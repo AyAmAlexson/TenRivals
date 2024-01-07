@@ -1,1 +1,1 @@
-web: gunicorn TenRivals.wsgi
+web: gunicorn TenRivals.TenRivals.wsgi
