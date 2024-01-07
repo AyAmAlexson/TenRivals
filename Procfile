@@ -1,1 +1,1 @@
-web: PYTHONPATH=TenRivals gunicorn --chdir TenRivals TenRivals.wsgi
+web: gunicorn TenRivals.TenRivals.wsgi
