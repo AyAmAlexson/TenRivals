@@ -53,7 +53,7 @@ MIDDLEWARE = [
 
 ]
 
-ROOT_URLCONF = 'TenRivals.urls'
+ROOT_URLCONF = 'tenrivals.urls'
 
 TEMPLATES = [
     {
@@ -71,7 +71,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'TenRivals.wsgi.application'
+WSGI_APPLICATION = 'tenrivals.wsgi.application'
 
 
 DATABASE_URL = env('DATABASE_URL')
