@@ -4,6 +4,7 @@ from persons.views import CustomLoginView, CustomSignupView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('users/', include('persons.urls')),
     # path('rivals/', include('rivals.urls')),
     path('accounts/login/', CustomLoginView.as_view(), name='account_login'),
     path('accounts/signup/', CustomSignupView.as_view(), name='account_signup'),
