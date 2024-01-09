@@ -5,7 +5,25 @@
 {% endblock title %}
 
 {% block content %}
+<!-- Кнопка для открытия модального окна -->
+<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#myModal">
+  Открыть модальное окно
+</button>
 
-<!-- Пример использования кнопки Bootstrap в шаблоне Django -->
-<button type="button" class="btn btn-primary">Primary Button</button>
+<!-- Модальное окно -->
+<div class="modal fade" id="myModal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <!-- Заголовок модального окна -->
+      <div class="modal-header">
+        <h4 class="modal-title">Мое модальное окно</h4>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <!-- Тело модального окна -->
+      <div class="modal-body">
+        <p>Содержимое модального окна...</p>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock content %}
