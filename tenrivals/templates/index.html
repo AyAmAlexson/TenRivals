@@ -1,5 +1,11 @@
 {% extends "default.html" %}
-<body>
+
+{% block title %}
+{{ flatpage.title }}
+{% endblock title %}
+
+{% block content %}
+
 <!-- Пример использования кнопки Bootstrap в шаблоне Django -->
 <button type="button" class="btn btn-primary">Primary Button</button>
-</body>
+{% endblock content %}

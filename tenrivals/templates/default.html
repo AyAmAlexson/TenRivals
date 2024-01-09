@@ -11,6 +11,11 @@
 <body>
     <!-- Ваш контент -->
     <h1>Привет, мир!!!</h1>
+                   {% block base_content %}
+                   {% block content %}
+                   {{ flatpage.content }}
+                   {% endblock content %}
+                   {% endblock base_content %}
     <!-- Подключение Bootstrap JavaScript (опционально) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
