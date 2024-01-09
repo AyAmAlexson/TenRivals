@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     'django.contrib.flatpages',
 
     'persons',
+    'rivals'
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
