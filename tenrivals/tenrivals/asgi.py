@@ -1,5 +1,5 @@
 """
-ASGI config for tenrivals project.
+ASGI config for TenRivals project.
 
 It exposes the ASGI callable as a module-level variable named ``application``.
 
