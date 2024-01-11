@@ -136,90 +136,88 @@ var myRadarChart = new Chart(ctx, {
 </script>
 
 
-<script>
+<script>  
 
+var ctx = document.getElementById('myChart').getContext('2d');
+var chart = new Chart(ctx, {
+    // The type of chart we want to create
+    type: 'radar',
 
-                        $(window).on('load', function(){
-                            var ctx = document.getElementById('myChart').getContext('2d');
-                            var chart = new Chart(ctx, {
-                                // The type of chart we want to create
-                                type: 'radar',
+    // The data for our dataset
+    data: {
+        labels: [
+                                                                                            'Forehand',
+                                                    'Backhand',
+                                                    'Игра у сетки',
+                                                    'Игра на задней линии',
+                                                    'Подача',
+                                                    'Приём подачи',
+                                                    'Атака',
+                                                    'Удержание мяча',
+                                                    ],
+        datasets: [{
+            backgroundColor: 'rgb(255, 99, 132)',
+            borderColor: 'rgb(255, 99, 132)',
+            data: [
+                                                            3,
+                                                            2,
+                                                            2,
+                                                            3,
+                                                            2,
+                                                            3,
+                                                            2,
+                                                            3,
+                                                        ],
+            fill: false
+        }]
+    },
 
-                                // The data for our dataset
-                                data: {
-                                    labels: [
-                                                                                                                        'Forehand',
-                                                                                'Backhand',
-                                                                                'Игра у сетки',
-                                                                                'Игра на задней линии',
-                                                                                'Подача',
-                                                                                'Приём подачи',
-                                                                                'Атака',
-                                                                                'Удержание мяча',
-                                                                                ],
-                                    datasets: [{
-                                        backgroundColor: 'rgb(255, 99, 132)',
-                                        borderColor: 'rgb(255, 99, 132)',
-                                        data: [
-                                                                                        3,
-                                                                                        2,
-                                                                                        2,
-                                                                                        3,
-                                                                                        2,
-                                                                                        3,
-                                                                                        2,
-                                                                                        3,
-                                                                                    ],
-                                        fill: false
-                                    }]
-                                },
+    // Configuration options go here
+    options: {
+        legend: {
+            display: false,
+            labels: {
+                hidden: true
+            }
+        },
+        tooltips: {
+            mode: 'index',
+            callbacks: {
+                label: function(tooltipItem, data) {
+                    console.log("tooltipItem", tooltipItem)
+                    console.log("data", data)
+                    // var label = data.datasets[tooltipItem.datasetIndex].label || '';
+                    label = data.labels[tooltipItem.index] + " - " + tooltipItem.value;
+                    return label;
+                },
+                title: function(tooltipItem, data) {
+                    return "";
+                }
+            }
+            // enabled: false,
+        },
+        title: {
+            display: false,
+        },
+        maintainAspectRatio: true,
+        spanGaps: false,
+        responsive: true,
+        scale: {
+            angleLines: {
+                display: false
+            },
+            pointLabels:{
+                display: false
+            },
+            ticks: {
+                stepSize: 1,
+                suggestedMin: 0,
+                suggestedMax: 5
+            }
+        }
+    }
+});
 
-                                // Configuration options go here
-                                options: {
-                                    legend: {
-                                        display: false,
-                                        labels: {
-                                            hidden: true
-                                        }
-                                    },
-                                    tooltips: {
-                                        mode: 'index',
-                                        callbacks: {
-                                            label: function(tooltipItem, data) {
-                                                console.log("tooltipItem", tooltipItem)
-                                                console.log("data", data)
-                                                // var label = data.datasets[tooltipItem.datasetIndex].label || '';
-                                                label = data.labels[tooltipItem.index] + " - " + tooltipItem.value;
-                                                return label;
-                                            },
-                                            title: function(tooltipItem, data) {
-                                                return "";
-                                            }
-                                        }
-                                        // enabled: false,
-                                    },
-                                    title: {
-                                        display: false,
-                                    },
-                                    maintainAspectRatio: true,
-                                    spanGaps: false,
-                                    responsive: true,
-                                    scale: {
-                                        angleLines: {
-                                            display: false
-                                        },
-                                        pointLabels:{
-                                            display: false
-                                        },
-                                        ticks: {
-                                            stepSize: 1,
-                                            suggestedMin: 0,
-                                            suggestedMax: 5
-                                        }
-                                    }
-                                }
-                            });
-                        })
 
 
 </script>
