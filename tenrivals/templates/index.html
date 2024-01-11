@@ -210,10 +210,10 @@ var chart = new Chart(ctx, {
                 display: false
             },
             ticks: {
-                stepSize: 1,
                 beginAtZero: true,
-                min: 0, // Set the minimum value
-                max: 5, // Set the maximum value
+                suggestedMin: 0, // Use suggestedMin instead of min
+                suggestedMax: 5, // Use suggestedMax instead of max
+                stepSize: 1,
             }
         }
     }
