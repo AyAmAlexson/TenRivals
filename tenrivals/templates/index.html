@@ -26,4 +26,80 @@
     </div>
   </div>
 </div>
+
+<!-- Canvas for Chart -->
+<canvas id="myChart" width="400" height="200"></canvas>
+<!-- Canvas for Radar Chart -->
+<canvas id="myRadarChart" width="400" height="400"></canvas>
+
+
+<script>
+  // Get the canvas element
+  var ctx = document.getElementById('myChart').getContext('2d');
+
+  // Create a sample chart (replace this with your data)
+  var myChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['January', 'February', 'March', 'April', 'May'],
+      datasets: [{
+        label: 'Sample Data',
+        data: [12, 19, 3, 5, 2],
+        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+        borderColor: 'rgba(75, 192, 192, 1)',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      scales: {
+        y: {
+          beginAtZero: true
+        }
+      }
+    }
+  });
+</script>
+
+<script>
+  // Get the canvas element
+  var ctx = document.getElementById('myRadarChart').getContext('2d');
+
+  // Sample data for the radar chart
+  var data = {
+    labels: ['Skill 1', 'Skill 2', 'Skill 3', 'Skill 4', 'Skill 5'],
+    datasets: [{
+      label: 'Your Skills',
+      data: [80, 60, 75, 40, 90],
+      backgroundColor: 'rgba(75, 192, 192, 0.2)',
+      borderColor: 'rgba(75, 192, 192, 1)',
+      borderWidth: 2,
+      pointBackgroundColor: 'rgba(75, 192, 192, 1)',
+      pointBorderColor: '#fff',
+      pointHoverBackgroundColor: '#fff',
+      pointHoverBorderColor: 'rgba(75, 192, 192, 1)'
+    }]
+  };
+
+  // Configuration options for the radar chart
+  var options = {
+    scale: {
+      ticks: { beginAtZero: true, max: 100 },
+      angleLines: { color: 'rgba(0, 0, 0, 0.1)' },
+      gridLines: { color: 'rgba(0, 0, 0, 0.1)' }
+    }
+  };
+
+  // Create the radar chart
+  var myRadarChart = new Chart(ctx, {
+    type: 'radar',
+    data: data,
+    options: options
+  });
+</script>
+
+
+<!-- Include Chart.js from jsDelivr -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script>
+
+
 {% endblock content %}
