@@ -38,32 +38,7 @@
 <!-- Canvas for Radar Chart -->
 <canvas id="myRadarChart2" width="400" height="400"></canvas>
 
-<script>
-  // Get the canvas element
-  var ctx = document.getElementById('myChart').getContext('2d');
 
-  // Create a sample chart (replace this with your data)
-  var myChart = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: ['January', 'February', 'March', 'April', 'May'],
-      datasets: [{
-        label: 'Sample Data',
-        data: [12, 19, 3, 5, 2],
-        backgroundColor: 'rgba(75, 192, 192, 0.2)',
-        borderColor: 'rgba(75, 192, 192, 1)',
-        borderWidth: 1
-      }]
-    },
-    options: {
-      scales: {
-        y: {
-          beginAtZero: true
-        }
-      }
-    }
-  });
-</script>
 
 <script>
   // Get the canvas element
@@ -158,6 +133,95 @@ var myRadarChart = new Chart(ctx, {
   data: data,
   options: options
 });
+</script>
+
+
+<script>
+
+
+                        $(window).on('load', function(){
+                            var ctx = document.getElementById('myChart').getContext('2d');
+                            var chart = new Chart(ctx, {
+                                // The type of chart we want to create
+                                type: 'radar',
+
+                                // The data for our dataset
+                                data: {
+                                    labels: [
+                                                                                                                        'Forehand',
+                                                                                'Backhand',
+                                                                                'Игра у сетки',
+                                                                                'Игра на задней линии',
+                                                                                'Подача',
+                                                                                'Приём подачи',
+                                                                                'Атака',
+                                                                                'Удержание мяча',
+                                                                                ],
+                                    datasets: [{
+                                        backgroundColor: 'rgb(255, 99, 132)',
+                                        borderColor: 'rgb(255, 99, 132)',
+                                        data: [
+                                                                                        3,
+                                                                                        2,
+                                                                                        2,
+                                                                                        3,
+                                                                                        2,
+                                                                                        3,
+                                                                                        2,
+                                                                                        3,
+                                                                                    ],
+                                        fill: false
+                                    }]
+                                },
+
+                                // Configuration options go here
+                                options: {
+                                    legend: {
+                                        display: false,
+                                        labels: {
+                                            hidden: true
+                                        }
+                                    },
+                                    tooltips: {
+                                        mode: 'index',
+                                        callbacks: {
+                                            label: function(tooltipItem, data) {
+                                                console.log("tooltipItem", tooltipItem)
+                                                console.log("data", data)
+                                                // var label = data.datasets[tooltipItem.datasetIndex].label || '';
+                                                label = data.labels[tooltipItem.index] + " - " + tooltipItem.value;
+                                                return label;
+                                            },
+                                            title: function(tooltipItem, data) {
+                                                return "";
+                                            }
+                                        }
+                                        // enabled: false,
+                                    },
+                                    title: {
+                                        display: false,
+                                    },
+                                    maintainAspectRatio: true,
+                                    spanGaps: false,
+                                    responsive: true,
+                                    scale: {
+                                        angleLines: {
+                                            display: false
+                                        },
+                                        pointLabels:{
+                                            display: false
+                                        },
+                                        ticks: {
+                                            stepSize: 1,
+                                            suggestedMin: 0,
+                                            suggestedMax: 5
+                                        }
+                                    }
+                                }
+                            });
+                        })
+
+
 </script>
 
 {% endblock content %}
