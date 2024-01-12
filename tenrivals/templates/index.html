@@ -5,6 +5,70 @@
 {% endblock title %}
 
 {% block content %}
+<style>
+        body {
+            overflow-x: hidden;
+        }
+
+        .offcanvas {
+            position: fixed;
+            top: 0;
+            right: -100%;
+            height: 100%;
+            width: 300px;
+            background-color: #f8f9fa;
+            transition: right 0.3s ease-in-out;
+        }
+
+        .offcanvas.show {
+            right: 0;
+        }
+
+        .offcanvas-inner {
+            padding: 1rem;
+        }
+
+        .close-btn {
+            cursor: pointer;
+        }
+    </style>
+
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col">
+            <button class="btn btn-primary mt-3" onclick="toggleOffcanvas()">Open Login</button>
+        </div>
+    </div>
+</div>
+
+<div class="offcanvas" id="offcanvas">
+    <div class="offcanvas-inner">
+        <span class="close-btn" onclick="toggleOffcanvas()">&#10006;</span>
+        <h4 class="mb-4">Login</h4>
+        <!-- Your login form goes here -->
+        <form>
+            <div class="mb-3">
+                <label for="username" class="form-label">Username</label>
+                <input type="text" class="form-control" id="username" name="username">
+            </div>
+            <div class="mb-3">
+                <label for="password" class="form-label">Password</label>
+                <input type="password" class="form-control" id="password" name="password">
+            </div>
+            <button type="submit" class="btn btn-primary">Login</button>
+        </form>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    function toggleOffcanvas() {
+        const offcanvas = document.getElementById('offcanvas');
+        offcanvas.classList.toggle('show');
+    }
+</script>
+
 <!-- Кнопка для открытия модального окна -->
 <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#myModal">
   Открыть модальное окно
