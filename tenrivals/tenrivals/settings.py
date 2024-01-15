@@ -10,7 +10,7 @@ env = environ.Env()
 environ.Env.read_env()
 
 SECRET_KEY = env('SECRET_KEY')
-DEBUG = env('DEBUG')
+DEBUG = (os.environ.get('DEBUG_VALUE') == 'True')
 
 
 ALLOWED_HOSTS = [
@@ -60,7 +60,7 @@ ROOT_URLCONF = 'tenrivals.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR/'templates'],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
