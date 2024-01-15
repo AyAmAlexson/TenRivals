@@ -10,8 +10,8 @@ env = environ.Env()
 environ.Env.read_env()
 
 SECRET_KEY = env('SECRET_KEY')
-DEBUG = (os.environ.get('DEBUG_VALUE') == 'True')
-
+# DEBUG = (os.environ.get('DEBUG_VALUE') == 'True')
+DEBUG = True
 
 ALLOWED_HOSTS = [
     'tenrivals-b413e3f2778a.herokuapp.com',
