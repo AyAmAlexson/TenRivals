@@ -11,11 +11,11 @@
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
  */
 :root {
-  --bs-blue: #0061f2;
+  --bs-blue: #124A9B;
   --bs-indigo: #5800e8;
   --bs-purple: #6900c7;
   --bs-pink: #e30059;
-  --bs-red: #e81500;
+  --bs-red: #ee1b24;
   --bs-orange: #f76400;
   --bs-yellow: #f4a100;
   --bs-green: #00ac69;
@@ -44,13 +44,13 @@
   --bs-dark: #212832;
   --bs-black: #000;
   --bs-white: #fff;
-  --bs-red: #e81500;
+  --bs-red: #ee1b24;
   --bs-orange: #f76400;
   --bs-yellow: #f4a100;
   --bs-green: #00ac69;
   --bs-teal: #00ba94;
   --bs-cyan: #00cfd5;
-  --bs-blue: #0061f2;
+  --bs-blue: #124A9B;
   --bs-indigo: #5800e8;
   --bs-purple: #6900c7;
   --bs-pink: #e30059;
@@ -81,13 +81,13 @@
   --bs-dark-rgb: 33, 40, 50;
   --bs-black-rgb: 0, 0, 0;
   --bs-white-rgb: 255, 255, 255;
-  --bs-red-rgb: 232, 21, 0;
+  --bs-red-rgb: 238, 27, 36;
   --bs-orange-rgb: 247, 100, 0;
   --bs-yellow-rgb: 244, 161, 0;
   --bs-green-rgb: 0, 172, 105;
   --bs-teal-rgb: 0, 186, 148;
   --bs-cyan-rgb: 0, 207, 213;
-  --bs-blue-rgb: 0, 97, 242;
+  --bs-blue-rgb: 18, 74, 155;
   --bs-indigo-rgb: 88, 0, 232;
   --bs-purple-rgb: 105, 0, 199;
   --bs-pink-rgb: 227, 0, 89;
