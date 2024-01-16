@@ -4873,7 +4873,7 @@ textarea.form-control-lg {
 .navbar > .container-xxl {
   display: flex;
   flex-wrap: inherit;
-  align-items: left;
+  align-items: start;
   justify-content: space-between;
 }
 .navbar-brand {
