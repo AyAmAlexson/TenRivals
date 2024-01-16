@@ -4860,7 +4860,7 @@ textarea.form-control-lg {
   position: relative;
   display: flex;
   flex-wrap: wrap;
-  align-items: start;
+  align-items: center;
   justify-content: space-between;
   padding: var(--bs-navbar-padding-y) var(--bs-navbar-padding-x);
 }
@@ -4928,19 +4928,20 @@ textarea.form-control-lg {
     height: 2px; /* Толщина подчеркивания */
     background-color: var(--bs-navbar-hover-color); /* Цвет подчеркивания */
     bottom: 10px;
-    left: -100%; /* Начнем за пределами элемента слева */
+    left: 0;
+    transform: scaleX(0); /* Начнем с нулевой ширины */
+    transform-origin: left; /* Устанавливаем начальную точку для анимации */
     transition: width 0.3s, left 0.3s; /* Длительность анимации для ширины и позиции слева */
 }
 
 .navbar-nav .nav-link:hover::before {
-    width: 100%;
-    left: 0; /* Перемещаем линию внутрь элемента */
+    transform: scaleX(1); /* Увеличиваем ширину до 100% */
 }
 
 /* Отменяем подчеркивание при наведении на активный пункт меню */
 .navbar-nav .nav-link.active::before,
 .navbar-nav .nav-link.active:hover::before {
-    width: 0;
+    transform: scaleX(0); /* Возвращаем ширину обратно к нулю */
 }
 
 .navbar-text {
