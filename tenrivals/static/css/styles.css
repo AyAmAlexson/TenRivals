@@ -4929,19 +4929,19 @@ textarea.form-control-lg {
     background-color: var(--bs-navbar-hover-color); /* Цвет подчеркивания */
     bottom: 10px;
     left: 0;
-    transform: scaleX(0); /* Начнем с нулевой ширины */
     transform-origin: left; /* Устанавливаем начальную точку для анимации */
     transition: width 0.3s, left 0.3s; /* Длительность анимации для ширины и позиции слева */
 }
 
 .navbar-nav .nav-link:hover::before {
-    transform: scaleX(1); /* Увеличиваем ширину до 100% */
+    width: 100%;
+    left: 0; /* Перемещаем линию внутрь элемента */
 }
 
 /* Отменяем подчеркивание при наведении на активный пункт меню */
 .navbar-nav .nav-link.active::before,
 .navbar-nav .nav-link.active:hover::before {
-    transform: scaleX(0); /* Возвращаем ширину обратно к нулю */
+    width: 0;
 }
 
 .navbar-text {
