@@ -4925,10 +4925,10 @@ textarea.form-control-lg {
     content: "";
     position: absolute;
     width: 0; /* Начнем с нулевой ширины */
-    height: 1px; /* Толщина подчеркивания */
+    height: 2px; /* Толщина подчеркивания */
     background-color: var(--bs-navbar-hover-color); /* Цвет подчеркивания */
-    bottom: 0;
-    left: -10%; /* Начнем за пределами элемента слева */
+    bottom: 20px;
+    left: -100%; /* Начнем за пределами элемента слева */
     transition: width 0.3s, left 0.3s; /* Длительность анимации для ширины и позиции слева */
 }
 
