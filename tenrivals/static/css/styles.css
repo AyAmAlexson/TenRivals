@@ -4911,22 +4911,34 @@ textarea.form-control-lg {
 }
 
 /* Добавляем подчеркивание при наведении на пункт меню */
+.navbar-nav .nav-item {
+    position: relative;
+    overflow: hidden; /* Скрываем лишнюю линию слева */
+}
+
+/* Добавляем подчеркивание при наведении на пункт меню */
 .navbar-nav .nav-link:hover {
     position: relative;
 }
 
-.navbar-nav .nav-link:hover::before {
+.navbar-nav .nav-link::before {
     content: "";
     position: absolute;
-    width: 100%;
+    width: 0; /* Начнем с нулевой ширины */
     height: 2px; /* Толщина подчеркивания */
     background-color: var(--bs-navbar-hover-color); /* Цвет подчеркивания */
     bottom: 0;
-    left: 0;
-    transition: width 0.3s; /* Длительность анимации */
+    left: -100%; /* Начнем за пределами элемента слева */
+    transition: width 0.3s, left 0.3s; /* Длительность анимации для ширины и позиции слева */
+}
+
+.navbar-nav .nav-link:hover::before {
+    width: 100%;
+    left: 0; /* Перемещаем линию внутрь элемента */
 }
 
 /* Отменяем подчеркивание при наведении на активный пункт меню */
+.navbar-nav .nav-link.active::before,
 .navbar-nav .nav-link.active:hover::before {
     width: 0;
 }
