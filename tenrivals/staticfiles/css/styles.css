@@ -14958,6 +14958,16 @@ body {
 }
 
 @font-face {
+  font-family: "Rimba Andalas";
+  src: url("../assets/fonts/Rimba-Andalas/Rimba Andalas.otf");
+}
+
+@font-face {
+  font-family: "Rimba Andalas Swashes";
+  src: url("../assets/fonts/Rimba-Andalas/Rimba Andalas Swashes.otf");
+}
+
+@font-face {
   font-family: "Metropolis";
   src: url("../assets/fonts/metropolis/Metropolis-Thin.otf");
   font-weight: 100;
@@ -18710,10 +18720,16 @@ section {
   font-size: 0.875rem;
 }
 .footer .footer-brand {
+  font-family: 'Rimba Andalas', sans-serif;
   font-size: 1.2rem;
-  font-weight: bold;
   margin-bottom: 0.25rem;
 }
+.footer .footer-brand-swash {
+  font-family: 'Rimba Andalas Swashes', sans-serif;
+  font-size: 1.2rem;
+  margin-bottom: 0.25rem;
+}
+
 .footer .footer-brand svg {
   height: 1rem;
 }

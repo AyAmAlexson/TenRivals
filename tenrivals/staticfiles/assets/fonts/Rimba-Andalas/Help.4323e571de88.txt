@@ -1,0 +1,7 @@
+How To Access Alternates Characters
+
+- From AI : https://helpx.adobe.com/illustrator/using/special-characters.html 
+- From Photoshop : https://creativepro.com/photoshop-quick-tip-applying-opentype-alternates/
+- From MS Word : https://support.creativemarket.com/hc/en-us/articles/360037478813--Using-Fonts-with-Special-Features-OpenType-#msword
+- Copy-Paste from Font Book (Mac) https://designbundles.net/design-school/access-font-glyphs-mac
+- Copy-Paste from Character Map (Windows) https://www.top-password.com/blog/open-character-map-in-windows-10/
