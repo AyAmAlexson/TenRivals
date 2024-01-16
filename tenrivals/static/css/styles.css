@@ -4860,7 +4860,7 @@ textarea.form-control-lg {
   position: relative;
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  align-items: self-start;
   justify-content: space-between;
   padding: var(--bs-navbar-padding-y) var(--bs-navbar-padding-x);
 }
@@ -4873,7 +4873,7 @@ textarea.form-control-lg {
 .navbar > .container-xxl {
   display: flex;
   flex-wrap: inherit;
-  align-items: start;
+  align-items: center;
   justify-content: space-between;
 }
 .navbar-brand {
@@ -4927,7 +4927,7 @@ textarea.form-control-lg {
     width: 0; /* Начнем с нулевой ширины */
     height: 2px; /* Толщина подчеркивания */
     background-color: var(--bs-navbar-hover-color); /* Цвет подчеркивания */
-    bottom: 12px;
+    bottom: 10px;
     left: -100%; /* Начнем за пределами элемента слева */
     transition: width 0.3s, left 0.3s; /* Длительность анимации для ширины и позиции слева */
 }
