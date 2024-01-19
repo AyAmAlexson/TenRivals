@@ -4730,7 +4730,7 @@ textarea.form-control-lg {
 }
 
 .nav-link {
-  display: inline-flex;
+  display: block;
   padding: var(--bs-nav-link-padding-y) var(--bs-nav-link-padding-x);
   font-size: var(--bs-nav-link-font-size);
   font-weight: var(--bs-nav-link-font-weight);
@@ -4858,7 +4858,7 @@ textarea.form-control-lg {
   --bs-navbar-toggler-focus-width: 0.25rem;
   --bs-navbar-toggler-transition: box-shadow 0.15s ease-in-out;
   position: relative;
-  display: flex;
+  display: block;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
@@ -4910,45 +4910,34 @@ textarea.form-control-lg {
   position: static;
 }
 
-.navbar-nav .nav-item,
-.navbar-nav .nav-link,
-.navbar-nav .dropdown-item {
-    position: relative;
-}
 
 /* Добавляем подчеркивание при наведении на пункт меню */
-.navbar-nav .nav-link:hover,
-.navbar-nav .dropdown-item:hover {
+.navbar-nav .nav-link:hover {
     position: relative;
 }
 
-.navbar-nav .nav-link::before,
-.navbar-nav .dropdown-item::before {
+.navbar-nav .nav-link::before {
     content: "";
     position: absolute;
-    width: 0; /* Starts with no width */
-    height: 2px; /* Height of the underline */
-    background-color: var(--bs-navbar-hover-color); /* Underline color */
-    bottom: 8px; /* Adjust as needed */
-    /*left: 0; !* Start from the very left *!*/
-    transition: width 0.3s; /* Smooth transition for width */
+    width: 0; /* Начнем с нулевой ширины */
+    height: 2px; /* Толщина подчеркивания */
+    background-color: var(--bs-navbar-hover-color); /* Цвет подчеркивания */
+    bottom: 10px;
+    /*left: 8px;*/
+    transform-origin: left;
+    transition: width 0.3s, left 0.3s; /* Длительность анимации для ширины и позиции слева */
 }
 
-
-.navbar-nav .nav-link:hover::before,
-.navbar-nav .dropdown-item:hover::before {
-    width: 40px; /* Reduces the underline width by 10px */
+.navbar-nav .nav-link:hover::before {
+    width: 100%;
+    /*left: 8px; !* Перемещаем линию внутрь элемента *!*/
 }
 
-
-
+/* Отменяем подчеркивание при наведении на активный пункт меню */
 .navbar-nav .nav-link.active::before,
-.navbar-nav .nav-link.active:hover::before,
-.navbar-nav .dropdown-item.active::before,
-.navbar-nav .dropdown-item.active:hover::before {
+.navbar-nav .nav-link.active:hover::before {
     width: 0;
 }
-
 
 .navbar-text {
   padding-top: 0.5rem;
@@ -15004,119 +14993,119 @@ body {
 
 @font-face {
   font-family: "Rimba Andalas";
-  src: url("../assets/fonts/Rimba-Andalas/Rimba Andalas.otf");
+  src: url("../assets/fonts/Rimba-Andalas/Rimba Andalas.b565eb0aa751.otf");
 }
 
 @font-face {
   font-family: "Rimba Andalas Swashes";
-  src: url("../assets/fonts/Rimba-Andalas/Rimba Andalas Swashes.otf");
+  src: url("../assets/fonts/Rimba-Andalas/Rimba Andalas Swashes.500fcff5fecf.otf");
 }
 
 @font-face {
   font-family: "Metropolis";
-  src: url("../assets/fonts/metropolis/Metropolis-Thin.otf");
+  src: url("../assets/fonts/metropolis/Metropolis-Thin.152ab0324f44.otf");
   font-weight: 100;
   font-style: normal;
 }
 @font-face {
   font-family: "Metropolis";
-  src: url("../assets/fonts/metropolis/Metropolis-ThinItalic.otf");
+  src: url("../assets/fonts/metropolis/Metropolis-ThinItalic.a10db35c6f48.otf");
   font-weight: 100;
   font-style: italic;
 }
 @font-face {
   font-family: "Metropolis";
-  src: url("../assets/fonts/metropolis/Metropolis-ExtraLight.otf");
+  src: url("../assets/fonts/metropolis/Metropolis-ExtraLight.c5ae09393655.otf");
   font-weight: 200;
   font-style: normal;
 }
 @font-face {
   font-family: "Metropolis";
-  src: url("../assets/fonts/metropolis/Metropolis-ExtraLightItalic.otf");
+  src: url("../assets/fonts/metropolis/Metropolis-ExtraLightItalic.414a434d6ad4.otf");
   font-weight: 200;
   font-style: italic;
 }
 @font-face {
   font-family: "Metropolis";
-  src: url("../assets/fonts/metropolis/Metropolis-Light.otf");
+  src: url("../assets/fonts/metropolis/Metropolis-Light.c82170e08b76.otf");
   font-weight: 300;
   font-style: normal;
 }
 @font-face {
   font-family: "Metropolis";
-  src: url("../assets/fonts/metropolis/Metropolis-LightItalic.otf");
+  src: url("../assets/fonts/metropolis/Metropolis-LightItalic.2de2a64942ec.otf");
   font-weight: 300;
   font-style: italic;
 }
 @font-face {
   font-family: "Metropolis";
-  src: url("../assets/fonts/metropolis/Metropolis-Regular.otf");
+  src: url("../assets/fonts/metropolis/Metropolis-Regular.f7b5e589f882.otf");
   font-weight: 400;
   font-style: normal;
 }
 @font-face {
   font-family: "Metropolis";
-  src: url("../assets/fonts/metropolis/Metropolis-RegularItalic.otf");
+  src: url("../assets/fonts/metropolis/Metropolis-RegularItalic.763b44257f3a.otf");
   font-weight: 400;
   font-style: italic;
 }
 @font-face {
   font-family: "Metropolis";
-  src: url("../assets/fonts/metropolis/Metropolis-Medium.otf");
+  src: url("../assets/fonts/metropolis/Metropolis-Medium.f4bca87fd0d1.otf");
   font-weight: 500;
   font-style: normal;
 }
 @font-face {
   font-family: "Metropolis";
-  src: url("../assets/fonts/metropolis/Metropolis-MediumItalic.otf");
+  src: url("../assets/fonts/metropolis/Metropolis-MediumItalic.60eace1cb8db.otf");
   font-weight: 500;
   font-style: italic;
 }
 @font-face {
   font-family: "Metropolis";
-  src: url("../assets/fonts/metropolis/Metropolis-SemiBold.otf");
+  src: url("../assets/fonts/metropolis/Metropolis-SemiBold.2556a4f74e2c.otf");
   font-weight: 600;
   font-style: normal;
 }
 @font-face {
   font-family: "Metropolis";
-  src: url("../assets/fonts/metropolis/Metropolis-SemiBoldItalic.otf");
+  src: url("../assets/fonts/metropolis/Metropolis-SemiBoldItalic.536778d712a7.otf");
   font-weight: 600;
   font-style: italic;
 }
 @font-face {
   font-family: "Metropolis";
-  src: url("../assets/fonts/metropolis/Metropolis-Bold.otf");
+  src: url("../assets/fonts/metropolis/Metropolis-Bold.dea4998b081c.otf");
   font-weight: 700;
   font-style: normal;
 }
 @font-face {
   font-family: "Metropolis";
-  src: url("../assets/fonts/metropolis/Metropolis-BoldItalic.otf");
+  src: url("../assets/fonts/metropolis/Metropolis-BoldItalic.15b149fc383c.otf");
   font-weight: 700;
   font-style: italic;
 }
 @font-face {
   font-family: "Metropolis";
-  src: url("../assets/fonts/metropolis/Metropolis-ExtraBold.otf");
+  src: url("../assets/fonts/metropolis/Metropolis-ExtraBold.d7eaa8ab58ec.otf");
   font-weight: 800;
   font-style: normal;
 }
 @font-face {
   font-family: "Metropolis";
-  src: url("../assets/fonts/metropolis/Metropolis-ExtraBoldItalic.otf");
+  src: url("../assets/fonts/metropolis/Metropolis-ExtraBoldItalic.f1e8fdf108c2.otf");
   font-weight: 800;
   font-style: italic;
 }
 @font-face {
   font-family: "Metropolis";
-  src: url("../assets/fonts/metropolis/Metropolis-Black.otf");
+  src: url("../assets/fonts/metropolis/Metropolis-Black.de55ae52af85.otf");
   font-weight: 800;
   font-style: normal;
 }
 @font-face {
   font-family: "Metropolis";
-  src: url("../assets/fonts/metropolis/Metropolis-BlackItalic.otf");
+  src: url("../assets/fonts/metropolis/Metropolis-BlackItalic.ef50aa42a925.otf");
   font-weight: 800;
   font-style: italic;
 }
@@ -18685,7 +18674,7 @@ section {
 
 .device[data-device=iPhoneX][data-orientation=portrait][data-color=black] {
   padding-bottom: 198.89807163%;
-  background-image: url("../assets/img/device-mockups/iPhoneX/portrait.png");
+  background-image: url("../assets/img/device-mockups/iPhoneX/portrait.a3f4e3fd390d.png");
   z-index: initial;
 }
 
@@ -18700,7 +18689,7 @@ section {
 
 .device[data-device=iPhoneX][data-orientation=landscape][data-color=black] {
   padding-bottom: 50.27700831%;
-  background-image: url("../assets/img/device-mockups/iPhoneX/landscape.png");
+  background-image: url("../assets/img/device-mockups/iPhoneX/landscape.4acd570758c6.png");
   z-index: initial;
 }
 
@@ -18726,7 +18715,7 @@ section {
 
 .device[data-device=iPhoneX][data-orientation=portrait][data-color=black]::after {
   content: "";
-  background-image: url("../assets/img/device-mockups/iPhoneX/portrait_black.png");
+  background-image: url("../assets/img/device-mockups/iPhoneX/portrait_black.a3f4e3fd390d.png");
 }
 
 .device[data-device=iPhoneX][data-orientation=portrait][data-color=black] .button {
@@ -18750,7 +18739,7 @@ section {
 
 .device[data-device=iPhoneX][data-orientation=landscape][data-color=black]::after {
   content: "";
-  background-image: url("../assets/img/device-mockups/iPhoneX/landscape_black.png");
+  background-image: url("../assets/img/device-mockups/iPhoneX/landscape_black.4acd570758c6.png");
 }
 
 .device[data-device=iPhoneX][data-orientation=landscape][data-color=black] .button {

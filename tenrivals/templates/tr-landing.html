@@ -2,43 +2,103 @@
 {% load static %}
 
         {% block content %}
-            <!-- Page Header-->
-                    <header class="page-header-ui page-header-ui-dark bg-img-repeat bg-primary" style="background-image: url('assets/img/backgrounds/pattern-shapes.png')">
-                        <div class="page-header-ui-content">
+           <!-- Page Header-->
+                    <header class="page-header-ui page-header-ui-light bg-tan">
+                        <div class="page-header-ui-content pt-10">
                             <div class="container px-5">
-                                <div class="row gx-5 justify-content-center">
-                                    <div class="col-xl-8 col-lg-10 text-center">
-                                        <h1 class="page-header-ui-title">Buy and sell used items</h1>
-                                        <p class="page-header-ui-text mb-5">Out with the old, in with the new! Your trash is another's treasure. Start making money, or find great deals today!</p>
-                                        <a class="btn btn-teal fw-500 me-2" href="#!">Start Selling</a>
-                                        <a class="btn btn-link fw-500" href="#!">Browse Categories</a>
+                                <div class="row gx-5 align-items-center">
+                                    <div class="col-lg-6" data-aos="fade-up">
+                                        <h1 class="page-header-ui-title">Build your next project faster with SB UI Kit Pro</h1>
+                                        <p class="page-header-ui-text mb-5">Welcome to SB UI Kit Pro, a toolkit for building beautiful web interfaces, created by the development team at Start Bootstrap</p>
+                                        <a class="btn btn-teal fw-500 me-2" href="#!">
+                                            Get Started
+                                            <i class="ms-2" data-feather="arrow-right"></i>
+                                        </a>
+                                        <a class="btn btn-link fw-500" href="#!">Learn More</a>
+                                    </div>
+                                    <div class="col-lg-6 d-none d-lg-block" data-aos="fade-up" data-aos-delay="100"><img class="img-fluid" src="{% static 'assets/img/illustrations/tribalgpt2.png'%}" /></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="svg-border-rounded text-white">
+                            <!-- Rounded SVG Border-->
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144.54 17.34" preserveAspectRatio="none" fill="currentColor"><path d="M144.54,17.34H0V0H144.54ZM0,0S32.36,17.34,72.27,17.34,144.54,0,144.54,0"></path></svg>
+                        </div>
+                    </header>
+                    <section class="bg-white py-10">
+                        <div class="container px-5">
+                            <div class="row gx-5 text-center">
+                                <div class="col-lg-4 mb-5 mb-lg-0">
+                                    <div class="icon-stack icon-stack-xl bg-gradient-primary-to-secondary text-white mb-4"><i data-feather="layers"></i></div>
+                                    <h3>Built for developers</h3>
+                                    <p class="mb-0">Our customizable, block-based build system makes creating your next project fast and easy!</p>
+                                </div>
+                                <div class="col-lg-4 mb-5 mb-lg-0">
+                                    <div class="icon-stack icon-stack-xl bg-gradient-primary-to-secondary text-white mb-4"><i data-feather="smartphone"></i></div>
+                                    <h3>Modern responsive design</h3>
+                                    <p class="mb-0">Featuring carefully crafted, mobile-first components, your end product will function beautifully on any device!</p>
+                                </div>
+                                <div class="col-lg-4">
+                                    <div class="icon-stack icon-stack-xl bg-gradient-primary-to-secondary text-white mb-4"><i data-feather="code"></i></div>
+                                    <h3>Complete documentation</h3>
+                                    <p class="mb-0">All of the layouts, page sections, components, and utilities are fully covered in this products docs.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="svg-border-rounded text-light">
+                            <!-- Rounded SVG Border-->
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144.54 17.34" preserveAspectRatio="none" fill="currentColor"><path d="M144.54,17.34H0V0H144.54ZM0,0S32.36,17.34,72.27,17.34,144.54,0,144.54,0"></path></svg>
+                        </div>
+                    </section>
+                    <section class="bg-light py-10">
+                        <div class="container px-5">
+                            <div class="row gx-5 align-items-center justify-content-center">
+                                <div class="col-md-9 col-lg-6 order-1 order-lg-0" data-aos="fade-right">
+                                    <div class="content-skewed content-skewed-right"><img class="content-skewed-item img-fluid shadow-lg rounded-3" src="https://assets.startbootstrap.com/img/screenshots-product-pages/sb-ui-kit-pro/landing-portfolio.png" alt="..." /></div>
+                                </div>
+                                <div class="col-lg-6 order-0 order-lg-1 mb-5 mb-lg-0" data-aos="fade-left">
+                                    <div class="mb-5">
+                                        <h2>Here's What You Get</h2>
+                                        <p class="lead">When you purchase this UI Kit, you get access to a robust suite of powerful tools and components to help you build your next landing page quickly and easily.</p>
+                                    </div>
+                                    <div class="row gx-5">
+                                        <div class="col-md-6 mb-4">
+                                            <h6>Landing Pages</h6>
+                                            <p class="mb-2 small">We've crafted landing page examples for many popular business and product types.</p>
+                                            <a class="small text-arrow-icon" href="#!">
+                                                Learn More
+                                                <i data-feather="arrow-right"></i>
+                                            </a>
+                                        </div>
+                                        <div class="col-md-6 mb-4">
+                                            <h6>Page Examples</h6>
+                                            <p class="mb-2 small mb-0">Use our pre-built page examples to quickly create inner pages to your website.</p>
+                                            <a class="small text-arrow-icon" href="#!">
+                                                Learn More
+                                                <i data-feather="arrow-right"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <div class="row gx-5">
+                                        <div class="col-md-6 mb-4">
+                                            <h6>Layouts</h6>
+                                            <p class="mb-2 small mb-0">Our flex box based layout options make your site beautifully responsive and adaptable to any device.</p>
+                                            <a class="small text-arrow-icon" href="#!">
+                                                Learn More
+                                                <i data-feather="arrow-right"></i>
+                                            </a>
+                                        </div>
+                                        <div class="col-md-6 mb-4">
+                                            <h6>Modular Sections</h6>
+                                            <p class="small mb-0">All of the sections on each page are modular, so you can drop them into an existing page, or start with a new one!</p>
+                                            <a class="small text-arrow-icon" href="#!">
+                                                Learn More
+                                                <i data-feather="arrow-right"></i>
+                                            </a>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="svg-border-waves text-light">
-                            <!-- Wave SVG Border-->
-                            <svg class="wave" style="pointer-events: none" fill="currentColor" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1920 75">
-                                <defs>
-                                    <style>
-                                        .a {
-                                            fill: none;
-                                        }
-                                        .b {
-                                            clip-path: url(#a);
-                                        }
-                                        .d {
-                                            opacity: 0.5;
-                                            isolation: isolate;
-                                        }
-                                    </style>
-                                </defs>
-                                <clippath id="a"><rect class="a" width="1920" height="75"></rect></clippath>
-                                <g class="b"><path class="c" d="M1963,327H-105V65A2647.49,2647.49,0,0,1,431,19c217.7,3.5,239.6,30.8,470,36,297.3,6.7,367.5-36.2,642-28a2511.41,2511.41,0,0,1,420,48"></path></g>
-                                <g class="b"><path class="d" d="M-127,404H1963V44c-140.1-28-343.3-46.7-566,22-75.5,23.3-118.5,45.9-162,64-48.6,20.2-404.7,128-784,0C355.2,97.7,341.6,78.3,235,50,86.6,10.6-41.8,6.9-127,10"></path></g>
-                                <g class="b"><path class="d" d="M1979,462-155,446V106C251.8,20.2,576.6,15.9,805,30c167.4,10.3,322.3,32.9,680,56,207,13.4,378,20.3,494,24"></path></g>
-                                <g class="b"><path class="d" d="M1998,484H-243V100c445.8,26.8,794.2-4.1,1035-39,141-20.4,231.1-40.1,378-45,349.6-11.6,636.7,73.8,828,150"></path></g>
-                            </svg>
-                        </div>
-                    </header>
+                    </section>
         {% endblock content %}
