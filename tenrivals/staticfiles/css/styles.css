@@ -16359,6 +16359,21 @@ body {
   color: #212832 !important;
 }
 
+.text-rimba-large {
+  font-family: 'Rimba Andalas', sans-serif !important;;
+  font-size: 1.2rem;
+}
+
+.text-rimba-normal {
+  font-family: 'Rimba Andalas', sans-serif !important;;
+  font-size: 1rem;
+}
+
+.text-rimba-small {
+  font-family: 'Rimba Andalas', sans-serif !important;;
+  font-size: 0.8rem;
+}
+
 .fw-100 {
   font-weight: 100 !important;
 }
