@@ -32,12 +32,15 @@ INSTALLED_APPS = [
 
     'persons',
     'rivals',
+    'dashboard',
+
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
     'allauth.socialaccount.providers.facebook',
     'widget_tweaks',
+
 
 ]
 
