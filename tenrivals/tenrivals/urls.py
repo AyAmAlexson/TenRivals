@@ -10,5 +10,5 @@ urlpatterns = [
     path('accounts/login/', CustomLoginView.as_view(), name='account_login'),
     path('accounts/signup/', CustomSignupView.as_view(), name='account_signup'),
     path('accounts/', include('allauth.urls')),
-    path('dashboard/', include('dashboard.urls')),
+    # path('dashboard/', include('dashboard.urls')),
 ]

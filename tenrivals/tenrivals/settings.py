@@ -32,7 +32,7 @@ INSTALLED_APPS = [
 
     'persons',
     'rivals',
-    'dashboard',
+
 
     'allauth',
     'allauth.account',
