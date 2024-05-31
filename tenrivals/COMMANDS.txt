@@ -1,0 +1,208 @@
+
+
+КОМАНДЫ:
+
+
+Создать двух пользователей (с помощью метода User.objects.create_user('username')):
+cu1 = CustomUser.objects.create_user(username='DMedvedev', first_name='Daniil', last_name='Medvedev', email='dmdmdmdm123123xp0!', mobile='+791283744172')
+cu2 = CustomUser.objects.create_user(username='ARublev', first_name='Andrey', last_name='Rublev', email='Rublevasdf@af;hsdl.com', mobile='+718320417952')
+cu3 = CustomUser.objects.create_user(username='AKaratsev', first_name='Aslan', last_name='Karatsev', email='Karatsev341fa@as;dklfjhg.com', mobile='+712934029376')
+cu4 = CustomUser.objects.create_user(username='KKhachnov', first_name='Karen', last_name='Khachnov', email='Khachnov.8as70dfyp@asdf8yhu.com', mobile='+7039148273042')
+cu5 = CustomUser.objects.create_user(username='MSafin', first_name='Marat', last_name='Safin', email='Safina;sdjf2@a90s8dyf.com', mobile='+721394701298347')
+cu6 = CustomUser.objects.create_user(username='EKafelnikov', first_name='Evgeniy', last_name='Kafelnikov', email='Kafelnikovd;lasfjh@pa7sdf9.com', mobile='+712348901276340')
+cu7 = CustomUser.objects.create_user(username='MYuzhniy', first_name='Mike', last_name='Yuzhniy', email='Yuzhniy;sdfjh@a;sdklfn.com', mobile='+7031248972034987')
+cu8 = CustomUser.objects.create_user(username='NDavidenko', first_name='Nikolay', last_name='Davidenko', email='Davidenkoasd;fh@;sadjfh.com', mobile='+712034870123874')
+cu9 = CustomUser.objects.create_user(username='NDjokovic', first_name='Novak', last_name='jokovic', email='jokovic@a;lksdjfp.com', mobile='+351092873209332')
+cu10 = CustomUser.objects.create_user(username='RNadal', first_name='Rafael', last_name='Nadal', email='Nadalakhdfs@asdkjfh.com', mobile='+68120398471001293')
+cu11 = CustomUser.objects.create_user(username='RFederer', first_name='Roger', last_name='Federer', email='Federer1234@aldddshf.com', mobile='+8812398471092873')
+cu12 = CustomUser.objects.create_user(username='CAlcaraz', first_name='Carlos', last_name='Alcaraz', email='Alcaraz89sdyf9@asd89fy.com', mobile='+682198374092234')
+cu13 = CustomUser.objects.create_user(username='SWavrinka', first_name='Stan', last_name='Wavrinka', email='Wavrinkaa9s8df@ds987asdf.com', mobile='+88130298470293847')
+cu14 = CustomUser.objects.create_user(username='AMurray', first_name='Andy', last_name='Murray', email='Murray09asd7fa.d@aflsdj.com', mobile='+4402193847129837430293')
+cu15 = CustomUser.objects.create_user(username='AMolodenko', first_name='Andrey', last_name='Molodenko', email='a.molodenko@gmail.com', mobile='+35677120703')
+
+
+
+pl1 = Player.objects.create(_user=CustomUser.objects.get(username='DMedvedev'))
+pl2 = Player.objects.create(_user=CustomUser.objects.get(username='ARublev'))
+pl3 = Player.objects.create(_user=CustomUser.objects.get(username='AKaratsev'))
+pl4 = Player.objects.create(_user=CustomUser.objects.get(username='KKhachnov'))
+pl5 = Player.objects.create(_user=CustomUser.objects.get(username='MSafin'))
+pl6 = Player.objects.create(_user=CustomUser.objects.get(username='EKafelnikov'))
+pl7 = Player.objects.create(_user=CustomUser.objects.get(username='MYuzhniy'))
+pl8 = Player.objects.create(_user=CustomUser.objects.get(username='NDavidenko'))
+pl9 = Player.objects.create(_user=CustomUser.objects.get(username='NDjokovic'))
+pl10 = Player.objects.create(_user=CustomUser.objects.get(username='RNadal'))
+pl11 = Player.objects.create(_user=CustomUser.objects.get(username='RFederer'))
+pl12 = Player.objects.create(_user=CustomUser.objects.get(username='CAlcaraz'))
+pl13 = Player.objects.create(_user=CustomUser.objects.get(username='SWavrinka'))
+pl14 = Player.objects.create(_user=CustomUser.objects.get(username='AMurray'))
+pl15 = Player.objects.create(_user=CustomUser.objects.get(username='AMolodenko'))
+
+
+to1 = Tournament.objects.create (_players_num =8, _type = 'RM', _category ='C0', _gender = 'M', _format = 'S')
+to2 = Tournament.objects.create (_players_num =8, _type = 'RM', _category ='C0', _gender = 'F', _format = 'S')
+to3 = Tournament.objects.create (_players_num =8, _type = 'RM', _category ='C0', _gender = 'X', _format = 'S')
+to4 = Tournament.objects.create (_players_num =4, _type = 'GM', _category ='C1', _gender = 'M', _format = 'S')
+to5 = Tournament.objects.create (_players_num =4, _type = 'GM', _category ='C1', _gender = 'F', _format = 'S')
+to6 = Tournament.objects.create (_players_num =8, _type = 'RM', _category ='C1', _gender = 'X', _format = 'S')
+to7 = Tournament.objects.create (_players_num =8, _type = 'RM', _category ='C2', _gender = 'M', _format = 'S')
+to8 = Tournament.objects.create (_players_num =8, _type = 'RM', _category ='C2', _gender = 'F', _format = 'S')
+to9 = Tournament.objects.create (_players_num =8, _type = 'RM', _category ='C2', _gender = 'X', _format = 'S')
+to10 = Tournament.objects.create (_players_num =16, _type = 'RM', _category ='C3', _gender = 'M', _format = 'S')
+to11 = Tournament.objects.create (_players_num =4, _type = 'GM', _category ='C3', _gender = 'M', _format = 'S')
+
+
+
+
+
+
+
+Создать два объекта модели Author, связанные с пользователями:
+Agents.objects.create(user_id=CustomUser.objects.get(id=1))
+Agents.objects.create(user_id=CustomUser.objects.get(id=2))
+Agents.objects.create(user_id=CustomUser.objects.get(id=3))
+Agents.objects.create(user_id=CustomUser.objects.get(id=4))
+
+
+Owners.objects.create(owner_ql_id = "ON12312", activated=True, first_name="Victor", last_name="Galea", phone_1="+35611111111",email="vg123@gmail.com", added_by=Agents.objects.get(id=2))
+Owners.objects.create(owner_ql_id = "ON9253", activated=True, first_name="Josef", last_name="Borg", phone_1="+35622222222",email="jbjbjbjb123@gmail.com", added_by=Agents.objects.get(id=3))
+(тут ссылаемся именно на Агента, а не на юзера: потому, что только Агенты могут добавлять информацию и любые записи в бд)
+
+Clients.objects.create(first_name="Anna", last_name="Ivanova", phone_1="+79121234567",email="annaivanova2341124@gmail.com", added_by=Agents.objects.get(id=1))
+Clients.objects.create(first_name="Petr", last_name="Petrov", phone_1="+79879876543",email="pepetrov12983798@gmail.com", added_by=Agents.objects.get(id=3))
+(тут ссылаемся именно на Агента, а не на юзера: потому, что только Агенты могут добавлять информацию и любые записи в бд)
+
+Добавить 4 категории в модель Category: (сделал больше в соответствующую модель Fatures)
+
+Features.objects.create(prop_feature='Sea View')
+Features.objects.create(prop_feature='Terrace')
+Features.objects.create(prop_feature='Yard')
+Features.objects.create(prop_feature='Balcony')
+Features.objects.create(prop_feature='Air Conditioning')
+Features.objects.create(prop_feature='Town View')
+Features.objects.create(prop_feature='Seafront')
+Features.objects.create(prop_feature='Dishwasher')
+Features.objects.create(prop_feature='Open Plan')
+Features.objects.create(prop_feature='A-Ultra Modern')
+Features.objects.create(prop_feature='B-Modern')
+Features.objects.create(prop_feature='C-Standard')
+Features.objects.create(prop_feature='Furnished')
+
+
+Добавить 2 статьи и 1 новость: (добавил 2 объекта недвижимости для аренды и 1 для продажи
+
+prop1 = ResProperties.objects.create(ref = 75349, prop_division='QL',prop_type="Apartments", location="Marsaskala", address="3 Flat 10, Triq St Peter, Marsaskala, Malta", _price=1200.0,status ='AV', status_valid='Available',bedrooms=2,bathrooms=2, prop_description = 'MARSASKALA - A duplex two-bedroom apartment with an additional multi-purpose room, located less than a five-minute way from the Marsaskala promenade.', owner=Owners.objects.get(id=1),added_by=Agents.objects.get(id=3))
+prop2 = ResProperties.objects.create(ref = 41147, prop_division='QL',prop_type="Penthouses", location="St. Julians", address="55 Flat 18, Triq Manwel Dimech, St. Julians, Malta", _price=2000.0,status ='AV', status_valid='Available',bedrooms=3,bathrooms=2, prop_description = "SAINT JULIAN'S - Here we find a stunning penthouse overlooking the town with amenities very close by such as restaurants, grocers, and a bus stop.", owner=Owners.objects.get(id=2),added_by=Agents.objects.get(id=4))
+prop3 = ResProperties.objects.create(ref = 15273, prop_division='ZH',prop_type="Penthouses", location="Valletta", address="1 Flat 1, Triq San Gwann, Valletta, Malta",  _price=450000.0,status ='AV', status_valid='Available',bedrooms=2,bathrooms=2, prop_description = "Found in a quiet street in Valletta, one finds this brand new designer finished, and furnished penthouse that upon entering, boasts a very bright open plan kitchen/living area with great space and a small terrace enjoying some sea views. ", owner=Owners.objects.get(id=1),added_by=Agents.objects.get(id=1))
+
+Присвоить им категории (как минимум в одной статье/новости должно быть не меньше 2 категорий)
+
+SeaView = Features.objects.get(prop_feature='Sea View')
+Modern = Features.objects.get(prop_feature='B-Modern')
+UModern = Features.objects.get(prop_feature='A-Ultra Modern')
+Standard = Features.objects.get(prop_feature='C-Standard')
+AC = Features.objects.get(prop_feature='Air Conditioning')
+Yard = Features.objects.get(prop_feature='Yard')
+Terrace = Features.objects.get(prop_feature='Terrace')
+Balcony = Features.objects.get(prop_feature='Balcony')
+Furnished = Features.objects.get(prop_feature='Furnished')
+
+prop1.prop_features.add(SeaView)
+prop1.prop_features.add(Terrace)
+prop1.prop_features.add(Modern)
+prop1.prop_features.add(Furnished)
+
+prop2.prop_features.add(Yard)
+prop2.prop_features.add(AC)
+prop2.prop_features.add(Standard)
+prop2.prop_features.add(Furnished)
+
+prop3.prop_features.add(Balcony)
+prop3.prop_features.add(SeaView)
+prop3.prop_features.add(UModern)
+prop3.prop_features.add(Furnished)
+
+Создать как минимум 4 комментария к разным объектам модели Post (в каждом объекте должен быть как минимум один комментарий):
+
+c1 = Comments.objects.create(re_property = prop1, added_by = Agents.objects.get(id=3), comment = "To call end of July, as the current tennants still lives there")
+c2 = Comments.objects.create(re_property = prop1, added_by = Agents.objects.get(id=4), comment = "There is a large construction site across the road, too noisy, be aware")
+c3 = Comments.objects.create(re_property = prop2, added_by = Agents.objects.get(id=1), comment = "Old furniture, not enough light, pets are accepted")
+c4 = Comments.objects.create(re_property = prop3, added_by = Agents.objects.get(id=2), comment = "The enramce is from the backstreet, there is also a view on St.Johns Cathedral")
+
+Применяя функции like() и dislike() к статьям/новостям и комментариям, скорректировать рейтинги этих объектов:
+prop1.price = 1250
+prop3.price = 460000
+
+Далее имитируем случай, когда агент провел успешный просмотр собственности с клиентом и заключил контракт на аренду на 1 год:
+
+Сначала назначим просмотр:
+client1 = Clients.objects.get(first_name = "Anna", last_name="Ivanova")
+agent_rented = Agents.objects.get(id=3)
+prop1 = ResProperties.objects.get(ref=75349)
+view1 = Viewings.objects.create(re_property = prop1, client = client1, agent=agent_rented, date = "2023-07-17")
+
+Потом заключим контракт:
+contract1 = Contracts.objects.create(re_property= prop1, client=client1, agent=agent_rented, move_in_date = "2023-08-01", sign_date="2023-07-17", final_price = 1150.0, af_paid=True, deposit_paid=True, contract_signed = True)
+
+Ставим пометку off_the_market и убираем из доступных вариантов
+prop1.make_off_the_market("2023-07-17")
+
+Финально запишем это в статистику агента: (аналог строки в задании "Обновить рейтинги пользователей")
+agent_rented.close_contract(1150)
+
+Вывести username и рейтинг лучшего пользователя (применяя сортировку и возвращая поля первого объекта): будем выводить самых успешных агентов по количеству и по сумме сгенерированной выручки:
+
+для начала создадим историю
+agent1 = Agents.objects.get(id=8)
+agent2 = Agents.objects.get(id=5)
+agent3 = Agents.objects.get(id=6)
+agent4 = Agents.objects.get(id=7)
+
+agent1.close_contract(1750)
+agent3.close_contract(750)
+agent2.close_contract(600)
+agent3.close_contract(2000)
+agent2.close_contract(1600)
+agent1.close_contract(1000)
+agent1.close_contract(1250)
+agent3.close_contract(750)
+agent4.close_contract(800)
+agent4.close_contract(950)
+agent4.close_contract(1300)
+agent1.close_contract(1100)
+agent2.close_contract(1300)
+agent2.close_contract(1000)
+agent4.close_contract(2200)
+agent3.close_contract(750)
+agent3.close_contract(750)
+agent3.close_contract(1750)
+agent4.close_contract(1200)
+agent4.close_contract(3800)
+agent1.close_contract(1750)
+
+top_contracts_agent = Agents.objects.all().order_by('contracts_closed').last()
+f'{top_contracts_agent}: {top_contracts_agent.contracts_closed} contracts closed'
+
+top_revenue_agent = Agents.objects.all().order_by('revenue_generated').last()
+f'{top_revenue_agent}: €{top_revenue_agent.revenue_generated} revenue generated'
+
+Вывести дату добавления, username автора, рейтинг, заголовок и превью лучшей статьи, основываясь на лайках/дислайках к этой статье.
+- тут выведу информацию по самой дорогой сданной в аренду недвижимости
+
+для этого сдадим еще одну квартиру(заключим контакт)
+prop2 = ResProperties.objects.get(ref=41147)
+client2 = Clients.objects.get(first_name = "Petr", last_name="Petrov")
+agent_rented2 = Agents.objects.get(id=3)
+contract2 = Contracts.objects.create(re_property= prop2, client=client2, agent=agent_rented2, move_in_date = "2023-09-01", sign_date="2023-07-22", final_price = 2100.0, af_paid=True, deposit_paid=True, contract_signed = True)
+prop2.make_off_the_market("2023-07-22")
+
+
+отсортируем контракты по стоимости и выведем информацию по самому дорогому
+top_contract = Contracts.objects.all().order_by('final_price').last()
+top_property = top_contract.re_property
+f'Top contract: №{top_contract.id} signed on {top_contract.sign_date} between {top_property.owner.first_name} {top_property.owner.last_name} as Lessor and {top_contract.client.first_name} {top_contract.client.last_name} as Lessee with {top_contract.agent} as Witness regarding the property: {top_property.preview()}'
+
+Вывести все комментарии (дата, пользователь, рейтинг, текст) к этой статье
+
+
+

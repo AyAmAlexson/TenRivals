@@ -689,10 +689,12 @@ progress {
 .container-md,
 .container-sm {
   --bs-gutter-x: 1.5rem;
-  --bs-gutter-y: 0;
+  --bs-gutter-y: 0.5rem;
   width: 100%;
   padding-right: calc(var(--bs-gutter-x) * 0.5);
   padding-left: calc(var(--bs-gutter-x) * 0.5);
+  padding-top: calc(var(--bs-gutter-y) * 0.5);
+  padding-bottom: calc(var(--bs-gutter-y) * 0.5);
   margin-right: auto;
   margin-left: auto;
 }
@@ -724,7 +726,7 @@ progress {
 }
 .row {
   --bs-gutter-x: 1.5rem;
-  --bs-gutter-y: 0;
+  --bs-gutter-y: 0.5rem;
   display: flex;
   flex-wrap: wrap;
   margin-top: calc(-1 * var(--bs-gutter-y));
@@ -3322,6 +3324,24 @@ textarea.form-control-lg {
   --bs-btn-disabled-border-color: #6900c7;
 }
 
+.btn-pepper-purple {
+  --bs-btn-color: #fff;
+  --bs-btn-bg: #735489;
+  --bs-btn-border-color: #735489;
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: #543C65;
+  --bs-btn-hover-border-color: #4F3A5F;
+  --bs-btn-focus-shadow-rgb: 128, 38, 207;
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: #543C65;
+  --bs-btn-active-border-color: #4F3A5F;
+  --bs-btn-active-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
+  --bs-btn-disabled-color: #fff;
+  --bs-btn-disabled-bg: #A498AC;
+  --bs-btn-disabled-border-color: #A498AC;
+}
+
+
 .btn-pink {
   --bs-btn-color: #fff;
   --bs-btn-bg: #e30059;
@@ -4929,7 +4949,7 @@ textarea.form-control-lg {
     width: 0; /* Starts with no width */
     height: 2px; /* Height of the underline */
     background-color: var(--bs-navbar-hover-color); /* Underline color */
-    bottom: 8px; /* Adjust as needed */
+    bottom: 4px; /* Adjust as needed */
     /*left: 0; !* Start from the very left *!*/
     transition: width 0.3s; /* Smooth transition for width */
 }
@@ -5305,7 +5325,7 @@ textarea.form-control-lg {
   --bs-card-title-spacer-y: 0.5rem;
   --bs-card-border-width: 1px;
   --bs-card-border-color: rgba(33, 40, 50, 0.125);
-  --bs-card-border-radius: 0.35rem;
+  --bs-card-border-radius: 1.2rem;
   --bs-card-box-shadow: ;
   --bs-card-inner-border-radius: 0.35rem;
   --bs-card-cap-padding-y: 1rem;
@@ -6188,9 +6208,9 @@ textarea.form-control-lg {
 
 .list-group {
   --bs-list-group-color: #212832;
-  --bs-list-group-bg: #fff;
-  --bs-list-group-border-color: rgba(0, 0, 0, 0.125);
-  --bs-list-group-border-width: 1px;
+  --bs-list-group-bg: rgba(255, 255, 255, 0);
+  --bs-list-group-border-color: rgba(0, 0, 0, 0);
+  --bs-list-group-border-width: 0px;
   --bs-list-group-border-radius: 0.35rem;
   --bs-list-group-item-padding-x: 1rem;
   --bs-list-group-item-padding-y: 0.5rem;
@@ -10915,6 +10935,60 @@ textarea.form-control-lg {
   background-color: rgba(var(--bs-white-rgb), var(--bs-bg-opacity)) !important;
 }
 
+.bg-glass-100 {
+  --bs-bg-opacity: 0.1;
+  backdrop-filter: blur(10px);
+  background-color: rgba(var(--bs-white-rgb), var(--bs-bg-opacity)) !important;
+}
+
+.bg-glass-200 {
+  --bs-bg-opacity: 0.2;
+  backdrop-filter: blur(10px);
+  background-color: rgba(var(--bs-white-rgb), var(--bs-bg-opacity)) !important;
+}
+
+.bg-glass-300 {
+  --bs-bg-opacity: 0.3;
+  backdrop-filter: blur(10px);
+  background-color: rgba(var(--bs-white-rgb), var(--bs-bg-opacity)) !important;
+}
+
+.bg-glass-400 {
+  --bs-bg-opacity: 0.4;
+  backdrop-filter: blur(10px);
+  background-color: rgba(var(--bs-white-rgb), var(--bs-bg-opacity)) !important;
+}
+
+.bg-glass-500 {
+  --bs-bg-opacity: 0.5;
+  backdrop-filter: blur(10px);
+  background-color: rgba(var(--bs-white-rgb), var(--bs-bg-opacity)) !important;
+}
+
+.bg-glass-600 {
+  --bs-bg-opacity: 0.6;
+  backdrop-filter: blur(10px);
+  background-color: rgba(var(--bs-white-rgb), var(--bs-bg-opacity)) !important;
+}
+
+.bg-glass-700 {
+  --bs-bg-opacity: 0.7;
+  backdrop-filter: blur(10px);
+  background-color: rgba(var(--bs-white-rgb), var(--bs-bg-opacity)) !important;
+}
+
+.bg-glass-800 {
+  --bs-bg-opacity: 0.8;
+  backdrop-filter: blur(10px);
+  background-color: rgba(var(--bs-white-rgb), var(--bs-bg-opacity)) !important;
+}
+
+.bg-glass-900 {
+  --bs-bg-opacity: 0.9;
+  backdrop-filter: blur(10px);
+  background-color: rgba(var(--bs-white-rgb), var(--bs-bg-opacity)) !important;
+}
+
 .bg-tan {
   --bs-bg-opacity: 1;
   background-color: rgba(var(--bs-tan-soft-rgb), var(--bs-bg-opacity)) !important;
@@ -15189,6 +15263,11 @@ body {
   background-image: linear-gradient(135deg, #0061f2 0%, rgba(105, 0, 199, 0.8) 100%) !important;
 }
 
+.bg-gradient-ten-rivals {
+  background-color: #02FF0D !important;
+  background-image: linear-gradient(120deg, #02FF0D 8%, #E8DF00 80%) !important;
+}
+
 .bg-transparent-light {
   color: rgba(255, 255, 255, 0.5) !important;
   background-color: rgba(0, 0, 0, 0.1) !important;
@@ -15233,6 +15312,15 @@ body {
 
 .bg-gray-900 {
   background-color: #212832 !important;
+}
+
+.bg-purple-100 {
+  background-color: #ECE9F1 !important;
+}
+
+
+.bg-purple-900 {
+  background-color: #271A34 !important;
 }
 
 .bg-white-25 {
@@ -16359,6 +16447,11 @@ body {
   color: #212832 !important;
 }
 
+.text-rimba-extra-large {
+  font-family: 'Rimba Andalas', sans-serif !important;;
+  font-size: 2.5rem;
+}
+
 .text-rimba-large {
   font-family: 'Rimba Andalas', sans-serif !important;;
   font-size: 1.2rem;
@@ -16371,6 +16464,21 @@ body {
 
 .text-rimba-small {
   font-family: 'Rimba Andalas', sans-serif !important;;
+  font-size: 0.8rem;
+}
+
+.text-rimba-swash-large {
+  font-family: 'Rimba Andalas Swashes', sans-serif !important;;
+  font-size: 1.2rem;
+}
+
+.text-rimba-swash-normal {
+  font-family: 'Rimba Andalas Swashes', sans-serif !important;;
+  font-size: 1rem;
+}
+
+.text-rimba-swash-small {
+  font-family: 'Rimba Andalas Swashes', sans-serif !important;;
   font-size: 0.8rem;
 }
 
@@ -16466,8 +16574,8 @@ body {
 }
 
 .feather-sm {
-  height: 0.875rem !important;
-  width: 0.875rem !important;
+  height: 0.75rem !important;
+  width: 0.75rem !important;
 }
 
 .feather-lg {
@@ -17347,13 +17455,9 @@ body {
 .feather {
   height: 1rem;
   width: 1rem;
-  vertical-align: top;
+  vertical-align: bottom;
 }
 
-.feather-sm {
-  height: 0.8rem;
-  width: 0.8rem;
-}
 
 .icon-stack {
   display: inline-flex;
@@ -18809,7 +18913,7 @@ section {
   padding-bottom: 8rem;
 }
 .page-header-ui .page-header-ui-content .page-header-ui-title {
-  font-size: 2.5rem;
+  font-size: 4.00rem;
 }
 .page-header-ui .page-header-ui-content .page-header-ui-text {
   font-size: 1.15rem;

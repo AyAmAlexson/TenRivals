@@ -1,0 +1,139 @@
+{% extends 'default.html' %}
+{% load static %}
+{% load custom_tags %}
+{% load custom_filters %}
+
+        {% block content %}
+           <!-- Page Header-->
+                    <header class="page-header-ui page-header-ui-light bg-purple-100">
+                        <div class="page-header-ui-content pt-6">
+                            <div class="container px-5">
+                                <div class="row gx-5 align-items-center">
+                                    <div class="col-lg-6" data-aos="fade-up">
+                                        <h1>All tournaments for {{request.user.username }} </h1>
+                                           <h6> {{ tournaments|length }} tournaments in total </h6>
+                                               <table style="width:100%" class="table">
+                                                   <hr>
+                                                   <tr>
+                                                   <td>
+
+                                                    </td>
+                                                   <td>
+                                           {# Добавляем форму, которая объединяет набор полей, которые будут отправляться в запросе #}
+                                                <form id="filter-form" method="get" align="right">
+
+                                            {% for field in filterset.form %}
+                                                <div style="display: inline-block; margin-right: 10px;">
+                                                    {{ field.label_tag }} {{ field }}
+                                                </div>
+                                            {% endfor %}
+
+                                        </form>
+
+                                        <script>
+                                            document.addEventListener('DOMContentLoaded', function() {
+                                                var filterForm = document.getElementById('filter-form');
+                                                var formFields = filterForm.querySelectorAll('input, select, textarea');
+
+                                                formFields.forEach(function(field) {
+                                                    field.addEventListener('change', function() {
+                                                        filterForm.action = window.location.href;
+                                                        filterForm.submit();
+                                                    });
+                                                });
+
+
+                                            });
+                                        </script>
+
+
+                                        </td>
+                                        </tr>
+
+                                           </form>
+                                                   </table>
+                                           <hr>
+                                           {% if tournaments %}
+
+                                               <table style="width:100%" class="table">
+                                                   <tr>
+                                                       <th>REF</th>
+                                                       <th>Type</th>
+                                                       <th>Category</th>
+                                                       <th>Gender</th>
+                                                       <th>Format</th>
+                                                       <th>Country</th>
+                                                       <th>City</th>
+                                                       <th>Status</th>
+                                                       <th>Players Enrolled</th>
+                                                       <th><a href = "?{% if order == 'desc' %}{% url_replace order='asc' %}{% else %}{% url_replace order='desc' %}{% endif%}">Added on</a> </th>
+                                                   </tr>
+
+                                                   {% for tournament in tournaments %}
+                                                   <tr>
+<!--                                                       <td>{% if resproperty.prop_division == 'QL' %}  For Rent - Residential   {% elif resproperty.prop_division == 'QC' %} For Rent - Commercial {% else %} For Sale {% endif %}</td>-->
+                                                       <td>{{ tournament.ref }}</td>
+                                                       <td>{{ tournament.type|const_replace}}</td>
+                                                       <td>{{ tournament.category|const_replace}}</td>
+                                                       <td>{{ tournament.gender|const_replace}}</td>
+                                                       <td>{{ tournament.format|const_replace}}</td>
+                                                       <td>{{ tournament.geo|const_replace}}</td>
+                                                       <td>{{ tournament.city|const_replace}}</td>
+                                                       <td>{{ tournament.status|const_replace}}</td>
+                                                       <td>{{ tournament.players_enrolled }} of {{ tournament.players_num}}</td>
+<!--                                                       <td>{% if resproperty.status == 'AV' %}  Available   {% else %} Contact the Agent {% endif %}</td>-->
+                                                       <td>{{ tournament.date_created }}</td>
+                                                   </tr>
+                                                   {% endfor %}
+
+                                               </table>
+                                           {% else %}
+                                               <h2>No available tournaments!</h2>
+                                           {% endif %}
+
+                                           {# Добавляем пагинацию на страницу #}
+
+                                           {# Информация о предыдущих страницах #}
+                                           {% if page_obj.has_previous %}
+                                               <a href="?{% url_replace page=1 %}">1</a>
+                                               {% if page_obj.previous_page_number != 1 %}
+                                                   ...
+                                                   <a href="?{% url_replace page=page_obj.previous_page_number %}">{{ page_obj.previous_page_number }}</a>
+                                               {% endif %}
+                                           {% endif %}
+
+                                           {# Информация о текущей странице #}
+                                           {{ page_obj.number }}
+
+                                           {# Информация о следующих страницах #}
+                                           {% if page_obj.has_next %}
+                                               <a href="?{% url_replace page=page_obj.next_page_number%}">{{ page_obj.next_page_number }}</a>
+                                               {% if paginator.num_pages != page_obj.next_page_number %}
+                                                   ...
+                                                   <a href="?{% url_replace page=page_obj.paginator.num_pages %}">{{ page_obj.paginator.num_pages }}</a>
+                                               {% endif %}
+                                           {% endif %}
+<!--                                        <br>-->
+<!--                                               <form action="" align = "left" width="150">-->
+<!--                                                   <input type="button"  value="Add Residential Property" onclick="window.location.href='residential/create/';"/>-->
+<!--                                                   <input type="button"  value="Add Property for Sale" onclick="window.location.href='sales/create/';"/>-->
+<!--                                                   <input type="button"  value="Add Commercial Property" onclick="window.location.href='commercial/create/';"/>-->
+<!--                                               </form>-->
+<!--                                        -->
+<!--                                        <br>-->
+                                        <br>
+                                        <a href="/accounts/logout/"> Sign Out </a>
+                                    </div>
+                                    
+                                </div>
+                            </div>
+                        </div>
+                        <div class="svg-border-rounded text-white">
+                            <!-- Rounded SVG Border-->
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144.54 17.34" preserveAspectRatio="none" fill="currentColor"><path d="M144.54,17.34H0V0H144.54ZM0,0S32.36,17.34,72.27,17.34,144.54,0,144.54,0"></path></svg>
+                        </div>
+                    </header>
+
+        {% endblock content %}
+
+

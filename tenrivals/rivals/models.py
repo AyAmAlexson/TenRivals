@@ -1,7 +1,7 @@
 from django.db import models
 from persons.models import CustomUser
 from .const import TOURNAMENT_GENDER, TOURNAMENT_FORMAT, TOURNAMENT_CATEGORY, TOURNAMENT_STATUS, TOURNAMENT_TYPE, GENDER
-from .const import DELETED_PLAYER, DELETED_PAIR, MATCH_STATUS, RR_GEOS, CURRENT_SEASON
+from .const import DELETED_PLAYER, DELETED_PAIR, MATCH_STATUS, TR_GEOS, CURRENT_SEASON, TR_CITIES
 from datetime import date, datetime, timedelta
 
 import math, random
@@ -21,8 +21,8 @@ class Player(models.Model):
     _user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='player')
     _birthdate = models.DateField(null=True)
     _gender = models.CharField(max_length=1, choices=GENDER, null=True)
-    _geo = models.CharField(max_length=50, default='GE')
-    _city = models.CharField(max_length=50, default='TB')
+    _geo = models.CharField(max_length=2, default='GE')
+    _city = models.CharField(max_length=3, default='TBI')
     _height = models.FloatField(null=True)
     _weight = models.FloatField(null=True)
     _tennis_exp_year = models.PositiveIntegerField(null=True)
@@ -96,11 +96,12 @@ class Tournament(models.Model):
     _category = models.CharField(max_length=2, choices=TOURNAMENT_CATEGORY)
     _gender = models.CharField(max_length=1, choices=TOURNAMENT_GENDER)
     _format = models.CharField(max_length=2, choices=TOURNAMENT_FORMAT)
-    _geo = models.CharField(max_length=2, choices=RR_GEOS, default='GE')
-    _city = models.CharField(max_length=50, null=True)
+    _geo = models.CharField(max_length=2, choices=TR_GEOS, default='GE')
+    _city = models.CharField(max_length=3, choices=TR_CITIES, default='TBI')
     _status = models.CharField(max_length=2, choices=TOURNAMENT_STATUS, default='CI')
 
     _start_date = models.DateField(null=True)
+    _date_created = models.DateField(auto_now_add=True)
 
     _current_stage = models.SmallIntegerField(default=0)
     _current_stage_start_date = models.DateField(null=True)
@@ -112,8 +113,85 @@ class Tournament(models.Model):
     _players_num = models.PositiveSmallIntegerField()
     _players_enrolled = models.PositiveSmallIntegerField(default=0)
 
+
     def __str__(self):
         return f'{self._title}: {self._gender} {self._category} {self._format} {self._type}'
+
+    @property
+    def ref(self):
+        return self._geo + '-' + '0'*(5-len(str(self.pk)))+str(self.pk)
+
+    @property
+    def title(self):
+        return self._title
+
+    @property
+    def type(self):
+        return self._type
+
+    @property
+    def category(self):
+        return self._category
+
+    @property
+    def gender(self):
+        return self._gender
+
+    @property
+    def format(self):
+        return self._format
+
+    @property
+    def geo(self):
+        return self._geo
+
+    @property
+    def city(self):
+        return self._city
+
+    @property
+    def status(self):
+        return self._status
+
+    @property
+    def start_date(self):
+        return self._start_date
+
+    @property
+    def date_created(self):
+        return self._date_created
+
+    @property
+    def current_stage(self):
+        return self._current_stage
+
+    @property
+    def current_stage_start_date(self):
+        return self._current_stage_start_date
+
+    @property
+    def current_stage_end_date(self):
+        return self._current_stage_end_date
+
+    @property
+    def players(self):
+        return self._players
+
+    @property
+    def pairs(self):
+        return self._pairs
+
+    @property
+    def players_num(self):
+        return self._players_num
+
+    @property
+    def players_left(self):
+        return self._players_num-self.players_enrolled
+
+    @property
+    def players_enrolled(self):
+        return self._players_enrolled
 
     @property
     def _stages_max(self):

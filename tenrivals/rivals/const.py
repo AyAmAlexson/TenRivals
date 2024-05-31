@@ -8,15 +8,15 @@ TOURNAMENT_TYPE = [
 TOURNAMENT_CATEGORY = [
     ('C0','Novice'),
     ('C1','Challenger'),
-    ('C2','Tour'),
-    ('C3','Maters'),
-    ('PR','Professionals'),
+    # ('C2','Tour'),
+    ('C3','Masters'),
+    ('PR','Profi'),
 ]
 
 TOURNAMENT_GENDER = [
-    ('M', "Men's Tournaments"),
-    ('F', "Women's Tournaments"),
-    ('X', "Mixed Tournaments")
+    ('M', "Men"),
+    ('X', "Mixed"),
+    ('F', "Women"),
 ]
 
 TOURNAMENT_FORMAT = [
@@ -25,7 +25,7 @@ TOURNAMENT_FORMAT = [
 ]
 
 TOURNAMENT_STATUS = [
-    ('CI', 'Check-In'),
+    ('CI', 'Check-in Open'),
     ('AC', 'In Action'),
     ('FI', 'Finished'),
 ]
@@ -43,12 +43,24 @@ MATCH_STATUS = [
     ('FI', 'Finished'),
 ]
 
-RR_GEOS = [
+TR_GEOS = [
     ('MT', 'Malta'),
     ('IT', 'Italy'),
     ('RS', 'Serbia'),
-    ('ME', 'Montenegro'),
     ('GE', 'Georgia'),
+    ('RU', 'Russia')
+]
+
+TR_CITIES = [
+    ('MTA', 'Malta All, MT'),
+    ('TBI', 'Tbilisi, GE'),
+    ('BAT', 'Batumi, GE'),
+    ('MSC', 'Moscow, RU'),
+    ('SPB', 'St. Petersburg, RU'),
+    ('MIL', 'Milano, IT'),
+    ('ROM', 'Roma, IT'),
+    ('BEL', 'Belgrad, RS'),
+
 ]
 
 CURRENT_SEASON = datetime.datetime.now().year
