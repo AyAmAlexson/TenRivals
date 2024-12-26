@@ -5,7 +5,7 @@
 
         {% block content %}
            <!-- Page Header-->
-                    <header class="page-header-ui page-header-ui-light bg-purple-100">
+                    <header class="page-header-ui page-header-ui-light bg-light">
                         <div class="page-header-ui-content pt-6">
                             <div class="container px-5">
                                 <div class="row gx-5 align-items-center">
@@ -19,7 +19,7 @@
 
                                                     </td>
                                                    <td>
-                                           {# Добавляем форму, которая объединяет набор полей, которые будут отправляться в запросе #}
+                                           {# Добвляем форму, которая объединяет набор полей, которые будут отправляться в запросе #}
                                                 <form id="filter-form" method="get" align="right">
 
                                             {% for field in filterset.form %}
@@ -55,38 +55,36 @@
                                            <hr>
                                            {% if tournaments %}
 
-                                               <table style="width:100%" class="table">
-                                                   <tr>
-                                                       <th>REF</th>
-                                                       <th>Type</th>
-                                                       <th>Category</th>
-                                                       <th>Gender</th>
-                                                       <th>Format</th>
-                                                       <th>Country</th>
-                                                       <th>City</th>
-                                                       <th>Status</th>
-                                                       <th>Players Enrolled</th>
-                                                       <th><a href = "?{% if order == 'desc' %}{% url_replace order='asc' %}{% else %}{% url_replace order='desc' %}{% endif%}">Added on</a> </th>
-                                                   </tr>
-
+                                               <div class="tournaments-grid">
                                                    {% for tournament in tournaments %}
-                                                   <tr>
-<!--                                                       <td>{% if resproperty.prop_division == 'QL' %}  For Rent - Residential   {% elif resproperty.prop_division == 'QC' %} For Rent - Commercial {% else %} For Sale {% endif %}</td>-->
-                                                       <td>{{ tournament.ref }}</td>
-                                                       <td>{{ tournament.type|const_replace}}</td>
-                                                       <td>{{ tournament.category|const_replace}}</td>
-                                                       <td>{{ tournament.gender|const_replace}}</td>
-                                                       <td>{{ tournament.format|const_replace}}</td>
-                                                       <td>{{ tournament.geo|const_replace}}</td>
-                                                       <td>{{ tournament.city|const_replace}}</td>
-                                                       <td>{{ tournament.status|const_replace}}</td>
-                                                       <td>{{ tournament.players_enrolled }} of {{ tournament.players_num}}</td>
-<!--                                                       <td>{% if resproperty.status == 'AV' %}  Available   {% else %} Contact the Agent {% endif %}</td>-->
-                                                       <td>{{ tournament.date_created }}</td>
-                                                   </tr>
+                                                   <div class="tournament-card">
+                                                       <div class="tournament-header bg-gradient-primary">
+                                                           <span class="tournament-ref">{{ tournament.ref }}</span>
+                                                           <span class="tournament-status {{ tournament.status|lower }}">{{ tournament.status|const_replace}}</span>
+                                                       </div>
+                                                       <div class="tournament-body">
+                                                           <div class="tournament-main-info">
+                                                               <h3>{{ tournament.type|const_replace}}</h3>
+                                                               <p class="tournament-category">{{ tournament.category|const_replace}}</p>
+                                                           </div>
+                                                           <div class="tournament-details">
+                                                               <div class="detail-item">
+                                                                   <i class="fas fa-users"></i>
+                                                                   <span>{{ tournament.players_enrolled }}/{{ tournament.players_num}}</span>
+                                                               </div>
+                                                               <div class="detail-item">
+                                                                   <i class="fas fa-map-marker-alt"></i>
+                                                                   <span>{{ tournament.city|const_replace}}, {{ tournament.geo|const_replace}}</span>
+                                                               </div>
+                                                               <div class="detail-item">
+                                                                   <i class="fas fa-venus-mars"></i>
+                                                                   <span>{{ tournament.gender|const_replace}}</span>
+                                                               </div>
+                                                           </div>
+                                                       </div>
+                                                   </div>
                                                    {% endfor %}
-
-                                               </table>
+                                               </div>
                                            {% else %}
                                                <h2>No available tournaments!</h2>
                                            {% endif %}
