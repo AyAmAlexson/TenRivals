@@ -1,0 +1,93 @@
+{% extends 'default.html' %}
+{% load i18n %}
+{% load static %}
+{% load custom_tags %}
+
+{% block head_title %}{% trans "Player Profile Setup - Step 1" %}{% endblock %}
+
+{% block content %}
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+    <div class="container-xl px-4">
+        <div class="page-header-content pt-10">
+            <div class="row align-items-center justify-content-between">
+                <div class="col-auto mt-4">
+                    <h1 class="page-header-title">
+                        <div class="page-header-icon"><i data-feather="user-plus"></i></div>
+                        {% trans "Player Profile Setup" %}
+                    </h1>
+                    <div class="page-header-subtitle">{% trans "Step 1 of 5: Link your Telegram Account" %}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Main page content-->
+<div class="container-xl px-4 mt-n10">
+    <div class="card">
+        <div class="card-body">
+            {% if messages %}
+            <div class="row justify-content-center mb-4">
+                <div class="col-xxl-6 col-xl-8">
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="row justify-content-center">
+                <div class="col-xxl-6 col-xl-8">
+                     <form method="post" id="wizard-step1-form">
+                         {% csrf_token %}
+                         <h3 class="text-primary">{% trans "Step 1: Link Telegram" %}</h3>
+                         <h5 class="card-title mb-4">{% trans "Enter your Telegram username" %}</h5>
+
+                         <!-- Инструкция -->
+                         <div class="alert alert-info small mb-4">
+                              <h6 class="alert-heading">{% trans "Why Telegram?" %}</h6>
+                              <p>{% trans "Telegram is essential for tournament communication, receiving match notifications, and important updates. Please ensure you have a username set up." %}</p>
+                              <strong>{% trans "How to find or set your username:" %}</strong>
+                              <ol class="mb-0">
+                                  <li>{% trans "Open Telegram app." %}</li>
+                                  <li>{% trans "Go to Settings." %}</li>
+                                  <li>{% trans "If you see 'Username' listed, that's it! Enter it below (without the leading '@')." %}</li>
+                                  <li>{% trans "If you see 'None' or no username, tap it to set one up. It must be unique, 5-32 characters, using a-z, 0-9, and underscores." %}</li>
+                              </ol>
+                         </div>
+
+                         <!-- Форма ввода ника -->
+                         <div class="mb-3">
+                             <label for="{{ form.telegram_username.id_for_label }}" class="small mb-1">{{ form.telegram_username.label }}</label>
+                             {{ form.telegram_username }} {# Рендеринг поля из формы #}
+                             {% if form.telegram_username.help_text %}
+                                 <div class="form-text small">{{ form.telegram_username.help_text }}</div>
+                             {% endif %}
+                             {% if form.telegram_username.errors %}
+                                 <div class="invalid-feedback d-block">
+                                     {{ form.telegram_username.errors|first }}
+                                 </div>
+                             {% endif %}
+                             {% if form.non_field_errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.non_field_errors|first }}
+                                </div>
+                             {% endif %}
+                         </div>
+
+                         <hr class="my-4" />
+                         <div class="d-flex justify-content-end">
+                             <button class="btn btn-primary" type="submit">
+                                  {% trans "Save & Proceed to Verification" %} <i data-feather="arrow-right" class="ms-1"></i>
+                             </button>
+                         </div>
+                     </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

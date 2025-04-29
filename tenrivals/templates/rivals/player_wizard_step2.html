@@ -1,0 +1,143 @@
+{% extends 'default.html' %}
+{% load i18n %}
+{% load static %}
+{% load custom_tags %}
+
+{% block head_title %}{% trans "Player Profile Setup - Step 2" %}{% endblock %}
+
+{% block content %}
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+    <div class="container-xl px-4">
+        <div class="page-header-content pt-10">
+            <div class="row align-items-center justify-content-between">
+                <div class="col-auto mt-4">
+                    <h1 class="page-header-title">
+                        <div class="page-header-icon"><i data-feather="user-check"></i></div>
+                        {% trans "Player Profile Setup" %}
+                    </h1>
+                    <div class="page-header-subtitle">{% trans "Step 2 of 5: Verify Telegram Account" %}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Main page content-->
+<div class="container-xl px-4 mt-n10">
+    <div class="card">
+        <div class="card-body">
+            {% if messages %}
+            <div class="row justify-content-center mb-4">
+                <div class="col-xxl-8 col-xl-10">
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="row justify-content-center">
+                <div class="col-xxl-8 col-xl-10">
+                     <form method="post" id="wizard-step2-form">
+                         {% csrf_token %}
+                         <h3 class="text-primary">{% trans "Step 2: Verify Telegram" %}</h3>
+                         {% if telegram_username_current %}
+                             <h5 class="card-title mb-4">{% blocktrans with username=telegram_username_current %}Confirm your account @{{ username }}{% endblocktrans %}</h5>
+                         {% else %}
+                             <h5 class="card-title mb-4">{% trans "Verification Options" %}</h5>
+                         {% endif %}
+
+                         <!-- Опции верификации -->
+                         <div class="row mt-4">
+                             <!-- Метод QR -->
+                             <div class="col-md-6 mb-4">
+                                 <div class="card h-100 border-0 shadow-sm">
+                                     <div class="card-body p-4 text-center">
+                                         <div class="mb-3 text-secondary"><i class="fas fa-qrcode fa-3x"></i></div>
+                                         <h5 class="text-secondary">{% trans "Verify via QR Code or Link" %}</h5>
+                                         <p class="small text-muted mb-3">{% trans "Fastest way! Scan or click below." %}</p>
+                                         {% if qr_code_base64 %}
+                                             <div class="mx-auto mb-3 p-2 bg-white rounded border" style="width: 180px; height: 180px;">
+                                                 <img src="data:image/png;base64,{{ qr_code_base64 }}" class="img-fluid" alt="Verification QR Code">
+                                             </div>
+                                             <a href="{{ deep_link }}" class="btn btn-outline-secondary w-100 mb-2" target="_blank">
+                                                 <i class="fab fa-telegram-plane me-1"></i> {% trans "Click Link to Verify" %}
+                                             </a>
+                                         {% else %}
+                                             <p class="text-danger small">{% trans "QR code/link generation failed. Check bot settings." %}</p>
+                                             <button class="btn btn-outline-secondary mt-2"
+                                                     type="submit"
+                                                     name="retry_generation" {# Имя кнопки Retry #}
+                                                     formnovalidate> {# Не валидировать другие поля #}
+                                                 <i data-feather="refresh-cw" class="me-1"></i> {% trans "Try Again" %}
+                                             </button>
+                                         {% endif %}
+                                         <p class="small text-muted mt-3">
+                                             {% trans "After verifying via QR/Link, click 'Check Status & Continue' below." %}
+                                         </p>
+                                     </div>
+                                 </div>
+                             </div>
+                             <!-- Метод ручного ввода кода -->
+                             <div class="col-md-6 mb-4">
+                                 <div class="card h-100 border-0 shadow-sm">
+                                      <div class="card-body p-4 text-center">
+                                          <div class="mb-3 text-primary"><i class="fas fa-keyboard fa-3x"></i></div>
+                                          <h5 class="text-primary">{% trans "Verify Manually" %}</h5>
+                                          <p class="small text-muted mb-3">{% trans "Enter the 6-digit code sent to your Telegram." %}</p>
+                                      </div>
+                                      <hr class="m-0">
+                                      <div class="card-body p-4">
+                                           <p class="small text-muted text-center">
+                                              {% if telegram_bot_name %}
+                                                 {% blocktrans with bot_name=telegram_bot_name %}Check messages from <strong>@{{ bot_name }}</strong>.{% endblocktrans %}
+                                              {% else %}
+                                                  {% trans "Bot information not available." %}
+                                              {% endif %}
+                                           </p>
+                                           {# Форма для ручного ввода кода #}
+                                           <div class="mb-3">
+                                               <label for="{{ manual_code_form.verification_code.id_for_label }}" class="form-label small visually-hidden">{% trans "Verification Code" %}</label>
+                                               {# Используем форму из контекста #}
+                                               {{ manual_code_form.verification_code.label_tag }}
+                                               {{ manual_code_form.verification_code }}
+                                               {% if manual_code_form.verification_code.errors %}
+                                               <div class="invalid-feedback d-block">
+                                                   {{ manual_code_form.verification_code.errors|first }}
+                                               </div>
+                                               {% endif %}
+                                                {% if manual_code_form.non_field_errors %}
+                                                    <div class="invalid-feedback d-block">
+                                                        {{ manual_code_form.non_field_errors|first }}
+                                                    </div>
+                                                {% endif %}
+                                           </div>
+                                           <div class="d-grid">
+                                               <button class="btn btn-primary" type="submit" name="submit_code"> {# Имя кнопки Verify #}
+                                                   <i class="fas fa-check-circle me-1"></i> {% trans "Verify Code & Continue" %}
+                                               </button>
+                                           </div>
+                                      </div>
+                                 </div>
+                             </div>
+                         </div>
+
+                         <hr class="my-4" />
+                         <div class="d-flex justify-content-between">
+                              <a href="{% url 'rivals:player_wizard_step1' %}" class="btn btn-light"> {# Ссылка на предыдущий шаг #}
+                                  <i data-feather="arrow-left" class="me-1"></i> {% trans "Back to Username" %}
+                              </a>
+                              <button class="btn btn-secondary" type="submit" name="check_status"> {# Имя кнопки Check Status #}
+                                  <i data-feather="refresh-cw" class="me-1"></i> {% trans "Check Status & Continue" %}
+                              </button>
+                         </div>
+                     </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

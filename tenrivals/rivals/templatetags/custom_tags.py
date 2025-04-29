@@ -17,3 +17,10 @@ def url_replace(context, **kwargs):
    return d.urlencode()
 
 
+@register.filter(name='get_form_field')
+def get_form_field(form, field_name):
+    """Возвращает поле формы по его имени."""
+    try:
+        return form[field_name]
+    except KeyError:
+        return None

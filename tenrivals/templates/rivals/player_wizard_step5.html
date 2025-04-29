@@ -1,0 +1,207 @@
+{% extends 'default.html' %}
+{% load i18n %}
+{% load static %}
+{% load custom_tags %}
+{% load custom_filters %}
+
+{% block head_title %}{% trans "Player Profile Setup - Review" %}{% endblock %}
+
+{% block content %}
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+    <div class="container-xl px-4">
+        <div class="page-header-content pt-10">
+            <div class="row align-items-center justify-content-between">
+                <div class="col-auto mt-4">
+                    <h1 class="page-header-title">
+                        <div class="page-header-icon"><i data-feather="check-circle"></i></div>
+                        {% trans "Player Profile Setup" %}
+                    </h1>
+                    <div class="page-header-subtitle">{% trans "Step 5 of 5: Review and Submit Your Profile" %}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Main page content-->
+<div class="container-xl px-4 mt-n10">
+    <div class="card">
+         <div class="card-header border-bottom">
+            <div class="nav nav-pills nav-justified flex-column flex-xl-row nav-wizard" role="tablist">
+                {# Показываем все шаги как пройденные #}
+                <a class="nav-item nav-link text-success fw-500 wizard-step-complete">1 {% trans "Telegram" %}</a>
+                <a class="nav-item nav-link text-success fw-500 wizard-step-complete">2 {% trans "Verify" %}</a>
+                <a class="nav-item nav-link text-success fw-500 wizard-step-complete">3 {% trans "Personal" %}</a>
+                <a class="nav-item nav-link text-success fw-500 wizard-step-complete">4 {% trans "Profile" %}</a>
+                <a class="nav-item nav-link active">5 {% trans "Review" %}</a>
+            </div>
+        </div>
+        <div class="card-body">
+            {% if messages %}
+            <div class="row justify-content-center mb-4">
+                <div class="col-xxl-6 col-xl-8">
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+             {# Используем одну форму для POST запроса с enctype #}
+             <form method="post" enctype="multipart/form-data" id="player-wizard-final-form">
+                 {% csrf_token %}
+                 <div class="row justify-content-center">
+                     <div class="col-xxl-6 col-xl-8">
+                         <h3 class="text-primary">{% trans "Step 5: Review & Submit" %}</h3>
+                         <h5 class="card-title mb-4">{% trans "Please review your information before submitting" %}</h5>
+
+                         {# === Блок Аватара === #}
+                         <div class="text-center mb-4">
+                             <label class="small mb-1">{% trans "Profile Picture" %}</label>
+                             <div class="avatar-upload">
+                                 <div class="avatar-preview mx-auto mb-3" style="width: 150px; height: 150px; border-radius: 50%; overflow: hidden; border: 2px solid #ced4da; position: relative; cursor: pointer;">
+                                     <img id="avatar-preview-image-step5"
+                                          src="{{ user.player.get_avatar_url|default:'/static/assets/img/illustrations/profiles/profile-1.png' }}"
+                                          style="width: 100%; height: 100%; object-fit: cover;" alt="Avatar Preview">
+                                     <div class="overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease;">
+                                         <i class="fas fa-camera text-white" style="font-size: 24px;"></i>
+                                     </div>
+                                 </div>
+                                 <div class="avatar-edit text-center mt-2">
+                                      {# Рендерим поле из формы аватара #}
+                                      {{ avatar_form.avatar.label_tag }}
+                                      {{ avatar_form.avatar }} {# Скрытый input для файла #}
+                                      <label for="{{ avatar_form.avatar.id_for_label }}" class="btn btn-sm btn-primary">
+                                          <i class="fas fa-upload me-1"></i> {% trans "Change Image" %}
+                                      </label>
+                                      {% if avatar_form.avatar.help_text %}<div class="form-text small mt-1">{{ avatar_form.avatar.help_text }}</div>{% endif %}
+                                      {% if avatar_form.avatar.errors %}<div class="small text-danger mt-1">{{ avatar_form.avatar.errors|first }}</div>{% endif %}
+                                 </div>
+                             </div>
+                         </div>
+                         {# === Конец Блока Аватара === #}
+
+                         {# Карточка NTRP #}
+                         <div class="card mb-4 ntrp-card">
+                             <div class="card-header bg-primary text-white"><h5 class="mb-0">Your Calculated Tennis Rating</h5></div>
+                             <div class="card-body text-center">
+                                 <div class="row align-items-center">
+                                     <div class="col-md-6 mb-3 mb-md-0">
+                                         <h5 class="text-muted mb-2">NTRP Rating</h5>
+                                         {# Отображаем рассчитанный NTRP из контекста #}
+                                         <div class="ntrp-value">{{ calculated_ntrp|floatformat:1 }}</div>
+                                         <div class="small text-muted">National Tennis Rating Program scale</div>
+                                     </div>
+                                     <div class="col-md-6">
+                                         <h5 class="text-muted mb-2">Player Category</h5>
+                                         {# Отображаем рассчитанную категорию из контекста #}
+                                         <div class="category-value">{{ calculated_category }}</div>
+                                         <div class="small text-muted">Your tournament category group</div>
+                                     </div>
+                                 </div>
+                                 <div class="alert alert-info mt-4 mb-0"><i class="fas fa-info-circle me-2"></i> This rating is calculated based on your answers in the previous step.</div>
+                             </div>
+                         </div>
+
+                         {# Карточка Personal Info #}
+                         <div class="card mb-4">
+                              <div class="card-header d-flex justify-content-between align-items-center">
+                                  Personal Information <a href="{% url 'rivals:player_wizard_step3' %}" class="btn btn-sm btn-light"><i data-feather="edit-2" class="me-1"></i> Edit</a>
+                              </div>
+                              <div class="card-body">
+                                  {# Используем данные из wizard_data для отображения #}
+                                  <div class="row small"><div class="col-sm-4 text-truncate"><em>Full Name:</em></div><div class="col">{{ wizard_data.first_name }} {{ wizard_data.last_name }}</div></div>
+                                  <div class="row small"><div class="col-sm-4 text-truncate"><em>Email:</em></div><div class="col">{{ user.email }}</div></div>
+                                  <div class="row small"><div class="col-sm-4 text-truncate"><em>Mobile:</em></div><div class="col">{{ wizard_data.mobile|default:"-" }}</div></div>
+                                  <div class="row small"><div class="col-sm-4 text-truncate"><em>Birthdate:</em></div><div class="col">{{ wizard_data.birthdate|date:"Y-m-d"|default:"-" }}</div></div>
+                                  <div class="row small"><div class="col-sm-4 text-truncate"><em>Gender:</em></div><div class="col">{{ gender_display|default:"-" }}</div></div>
+                                  <div class="row small"><div class="col-sm-4 text-truncate"><em>City:</em></div><div class="col">{{ city_display|default:"-" }}</div></div>
+                              </div>
+                         </div>
+
+                         {# Карточка Physical & Tennis Info #}
+                         <div class="card mb-4">
+                               <div class="card-header d-flex justify-content-between align-items-center">
+                                   Physical & Tennis Info <a href="{% url 'rivals:player_wizard_step4' %}" class="btn btn-sm btn-light"><i data-feather="edit-2" class="me-1"></i> Edit</a>
+                              </div>
+                              <div class="card-body">
+                                  {# Используем данные из wizard_data для отображения #}
+                                  <div class="row small"><div class="col-sm-4 text-truncate"><em>Height:</em></div><div class="col">{{ wizard_data.height|default:"-" }} cm</div></div>
+                                  <div class="row small"><div class="col-sm-4 text-truncate"><em>Weight:</em></div><div class="col">{{ wizard_data.weight|default:"-" }} kg</div></div>
+                                  <div class="row small"><div class="col-sm-4 text-truncate"><em>Availability:</em></div><div class="col">{{ wizard_data.availability|default:"Not specified" }}</div></div>
+                                  <div class="row small"><div class="col-sm-4 text-truncate"><em>Started playing in:</em></div><div class="col">{{ wizard_data.tennis_exp_year|default:"-" }}</div></div>
+                                  <div class="row small"><div class="col-sm-4 text-truncate"><em>Experience level:</em></div><div class="col">{{ experience_display|default:"-" }}</div></div>
+                                  <div class="row small"><div class="col-sm-4 text-truncate"><em>Playing frequency:</em></div><div class="col">{{ frequency_display|default:"-" }}</div></div>
+                                  <div class="row small"><div class="col-sm-4 text-truncate"><em>Technical level:</em></div><div class="col">{{ technical_display|default:"-" }}</div></div>
+                                  <div class="row small"><div class="col-sm-4 text-truncate"><em>Serve level:</em></div><div class="col">{{ serve_display|default:"-" }}</div></div>
+                                  <div class="row small"><div class="col-sm-4 text-truncate"><em>Match experience:</em></div><div class="col">{{ match_display|default:"-" }}</div></div>
+                              </div>
+                         </div>
+
+                         {# Отображение ошибок формы, если они есть #}
+                         {% if form_errors %}
+                             <div class="alert alert-danger mt-4">
+                                 <strong>{% trans "Please correct the errors:" %}</strong>
+                                 <ul>
+                                     {% for field, error_list in form_errors.items %}
+                                         {% for error in error_list %}
+                                             <li>{% if field != '__all__' %}{{ field }}: {% endif %}{{ error }}</li>
+                                         {% endfor %}
+                                     {% endfor %}
+                                 </ul>
+                                  <p><small>{% trans "You might need to go back to previous steps using the 'Edit' buttons or re-upload the avatar." %}</small></p>
+                             </div>
+                         {% endif %}
+
+                         <hr class="my-4" />
+                         <div class="d-flex justify-content-between">
+                             <a href="{% url 'rivals:player_wizard_step4' %}" class="btn btn-light">
+                                 <i data-feather="arrow-left" class="me-1"></i> {% trans "Previous" %}
+                             </a>
+                             {# Финальная кнопка отправки #}
+                             <button class="btn btn-primary" type="submit" name="submit_profile">
+                                 {% trans "Submit Profile" %}
+                             </button>
+                         </div>
+                     </div>
+                 </div>
+            </form>
+        </div> {# end card-body #}
+    </div> {# end card #}
+</div>
+
+<script>
+// JavaScript для предпросмотра аватара на Шаге 5
+document.addEventListener('DOMContentLoaded', function() {
+    const avatarInput = document.getElementById('{{ avatar_form.avatar.id_for_label }}'); // ID из новой формы
+    const avatarPreview = document.getElementById('avatar-preview-image-step5');
+    const previewContainer = avatarPreview.closest('.avatar-preview'); // Находим родительский контейнер
+
+    if(avatarInput && avatarPreview && previewContainer) {
+        previewContainer.addEventListener('click', () => avatarInput.click()); // Клик по контейнеру триггерит инпут
+        avatarInput.addEventListener('change', function() {
+            const file = this.files[0];
+            if(file && file.type.match('image.*')) {
+                if(file.size > 5 * 1024 * 1024) { // 5MB Limit
+                    alert('File too large (max 5MB)');
+                    this.value = ""; // Сбрасываем инпут
+                    return;
+                 }
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    avatarPreview.src = e.target.result;
+                }
+                reader.readAsDataURL(file);
+            } else if (file) {
+                alert('Please select an image file.');
+                this.value = ""; // Сбрасываем инпут
+            }
+        });
+    }
+});
+</script>
+
+{% endblock content %}

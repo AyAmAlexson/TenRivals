@@ -175,7 +175,10 @@
                                                     </a>
                                                 {% else %}
                                                     <p class="text-danger small">{% trans "QR code/link generation failed. Check bot settings." %}</p>
-                                                    <button class="btn btn-outline-secondary mt-2" type="submit" name="retry_verification_generation">
+                                                    <button class="btn btn-outline-secondary mt-2"
+                                                            type="submit"
+                                                            name="retry_verification_generation"
+                                                            formnovalidate>
                                                         <i data-feather="refresh-cw" class="me-1"></i> {% trans "Try Again" %}
                                                     </button>
                                                 {% endif %}

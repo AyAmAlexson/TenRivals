@@ -840,45 +840,42 @@ class AddTelegramUsernameForm(forms.Form):
 
 class PlayerWizardForm(forms.ModelForm):
     """
-    Форма-визард для заполнения профиля игрока, определения его уровня
-    и создания начальной статистики. (ЭТАП 2)
+    Форма-визард для заполнения профиля игрока (ШАГИ 3 и 4).
+    Поля аватара здесь больше нет.
     """
     # Поля для CustomUser
     first_name = forms.CharField(max_length=150, required=True, label='First Name')
     last_name = forms.CharField(max_length=150, required=True, label='Last Name')
     mobile = forms.CharField(max_length=15, required=False, label='Mobile Phone')
-    # email больше не нужен здесь, т.к. он основной для входа и вряд ли меняется в визарде
-    # email = forms.EmailField(required=False, label='Email')
-    # telegram = forms.CharField(max_length=32, required=True, label='Telegram')
-    
+
     # Поля для Player
     birthdate = forms.DateField(
-        widget=forms.DateInput(attrs={'type': 'date'}), 
-        required=True, 
+        widget=forms.DateInput(attrs={'type': 'date'}),
+        required=True,
         label='Date of Birth'
     )
     gender = forms.ChoiceField(
-        choices=GENDER, 
-        widget=forms.RadioSelect, 
-        required=True, 
+        choices=GENDER,
+        widget=forms.RadioSelect,
+        required=True,
         label='Gender'
     )
     height = forms.FloatField(
-        required=True, 
+        required=True,
         label='Height (cm)',
         min_value=120,
         max_value=220,
         help_text='Enter your height in centimeters'
     )
     weight = forms.FloatField(
-        required=True, 
+        required=True,
         label='Weight (kg)',
         min_value=40,
         max_value=150,
         help_text='Enter your weight in kilograms'
     )
     tennis_exp_year = forms.IntegerField(
-        required=True, 
+        required=True,
         label='When did you start playing tennis?',
         min_value=1980,
         max_value=datetime.now().year,
@@ -890,7 +887,7 @@ class PlayerWizardForm(forms.ModelForm):
         label='Your availability',
         help_text='Let others know when you are available to play'
     )
-    
+
     # Город и регион
     city = forms.ChoiceField(
         choices=TR_CITIES,
@@ -898,7 +895,7 @@ class PlayerWizardForm(forms.ModelForm):
         required=True,
         label='City'
     )
-    
+
     # Вопросы для определения уровня игрока (NTRP)
     EXPERIENCE_CHOICES = [
         (0, 'Never played before'),
@@ -907,7 +904,7 @@ class PlayerWizardForm(forms.ModelForm):
         (300, 'Between 3-5 years'),
         (400, 'More than 5 years')
     ]
-    
+
     FREQUENCY_CHOICES = [
         (0, 'Rarely or just starting'),
         (100, 'Once a month'),
@@ -915,7 +912,7 @@ class PlayerWizardForm(forms.ModelForm):
         (300, 'Several times a week'),
         (400, 'Almost every day')
     ]
-    
+
     LEVEL_CHOICES = [
         (0, 'Beginner - just learning the basics'),
         (100, 'Novice - can rally but inconsistent'),
@@ -923,7 +920,7 @@ class PlayerWizardForm(forms.ModelForm):
         (300, 'Advanced - good technique, consistent spin'),
         (400, 'Expert - very good technique and match experience')
     ]
-    
+
     SERVE_CHOICES = [
         (0, 'Learning how to serve'),
         (100, 'Can get the ball in but inconsistent'),
@@ -931,7 +928,7 @@ class PlayerWizardForm(forms.ModelForm):
         (300, 'Different types of serves with spin'),
         (400, 'Strong and accurate serves')
     ]
-    
+
     MATCH_CHOICES = [
         (0, 'Never played a match'),
         (100, 'Played a few friendly matches'),
@@ -939,72 +936,63 @@ class PlayerWizardForm(forms.ModelForm):
         (300, 'Played in local tournaments'),
         (400, 'Played in regional/national tournaments')
     ]
-    
+
     experience_level = forms.ChoiceField(
         choices=EXPERIENCE_CHOICES,
         widget=forms.RadioSelect,
         required=True,
         label='How long have you been playing tennis?'
     )
-    
+
     playing_frequency = forms.ChoiceField(
         choices=FREQUENCY_CHOICES,
         widget=forms.RadioSelect,
         required=True,
         label='How often do you play tennis?'
     )
-    
+
     technical_level = forms.ChoiceField(
         choices=LEVEL_CHOICES,
         widget=forms.RadioSelect,
         required=True,
         label='How would you describe your technical level?'
     )
-    
+
     serve_level = forms.ChoiceField(
         choices=SERVE_CHOICES,
         widget=forms.RadioSelect,
         required=True,
         label='How would you describe your serve?'
     )
-    
+
     match_experience = forms.ChoiceField(
         choices=MATCH_CHOICES,
         widget=forms.RadioSelect,
         required=True,
         label='What is your match experience?'
     )
-    
-    avatar = forms.ImageField(
-        required=False,
-        widget=forms.FileInput(attrs={
-            'class': 'form-control',
-            'accept': 'image/*',
-        }),
-        help_text='Upload your profile picture'
-    )
-    
+
     class Meta:
         model = Player
         fields = [
-            'first_name', 'last_name', 'mobile', # 'email', 'telegram',
-            'birthdate', 'gender', 'height', 'weight', 
-            'tennis_exp_year', 'availability', 'city'
+            'first_name', 'last_name', 'mobile',
+            'birthdate', 'gender', 'height', 'weight',
+            'tennis_exp_year', 'availability', 'city',
+            'experience_level', 'playing_frequency', 'technical_level',
+            'serve_level', 'match_experience',
         ]
-    
+
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
-        
+
         # Инициализация полей из существующих данных пользователя
         if self.user:
             self.fields['first_name'].initial = self.user.first_name
             self.fields['last_name'].initial = self.user.last_name
-            # self.fields['email'].initial = self.user.email
             self.fields['mobile'].initial = self.user.mobile
-            # self.fields['telegram'].initial = self.user.telegram
             self.fields['city'].initial = self.user.preferred_city
-            
+
             # Если у пользователя уже есть Player профиль
             try:
                 player = self.user.player
@@ -1018,7 +1006,7 @@ class PlayerWizardForm(forms.ModelForm):
                     self.fields['city'].initial = player.city
             except (Player.DoesNotExist, AttributeError):
                 pass
-        
+
         # Применяем классы стилей для полей формы
         for field_name, field in self.fields.items():
             if isinstance(field.widget, (forms.TextInput, forms.NumberInput, forms.EmailInput, forms.DateInput, forms.Select)):
@@ -1026,115 +1014,76 @@ class PlayerWizardForm(forms.ModelForm):
             elif isinstance(field.widget, forms.Textarea):
                 field.widget.attrs.update({'class': 'form-control'})
             elif isinstance(field.widget, forms.RadioSelect):
-                field.widget.attrs.update({'class': 'form-check-input'})
-    
+                for radio_input in field.widget.subwidgets(name=field.html_name, value=field.initial):
+                    radio_input.data['attrs']['class'] = 'form-check-input'
+
+
     def clean(self):
         cleaned_data = super().clean()
-        
         # Базовая валидация
         if not cleaned_data.get('first_name'):
             self.add_error('first_name', 'First name is required')
-        
         if not cleaned_data.get('last_name'):
             self.add_error('last_name', 'Last name is required')
-        
-        # Проверка даты рождения (не моложе 5 лет и не старше 100 лет)
+        # Проверка даты рождения
         birthdate = cleaned_data.get('birthdate')
         if birthdate:
             today = datetime.now().date()
             age = today.year - birthdate.year - ((today.month, today.day) < (birthdate.month, birthdate.day))
-            if age < 5:
-                self.add_error('birthdate', 'You must be at least 5 years old')
-            elif age > 100:
-                self.add_error('birthdate', 'Age cannot exceed 100 years')
-        
+            if age < 5: self.add_error('birthdate', 'You must be at least 5 years old')
+            elif age > 100: self.add_error('birthdate', 'Age cannot exceed 100 years')
         return cleaned_data
-    
+
+
     def calculate_ntrp(self):
-        """
-        Рассчитывает NTRP игрока на основе ответов в анкете.
-        NTRP (National Tennis Rating Program) - от 1.0 до 7.0
-        """
-        # Получаем значения из формы
         experience = int(self.cleaned_data.get('experience_level', 0))
         frequency = int(self.cleaned_data.get('playing_frequency', 0))
         technique = int(self.cleaned_data.get('technical_level', 0))
         serve = int(self.cleaned_data.get('serve_level', 0))
         matches = int(self.cleaned_data.get('match_experience', 0))
-        
-        # Вычисляем общую сумму баллов (максимум 2000)
         total_points = experience + frequency + technique + serve + matches
-        
-        # Пересчитываем в шкалу NTRP (от 1.0 до 7.0)
-        # Формула: 1.0 + (total_points / 2000) * 6.0
         ntrp_raw = 1.0 + (total_points / 2000) * 6.0
-        
-        # Округляем до 1 десятичного знака
         ntrp = round(ntrp_raw * 10) / 10
-        
-        # Конвертируем в целое число для хранения (умножаем на 10)
         return int(ntrp * 1000)
-    
-    def determine_category(self, ntrp):
-        """
-        Определяет категорию игрока на основе NTRP.
-        
-        Категории:
-        C0: NTRP < 2.0 (начинающие)
-        C1: 2.0 <= NTRP < 3.5 (любители)
-        C2: 3.5 <= NTRP < 4.5 (полупрофессионалы)
-        C3: 4.5 <= NTRP < 7.0 (профессионалы)
-        C5: NTRP >= 7.0 (продвинутые профессионалы)
-        """
-        ntrp_float = ntrp / 10000  # Преобразуем в формат с плавающей точкой (например, 350 -> 3.5)
-        
-        if ntrp_float < 2.0:
-            return 'C0'
-        elif ntrp_float < 3.5:
-            return 'C1'
-        #elif ntrp_float < 4.0:
-        #    return 'C2'
-        elif ntrp_float < 4.5:
-            return 'C3'
-        elif ntrp_float < 7.0:
-            return 'C4'
-        else:
-            return 'C5'
-    
+
+
+    def determine_category(self, ntrp_int):
+        ntrp_float = ntrp_int / 1000.0
+        if ntrp_float < 2.0: return 'C0'
+        elif ntrp_float < 3.5: return 'C1'
+        elif ntrp_float < 4.5: return 'C3'
+        elif ntrp_float < 7.0: return 'C4'
+        else: return 'C5'
+
     def save(self, commit=True):
-        """
-        Сохраняет данные формы, обновляя или создавая модели CustomUser, Player и PlayerSeasonStats.
-        """
         # Получаем или создаем профиль игрока
         if self.instance and self.instance.pk:
             player = super().save(commit=False)
         else:
-            player = super().save(commit=False)
-            player.user = self.user
-        
+            try:
+                player = Player.objects.get(user=self.user)
+                player = super(PlayerWizardForm, self).save(commit=False)
+            except Player.DoesNotExist:
+                player = super(PlayerWizardForm, self).save(commit=False)
+                player.user = self.user
+
         # Обновляем данные пользователя
         user = self.user
         user.first_name = self.cleaned_data['first_name']
         user.last_name = self.cleaned_data['last_name']
-        
         if self.cleaned_data.get('mobile'):
             user.mobile = self.cleaned_data['mobile']
-        
-        # Устанавливаем город и определяем регион
         city_code = self.cleaned_data['city']
         user.preferred_city = city_code
-        
-        # Находим geo_code для выбранного города
         geo_code = None
         for city_code_check, city_name in TR_CITIES:
             if city_code_check == city_code:
                 geo_code = city_name[-2:]
                 break
-        
         if geo_code:
             user.preferred_geo = geo_code
             player.geo = geo_code
-        
+
         # Обновляем данные игрока
         player.birthdate = self.cleaned_data['birthdate']
         player.gender = self.cleaned_data['gender']
@@ -1143,65 +1092,77 @@ class PlayerWizardForm(forms.ModelForm):
         player.tennis_exp_year = self.cleaned_data['tennis_exp_year']
         player.availability = self.cleaned_data.get('availability', '')
         player.city = city_code
-        
-        # Рассчитываем NTRP и определяем категорию
+
+        # Рассчитываем NTRP и категорию
         ntrp_value = self.calculate_ntrp()
         player.category = self.determine_category(ntrp_value)
-        
-        # Устанавливаем флаг is_new в False, т.к. профиль заполнен
         player.is_new = False
-        
-        # Сохраняем аватар, если он был загружен
-        if self.cleaned_data.get('avatar'):
-            player.avatar = self.cleaned_data['avatar']
-        
+
         if commit:
             user.save()
             player.save()
-            
-            # Создаем или обновляем сезонную статистику
+
+            # Статистика (оставляем как есть)
             current_year = date.today().year
             stats, created = PlayerSeasonStats.objects.get_or_create(
                 player=player,
                 season=current_year,
                 defaults={
-                    'geo': player.geo,
-                    'season_start_NTRP': ntrp_value,
-                    'season_final_NTRP': ntrp_value,
-                    'max_season_NTRP': ntrp_value,
+                    'geo': player.geo, 'season_start_NTRP': ntrp_value,
+                    'season_final_NTRP': ntrp_value, 'max_season_NTRP': ntrp_value,
                     'min_season_NTRP': ntrp_value
                 }
             )
-            
-            # Если запись уже существовала, обновляем её
             if not created:
                 stats.season_start_NTRP = ntrp_value
                 stats.season_final_NTRP = ntrp_value
                 stats.max_season_NTRP = ntrp_value
                 stats.min_season_NTRP = ntrp_value
                 stats.save()
-            
-            # Создаем запись в PlayerCurrentStats, если её еще нет
-            PlayerCurrentStats.objects.get_or_create(
+
+            # Обновляем или создаем PlayerCurrentStats
+            current_stats, cs_created = PlayerCurrentStats.objects.get_or_create(
                 player=player,
-                defaults={
-                    'current_NTRP': ntrp_value
-                }
+                defaults={'current_NTRP': ntrp_value}
             )
-            
-            # Добавляем событие в таймлайн
-            TimelineEvent.objects.create(
-                player=player,
-                event_type='P',
-                color='S',
-                text=f"Profile completed with initial NTRP rating: {ntrp_value}",
-                redirect_url=reverse('rivals:player_detail', kwargs={'pk': player.pk})
-            )
-            
-            # Дополнительно создаем PlayerAttributes, если нужно
+            if not cs_created:
+                 current_stats.current_NTRP = ntrp_value
+                 current_stats.save()
+
+
+            TimelineEvent.objects.get_or_create(
+                 player=player, event_type='P', check_field='profile_completed',
+                 defaults={
+                      'color': 'S',
+                      'text': f"Profile completed with initial NTRP rating: {ntrp_value/1000.0}",
+                      'redirect_url': reverse('rivals:player_detail', kwargs={'pk': player.pk})
+                 }
+             )
             PlayerAttributes.objects.get_or_create(player=player)
-        
+
         return player
+    
+
+class PlayerWizardAvatarForm(forms.Form):
+    """
+    Форма для загрузки аватара на Шаге 5 визарда.
+    """
+    avatar = forms.ImageField(
+        required=False, # Делаем необязательным, если пользователь не хочет менять
+        widget=forms.ClearableFileInput(attrs={ # Используем ClearableFileInput
+            'class': 'form-control',
+            'accept': 'image/*',
+        }),
+        label='Profile Picture',
+        help_text='Upload your profile picture (optional, max 5MB)'
+    )
+
+    def clean_avatar(self):
+        avatar = self.cleaned_data.get('avatar')
+        if avatar:
+            if avatar.size > 5 * 1024 * 1024: # 5MB limit
+                raise forms.ValidationError("Image file too large ( > 5MB )")
+        return avatar
     
 
     

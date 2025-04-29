@@ -1,0 +1,136 @@
+{% extends 'default.html' %}
+{% load i18n %}
+{% load static %}
+{% load custom_tags %}
+
+{% block head_title %}{% trans "Player Profile Setup - Step 4" %}{% endblock %}
+
+{% block content %}
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+    <div class="container-xl px-4">
+        <div class="page-header-content pt-10">
+            <div class="row align-items-center justify-content-between">
+                <div class="col-auto mt-4">
+                    <h1 class="page-header-title">
+                        <div class="page-header-icon"><i data-feather="activity"></i></div>
+                        {% trans "Player Profile Setup" %}
+                    </h1>
+                    <div class="page-header-subtitle">{% trans "Step 4 of 5: Tennis Profile & Skill Assessment" %}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Main page content-->
+<div class="container-xl px-4 mt-n10">
+    <div class="card">
+        <div class="card-body">
+             {% if messages %}
+            <div class="row justify-content-center mb-4">
+                <div class="col-xxl-6 col-xl-8">
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            <div class="row justify-content-center">
+                <div class="col-xxl-6 col-xl-8">
+                     <form method="post" id="wizard-step4-form">
+                         {% csrf_token %}
+                         <h3 class="text-primary">{% trans "Step 4: Tennis Profile" %}</h3>
+                         <h5 class="card-title mb-4">{% trans "Your physical stats & experience" %}</h5>
+
+                         <!-- Физические атрибуты -->
+                         <div class="card mb-4">
+                             <div class="card-header">{% trans "Physical Attributes" %}</div>
+                             <div class="card-body">
+                                 <div class="row gx-3">
+                                     <div class="mb-3 col-md-6">
+                                         <label class="small mb-1" for="{{ form.height.id_for_label }}">{{ form.height.label }}</label>
+                                         {{ form.height }}
+                                         {% if form.height.help_text %}<div class="small text-muted">{{ form.height.help_text }}</div>{% endif %}
+                                         {% if form.height.errors %}<div class="invalid-feedback d-block">{{ form.height.errors|first }}</div>{% endif %}
+                                     </div>
+                                     <div class="mb-3 col-md-6">
+                                         <label class="small mb-1" for="{{ form.weight.id_for_label }}">{{ form.weight.label }}</label>
+                                         {{ form.weight }}
+                                         {% if form.weight.help_text %}<div class="small text-muted">{{ form.weight.help_text }}</div>{% endif %}
+                                         {% if form.weight.errors %}<div class="invalid-feedback d-block">{{ form.weight.errors|first }}</div>{% endif %}
+                                     </div>
+                                 </div>
+                                 <div class="mb-3">
+                                     <label class="small mb-1" for="{{ form.availability.id_for_label }}">{{ form.availability.label }}</label>
+                                     {{ form.availability }}
+                                     {% if form.availability.help_text %}<div class="small text-muted">{{ form.availability.help_text }}</div>{% endif %}
+                                     {% if form.availability.errors %}<div class="invalid-feedback d-block">{{ form.availability.errors|first }}</div>{% endif %}
+                                 </div>
+                             </div>
+                         </div>
+
+                         <!-- Опыт и Оценка Навыков -->
+                         <div class="card mb-4">
+                             <div class="card-header">{% trans "Tennis Experience & Skill Assessment" %}</div>
+                             <div class="card-body">
+                                  <div class="mb-3">
+                                     <label class="small mb-1" for="{{ form.tennis_exp_year.id_for_label }}">{{ form.tennis_exp_year.label }}</label>
+                                     {{ form.tennis_exp_year }}
+                                     {% if form.tennis_exp_year.help_text %}<div class="small text-muted">{{ form.tennis_exp_year.help_text }}</div>{% endif %}
+                                     {% if form.tennis_exp_year.errors %}<div class="invalid-feedback d-block">{{ form.tennis_exp_year.errors|first }}</div>{% endif %}
+                                 </div>
+
+                                 {# Рендеринг радиокнопок анкеты NTRP #}
+                                 {% with fields_to_render="experience_level playing_frequency technical_level serve_level match_experience".split %}
+                                     {% for field_name in fields_to_render %}
+                                         {% with field=form|get_form_field:field_name %} {# Используем тег для получения поля по имени #}
+                                             {% if field %}
+                                             <div class="mb-4">
+                                                 <label class="mb-1 fw-bold">{{ field.label }}</label>
+                                                 {% for radio in field %}
+                                                 <div class="form-check">
+                                                     {{ radio.tag }}
+                                                     <label class="form-check-label" for="{{ radio.id_for_label }}">
+                                                         {{ radio.choice_label }}
+                                                     </label>
+                                                 </div>
+                                                 {% endfor %}
+                                                 {% if field.errors %}
+                                                 <div class="small text-danger mt-1">{{ field.errors|first }}</div>
+                                                 {% endif %}
+                                                  {% if field.help_text %}
+                                                 <div class="form-text small mt-1">{{ field.help_text }}</div>
+                                                 {% endif %}
+                                             </div>
+                                             {% endif %}
+                                         {% endwith %}
+                                     {% endfor %}
+                                 {% endwith %}
+                             </div>
+                         </div>
+
+                         {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {{ form.non_field_errors|first }}
+                            </div>
+                         {% endif %}
+
+                         <hr class="my-4" />
+                         <div class="d-flex justify-content-between">
+                              <a href="{% url 'rivals:player_wizard_step3' %}" class="btn btn-light">
+                                  <i data-feather="arrow-left" class="me-1"></i> {% trans "Previous" %}
+                              </a>
+                              <button class="btn btn-primary" type="submit">
+                                  {% trans "Next" %} <i data-feather="arrow-right" class="ms-1"></i>
+                              </button>
+                         </div>
+                     </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

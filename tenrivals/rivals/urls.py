@@ -9,7 +9,13 @@ from .views import (
     approve_match_result, implement_match_result_all, create_ticket, reopen_ticket, close_ticket,
     reopen_match_result, check_overdue_matches, stage_prolongation_request, 
     approve_stage_prolongation_request, reject_stage_prolongation_request, reopen_stage_prolongation_request,
-    PlayerWizardView, activate_onboarding
+    # PlayerWizardView,
+    PlayerWizardStep1View,
+    PlayerWizardStep2View,
+    PlayerWizardStep3View,
+    PlayerWizardStep4View,
+    PlayerWizardStep5View,
+    activate_onboarding
 )
 
 app_name = 'rivals'
@@ -55,6 +61,11 @@ urlpatterns = [
     path('approve-stage-prolongation-request/<int:pk>/', approve_stage_prolongation_request, name='approve_stage_prolongation_request'),
     path('reject-stage-prolongation-request/<int:pk>/', reject_stage_prolongation_request, name='reject_stage_prolongation_request'),
     path('reopen-stage-prolongation-request/<int:pk>/', reopen_stage_prolongation_request, name='reopen_stage_prolongation_request'),
-    path('player-wizard/', PlayerWizardView.as_view(), name='player_wizard'),
+    # path('player-wizard/', PlayerWizardView.as_view(), name='player_wizard'),
+    path('player-wizard/step1/', PlayerWizardStep1View.as_view(), name='player_wizard_step1'),
+    path('player-wizard/step2/', PlayerWizardStep2View.as_view(), name='player_wizard_step2'),
+    path('player-wizard/step3/', PlayerWizardStep3View.as_view(), name='player_wizard_step3'),
+    path('player-wizard/step4/', PlayerWizardStep4View.as_view(), name='player_wizard_step4'),
+    path('player-wizard/step5/', PlayerWizardStep5View.as_view(), name='player_wizard_step5'),
     path('activate-onboarding/', activate_onboarding, name='activate_onboarding'),
 ]

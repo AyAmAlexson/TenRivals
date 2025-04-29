@@ -1,0 +1,117 @@
+{% extends 'default.html' %}
+{% load i18n %}
+{% load static %}
+{% load custom_tags %}
+
+{% block head_title %}{% trans "Player Profile Setup - Step 3" %}{% endblock %}
+
+{% block content %}
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+    <div class="container-xl px-4">
+        <div class="page-header-content pt-10">
+            <div class="row align-items-center justify-content-between">
+                <div class="col-auto mt-4">
+                    <h1 class="page-header-title">
+                        <div class="page-header-icon"><i data-feather="user"></i></div>
+                        {% trans "Player Profile Setup" %}
+                    </h1>
+                    <div class="page-header-subtitle">{% trans "Step 3 of 5: Personal Information" %}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Main page content-->
+<div class="container-xl px-4 mt-n10">
+    <div class="card">
+         <div class="card-body">
+             {% if messages %}
+            <div class="row justify-content-center mb-4">
+                <div class="col-xxl-6 col-xl-8">
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            <div class="row justify-content-center">
+                <div class="col-xxl-6 col-xl-8">
+                    <form method="post" id="wizard-step3-form">
+                        {% csrf_token %}
+                        <h3 class="text-primary">{% trans "Step 3: Personal Information" %}</h3>
+                        <h5 class="card-title mb-4">{% trans "Enter your basic details" %}</h5>
+
+                        {# Используем форму из контекста 'form' #}
+                        <div class="mb-3">
+                            <label class="small mb-1" for="{{ form.first_name.id_for_label }}">{{ form.first_name.label }}</label>
+                            {{ form.first_name }}
+                            {% if form.first_name.errors %}<div class="invalid-feedback d-block">{{ form.first_name.errors|first }}</div>{% endif %}
+                        </div>
+                        <div class="mb-3">
+                            <label class="small mb-1" for="{{ form.last_name.id_for_label }}">{{ form.last_name.label }}</label>
+                            {{ form.last_name }}
+                            {% if form.last_name.errors %}<div class="invalid-feedback d-block">{{ form.last_name.errors|first }}</div>{% endif %}
+                        </div>
+                         <div class="mb-3">
+                            <label class="small mb-1">Email address</label>
+                            <input type="email" class="form-control" value="{{ user.email }}" disabled>
+                            <div class="form-text small">Email cannot be changed during setup.</div>
+                        </div>
+                         <div class="row gx-3">
+                            <div class="mb-3 col-md-6">
+                                <label class="small mb-1" for="{{ form.mobile.id_for_label }}">{{ form.mobile.label }}</label>
+                                {{ form.mobile }}
+                                {% if form.mobile.errors %}<div class="invalid-feedback d-block">{{ form.mobile.errors|first }}</div>{% endif %}
+                            </div>
+                             <div class="mb-3 col-md-6">
+                                <label class="small mb-1" for="{{ form.birthdate.id_for_label }}">{{ form.birthdate.label }}</label>
+                                {{ form.birthdate }}
+                                {% if form.birthdate.errors %}<div class="invalid-feedback d-block">{{ form.birthdate.errors|first }}</div>{% endif %}
+                            </div>
+                        </div>
+                         <div class="row gx-3">
+                             <div class="mb-3 col-md-6">
+                                <label class="small mb-1" for="{{ form.city.id_for_label }}">{{ form.city.label }}</label>
+                                {{ form.city }}
+                                {% if form.city.errors %}<div class="invalid-feedback d-block">{{ form.city.errors|first }}</div>{% endif %}
+                            </div>
+                            <div class="mb-3 col-md-6">
+                                <label class="mb-1">{{ form.gender.label }}</label>
+                                <div class="d-flex flex-column">
+                                    {% for radio in form.gender %}
+                                    <div class="form-check mb-2">
+                                        {{ radio.tag }}
+                                        <label class="form-check-label" for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                {% if form.gender.errors %}<div class="invalid-feedback d-block">{{ form.gender.errors|first }}</div>{% endif %}
+                            </div>
+                        </div>
+
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {{ form.non_field_errors|first }}
+                            </div>
+                        {% endif %}
+
+                        <hr class="my-4" />
+                        <div class="d-flex justify-content-between">
+                             <a href="{% url 'rivals:player_wizard_step2' %}" class="btn btn-light"> {# Всегда назад на шаг 2 #}
+                                 <i data-feather="arrow-left" class="me-1"></i> {% trans "Previous" %}
+                             </a>
+                             <button class="btn btn-primary" type="submit">
+                                 {% trans "Next" %} <i data-feather="arrow-right" class="ms-1"></i>
+                             </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

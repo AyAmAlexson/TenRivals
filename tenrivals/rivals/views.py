@@ -50,7 +50,7 @@ from .forms import (
     TicketForm,
     PlayerWizardForm,
     AddTelegramUsernameForm,
-   
+    PlayerWizardAvatarForm
 )
 
 from .services import (
@@ -1735,6 +1735,8 @@ def reopen_stage_prolongation_request(request, pk):
 def generate_verification_code():
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
 
+''' === СТАРЫЙ ВИЗАРД === 
+
 class PlayerWizardView(LoginRequiredMixin, View):
     template_name = 'rivals/player_wizard.html'
     add_telegram_form_class = AddTelegramUsernameForm
@@ -2025,6 +2027,393 @@ class PlayerWizardView(LoginRequiredMixin, View):
             messages.error(request, "Invalid action submitted.")
             logger.warning(f"Unknown POST action for user {user.email}")
             return redirect('rivals:player_wizard')
+
+'''
+
+# === НОВЫЕ VIEWS ДЛЯ ВИЗАРДА ===
+
+class PlayerWizardBaseView(LoginRequiredMixin, FormView):
+    """Базовый класс для шагов визарда"""
+    success_url = None # Будет определен в каждом шаге
+    template_name = 'rivals/player_wizard_step.html' # Используем общий шаблон для начала
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['step'] = self.step # Добавляем номер шага в контекст
+        # Добавим данные из сессии для отображения в шаблоне (если нужно)
+        context['wizard_data'] = self.request.session.get('wizard_data', {})
+        return context
+
+    def form_valid(self, form):
+        # Сохраняем данные шага в сессию
+        wizard_data = self.request.session.get('wizard_data', {})
+        wizard_data[f'step{self.step}_data'] = form.cleaned_data
+        self.request.session['wizard_data'] = wizard_data
+        self.request.session.modified = True # Помечаем сессию как измененную
+        logger.info(f"Wizard step {self.step} data saved to session for user {self.request.user.email}")
+        return super().form_valid(form)
+
+    def dispatch(self, request, *args, **kwargs):
+         # Проверка доступа к шагу (базовая)
+        if not request.user.is_authenticated:
+            return self.handle_no_permission()
+        # Более сложная проверка доступа будет в каждом конкретном view
+        return super().dispatch(request, *args, **kwargs)
+
+
+class PlayerWizardStep1View(PlayerWizardBaseView):
+    """Шаг 1: Ввод ника Telegram"""
+    form_class = AddTelegramUsernameForm
+    success_url = reverse_lazy('rivals:player_wizard_step2')
+    step = 1
+
+    def get_initial(self):
+        """Заполняем форму из сессии или текущими данными пользователя"""
+        initial = super().get_initial()
+        wizard_data = self.request.session.get('wizard_data', {})
+        step_data = wizard_data.get(f'step{self.step}_data', {})
+        initial['telegram_username'] = step_data.get(
+            'telegram_username',
+            self.request.user.telegram or getattr(self.request.user, 'telegramverification', None) # Пробуем получить имя
+        )
+        return initial
+
+    def form_valid(self, form):
+        # Выполняем действия Шага 1 (сохранение ника, отправка кода) ПЕРЕД сохранением в сессию
+        user = self.request.user
+        verification, _ = TelegramVerification.objects.get_or_create(user=user)
+        tg_username = form.cleaned_data['telegram_username']
+
+        # Проверка уникальности (важно!)
+        if TelegramVerification.objects.filter(
+            telegram_username__iexact=tg_username
+            ).exclude(user=user).exists() or CustomUser.objects.filter(
+                telegram__iexact=tg_username # Проверяем и поле CustomUser.telegram
+                ).exclude(pk=user.pk).exists():
+             messages.error(self.request, f"Telegram username '@{tg_username}' is already associated with another account.")
+             return self.form_invalid(form) # Возвращаем с ошибкой
+
+        # Сохраняем ник и генерируем код
+        user.telegram = tg_username # Сохраняем в CustomUser
+        verification.telegram_username = tg_username # Сохраняем в TelegramVerification
+        verification.is_verified = False
+        user.is_telegram_verified = False
+        verification.telegram_id = '' # Сбрасываем ID при смене ника
+        # Генерируем НОВЫЙ код при смене ника
+        verification.verification_code = generate_verification_code()
+        user.save(update_fields=['telegram', 'is_telegram_verified'])
+        verification.save()
+        logger.info(f"Username @{tg_username} saved for {user.email}. New verification code generated.")
+
+        # Отправляем код ботом (ваш код без изменений)
+        if bot:
+            try:
+                chat_info = bot.get_chat(f"@{tg_username}")
+                if chat_info and chat_info.id:
+                    message_text = f'Your Tennis Rivals verification code: *{verification.verification_code}*'
+                    bot.send_message(chat_info.id, message_text, parse_mode='Markdown')
+                    verification.telegram_id = str(chat_info.id) # Сохраняем ID
+                    verification.save(update_fields=['telegram_id'])
+                    messages.success(self.request, f"Verification code sent to @{tg_username}. Please check your Telegram or use other methods below.")
+                else:
+                    logger.warning(f"Could not find Telegram user @{tg_username} to send the code.")
+                    messages.warning(self.request, "Could not find Telegram user to send the code.")
+            except Exception as e:
+                logger.error(f"Error sending code via bot for {user.email}: {e}")
+                messages.warning(self.request, f"Could not send code to @{tg_username}. Please use QR/Link or manual code entry.")
+        else:
+            messages.info(self.request, "Telegram bot not configured. Please use QR/Link or manual code entry.")
+
+        # Теперь вызываем родительский form_valid для сохранения данных в сессию и редиректа
+        return super().form_valid(form)
+
+class PlayerWizardStep2View(PlayerWizardBaseView):
+    """Шаг 2: Верификация Telegram (ручной ввод)"""
+    # Пока сделаем только ручной ввод для простоты
+    form_class = TelegramVerificationForm
+    success_url = reverse_lazy('rivals:player_wizard_step3')
+    step = 2
+    template_name = 'rivals/player_wizard_step2.html' # Отдельный шаблон для Шага 2
+
+    def dispatch(self, request, *args, **kwargs):
+        # Проверка: нельзя попасть сюда, если не введен ник на шаге 1
+        wizard_data = request.session.get('wizard_data', {})
+        if 'step1_data' not in wizard_data or not wizard_data['step1_data'].get('telegram_username'):
+            messages.warning(request, "Please enter your Telegram username first.")
+            return redirect('rivals:player_wizard_step1')
+        # Проверка: если уже верифицирован, пропускаем шаг
+        if request.user.is_telegram_verified:
+            logger.info(f"User {request.user.email} already verified, skipping step 2.")
+            # Сохраним пустые данные для шага 2 в сессию, чтобы показать его как пройденный
+            wizard_data['step2_data'] = {} # Пустой словарь как маркер прохождения
+            request.session['wizard_data'] = wizard_data
+            request.session.modified = True
+            return redirect(self.get_success_url())
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        """Добавляем контекст для QR/ссылки"""
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        verification = get_object_or_404(TelegramVerification, user=user)
+        # Используем метод из старого view для генерации контекста QR/ссылки
+        # Нужен экземпляр старого view или вынести get_verification_context
+        context.update(PlayerWizardView().get_verification_context(user, verification)) # Немного хак, лучше вынести метод
+        # Добавляем действия для формы
+        context['form_actions'] = [
+             {'name': 'submit_code', 'label': 'Verify Code & Continue', 'class': 'btn-primary'},
+             {'name': 'retry_generation', 'label': 'Regenerate Options', 'class': 'btn-outline-secondary', 'formnovalidate': True},
+             {'name': 'check_status', 'label': 'Check Status & Continue', 'class': 'btn-secondary'},
+        ]
+        return context
+
+    def post(self, request, *args, **kwargs):
+        """Обрабатываем разные кнопки: submit_code, retry_generation, check_status"""
+        user = request.user
+        verification = get_object_or_404(TelegramVerification, user=user)
+
+        if 'submit_code' in request.POST:
+            form = self.get_form()
+            if form.is_valid():
+                entered_code = form.cleaned_data['verification_code']
+                if verification.verification_code and verification.verification_code == entered_code:
+                    verification.is_verified = True
+                    verification.verified_at = now()
+                    user.is_telegram_verified = True
+                    verification.save()
+                    user.save(update_fields=['is_telegram_verified'])
+                    messages.success(request, "Telegram verified successfully!")
+                    logger.info(f"Telegram manually verified for {user.email}")
+                    # Сохраняем данные формы (пустые) в сессию и редирект
+                    return self.form_valid(form)
+                else:
+                    messages.error(request, "Invalid verification code.")
+                    logger.warning(f"Invalid manual code for user {user.email}")
+                    return self.form_invalid(form)
+            else:
+                return self.form_invalid(form) # Показать ошибки формы
+
+        elif 'retry_generation' in request.POST:
+            logger.info(f"User {user.email} attempting retry verification generation.")
+            if not verification.verification_code:
+                verification.verification_code = generate_verification_code()
+                verification.save()
+            messages.info(request, "Attempting to regenerate verification options...")
+            # Просто редирект на GET этого же шага
+            return redirect('rivals:player_wizard_step2')
+
+        elif 'check_status' in request.POST:
+            # Обновляем статус пользователя из БД
+            user.refresh_from_db()
+            if user.is_telegram_verified:
+                messages.success(request, "Verification confirmed! Proceed to the next step.")
+                logger.info(f"Verification check successful for {user.email}")
+                 # Имитируем успешную отправку формы (пустой) для перехода
+                form = self.get_form_class()(data={}) # Создаем пустую валидную форму
+                form.is_valid() # Помечаем как валидную
+                return self.form_valid(form) # Сохраняем в сессию и редирект
+            else:
+                messages.info(request, "Telegram verification is not completed yet. Please verify using the methods above or try checking again later.")
+                logger.info(f"Verification check failed for {user.email}")
+                # Просто рендерим страницу заново с сообщением
+                return self.get(request, *args, **kwargs)
+        else:
+            messages.error(request, "Invalid action.")
+            return self.get(request, *args, **kwargs)
+
+
+class PlayerWizardStep3View(PlayerWizardBaseView):
+    """Шаг 3: Личная информация"""
+    form_class = PlayerWizardForm # Используем большую форму, но покажем часть полей
+    success_url = reverse_lazy('rivals:player_wizard_step4')
+    step = 3
+    template_name = 'rivals/player_wizard_step3.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        # Проверка: нельзя попасть сюда, если не пройден шаг 2 (т.е. нет step2_data в сессии)
+        wizard_data = request.session.get('wizard_data', {})
+        if 'step2_data' not in wizard_data:
+             # Дополнительно проверим флаг на пользователе, если сессия потерялась
+            if not request.user.is_telegram_verified:
+                messages.warning(request, "Please verify your Telegram account first.")
+                return redirect('rivals:player_wizard_step2')
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_form_kwargs(self):
+        """Передаем user в форму"""
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        # Получаем instance игрока, если он есть
+        try:
+             kwargs['instance'] = self.request.user.player
+        except Player.DoesNotExist:
+             kwargs['instance'] = None
+        return kwargs
+
+    def get_initial(self):
+        """Заполняем форму из сессии"""
+        initial = super().get_initial()
+        wizard_data = self.request.session.get('wizard_data', {})
+        # Заполняем поля этого шага из данных сессии предыдущих шагов, если они там есть
+        step3_data = wizard_data.get('step3_data', {})
+        initial.update(step3_data) # Перезапишет initial из get_form_kwargs, если есть в сессии
+        return initial
+
+    # form_valid унаследован от базового класса, просто сохранит данные в сессию
+
+class PlayerWizardStep4View(PlayerWizardBaseView):
+    """Шаг 4: Теннисный профиль и навыки"""
+    form_class = PlayerWizardForm # Используем большую форму, но покажем другую часть полей
+    success_url = reverse_lazy('rivals:player_wizard_step5')
+    step = 4
+    template_name = 'rivals/player_wizard_step4.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        # Проверка: нельзя попасть сюда, если не пройден шаг 3
+        wizard_data = request.session.get('wizard_data', {})
+        if 'step3_data' not in wizard_data:
+            messages.warning(request, "Please complete the previous step first.")
+            return redirect('rivals:player_wizard_step3')
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_form_kwargs(self):
+        """Передаем user и instance в форму"""
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        try:
+             kwargs['instance'] = self.request.user.player
+        except Player.DoesNotExist:
+             kwargs['instance'] = None
+        return kwargs
+
+    def get_initial(self):
+        """Заполняем форму из сессии"""
+        initial = super().get_initial()
+        wizard_data = self.request.session.get('wizard_data', {})
+        step4_data = wizard_data.get('step4_data', {})
+        initial.update(step4_data)
+        return initial
+
+    # form_valid унаследован от базового класса
+
+class PlayerWizardStep5View(LoginRequiredMixin, TemplateView):
+    """Шаг 5: Обзор и отправка"""
+    template_name = 'rivals/player_wizard_step5.html'
+    step = 5
+
+    def dispatch(self, request, *args, **kwargs):
+         # Проверка: нельзя попасть сюда, если не пройден шаг 4
+        wizard_data = request.session.get('wizard_data', {})
+        if 'step4_data' not in wizard_data:
+            messages.warning(request, "Please complete the previous step first.")
+            return redirect('rivals:player_wizard_step4')
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['step'] = self.step
+        wizard_data = self.request.session.get('wizard_data', {})
+        all_data = {}
+        for key, value in wizard_data.items():
+             if isinstance(value, dict):
+                 all_data.update(value)
+        context['wizard_data'] = all_data
+
+        # Создаем форму аватара для рендеринга
+        context['avatar_form'] = PlayerWizardAvatarForm() # <--- НОВАЯ ФОРМА
+
+        # --- Расчет NTRP и категории (как было) ---
+        try: player_instance = self.request.user.player
+        except Player.DoesNotExist: player_instance = None
+        review_form = PlayerWizardForm(data=all_data, instance=player_instance, user=self.request.user)
+        if review_form.is_bound and review_form.is_valid():
+            context['calculated_ntrp_int'] = review_form.calculate_ntrp()
+            context['calculated_ntrp'] = context['calculated_ntrp_int'] / 1000.0 # Для отображения 3.5
+            context['calculated_category'] = review_form.determine_category(context['calculated_ntrp_int'])
+        else:
+             logger.warning(f"Wizard data seems invalid at review step for user {self.request.user.email}. Errors: {review_form.errors.as_json()}")
+             context['calculated_ntrp_int'] = 0
+             context['calculated_ntrp'] = 0.0
+             context['calculated_category'] = 'N/A'
+             messages.error(self.request, "There was an issue with the data collected. Please review previous steps.")
+        # --- Конец расчета ---
+
+        # --- Отображаемые значения (как было) ---
+        context['city_display'] = dict(TR_CITIES).get(all_data.get('city'))
+        context['gender_display'] = dict(GENDER).get(all_data.get('gender'))
+        context['experience_display'] = dict(PlayerWizardForm.EXPERIENCE_CHOICES).get(int(all_data.get('experience_level', 0)))
+        context['frequency_display'] = dict(PlayerWizardForm.FREQUENCY_CHOICES).get(int(all_data.get('playing_frequency', 0)))
+        context['technical_display'] = dict(PlayerWizardForm.LEVEL_CHOICES).get(int(all_data.get('technical_level', 0)))
+        context['serve_display'] = dict(PlayerWizardForm.SERVE_CHOICES).get(int(all_data.get('serve_level', 0)))
+        context['match_display'] = dict(PlayerWizardForm.MATCH_CHOICES).get(int(all_data.get('match_experience', 0)))
+        # --- Конец отображаемых значений ---
+
+        return context
+
+    def post(self, request, *args, **kwargs):
+        wizard_data = request.session.get('wizard_data', {})
+        all_data = {}
+        for key, value in wizard_data.items():
+            if isinstance(value, dict):
+                all_data.update(value)
+
+        # Получаем или создаем игрока
+        player, created = Player.objects.get_or_create(user=request.user)
+
+        # Создаем и валидируем ОСНОВНУЮ форму с данными из сессии
+        final_form = PlayerWizardForm(data=all_data, instance=player, user=request.user)
+        # Создаем и валидируем ФОРМУ АВАТАРА с данными из POST и FILES
+        avatar_form = PlayerWizardAvatarForm(request.POST, request.FILES) # <--- НОВАЯ ФОРМА
+
+        # Проверяем обе формы
+        if final_form.is_valid() and avatar_form.is_valid():
+            try:
+                # 1. Сохраняем основные данные (без аватара)
+                # commit=True здесь сохранит User, Player, Stats
+                saved_player = final_form.save(commit=True)
+
+                # 2. Сохраняем аватар, если он был загружен
+                avatar = avatar_form.cleaned_data.get('avatar')
+                if avatar:
+                    saved_player.avatar = avatar
+                    saved_player.save(update_fields=['avatar']) # Обновляем только поле аватара
+                    logger.info(f"Avatar updated for wizard user {request.user.email}")
+
+                # 3. Завершаем онбординг (как было)
+                onboarding, _ = PlayerOnboarding.objects.get_or_create(player=saved_player)
+                onboarding.is_completed = True
+                onboarding.completed_at = now()
+                onboarding.save()
+
+                messages.success(request, "Your profile has been completed successfully!")
+                logger.info(f"Wizard completed and profile saved for user {request.user.email}")
+                request.session.pop('wizard_data', None)
+                return redirect('rivals:today')
+
+            except Exception as e:
+                 logger.exception(f"Error during final save for wizard user {request.user.email}: {e}")
+                 messages.error(request, "An error occurred while saving your profile. Please try again.")
+                 # Остаемся на странице обзора с ошибкой
+                 context = self.get_context_data(**kwargs)
+                 # Передаем ошибки обеих форм
+                 context['form_errors'] = final_form.errors | avatar_form.errors
+                 return self.render_to_response(context)
+        else:
+            # Если хотя бы одна форма невалидна
+            logger.error(f"Wizard final form invalid for user {request.user.email}: ProfileForm={final_form.errors.as_json()} AvatarForm={avatar_form.errors.as_json()}")
+            messages.error(request, "There were errors in your profile data. Please go back and correct them or re-upload the avatar if needed.")
+             # Остаемся на странице обзора с ошибкой
+            context = self.get_context_data(**kwargs)
+            # Передаем ошибки обеих форм и сами формы для ререндера
+            context['form_errors'] = final_form.errors | avatar_form.errors
+            context['avatar_form'] = avatar_form # Передаем невалидную форму аватара обратно
+            return self.render_to_response(context)
+
+# === КОНЕЦ НОВЫХ VIEWS ===
+
+
+
+
 
 def activate_onboarding(request):
     player = request.user.player
