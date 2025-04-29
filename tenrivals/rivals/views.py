@@ -2354,7 +2354,7 @@ class PlayerWizardStep3View(PlayerWizardBaseView):
                      # 'email': self.request.user.email, # Email обычно не редактируется здесь
                      'mobile': self.request.user.mobile if self.request.user.mobile else '',
                      'birthdate': player.birthdate if player.birthdate else None,
-                     'city': player.city.name if player.city else '',
+                     'city': player.city if player.city else '',
                      'gender': player.gender if player.gender else '',
                  })
                  logger.debug(f"Step 3 get_initial: Pre-filled initial from user profile: {initial}")
