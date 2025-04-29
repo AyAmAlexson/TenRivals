@@ -1,0 +1,2 @@
+django-debug-toolbar==5.0.1
+Faker==33.3.1 

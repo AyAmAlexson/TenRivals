@@ -1,0 +1,27 @@
+# Git files
+.git/
+.gitignore
+
+# Development dependencies
+requirements-dev.txt
+
+# Tests
+tests/
+*.py[cod]
+
+# Documentation
+docs/
+
+# Local settings
+local_settings.py
+
+# Environment variables file
+.env*
+
+# Cache folders
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+
+# Other
+.DS_Store 
