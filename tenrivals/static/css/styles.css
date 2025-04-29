@@ -20245,20 +20245,50 @@ pre[class*=language-] {
 
 @media (min-width: 992px) {
   .title-adaptable {
-    font-size: 3.5rem !important;
+    font-size: 4.5rem !important;
   }
 }
 
 @media (min-width: 1200px) {
   .title-adaptable {
-    font-size: 4rem !important;
+    font-size: 6rem !important;
+  }
+}
+
+@media (min-width: 1500px) {
+  .title-adaptable {
+    font-size: 8rem !important;
   }
 }
 
 
+.subtitle-adaptable {
+  font-size: 1.8rem !important;
+}
 
+@media (min-width: 768px) {
+  .subtitle-adaptable {
+    font-size: 2rem !important;
+  }
+}
 
+@media (min-width: 992px) {
+  .subtitle-adaptable {
+    font-size: 3rem !important;
+  }
+}
 
+@media (min-width: 1200px) {
+  .subtitle-adaptable {
+    font-size: 4rem !important;
+  }
+}
+
+@media (min-width: 1500px) {
+  .subtitle-adaptable {
+    font-size: 6rem !important;
+  }
+}
 
 .svg-border-angled {
   padding-top: 3rem;
