@@ -1,1 +1,1 @@
-web: PYTHONPATH=TenRivals gunicorn --chdir tenrivals tenrivals.wsgi
+web: PYTHONPATH=TenRivals gunicorn --chdir tenrivals --workers=${WEB_CONCURRENCY:-4} tenrivals.wsgi --log-file -
