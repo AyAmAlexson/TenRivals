@@ -20263,30 +20263,30 @@ pre[class*=language-] {
 
 
 .subtitle-adaptable {
-  font-size: 1.8rem !important;
+  font-size: 1.4rem !important;
 }
 
 @media (min-width: 768px) {
   .subtitle-adaptable {
-    font-size: 2rem !important;
+    font-size: 1.8rem !important;
   }
 }
 
 @media (min-width: 992px) {
   .subtitle-adaptable {
-    font-size: 3rem !important;
+    font-size: 2.5rem !important;
   }
 }
 
 @media (min-width: 1200px) {
   .subtitle-adaptable {
-    font-size: 4rem !important;
+    font-size: 3rem !important;
   }
 }
 
 @media (min-width: 1500px) {
   .subtitle-adaptable {
-    font-size: 6rem !important;
+    font-size: 4rem !important;
   }
 }
 
