@@ -38,20 +38,20 @@ import telebot
 
 # Local imports
 from .const import TR_GEOS, TR_CITIES
+
 from .forms import (
-    TournamentForm, 
-    StageProlongationRequestForm, 
-    PlayerUpdateForm, 
-    CityUpdateForm, 
-    AvatarUpdateForm, 
-    RateOpponentForm, 
-    PlayerMatchScoreForm, 
-    DualPlayerMatchScoreForm, 
-    TicketForm,
-    PlayerWizardForm,
+    PlayerUpdateForm, CityUpdateForm, AvatarUpdateForm, ChallengeForm,
+    RateOpponentForm, TournamentForm, PlayerMatchScoreForm, DualPlayerMatchScoreForm,
+    TicketForm, StageProlongationRequestForm,
+    # Формы визарда
     AddTelegramUsernameForm,
-    PlayerWizardAvatarForm
+    PlayerWizardStep3Form, PlayerWizardStep4Form, PlayerWizardForm,
+
+    # Константы из форм
+    EXPERIENCE_CHOICES, FREQUENCY_CHOICES, LEVEL_CHOICES, SERVE_CHOICES, MATCH_CHOICES
 )
+# Импорты констант
+from .const import GENDER, TR_GEOS, TR_CITIES
 
 from .services import (
     approve_match_result_service,
@@ -87,6 +87,8 @@ from persons.services import generate_verification_code_service
 import qrcode
 import base64
 from io import BytesIO
+from django import forms # <--- ДОБАВЬТЕ ЭТОТ ИМПОРТ
+from django.utils.translation import gettext_lazy as _
 
 # Initialize logger
 logger = logging.getLogger(__name__)
@@ -1830,7 +1832,7 @@ class PlayerWizardView(LoginRequiredMixin, View):
         user = request.user
         player = get_object_or_404(Player, user=user)
         # Получаем или создаем объект верификации СРАЗУ
-        verification, _ = TelegramVerification.objects.get_or_create(
+        verification, verification_created = TelegramVerification.objects.get_or_create(
             user=user,
             defaults={'verification_code': generate_verification_code()}
         )
@@ -2029,6 +2031,37 @@ class PlayerWizardView(LoginRequiredMixin, View):
             return redirect('rivals:player_wizard')
 
 '''
+# === Вспомогательные функции для Шага 5 ===
+def calculate_ntrp_from_data(data):
+    """Рассчитывает NTRP из словаря данных."""
+    try:
+        # Используем .get() с 0 по умолчанию и преобразуем в int
+        experience = int(data.get('experience_level', 0))
+        frequency = int(data.get('playing_frequency', 0))
+        technique = int(data.get('technical_level', 0))
+        serve = int(data.get('serve_level', 0))
+        matches = int(data.get('match_experience', 0))
+        total_points = experience + frequency + technique + serve + matches
+        if total_points < 0: total_points = 0
+        # Формула расчета
+        ntrp_raw = 1.0 + (total_points / 2000.0) * 6.0
+        # Округляем до ближайших 0.5
+        ntrp = round(ntrp_raw * 2) / 2.0
+        return int(ntrp * 1000) # Возвращаем как int
+    except (ValueError, TypeError) as e:
+        logger.error(f"Could not calculate NTRP from data: {data}. Error: {e}", exc_info=True)
+        return 0 # Возвращаем 0 при ошибке
+
+def determine_category_from_ntrp(ntrp_int):
+    """Определяет категорию по NTRP (int * 1000)."""
+    if not isinstance(ntrp_int, int): ntrp_int = 0 # Доп. проверка
+    ntrp_float = ntrp_int / 1000.0
+    if ntrp_float < 2.0: return 'C0'
+    elif ntrp_float < 3.5: return 'C1'
+    elif ntrp_float < 4.5: return 'C3'
+    elif ntrp_float < 7.0: return 'C4' # Проверьте этот порог
+    else: return 'C5'
+# === Конец вспомогательных функций ===
 
 # === НОВЫЕ VIEWS ДЛЯ ВИЗАРДА ===
 
@@ -2045,14 +2078,34 @@ class PlayerWizardBaseView(LoginRequiredMixin, FormView):
         return context
 
     def form_valid(self, form):
-        # Сохраняем данные шага в сессию
         wizard_data = self.request.session.get('wizard_data', {})
-        wizard_data[f'step{self.step}_data'] = form.cleaned_data
-        self.request.session['wizard_data'] = wizard_data
-        self.request.session.modified = True # Помечаем сессию как измененную
-        logger.info(f"Wizard step {self.step} data saved to session for user {self.request.user.email}")
-        return super().form_valid(form)
+        step_key = f'step{self.step}_data'
 
+        cleaned_data_serializable = {}
+        for key, value in form.cleaned_data.items():
+            # Теперь 'forms' здесь определен
+            if isinstance(form.fields.get(key), (forms.FileField, forms.ImageField)):
+                 logger.debug(f"Skipping file field '{key}' for session serialization.")
+                 continue
+
+            if isinstance(value, date):
+                cleaned_data_serializable[key] = value.isoformat()
+            else:
+                cleaned_data_serializable[key] = value
+
+        logger.info(f"Wizard Step {self.step} Data BEFORE session save for {self.request.user.email}: Key='{step_key}', Data Type='dict'")
+        logger.debug(f"Wizard Step {self.step} Serializable Data Content: {cleaned_data_serializable}")
+
+        # Сохраняем преобразованные (сериализуемые) данные
+        wizard_data[step_key] = cleaned_data_serializable
+        self.request.session['wizard_data'] = wizard_data
+        self.request.session.modified = True
+
+        logger.info(f"Wizard Step {self.step} session marked modified for {self.request.user.email}.")
+        logger.debug(f"Session wizard_data AFTER save: {self.request.session.get('wizard_data')}")
+
+        return super().form_valid(form)
+    
     def dispatch(self, request, *args, **kwargs):
          # Проверка доступа к шагу (базовая)
         if not request.user.is_authenticated:
@@ -2063,6 +2116,7 @@ class PlayerWizardBaseView(LoginRequiredMixin, FormView):
 
 class PlayerWizardStep1View(PlayerWizardBaseView):
     """Шаг 1: Ввод ника Telegram"""
+    template_name = 'rivals/player_wizard_step1.html' # <--- ДОБАВЬТЕ ЭТУ СТРОКУ
     form_class = AddTelegramUsernameForm
     success_url = reverse_lazy('rivals:player_wizard_step2')
     step = 1
@@ -2081,7 +2135,7 @@ class PlayerWizardStep1View(PlayerWizardBaseView):
     def form_valid(self, form):
         # Выполняем действия Шага 1 (сохранение ника, отправка кода) ПЕРЕД сохранением в сессию
         user = self.request.user
-        verification, _ = TelegramVerification.objects.get_or_create(user=user)
+        verification, verification_created = TelegramVerification.objects.get_or_create(user=user)
         tg_username = form.cleaned_data['telegram_username']
 
         # Проверка уникальности (важно!)
@@ -2129,11 +2183,10 @@ class PlayerWizardStep1View(PlayerWizardBaseView):
 
 class PlayerWizardStep2View(PlayerWizardBaseView):
     """Шаг 2: Верификация Telegram (ручной ввод)"""
-    # Пока сделаем только ручной ввод для простоты
     form_class = TelegramVerificationForm
     success_url = reverse_lazy('rivals:player_wizard_step3')
     step = 2
-    template_name = 'rivals/player_wizard_step2.html' # Отдельный шаблон для Шага 2
+    template_name = 'rivals/player_wizard_step2.html'
 
     def dispatch(self, request, *args, **kwargs):
         # Проверка: нельзя попасть сюда, если не введен ник на шаге 1
@@ -2155,11 +2208,50 @@ class PlayerWizardStep2View(PlayerWizardBaseView):
         """Добавляем контекст для QR/ссылки"""
         context = super().get_context_data(**kwargs)
         user = self.request.user
+        # Используем get_object_or_404 для надежности
         verification = get_object_or_404(TelegramVerification, user=user)
-        # Используем метод из старого view для генерации контекста QR/ссылки
-        # Нужен экземпляр старого view или вынести get_verification_context
-        context.update(PlayerWizardView().get_verification_context(user, verification)) # Немного хак, лучше вынести метод
-        # Добавляем действия для формы
+
+        # --- УДАЛИТЕ ЭТУ СТРОКУ ---
+        # context.update(PlayerWizardView().get_verification_context(user, verification))
+
+        # --- ДОБАВЬТЕ ЭТУ ЛОГИКУ ВЗАМЕН ---
+        bot_username = settings.TELEGRAM_BOT_USERNAME
+        qr_code_base64 = None
+        deep_link = None
+
+        if bot_username and verification.verification_code:
+            # Создаем глубокую ссылку с кодом
+            start_param = f"verify_{verification.verification_code}"
+            deep_link = f"https://t.me/{bot_username}?start={start_param}"
+
+            # Генерируем QR-код
+            try:
+                qr = qrcode.QRCode(
+                    version=1,
+                    error_correction=qrcode.constants.ERROR_CORRECT_L,
+                    box_size=10, # Можно уменьшить для меньшего размера (напр. 6)
+                    border=4,
+                )
+                qr.add_data(deep_link)
+                qr.make(fit=True)
+                img = qr.make_image(fill_color="black", back_color="white")
+
+                # Конвертируем изображение в base64
+                buffer = BytesIO()
+                img.save(buffer, format="PNG")
+                qr_code_base64 = base64.b64encode(buffer.getvalue()).decode()
+            except Exception as e:
+                logger.error(f"Failed to generate QR code for user {user.email}: {e}")
+                # Оставляем qr_code_base64 = None
+
+        context['telegram_username'] = verification.telegram_username
+        context['telegram_bot_name'] = bot_username
+        context['deep_link'] = deep_link
+        context['qr_code_base64'] = qr_code_base64
+        context['verification_code'] = verification.verification_code # Для отладки или ручного ввода
+        # --- КОНЕЦ ДОБАВЛЕННОЙ ЛОГИКИ ---
+
+        # Добавляем действия для формы (остается без изменений)
         context['form_actions'] = [
              {'name': 'submit_code', 'label': 'Verify Code & Continue', 'class': 'btn-primary'},
              {'name': 'retry_generation', 'label': 'Regenerate Options', 'class': 'btn-outline-secondary', 'formnovalidate': True},
@@ -2223,11 +2315,53 @@ class PlayerWizardStep2View(PlayerWizardBaseView):
 
 
 class PlayerWizardStep3View(PlayerWizardBaseView):
-    """Шаг 3: Личная информация"""
-    form_class = PlayerWizardForm # Используем большую форму, но покажем часть полей
+    """Шаг 3: Личная информация + Аватар"""
+    form_class = PlayerWizardStep3Form
     success_url = reverse_lazy('rivals:player_wizard_step4')
     step = 3
     template_name = 'rivals/player_wizard_step3.html'
+
+    def get_initial(self):
+        logger.debug(f"!!!!!!!!!! ENTERING Step 3 get_initial !!!!!!!!!!") # <-- УБЕДИТЕСЬ, ЧТО ЭТА СТРОКА ЕСТЬ
+        initial = super().get_initial() # Получаем initial из базового класса (если есть)
+        wizard_data = self.request.session.get('wizard_data', {})
+        step3_data = wizard_data.get('step3_data')
+
+        # Логирование для отладки
+        logger.debug(f"Step 3 get_initial: Session wizard_data: {wizard_data}")
+
+        if step3_data:
+            logger.debug(f"Step 3 get_initial: Found step3_data in session: {step3_data}")
+            initial.update(step3_data) # Заполняем initial данными из сессии
+            logger.debug(f"Step 3 get_initial: Initial dict after update: {initial}")
+
+            # Конвертируем строку даты обратно в объект date для виджета
+            if 'birthdate' in initial and isinstance(initial['birthdate'], str):
+                try:
+                    initial['birthdate'] = date.fromisoformat(initial['birthdate'])
+                    logger.debug(f"Step 3 get_initial: Converted birthdate: {initial['birthdate']}")
+                except (ValueError, TypeError):
+                    logger.error(f"Step 3 get_initial: Could not convert birthdate string '{initial['birthdate']}' back to date.")
+                    del initial['birthdate'] # Удаляем, если не можем конвертировать
+        else:
+             logger.debug("Step 3 get_initial: No step3_data found in session.")
+             # Если данных в сессии нет, попробуем предзаполнить из профиля пользователя
+             if self.request.user and hasattr(self.request.user, 'player'):
+                 player = self.request.user.player
+                 initial.update({
+                     'first_name': self.request.user.first_name,
+                     'last_name': self.request.user.last_name,
+                     # 'email': self.request.user.email, # Email обычно не редактируется здесь
+                     'mobile': player.mobile if player.mobile else '',
+                     'birthdate': player.birthdate if player.birthdate else None,
+                     'city': player.city.name if player.city else '',
+                     'gender': player.gender if player.gender else '',
+                 })
+                 logger.debug(f"Step 3 get_initial: Pre-filled initial from user profile: {initial}")
+
+
+        logger.debug(f"Step 3 get_initial: Final initial dict returned: {initial}")
+        return initial
 
     def dispatch(self, request, *args, **kwargs):
         # Проверка: нельзя попасть сюда, если не пройден шаг 2 (т.е. нет step2_data в сессии)
@@ -2240,30 +2374,49 @@ class PlayerWizardStep3View(PlayerWizardBaseView):
         return super().dispatch(request, *args, **kwargs)
 
     def get_form_kwargs(self):
-        """Передаем user в форму"""
+        """ Передаем user в форму при GET запросе """
         kwargs = super().get_form_kwargs()
+        # kwargs НЕ ДОЛЖНЫ включать request.POST или request.FILES для GET
         kwargs['user'] = self.request.user
-        # Получаем instance игрока, если он есть
-        try:
-             kwargs['instance'] = self.request.user.player
-        except Player.DoesNotExist:
-             kwargs['instance'] = None
         return kwargs
 
-    def get_initial(self):
-        """Заполняем форму из сессии"""
-        initial = super().get_initial()
-        wizard_data = self.request.session.get('wizard_data', {})
-        # Заполняем поля этого шага из данных сессии предыдущих шагов, если они там есть
-        step3_data = wizard_data.get('step3_data', {})
-        initial.update(step3_data) # Перезапишет initial из get_form_kwargs, если есть в сессии
-        return initial
+    def post(self, request, *args, **kwargs):
+        """ Обрабатываем POST с учетом request.FILES для аватара """
+        # Передаем request.POST и request.FILES в конструктор формы
+        # Передаем user, чтобы форма могла его использовать при инициализации
+        form = self.get_form_class()(request.POST, request.FILES, user=request.user)
+        logger.info(f"Processing POST for Step 3 by {request.user.email}")
 
-    # form_valid унаследован от базового класса, просто сохранит данные в сессию
+        if form.is_valid():
+            logger.info(f"Step 3 form IS VALID for {request.user.email}.")
+            # --- СОХРАНЕНИЕ АВАТАРА ---
+            avatar = form.cleaned_data.get('avatar')
+            player = None # Инициализируем player
+            if avatar:
+                try:
+                    player, created = Player.objects.get_or_create(user=request.user)
+                    player.avatar = avatar
+                    player.save(update_fields=['avatar'])
+                    logger.info(f"Avatar uploaded and saved for user {request.user.email} in Step 3.")
+                except Exception as e:
+                    logger.error(f"Failed to save avatar for user {request.user.email} in Step 3: {e}", exc_info=True)
+                    messages.error(request, "Could not save uploaded avatar. Please try again.")
+                    # Не вызываем form_invalid, чтобы не прерывать визард из-за необязательного аватара
+            # --- КОНЕЦ СОХРАНЕНИЯ АВАТАРА ---
+
+            # Вызываем form_valid базового класса, чтобы сохранить
+            # остальные (сериализуемые) данные шага в сессию и сделать редирект
+            # Важно: не передаем request.FILES в form_valid
+            return self.form_valid(form) # form уже содержит cleaned_data
+        else:
+            logger.warning(f"Step 3 form IS INVALID for {request.user.email}.")
+            logger.warning(f"Form errors: {form.errors.as_json(escape_html=True)}")
+            # Передаем невалидную форму в form_invalid
+            return self.form_invalid(form)
 
 class PlayerWizardStep4View(PlayerWizardBaseView):
     """Шаг 4: Теннисный профиль и навыки"""
-    form_class = PlayerWizardForm # Используем большую форму, но покажем другую часть полей
+    form_class = PlayerWizardStep4Form # <--- ИЗМЕНЕНО
     success_url = reverse_lazy('rivals:player_wizard_step5')
     step = 4
     template_name = 'rivals/player_wizard_step4.html'
@@ -2271,149 +2424,225 @@ class PlayerWizardStep4View(PlayerWizardBaseView):
     def dispatch(self, request, *args, **kwargs):
         # Проверка: нельзя попасть сюда, если не пройден шаг 3
         wizard_data = request.session.get('wizard_data', {})
+
+        # --- ДОБАВЬТЕ ЛОГИРОВАНИЕ ПЕРЕД ПРОВЕРКОЙ ---
+        logger.info(f"Entering Step 4 dispatch for {request.user.email}. Checking session data.")
+        logger.debug(f"Session wizard_data at Step 4 dispatch: {wizard_data}")
+        # --- КОНЕЦ ЛОГИРОВАНИЯ ---
+
+
         if 'step3_data' not in wizard_data:
             messages.warning(request, "Please complete the previous step first.")
             return redirect('rivals:player_wizard_step3')
+        
+        # --- ДОБАВЬТЕ ЛОГИРОВАНИЕ ПРИ УСПЕХЕ ---
+        logger.info(f"Step 3 data FOUND in session for {request.user.email}. Proceeding with Step 4.")
+        # --- КОНЕЦ ЛОГИРОВАНИЯ ---
+        
+        
         return super().dispatch(request, *args, **kwargs)
 
     def get_form_kwargs(self):
-        """Передаем user и instance в форму"""
+        """Передаем user в форму"""
         kwargs = super().get_form_kwargs()
         kwargs['user'] = self.request.user
-        try:
-             kwargs['instance'] = self.request.user.player
-        except Player.DoesNotExist:
-             kwargs['instance'] = None
+        # instance не нужен
         return kwargs
 
+    # get_initial можно оставить
     def get_initial(self):
-        """Заполняем форму из сессии"""
         initial = super().get_initial()
         wizard_data = self.request.session.get('wizard_data', {})
         step4_data = wizard_data.get('step4_data', {})
         initial.update(step4_data)
+
+        # Инициализация из Player, если нет в сессии
+        if not initial and self.request.user:
+             try:
+                 player = self.request.user.player
+                 if player:
+                     initial['height'] = player.height
+                     initial['weight'] = player.weight
+                     initial['tennis_exp_year'] = player.tennis_exp_year
+                     initial['availability'] = player.availability
+                     # Для ChoiceField начальные значения лучше не ставить,
+                     # если они не были явно выбраны ранее
+             except Player.DoesNotExist:
+                 pass
         return initial
 
     # form_valid унаследован от базового класса
 
-class PlayerWizardStep5View(LoginRequiredMixin, TemplateView):
-    """Шаг 5: Обзор и отправка"""
+    # --- ДОБАВЬТЕ КОНТЕКСТ ЗДЕСЬ ---
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Передаем список имен полей для рендеринга анкеты
+        context['ntrp_survey_fields'] = [
+            'experience_level',
+            'playing_frequency',
+            'technical_level',
+            'serve_level',
+            'match_experience'
+        ]
+        return context
+    # --- КОНЕЦ ДОБАВЛЕНИЯ ---
+
+class PlayerWizardStep5View(LoginRequiredMixin, View):
     template_name = 'rivals/player_wizard_step5.html'
     step = 5
 
+    # Auxiliary function remains the same
+    def get_all_wizard_data(self, request, convert_date=False):
+        wizard_data = request.session.get('wizard_data', {})
+        all_data = {}
+        for i in range(1, self.step):
+            step_key = f'step{i}_data'
+            step_data = wizard_data.get(step_key, {})
+            if isinstance(step_data, dict):
+                if convert_date:
+                    birthdate_str = step_data.get('birthdate')
+                    if birthdate_str and isinstance(birthdate_str, str):
+                        try:
+                            step_data['birthdate'] = date.fromisoformat(birthdate_str)
+                        except (ValueError, TypeError):
+                            logger.error(f"Could not convert birthdate '{birthdate_str}' back to date object.")
+                            step_data.pop('birthdate', None)
+                all_data.update(step_data)
+            else:
+                logger.warning(f"Data for {step_key} in session is not a dict: {step_data}")
+        logger.debug(f"Collected all_data (convert_date={convert_date}) for Step 5: {all_data}")
+        return all_data
+
+    # dispatch remains the same
     def dispatch(self, request, *args, **kwargs):
-         # Проверка: нельзя попасть сюда, если не пройден шаг 4
+        if not request.user.is_authenticated:
+            return self.handle_no_permission()
         wizard_data = request.session.get('wizard_data', {})
         if 'step4_data' not in wizard_data:
-            messages.warning(request, "Please complete the previous step first.")
+            logger.warning(f"User {request.user.email} accessing Step 5 without Step 4 data. Redirecting.")
+            messages.warning(request, _("Please complete the previous step first."))
             return redirect('rivals:player_wizard_step4')
         return super().dispatch(request, *args, **kwargs)
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['step'] = self.step
-        wizard_data = self.request.session.get('wizard_data', {})
-        all_data = {}
-        for key, value in wizard_data.items():
-             if isinstance(value, dict):
-                 all_data.update(value)
+    # get method remains the same
+    def get(self, request, *args, **kwargs):
+        context = {'step': self.step}
+        all_data = self.get_all_wizard_data(request, convert_date=False)
         context['wizard_data'] = all_data
-
-        # Создаем форму аватара для рендеринга
-        context['avatar_form'] = PlayerWizardAvatarForm() # <--- НОВАЯ ФОРМА
-
-        # --- Расчет NTRP и категории (как было) ---
-        try: player_instance = self.request.user.player
-        except Player.DoesNotExist: player_instance = None
-        review_form = PlayerWizardForm(data=all_data, instance=player_instance, user=self.request.user)
-        if review_form.is_bound and review_form.is_valid():
-            context['calculated_ntrp_int'] = review_form.calculate_ntrp()
-            context['calculated_ntrp'] = context['calculated_ntrp_int'] / 1000.0 # Для отображения 3.5
-            context['calculated_category'] = review_form.determine_category(context['calculated_ntrp_int'])
-        else:
-             logger.warning(f"Wizard data seems invalid at review step for user {self.request.user.email}. Errors: {review_form.errors.as_json()}")
+        # ... (NTRP, display values, avatar URL calculations as before) ...
+        # Расчет NTRP и Категории
+        try:
+            context['calculated_ntrp_int'] = calculate_ntrp_from_data(all_data)
+            context['calculated_ntrp'] = context['calculated_ntrp_int'] / 1000.0
+            context['calculated_category'] = determine_category_from_ntrp(context['calculated_ntrp_int'])
+        except Exception as e:
+             logger.error(f"Error calculating NTRP/Category at review step: {e}", exc_info=True)
              context['calculated_ntrp_int'] = 0
              context['calculated_ntrp'] = 0.0
              context['calculated_category'] = 'N/A'
-             messages.error(self.request, "There was an issue with the data collected. Please review previous steps.")
-        # --- Конец расчета ---
+             messages.error(request, _("Could not calculate profile data."))
+        # Отображаемые значения
+        try:
+            context['city_display'] = dict(TR_CITIES).get(all_data.get('city'), '-')
+            context['gender_display'] = dict(GENDER).get(all_data.get('gender'), '-')
+            context['experience_display'] = dict(EXPERIENCE_CHOICES).get(int(all_data.get('experience_level', '0')), '-')
+            context['frequency_display'] = dict(FREQUENCY_CHOICES).get(int(all_data.get('playing_frequency', '0')), '-')
+            context['technical_display'] = dict(LEVEL_CHOICES).get(int(all_data.get('technical_level', '0')), '-')
+            context['serve_display'] = dict(SERVE_CHOICES).get(int(all_data.get('serve_level', '0')), '-')
+            context['match_display'] = dict(MATCH_CHOICES).get(int(all_data.get('match_experience', '0')), '-')
+        except (ValueError, TypeError, KeyError) as e:
+            logger.error(f"Error getting display values for review step: {e}", exc_info=True)
+            for key in ['city_display', 'gender_display', 'experience_display', 'frequency_display', 'technical_display', 'serve_display', 'match_display']:
+                context.setdefault(key, '-')
+        # URL Аватара
+        try:
+            context['player_avatar_url'] = request.user.player.get_avatar_url()
+        except (Player.DoesNotExist, AttributeError) as e :
+             logger.warning(f"Could not get player avatar URL: {e}")
+             context['player_avatar_url'] = Player().get_avatar_url()
 
-        # --- Отображаемые значения (как было) ---
-        context['city_display'] = dict(TR_CITIES).get(all_data.get('city'))
-        context['gender_display'] = dict(GENDER).get(all_data.get('gender'))
-        context['experience_display'] = dict(PlayerWizardForm.EXPERIENCE_CHOICES).get(int(all_data.get('experience_level', 0)))
-        context['frequency_display'] = dict(PlayerWizardForm.FREQUENCY_CHOICES).get(int(all_data.get('playing_frequency', 0)))
-        context['technical_display'] = dict(PlayerWizardForm.LEVEL_CHOICES).get(int(all_data.get('technical_level', 0)))
-        context['serve_display'] = dict(PlayerWizardForm.SERVE_CHOICES).get(int(all_data.get('serve_level', 0)))
-        context['match_display'] = dict(PlayerWizardForm.MATCH_CHOICES).get(int(all_data.get('match_experience', 0)))
-        # --- Конец отображаемых значений ---
+        return render(request, self.template_name, context)
 
-        return context
-
+    # Simplified post method - NO VALIDATION HERE
+    @transaction.atomic # Wrap in transaction for safety
     def post(self, request, *args, **kwargs):
-        wizard_data = request.session.get('wizard_data', {})
-        all_data = {}
-        for key, value in wizard_data.items():
-            if isinstance(value, dict):
-                all_data.update(value)
+        logger.info(f"Processing POST for Step 5 confirmation by {request.user.email}.")
+        all_data = self.get_all_wizard_data(request, convert_date=True)
 
-        # Получаем или создаем игрока
-        player, created = Player.objects.get_or_create(user=request.user)
+        player_instance = None
+        try:
+            player_instance = request.user.player
+        except Player.DoesNotExist:
+             logger.error(f"Player does not exist for user {request.user.email} during Step 5 POST")
+             messages.error(request, _("User profile not found. Cannot complete setup.")) # Используем _ здесь
+             return redirect('rivals:player_wizard_step1')
 
-        # Создаем и валидируем ОСНОВНУЮ форму с данными из сессии
-        final_form = PlayerWizardForm(data=all_data, instance=player, user=request.user)
-        # Создаем и валидируем ФОРМУ АВАТАРА с данными из POST и FILES
-        avatar_form = PlayerWizardAvatarForm(request.POST, request.FILES) # <--- НОВАЯ ФОРМА
+        try:
+            logger.debug(f"Updating player instance {player_instance.pk} with data subset: { {k:v for k,v in all_data.items() if k in ['first_name','last_name','birthdate','city','gender','height','weight','tennis_exp_year','availability']} }") # Логируем только то, что сохраняем
 
-        # Проверяем обе формы
-        if final_form.is_valid() and avatar_form.is_valid():
+            # --- Обновляем поля, которые ЕСТЬ в модели Player ---
+            player_instance.user.first_name = all_data.get('first_name', player_instance.user.first_name)
+            player_instance.user.last_name = all_data.get('last_name', player_instance.user.last_name)
+            # Mobile в CustomUser
+            new_mobile = all_data.get('mobile')
+            if new_mobile is not None:
+                player_instance.user.mobile = new_mobile
+                player_instance.user.save(update_fields=['mobile'])
+
+            if 'birthdate' in all_data:
+                player_instance.birthdate = all_data['birthdate']
+            if 'city' in all_data:
+                 player_instance.city = all_data['city'] # Assuming CharField
+            player_instance.gender = all_data.get('gender', player_instance.gender)
+            player_instance.height = all_data.get('height', player_instance.height)
+            player_instance.weight = all_data.get('weight', player_instance.weight)
+            player_instance.tennis_exp_year = all_data.get('tennis_exp_year', player_instance.tennis_exp_year)
+            player_instance.availability = all_data.get('availability', player_instance.availability)
+
+            # --- НЕ обновляем поля, которых нет в модели ---
+            # player_instance.experience_level = ...
+            # player_instance.playing_frequency = ...
+            # player_instance.technical_level = ...
+            # player_instance.serve_level = ...
+            # player_instance.match_experience = ...
+
+            # --- Рассчитываем и сохраняем ТОЛЬКО NTRP (если поле есть) ---
             try:
-                # 1. Сохраняем основные данные (без аватара)
-                # commit=True здесь сохранит User, Player, Stats
-                saved_player = final_form.save(commit=True)
+                 ntrp_int = calculate_ntrp_from_data(all_data)
+                 # Убедитесь, что поле 'rating_ntrp' существует в модели Player!
+                 player_instance.rating_ntrp = ntrp_int
+                 logger.info(f"Calculated and set rating_ntrp = {ntrp_int}")
+            except AttributeError:
+                 logger.error("Model Player does not have field 'rating_ntrp'. Cannot save calculated NTRP.")
+            except Exception as ntrp_error:
+                 logger.error(f"Could not calculate/set NTRP during final save: {ntrp_error}")
+                 # player_instance.rating_ntrp = 0 # Или не трогать поле
 
-                # 2. Сохраняем аватар, если он был загружен
-                avatar = avatar_form.cleaned_data.get('avatar')
-                if avatar:
-                    saved_player.avatar = avatar
-                    saved_player.save(update_fields=['avatar']) # Обновляем только поле аватара
-                    logger.info(f"Avatar updated for wizard user {request.user.email}")
-
-                # 3. Завершаем онбординг (как было)
-                onboarding, _ = PlayerOnboarding.objects.get_or_create(player=saved_player)
-                onboarding.is_completed = True
-                onboarding.completed_at = now()
-                onboarding.save()
-
-                messages.success(request, "Your profile has been completed successfully!")
-                logger.info(f"Wizard completed and profile saved for user {request.user.email}")
-                request.session.pop('wizard_data', None)
-                return redirect('rivals:today')
-
-            except Exception as e:
-                 logger.exception(f"Error during final save for wizard user {request.user.email}: {e}")
-                 messages.error(request, "An error occurred while saving your profile. Please try again.")
-                 # Остаемся на странице обзора с ошибкой
-                 context = self.get_context_data(**kwargs)
-                 # Передаем ошибки обеих форм
-                 context['form_errors'] = final_form.errors | avatar_form.errors
-                 return self.render_to_response(context)
-        else:
-            # Если хотя бы одна форма невалидна
-            logger.error(f"Wizard final form invalid for user {request.user.email}: ProfileForm={final_form.errors.as_json()} AvatarForm={avatar_form.errors.as_json()}")
-            messages.error(request, "There were errors in your profile data. Please go back and correct them or re-upload the avatar if needed.")
-             # Остаемся на странице обзора с ошибкой
-            context = self.get_context_data(**kwargs)
-            # Передаем ошибки обеих форм и сами формы для ререндера
-            context['form_errors'] = final_form.errors | avatar_form.errors
-            context['avatar_form'] = avatar_form # Передаем невалидную форму аватара обратно
-            return self.render_to_response(context)
-
-# === КОНЕЦ НОВЫХ VIEWS ===
+            # --- Mark profile complete ---
+            player_instance.is_new = False
 
 
+            # --- Сохраняем player (user сохранен отдельно) ---
+            player_instance.save()
+            logger.info(f"Player instance {player_instance.pk} updated successfully.")
 
+            # ... (onboarding, session pop, redirect) ...
+            onboarding, onboarding_created = PlayerOnboarding.objects.get_or_create(player=player_instance)
 
+        
+            request.session.pop('wizard_data', None)
+            messages.success(request, _("Your profile has been completed successfully!")) # Используем _ здесь
+            return redirect('rivals:today')
+
+        except Exception as e:
+             logger.exception(f"Error during final DIRECT save for wizard user {request.user.email}: {e}")
+             # Используем _ здесь
+             messages.error(request, _("An error occurred while saving your profile. Please try again or contact support."))
+             return redirect(request.path)
+
+    # --- NO get_form_kwargs, form_valid, form_invalid needed ---
+
+# ... (остальной код файла) ...
 
 def activate_onboarding(request):
     player = request.user.player

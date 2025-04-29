@@ -51,38 +51,28 @@
             {% endif %}
 
              {# Используем одну форму для POST запроса с enctype #}
-             <form method="post" enctype="multipart/form-data" id="player-wizard-final-form">
+             <form method="post" id="player-wizard-final-form">
                  {% csrf_token %}
                  <div class="row justify-content-center">
                      <div class="col-xxl-6 col-xl-8">
                          <h3 class="text-primary">{% trans "Step 5: Review & Submit" %}</h3>
                          <h5 class="card-title mb-4">{% trans "Please review your information before submitting" %}</h5>
 
-                         {# === Блок Аватара === #}
+                         {# === ОТОБРАЖЕНИЕ АВАТАРА === #}
                          <div class="text-center mb-4">
-                             <label class="small mb-1">{% trans "Profile Picture" %}</label>
-                             <div class="avatar-upload">
-                                 <div class="avatar-preview mx-auto mb-3" style="width: 150px; height: 150px; border-radius: 50%; overflow: hidden; border: 2px solid #ced4da; position: relative; cursor: pointer;">
-                                     <img id="avatar-preview-image-step5"
-                                          src="{{ user.player.get_avatar_url|default:'/static/assets/img/illustrations/profiles/profile-1.png' }}"
-                                          style="width: 100%; height: 100%; object-fit: cover;" alt="Avatar Preview">
-                                     <div class="overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease;">
-                                         <i class="fas fa-camera text-white" style="font-size: 24px;"></i>
-                                     </div>
-                                 </div>
-                                 <div class="avatar-edit text-center mt-2">
-                                      {# Рендерим поле из формы аватара #}
-                                      {{ avatar_form.avatar.label_tag }}
-                                      {{ avatar_form.avatar }} {# Скрытый input для файла #}
-                                      <label for="{{ avatar_form.avatar.id_for_label }}" class="btn btn-sm btn-primary">
-                                          <i class="fas fa-upload me-1"></i> {% trans "Change Image" %}
-                                      </label>
-                                      {% if avatar_form.avatar.help_text %}<div class="form-text small mt-1">{{ avatar_form.avatar.help_text }}</div>{% endif %}
-                                      {% if avatar_form.avatar.errors %}<div class="small text-danger mt-1">{{ avatar_form.avatar.errors|first }}</div>{% endif %}
-                                 </div>
-                             </div>
+                              <label class="small mb-1 d-block">{% trans "Profile Picture" %}</label>
+                              <img src="{{ player_avatar_url|default:'/static/assets/img/illustrations/profiles/profile-1.png' }}"
+                                   class="img-thumbnail rounded-circle mb-2"
+                                   style="width: 150px; height: 150px; object-fit: cover;"
+                                   alt="Player Avatar"
+                                   onerror="this.onerror=null;this.src='/static/assets/img/illustrations/profiles/profile-1.png';"> {# Запасной URL при ошибке #}
+                              <div>
+                                   <a href="{% url 'rivals:player_wizard_step3' %}" class="btn btn-sm btn-light">
+                                        <i data-feather="edit-2" class="me-1"></i> {% trans "Change Picture (Step 3)" %}
+                                   </a>
+                              </div>
                          </div>
-                         {# === Конец Блока Аватара === #}
+                         {# === КОНЕЦ ОТОБРАЖЕНИЯ === #}
 
                          {# Карточка NTRP #}
                          <div class="card mb-4 ntrp-card">
@@ -113,10 +103,10 @@
                               </div>
                               <div class="card-body">
                                   {# Используем данные из wizard_data для отображения #}
-                                  <div class="row small"><div class="col-sm-4 text-truncate"><em>Full Name:</em></div><div class="col">{{ wizard_data.first_name }} {{ wizard_data.last_name }}</div></div>
+                                  <div class="row small"><div class="col-sm-4 text-truncate"><em>Full Name:</em></div><div class="col">{{ wizard_data.first_name|default:"-" }} {{ wizard_data.last_name|default:"-" }}</div></div>
                                   <div class="row small"><div class="col-sm-4 text-truncate"><em>Email:</em></div><div class="col">{{ user.email }}</div></div>
                                   <div class="row small"><div class="col-sm-4 text-truncate"><em>Mobile:</em></div><div class="col">{{ wizard_data.mobile|default:"-" }}</div></div>
-                                  <div class="row small"><div class="col-sm-4 text-truncate"><em>Birthdate:</em></div><div class="col">{{ wizard_data.birthdate|date:"Y-m-d"|default:"-" }}</div></div>
+                                  <div class="row small"><div class="col-sm-4 text-truncate"><em>Birthdate:</em></div><div class="col">{{ wizard_data.birthdate|default:"-" }}</div></div>
                                   <div class="row small"><div class="col-sm-4 text-truncate"><em>Gender:</em></div><div class="col">{{ gender_display|default:"-" }}</div></div>
                                   <div class="row small"><div class="col-sm-4 text-truncate"><em>City:</em></div><div class="col">{{ city_display|default:"-" }}</div></div>
                               </div>
@@ -172,36 +162,5 @@
         </div> {# end card-body #}
     </div> {# end card #}
 </div>
-
-<script>
-// JavaScript для предпросмотра аватара на Шаге 5
-document.addEventListener('DOMContentLoaded', function() {
-    const avatarInput = document.getElementById('{{ avatar_form.avatar.id_for_label }}'); // ID из новой формы
-    const avatarPreview = document.getElementById('avatar-preview-image-step5');
-    const previewContainer = avatarPreview.closest('.avatar-preview'); // Находим родительский контейнер
-
-    if(avatarInput && avatarPreview && previewContainer) {
-        previewContainer.addEventListener('click', () => avatarInput.click()); // Клик по контейнеру триггерит инпут
-        avatarInput.addEventListener('change', function() {
-            const file = this.files[0];
-            if(file && file.type.match('image.*')) {
-                if(file.size > 5 * 1024 * 1024) { // 5MB Limit
-                    alert('File too large (max 5MB)');
-                    this.value = ""; // Сбрасываем инпут
-                    return;
-                 }
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    avatarPreview.src = e.target.result;
-                }
-                reader.readAsDataURL(file);
-            } else if (file) {
-                alert('Please select an image file.');
-                this.value = ""; // Сбрасываем инпут
-            }
-        });
-    }
-});
-</script>
 
 {% endblock content %}

@@ -84,31 +84,29 @@
                                  </div>
 
                                  {# Рендеринг радиокнопок анкеты NTRP #}
-                                 {% with fields_to_render="experience_level playing_frequency technical_level serve_level match_experience".split %}
-                                     {% for field_name in fields_to_render %}
-                                         {% with field=form|get_form_field:field_name %} {# Используем тег для получения поля по имени #}
-                                             {% if field %}
-                                             <div class="mb-4">
-                                                 <label class="mb-1 fw-bold">{{ field.label }}</label>
-                                                 {% for radio in field %}
-                                                 <div class="form-check">
-                                                     {{ radio.tag }}
-                                                     <label class="form-check-label" for="{{ radio.id_for_label }}">
-                                                         {{ radio.choice_label }}
-                                                     </label>
-                                                 </div>
-                                                 {% endfor %}
-                                                 {% if field.errors %}
-                                                 <div class="small text-danger mt-1">{{ field.errors|first }}</div>
-                                                 {% endif %}
-                                                  {% if field.help_text %}
-                                                 <div class="form-text small mt-1">{{ field.help_text }}</div>
-                                                 {% endif %}
+                                 {% for field_name in ntrp_survey_fields %}
+                                     {% with field=form|get_form_field:field_name %} {# Используем тег для получения поля по имени #}
+                                         {% if field %}
+                                         <div class="mb-4">
+                                             <label class="mb-1 fw-bold">{{ field.label }}</label>
+                                             {% for radio in field %}
+                                             <div class="form-check">
+                                                 {{ radio.tag }}
+                                                 <label class="form-check-label" for="{{ radio.id_for_label }}">
+                                                     {{ radio.choice_label }}
+                                                 </label>
                                              </div>
+                                             {% endfor %}
+                                             {% if field.errors %}
+                                             <div class="small text-danger mt-1">{{ field.errors|first }}</div>
                                              {% endif %}
-                                         {% endwith %}
-                                     {% endfor %}
-                                 {% endwith %}
+                                              {% if field.help_text %}
+                                             <div class="form-text small mt-1">{{ field.help_text }}</div>
+                                             {% endif %}
+                                         </div>
+                                         {% endif %}
+                                     {% endwith %}
+                                 {% endfor %}
                              </div>
                          </div>
 

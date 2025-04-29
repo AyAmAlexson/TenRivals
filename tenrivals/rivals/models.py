@@ -996,7 +996,7 @@ class PlayerOnboarding(models.Model):
         result.append(('Update your profile info: name, birthdate, gender, city', reverse('rivals:player_update'),3,self.ob_main_info))
         result.append(('Update your additional info: height, weight, tennis experience, availability', reverse('rivals:player_update'),2,self.ob_additional_info))
         result.append(('Upload your avatar', reverse('rivals:player_update'),3,self.ob_avatar))
-        result.append(('Complete the skill evaluation', reverse('rivals:player_wizard'),3,self.ob_wizard_completed))
+        result.append(('Complete the skill evaluation', reverse('rivals:player_wizard_step1'),3,self.ob_wizard_completed))
         result.append(('Verify your email', reverse('rivals:player_update'),1,self.ob_verify_email))
         result.append(('Register in your first tournament', reverse('rivals:tournaments'),3,self.ob_first_tournament_registration))
         result.append(('Play your first match', "",3,self.ob_first_match_played))

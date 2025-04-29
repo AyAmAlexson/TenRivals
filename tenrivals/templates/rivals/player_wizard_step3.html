@@ -40,21 +40,50 @@
             {% endif %}
             <div class="row justify-content-center">
                 <div class="col-xxl-6 col-xl-8">
-                    <form method="post" id="wizard-step3-form">
+                    <form method="post" id="wizard-step3-form" enctype="multipart/form-data">
                         {% csrf_token %}
                         <h3 class="text-primary">{% trans "Step 3: Personal Information" %}</h3>
                         <h5 class="card-title mb-4">{% trans "Enter your basic details" %}</h5>
+
+                        {# === БЛОК АВАТАРА === #}
+                        <div class="mb-4 text-center">
+                             <label class="small mb-1 d-block">{% trans "Profile Picture (Optional)" %}</label>
+                             <div class="avatar-upload mx-auto" style="width: 150px;">
+                                 <div class="avatar-preview mx-auto mb-3" style="width: 150px; height: 150px; border-radius: 50%; overflow: hidden; border: 2px solid #ced4da; position: relative; background-color: #f8f9fa;">
+                                     {# Используем существующий аватар игрока или дефолтный #}
+                                     <img id="avatar-preview-image-step3"
+                                          src="{{ user.player.get_avatar_url|default:'/static/assets/img/illustrations/profiles/profile-1.png' }}"
+                                          style="width: 100%; height: 100%; object-fit: cover;" alt="Avatar Preview"
+                                          onerror="this.onerror=null;this.src='/static/assets/img/illustrations/profiles/profile-1.png';"> {# Запасной URL при ошибке загрузки #}
+                                     <div class="overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease; cursor: pointer;">
+                                         <i class="fas fa-camera text-white" style="font-size: 24px;"></i>
+                                     </div>
+                                 </div>
+                                 <div class="avatar-edit text-center mt-2">
+                                     {{ form.avatar.label_tag }} {# Должно быть скрыто CSS, если не нужно #}
+                                     {# Скрытый input файла. НЕ добавляйте класс form-control #}
+                                     {{ form.avatar }}
+                                     {# Видимая кнопка для выбора файла #}
+                                     <label for="{{ form.avatar.id_for_label }}" class="btn btn-sm btn-primary">
+                                         <i class="fas fa-upload me-1"></i> {% trans "Choose Image" %}
+                                     </label>
+                                     {% if form.avatar.help_text %}<div class="form-text small mt-1">{{ form.avatar.help_text }}</div>{% endif %}
+                                     {% if form.avatar.errors %}<div class="small text-danger mt-1">{{ form.avatar.errors|first }}</div>{% endif %}
+                                 </div>
+                             </div>
+                        </div>
+                        {# === КОНЕЦ БЛОКА АВАТАРА === #}
 
                         {# Используем форму из контекста 'form' #}
                         <div class="mb-3">
                             <label class="small mb-1" for="{{ form.first_name.id_for_label }}">{{ form.first_name.label }}</label>
                             {{ form.first_name }}
-                            {% if form.first_name.errors %}<div class="invalid-feedback d-block">{{ form.first_name.errors|first }}</div>{% endif %}
+                            {% if form.first_name.errors %}<div class="invalid-feedback d-block">{{ form.first_name.errors }}</div>{% endif %}
                         </div>
                         <div class="mb-3">
                             <label class="small mb-1" for="{{ form.last_name.id_for_label }}">{{ form.last_name.label }}</label>
                             {{ form.last_name }}
-                            {% if form.last_name.errors %}<div class="invalid-feedback d-block">{{ form.last_name.errors|first }}</div>{% endif %}
+                            {% if form.last_name.errors %}<div class="invalid-feedback d-block">{{ form.last_name.errors }}</div>{% endif %}
                         </div>
                          <div class="mb-3">
                             <label class="small mb-1">Email address</label>
@@ -65,19 +94,19 @@
                             <div class="mb-3 col-md-6">
                                 <label class="small mb-1" for="{{ form.mobile.id_for_label }}">{{ form.mobile.label }}</label>
                                 {{ form.mobile }}
-                                {% if form.mobile.errors %}<div class="invalid-feedback d-block">{{ form.mobile.errors|first }}</div>{% endif %}
+                                {% if form.mobile.errors %}<div class="invalid-feedback d-block">{{ form.mobile.errors }}</div>{% endif %}
                             </div>
                              <div class="mb-3 col-md-6">
                                 <label class="small mb-1" for="{{ form.birthdate.id_for_label }}">{{ form.birthdate.label }}</label>
                                 {{ form.birthdate }}
-                                {% if form.birthdate.errors %}<div class="invalid-feedback d-block">{{ form.birthdate.errors|first }}</div>{% endif %}
+                                {% if form.birthdate.errors %}<div class="invalid-feedback d-block">{{ form.birthdate.errors }}</div>{% endif %}
                             </div>
                         </div>
                          <div class="row gx-3">
                              <div class="mb-3 col-md-6">
                                 <label class="small mb-1" for="{{ form.city.id_for_label }}">{{ form.city.label }}</label>
                                 {{ form.city }}
-                                {% if form.city.errors %}<div class="invalid-feedback d-block">{{ form.city.errors|first }}</div>{% endif %}
+                                {% if form.city.errors %}<div class="invalid-feedback d-block">{{ form.city.errors }}</div>{% endif %}
                             </div>
                             <div class="mb-3 col-md-6">
                                 <label class="mb-1">{{ form.gender.label }}</label>
@@ -89,13 +118,13 @@
                                     </div>
                                     {% endfor %}
                                 </div>
-                                {% if form.gender.errors %}<div class="invalid-feedback d-block">{{ form.gender.errors|first }}</div>{% endif %}
+                                {% if form.gender.errors %}<div class="invalid-feedback d-block">{{ form.gender.errors }}</div>{% endif %}
                             </div>
                         </div>
 
                         {% if form.non_field_errors %}
                             <div class="alert alert-danger">
-                                {{ form.non_field_errors|first }}
+                                {{ form.non_field_errors }}
                             </div>
                         {% endif %}
 
@@ -114,4 +143,46 @@
         </div>
     </div>
 </div>
+
+{# --- ДОБАВЛЕН JS ДЛЯ АВАТАРА (id должен быть 'avatar-preview-image-step3') --- #}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const avatarInput = document.getElementById('{{ form.avatar.id_for_label }}');
+    const avatarPreview = document.getElementById('avatar-preview-image-step3');
+    const previewContainer = avatarPreview ? avatarPreview.closest('.avatar-preview') : null;
+
+    if(avatarInput && avatarPreview && previewContainer) {
+        const overlay = previewContainer.querySelector('.overlay');
+
+        // Клик по контейнеру/оверлею триггерит инпут
+        previewContainer.addEventListener('click', () => avatarInput.click());
+
+        avatarInput.addEventListener('change', function() {
+            const file = this.files[0];
+            if(file && file.type.match('image.*')) {
+                if(file.size > 5 * 1024 * 1024) { // 5MB Limit
+                    alert('File too large (max 5MB)');
+                    this.value = ""; // Сбрасываем инпут
+                    return;
+                 }
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    avatarPreview.src = e.target.result;
+                }
+                reader.readAsDataURL(file);
+            } else if (file) {
+                alert('Please select an image file.');
+                this.value = ""; // Сбрасываем инпут
+            }
+        });
+
+        if (overlay) {
+             previewContainer.addEventListener('mouseover', () => { overlay.style.opacity = '1'; });
+             previewContainer.addEventListener('mouseout', () => { overlay.style.opacity = '0'; });
+        }
+    } else {
+        console.error("Avatar preview elements not found for step 3.");
+    }
+});
+</script>
 {% endblock content %}
