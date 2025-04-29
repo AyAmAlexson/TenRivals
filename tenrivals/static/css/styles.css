@@ -125,10 +125,10 @@
   --bs-black-rgb: 0, 0, 0;
   --bs-body-color-rgb: 105, 112, 122;
   --bs-body-bg-rgb: 242, 246, 252;
-  --bs-font-sans-serif: "Montserrat", "Metropolis", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --bs-font-sans-serif: "Work Sans", "Metropolis", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
   --bs-font-monospace: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   --bs-gradient: linear-gradient(180deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0));
-  --bs-body-font-family: Montserrat, Metropolis, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji;
+  --bs-body-font-family: Work Sans, Metropolis, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji;
   --bs-header-font-family: Jost, Metropolis, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji;
   --bs-subheader-font-family: Work Sans, Metropolis, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji;
   --bs-body-font-size: 1rem;
@@ -195,28 +195,29 @@ h6, .h6, h5, .h5, h4, .h4, h3, .h3, h2, .h2, h1, .h1 {
 }
 
 h1, .h1 {
-  font-size: calc(2rem + 0.3vw);
+  font-size: calc(2.2rem + 0.3vw);
   font-family: var(--bs-header-font-family) !important;
 }
 @media (min-width: 1200px) {
   h1, .h1 {
-    font-size: 1.5rem;
+    font-size: 2.2rem;
   }
 }
 
 h2, .h2 {
-  font-size: calc(1.265rem + 0.18vw);
+  font-size: calc(1.8rem + 0.18vw);
   font-family: var(--bs-header-font-family) !important;
 }
 @media (min-width: 1200px) {
   h2, .h2 {
-    font-size: 1.4rem;
+    font-size: 2rem;
   }
 }
 
 h3, .h3 {
   font-size: calc(1.255rem + 0.06vw);
   font-family: var(--bs-subheader-font-family) !important;
+  font-weight: 200;
 }
 @media (min-width: 1200px) {
   h3, .h3 {
