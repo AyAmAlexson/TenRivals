@@ -205,7 +205,7 @@ h1, .h1 {
 }
 
 h2, .h2 {
-  font-size: calc(1.8rem + 0.18vw);
+  font-size: calc(2rem + 0.3vw);
   font-family: var(--bs-header-font-family) !important;
 }
 @media (min-width: 1200px) {
@@ -215,13 +215,13 @@ h2, .h2 {
 }
 
 h3, .h3 {
-  font-size: calc(1.255rem + 0.06vw);
+  font-size: calc(1.8rem + 0.3vw);
   font-family: var(--bs-subheader-font-family) !important;
   font-weight: 200;
 }
 @media (min-width: 1200px) {
   h3, .h3 {
-    font-size: 1.3rem;
+    font-size: 1.8rem;
   }
 }
 
