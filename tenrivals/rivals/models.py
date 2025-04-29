@@ -127,43 +127,37 @@ class Player(models.Model):
 
 
 def get_deleted_player():
-    # Получаем модель пользователя (CustomUser)
     from persons.models import CustomUser
-    from .models import Player  # Импортируем модель Player
+    # Используем get_or_create для атомарного получения или создания пользователя-заглушки
+    deleted_user, user_created = CustomUser.objects.get_or_create(
+        username='deleted_player',
+        defaults={
+            'email': 'deleted@example.com',
+            'first_name': 'Deleted',
+            'last_name': 'Player',
+            'preferred_city': 'DEL',
+            # Добавьте здесь другие поля с их значениями по умолчанию,
+            # если они нужны для создания пользователя.
+            # ВАЖНО: Не устанавливайте 'password' здесь,
+            # get_or_create не использует create_user.
+            # Мы установим непригодный пароль ниже, если пользователь только что создан.
+        }
+    )
 
-    try:
-        # Пытаемся получить специального пользователя с именем 'deleted_player'
-        deleted_user = CustomUser.objects.get(username='deleted_player')
-    except ObjectDoesNotExist:
-        # Если не найден, создаем его через метод create_user,
-        # чтобы пароль был правильно захеширован.
-        deleted_user = CustomUser.objects.create_user(
-            username='deleted_player',
-            email='deleted@example.com',
-            password=None  # Разрешаем пустой/неиспользуемый пароль
-        )
-        # Заполняем остальные поля
-        deleted_user.first_name = 'Deleted'
-        deleted_user.last_name = 'Player'
-        # Заполните поле preferred_city каким-либо значением, отличным от реальных городов
-        deleted_user.preferred_city = 'DEL'
-        # Если имеются другие обязательные поля, заполните их здесь
-        deleted_user.save()
+    # Если пользователь только что был создан, установим непригодный пароль
+    if user_created:
+        deleted_user.set_unusable_password()
+        deleted_user.save(update_fields=['password'])
 
-    try:
-        # Пытаемся получить профиль игрока, связанный с этим пользователем
-        deleted_player = Player.objects.get(user=deleted_user)
-    except ObjectDoesNotExist:
-        # Если профиль не найден, создаем его.
-        deleted_player = Player.objects.create(
-            user=deleted_user,
-            # Заполняем обязательное поле gender.
-            # Если значение 'X' подходит для обозначения удаленного игрока, используем его.
-            gender='X',
-            # Заполняем поле category специальным значением, чтобы оно не совпадало с реальными категориями.
-            category='D0'
-            # Если в модели Player есть дополнительные обязательные поля, заполните их здесь.
-        )
+    # Используем get_or_create для атомарного получения или создания профиля игрока-заглушки
+    deleted_player, player_created = Player.objects.get_or_create(
+        user=deleted_user,
+        defaults={
+            'gender': 'X',
+            'category': 'D0',
+            
+        }
+    )
 
     return deleted_player
 
