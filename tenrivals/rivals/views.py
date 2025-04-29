@@ -96,7 +96,11 @@ User = get_user_model()
 
 # Initialize Telegram bot if token is configured
 if settings.TELEGRAM_BOT_TOKEN:
-    bot = telebot.TeleBot(settings.TELEGRAM_BOT_TOKEN)
+    try:
+        bot = telebot.TeleBot(settings.TELEGRAM_BOT_TOKEN)
+    except Exception as e:
+        logger.error(f"Failed to initialize Telegram bot: {e}")
+        bot = None
 else:
     bot = None
 
@@ -1757,16 +1761,20 @@ class PlayerWizardView(LoginRequiredMixin, View):
                 context['qr_code_base64'] = qr_code_base64
             except Exception as e:
                  logger.error(f"Error generating QR code for user {user.email}: {e}")
-                 context['qr_code_base64'] = None
+                 # В случае ошибки, устанавливаем None, чтобы кнопка "Retry" появилась
+                 context['qr_code_base64'] = None # <--- Убедитесь, что здесь None при ошибке
+                 context['qr_code_error'] = True # Можно добавить флаг ошибки
 
             context['telegram_bot_name'] = bot_username
-            context['telegram_username_current'] = verification.telegram_username
+            # Используем имя из verification, если оно там есть, иначе из user.telegram
+            context['telegram_username_current'] = verification.telegram_username or user.telegram
         else:
             logger.warning(f"Cannot generate verification links for user {user.email}. Bot username or code missing.")
             context['deep_link'] = None
             context['qr_code_base64'] = None
             context['telegram_bot_name'] = None
-            context['telegram_username_current'] = None
+            context['telegram_username_current'] = verification.telegram_username or user.telegram # Все равно покажем имя
+            context['qr_code_error'] = True # Добавляем флаг ошибки
 
         context['manual_code_form'] = self.manual_code_form_class()
         return context
@@ -1775,9 +1783,9 @@ class PlayerWizardView(LoginRequiredMixin, View):
         user = request.user
         context = {}
         player, player_created = Player.objects.get_or_create(user=user)
-        # onboarding, onboarding_created = PlayerOnboarding.objects.get_or_create(player=player) # Возможно, понадобится позже
+        # onboarding, onboarding_created = PlayerOnboarding.objects.get_or_create(player=player)
 
-        # Определяем ЛОГИЧЕСКИЙ этап (1 - верификация, 2 - профиль)
+        # Определяем ЛОГИЧЕСКИЙ этап
         if user.is_telegram_verified:
             stage = 2
         else:
@@ -1786,34 +1794,29 @@ class PlayerWizardView(LoginRequiredMixin, View):
         context['stage'] = stage
 
         # Определяем ВИЗУАЛЬНЫЙ шаг
-        visual_step = 1 # По умолчанию
+        visual_step = 1
         if stage == 1:
-            # Получаем или создаем объект верификации
             verification, verification_created = TelegramVerification.objects.get_or_create(
                 user=user,
-                defaults={'verification_code': generate_verification_code_service()}
+                defaults={'verification_code': generate_verification_code()} # Используем локальную функцию
             )
-            # Генерируем код, если его нет
             if not verification.verification_code:
-                 verification.verification_code = generate_verification_code_service()
+                 verification.verification_code = generate_verification_code() # Используем локальную функцию
                  verification.save()
 
-            # Если ник уже есть, переходим к шагу верификации
-            current_telegram_username = user.telegram or verification.telegram_username
+            current_telegram_username = verification.telegram_username or user.telegram # Ищем имя в двух местах
             if current_telegram_username:
                 visual_step = 2
                 context.update(self.get_verification_context(user, verification))
-                context['manual_code_form'] = self.manual_code_form_class() # Добавляем пустую форму для кода
             else:
                 visual_step = 1
 
-            # Форма для шага 1 (даже если показываем шаг 2, она нужна для initial)
             context['add_telegram_form'] = self.add_telegram_form_class(
                  initial={'telegram_username': current_telegram_username}
             )
 
         elif stage == 2:
-            visual_step = 3 # Начинаем этап заполнения профиля с 3-го визуального шага
+            visual_step = 3
             context['profile_form'] = self.player_profile_form_class(instance=player, user=user)
 
         context['visual_step'] = visual_step
@@ -1824,10 +1827,13 @@ class PlayerWizardView(LoginRequiredMixin, View):
     def post(self, request, *args, **kwargs):
         user = request.user
         player = get_object_or_404(Player, user=user)
-        verification, _ = TelegramVerification.objects.get_or_create(user=user)
-        context = {} # Контекст для ререндера в случае ошибок
+        # Получаем или создаем объект верификации СРАЗУ
+        verification, _ = TelegramVerification.objects.get_or_create(
+            user=user,
+            defaults={'verification_code': generate_verification_code()}
+        )
+        context = {}
 
-        # Определяем, какая кнопка была нажата
         action = None
         if 'submit_telegram_username' in request.POST:
             action = 'submit_username'
@@ -1838,78 +1844,90 @@ class PlayerWizardView(LoginRequiredMixin, View):
         elif 'check_verification_status' in request.POST:
             action = 'check_status'
             current_visual_step = 2
+        # === НОВАЯ ПРОВЕРКА ===
+        elif 'retry_verification_generation' in request.POST:
+            action = 'retry_generation'
+            current_visual_step = 2
+        # =====================
         elif 'submit_profile' in request.POST:
             action = 'submit_profile'
-            current_visual_step = 5 # Предполагаем, что отправка идет с последнего шага
+            current_visual_step = 5
         else:
-             # Попытка определить шаг из скрытого поля, если кнопка не имеет name
              try:
                  current_visual_step = int(request.POST.get('visual_step', 1))
              except ValueError:
                  current_visual_step = 1
-             action = 'unknown' # Или определить действие по шагу?
+             action = 'unknown'
 
         logger.info(f"User {user.email} POST request. Action: {action}, Visual Step: {current_visual_step}")
 
         # --- Обработка Шага 1: Отправка ника ---
         if action == 'submit_username':
-            context['visual_step'] = 1 # В случае ошибки остаемся на шаге 1
+            # ... (ваш существующий код для submit_username, НО используйте verification из начала post) ...
+            # Замените все verification = ... на просто использование verification
+            # Пример изменения:
+            context['visual_step'] = 1
             add_telegram_form = self.add_telegram_form_class(request.POST)
             if add_telegram_form.is_valid():
                 tg_username = add_telegram_form.cleaned_data['telegram_username']
-                # Проверка уникальности
+                # Проверка уникальности (оставляем как есть)
                 if TelegramVerification.objects.filter(
                     telegram_username__iexact=tg_username
-                    ).exclude(user=user).exists():
+                    ).exclude(user=user).exists() or CustomUser.objects.filter(
+                        telegram__iexact=tg_username # Проверяем и поле CustomUser.telegram
+                        ).exclude(pk=user.pk).exists():
                      messages.error(request, f"Telegram username '@{tg_username}' is already associated with another account.")
                      context['add_telegram_form'] = add_telegram_form
                      context['stage'] = 1
                      return render(request, self.template_name, context)
 
                 # Сохраняем ник и генерируем код
-                user.telegram = tg_username
-                verification.telegram_username = tg_username
+                user.telegram = tg_username # Сохраняем в CustomUser
+                verification.telegram_username = tg_username # Сохраняем в TelegramVerification
                 verification.is_verified = False
                 user.is_telegram_verified = False
-                verification.telegram_id = ''
-                verification.verification_code = generate_verification_code_service()
+                verification.telegram_id = '' # Сбрасываем ID при смене ника
+                # Генерируем НОВЫЙ код при смене ника
+                verification.verification_code = generate_verification_code()
                 user.save(update_fields=['telegram', 'is_telegram_verified'])
                 verification.save()
                 logger.info(f"Username @{tg_username} saved for {user.email}. New verification code generated.")
 
-                # Пытаемся отправить код ботом
+                # Отправляем код ботом (ваш код без изменений)
                 if bot:
                     try:
-                        chat_info = bot.get_chat(f"@{tg_username}") # Имя уже очищено формой
+                        chat_info = bot.get_chat(f"@{tg_username}")
                         if chat_info and chat_info.id:
                             message_text = f'Your Tennis Rivals verification code: *{verification.verification_code}*'
                             bot.send_message(chat_info.id, message_text, parse_mode='Markdown')
-                            verification.telegram_id = str(chat_info.id)
+                            verification.telegram_id = str(chat_info.id) # Сохраняем ID
                             verification.save(update_fields=['telegram_id'])
                             messages.success(request, f"Verification code sent to @{tg_username}. Please check your Telegram or use other methods below.")
-                        else: messages.warning(request, "Could not find Telegram user to send the code.")
+                        else:
+                            logger.warning(f"Could not find Telegram user @{tg_username} to send the code.")
+                            messages.warning(request, "Could not find Telegram user to send the code.")
                     except Exception as e:
                         logger.error(f"Error sending code via bot for {user.email}: {e}")
                         messages.warning(request, f"Could not send code to @{tg_username}. Please use QR/Link or manual code entry.")
-                else: messages.info(request, "Telegram bot not configured. Please use QR/Link or manual code entry.")
+                else:
+                    messages.info(request, "Telegram bot not configured. Please use QR/Link or manual code entry.")
 
-                # Редирект на GET, который покажет Шаг 2
                 return redirect('rivals:player_wizard')
             else:
-                # Форма ника невалидна
                 context['add_telegram_form'] = add_telegram_form
                 context['stage'] = 1
                 return render(request, self.template_name, context)
 
         # --- Обработка Шага 2: Отправка кода ---
         elif action == 'submit_code':
-            context['visual_step'] = 2 # В случае ошибки остаемся на шаге 2
+            # ... (ваш существующий код для submit_code, используйте verification из начала post) ...
+            context['visual_step'] = 2
             context['stage'] = 1
             manual_code_form = self.manual_code_form_class(request.POST)
             if manual_code_form.is_valid():
                 entered_code = manual_code_form.cleaned_data['verification_code']
+                # Сверяем с кодом из объекта verification
                 if verification.verification_code and verification.verification_code == entered_code:
-                    # Код верный
                     verification.is_verified = True
                     verification.verified_at = now()
                     user.is_telegram_verified = True
@@ -1917,58 +1935,89 @@ class PlayerWizardView(LoginRequiredMixin, View):
                     user.save(update_fields=['is_telegram_verified'])
                     messages.success(request, "Telegram verified successfully!")
                     logger.info(f"Telegram manually verified for {user.email}")
-                    # Редирект на GET, который покажет Шаг 3
                     return redirect('rivals:player_wizard')
                 else:
-                    # Код неверный
                     messages.error(request, "Invalid verification code.")
                     logger.warning(f"Invalid manual code for user {user.email}")
-            # Готовим контекст для ререндера Шага 2 с ошибкой или невалидной формой
+            # Контекст для ререндера Шага 2
             context['manual_code_form'] = manual_code_form
-            context['add_telegram_form'] = self.add_telegram_form_class(initial={'telegram_username': user.telegram})
+            context['add_telegram_form'] = self.add_telegram_form_class(initial={'telegram_username': verification.telegram_username or user.telegram})
             context.update(self.get_verification_context(user, verification))
             return render(request, self.template_name, context)
 
         # --- Обработка Шага 2: Проверка статуса ---
         elif action == 'check_status':
-            context['visual_step'] = 2 # В случае ошибки остаемся на шаге 2
+             # ... (ваш существующий код для check_status, используйте user.is_telegram_verified) ...
+            context['visual_step'] = 2
             context['stage'] = 1
+            # Просто проверяем флаг на пользователе
             if user.is_telegram_verified:
                 messages.success(request, "Verification confirmed! Proceed to the next step.")
                 logger.info(f"Verification check successful for {user.email}")
-                # Редирект на GET, который покажет Шаг 3
                 return redirect('rivals:player_wizard')
             else:
                 messages.info(request, "Telegram verification is not completed yet. Please verify using the methods above or try checking again later.")
                 logger.info(f"Verification check failed for {user.email}")
-                # Готовим контекст для ререндера Шага 2
+                # Контекст для ререндера Шага 2
                 context['manual_code_form'] = self.manual_code_form_class()
-                context['add_telegram_form'] = self.add_telegram_form_class(initial={'telegram_username': user.telegram})
+                context['add_telegram_form'] = self.add_telegram_form_class(initial={'telegram_username': verification.telegram_username or user.telegram})
                 context.update(self.get_verification_context(user, verification))
                 return render(request, self.template_name, context)
 
+        # === НОВЫЙ ОБРАБОТЧИК ===
+        elif action == 'retry_generation':
+            context['visual_step'] = 2 # Остаемся на шаге 2
+            context['stage'] = 1      # Остаемся на этапе верификации
+            logger.info(f"User {user.email} attempting retry verification generation.")
+
+            # Убедимся, что код верификации существует
+            if not verification.verification_code:
+                verification.verification_code = generate_verification_code()
+                verification.save()
+                logger.info(f"Generated new verification code for {user.email} during retry.")
+
+            # Здесь НЕ пытаемся снова отправить код ботом, т.к. проблема
+            # скорее всего была в генерации QR/ссылки. GET-запрос сам
+            # перегенерирует контекст с QR/ссылкой.
+
+            messages.info(request, "Attempting to regenerate verification options...")
+            # Просто перенаправляем на GET-обработчик этого же визарда.
+            # GET-обработчик вызовет get_verification_context и отобразит
+            # актуальные данные (включая QR/ссылку, если генерация теперь удастся).
+            return redirect('rivals:player_wizard')
+        # ========================
+
         # --- Обработка Шага 5: Отправка профиля ---
         elif action == 'submit_profile':
-            context['visual_step'] = 5 # В случае ошибки остаемся на шаге 5
-            context['stage'] = 2 # Мы на этапе заполнения профиля
-            # Дополнительная проверка безопасности
+            # ... (ваш существующий код для submit_profile) ...
+            context['visual_step'] = 5
+            context['stage'] = 2
             if not user.is_telegram_verified:
                 messages.error(request, "Telegram verification is required before submitting profile.")
-                return redirect('rivals:player_wizard') # Вернуть на этап верификации
+                return redirect('rivals:player_wizard')
 
             profile_form = self.player_profile_form_class(
                 request.POST, request.FILES, instance=player, user=user
             )
             if profile_form.is_valid():
-                saved_player = profile_form.save() # Метод save() устанавливает is_new = False
+                # Сохраняем профиль и устанавливаем is_new=False внутри формы
+                saved_player = profile_form.save()
                 messages.success(request, "Your profile has been completed successfully!")
                 logger.info(f"Profile saved and is_new set to False for user {user.email}")
-                return redirect('rivals:today') # Редирект после визарда
+                # Возможно, стоит проверить PlayerOnboarding и завершить его
+                try:
+                    onboarding = PlayerOnboarding.objects.get(player=saved_player)
+                    onboarding.is_completed = True
+                    onboarding.completed_at = now()
+                    onboarding.save()
+                except PlayerOnboarding.DoesNotExist:
+                    pass # Или создать его как завершенный
+
+                return redirect('rivals:today')
             else:
-                # Форма профиля невалидна
                 logger.warning(f"Profile form errors for user {user.email}: {profile_form.errors.as_json()}")
                 context['profile_form'] = profile_form
-                # Важно передать stage=2 и visual_step=5 для корректного ререндера
+                # Передаем stage и visual_step для корректного ререндера
                 return render(request, self.template_name, context)
 
         # --- Неизвестное действие ---
