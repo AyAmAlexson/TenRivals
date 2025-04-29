@@ -153,4 +153,4 @@ cython_debug/
 
 
 # Custom ignores
-tenrivals/templates/templates reserve/
+tenrivals/tenrivals/templates/templates reserve/
