@@ -152,3 +152,5 @@ cython_debug/
 #.idea/
 
 
+# Custom ignores
+tenrivals/templates/templates reserve/
