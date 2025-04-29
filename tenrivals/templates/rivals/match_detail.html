@@ -1,0 +1,792 @@
+{% extends 'default.html' %}
+{% load static %}
+{% load custom_filters %}
+{% load custom_tags %}
+
+{% block content %}
+<!-- Шапка страницы в стиле ATP -->
+<div class="match-header" style="background-color: #0C2340; color: #ffffff; padding: 20px 0;">
+  <div class="container">
+    <!-- Информация о турнире и матче -->
+    <div class="row mt-10 mb-2">
+      <div class="col text-center">
+        <h2 class="mb-0"><a class="text-light" href="{% url 'rivals:tournament_detail' match.tournament.pk %}">{{ match.tournament.title }}</a></h2>
+        <div class="text-light">{{ match.tournament.get_city_display }} </div>
+        <div class="text-light">
+            <span class="badge badge-light rounded-pill px-3 py-1 mx-1" style="background-color: #ffffff; color: #000;">
+                {{ match.tournament.get_type_display }}
+            </span>
+            <span class="badge badge-light rounded-pill px-3 py-1 mx-1" style="background-color: #ffffff; color: #000;">
+                {{ match.tournament.get_gender_display }}
+            </span>
+            <span class="badge badge-light rounded-pill px-3 py-1 mx-1" style="background-color: #ffffff; color: #000;">
+                {{ match.get_match_type_display }}
+            </span>
+          
+        </div>
+        <small class="d-block mt-2">
+            &bull; Round: {{ match.tournament_stage|default:"is not set" }} of {{ match.tournament.stages_max }} &bull; {{ match.court|default:"Court is not set" }} Court &bull; {{ match.get_status_display }} &bull; 
+            {% if match.date %}
+              {{ match.date|date:"d M Y" }}
+            {% else %}
+              Due till {{ match.tournament.current_stage_end_date|date:"d M Y" }}
+            {% endif %}
+            &bull; 
+        </small>
+      </div>
+    </div>
+    
+    <!-- Секция соперников и результата -->
+    <div class="row align-items-center">
+      <!-- Левый игрок -->
+        <div class="col-lg-4 col-xl-4 col-xxl-3 text-right d-none d-lg-block">
+        
+            <img src="{{ player.avatar.url }}" alt="{{ player }}" class="avatar-100xl rounded-circle img-border-primary" >
+            <div class="d-flex flex-column align-items-start bg-primary px-4 rounded-pill mt-2 ">
+                <h4 class="mt-2 text-light no-wrap"><a href="{% url 'rivals:player_detail' player.id %}" class="text-light">{{ player }}</a></h4>
+                <div class="text-light small mt-n2 mb-2"> {{player.city | const_replace}} </div>
+            </div>
+       
+      </div>
+      <!-- Центральная панель со счетом в стиле ATP -->
+      <div class="col-lg-4 col-xl-4 col-xxl-6  text-center">
+        
+        <div class="score-panel w-100" style="display: inline-block; background: #ffffff transparent; color: #000; padding: 20px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.2); min-width: 250px;">
+          <div class="text-right">
+            <small class="text-light opacity-50 text-xs text-right">{{ match.date|date:"d M Y" }}</small>
+          </div>
+            <table class="table table-borderless mb-0 text-white" style="width:100%;">
+            
+            <tbody>
+              <tr>
+                <td style="vertical-align: middle; text-align: left;">
+                  <div class="player-info" style="display: flex; align-items: center;">
+                    <img src="{{ player_pm.player.avatar.url }}" alt="{{ player_pm.player }}" style="width:40px; height:40px; border-radius:50%; margin-right: 8px;">
+                    <span style="font-size:14px;">
+                      
+                        {{ player_pm.player.user.first_name }}<br>{{ player_pm.player.user.last_name }}
+                      
+                    </span>
+                    {% if overall_winner == 'player' %}
+                      <i class="fa fa-trophy" style="color: var(--bs-success); margin-left: 5px;" title="Winner"></i>
+                    {% endif %}
+                  </div>
+                </td>
+                <td class="px-1" style="vertical-align: middle;">
+                  {% if player_pm %}
+                    {{ player_pm.set1_score }}{% if player_pm.set1_tie_score %}<sup>{{ player_pm.set1_tie_score }}</sup>{% endif %}
+                  
+                  {% endif %}
+                </td>
+                <td class="px-1" style="vertical-align: middle;">
+                  {% if player_pm.set2_score == 0 %}
+                    0{% if player_pm.set2_tie_score %}<sup>{{ player_pm.set2_tie_score }}</sup>{% endif %}
+                  {% elif player_pm.set2_score %}
+                    {{ player_pm.set2_score }}{% if player_pm.set2_tie_score %}<sup>{{ player_pm.set2_tie_score }}</sup>{% endif %}
+                  
+                  {% endif %}
+                </td>
+                <td class="px-1" style="vertical-align: middle;">
+                  {% if player_pm.set3_score == 0 %}
+                    0{% if player_pm.set3_tie_score %}<sup>{{ player_pm.set3_tie_score }}</sup>{% endif %}
+                  {% elif player_pm.set3_score %}
+                    {{ player_pm.set3_score }}{% if player_pm.set3_tie_score %}<sup>{{ player_pm.set3_tie_score }}</sup>{% endif %}
+                  
+                  {% endif %}
+                </td>
+              </tr>
+              <tr>
+                <td style="vertical-align: middle; text-align: left;">
+                  <div class="player-info" style="display: flex; align-items: center;">
+                    <img src="{{ opponent_pm.player.avatar.url }}" alt="{{ opponent_pm.player }}" style="width:40px; height:40px; border-radius:50%; margin-right: 8px;">
+                    <span style="font-size:14px;">
+                      
+                        {{ opponent_pm.player.user.first_name }}<br>{{ opponent_pm.player.user.last_name }}
+                      
+                     
+                    </span>
+                    {% if overall_winner == 'opponent' %}
+                        <i class="fa fa-trophy" style="color: var(--bs-success); margin-left: 5px;" title="Winner"></i>
+                    {% endif %}
+                  </div>
+                </td>
+                <td class="px-1" style="vertical-align: middle;">
+                  {% if opponent_pm %}
+                    {{ opponent_pm.set1_score }}{% if opponent_pm.set1_tie_score %}<sup>{{ opponent_pm.set1_tie_score }}</sup>{% endif %}
+                  
+                  {% endif %}
+                </td>
+                <td class="px-1" style="vertical-align: middle;">
+                  {% if opponent_pm.set2_score == 0 %}
+                    0{% if opponent_pm.set2_tie_score %}<sup>{{ opponent_pm.set2_tie_score }}</sup>{% endif %}
+                  {% elif opponent_pm.set2_score %}
+                    {{ opponent_pm.set2_score }}{% if opponent_pm.set2_tie_score %}<sup>{{ opponent_pm.set2_tie_score }}</sup>{% endif %}
+                  
+                  {% endif %}
+                </td>
+                <td class="px-1" style="vertical-align: middle;">
+                  {% if opponent_pm.set3_score == 0 %}
+                    0{% if opponent_pm.set3_tie_score %}<sup>{{ opponent_pm.set3_tie_score }}</sup>{% endif %}
+                  {% elif opponent_pm.set3_score %}
+                    {{ opponent_pm.set3_score }}{% if opponent_pm.set3_tie_score %}<sup>{{ opponent_pm.set3_tie_score }}</sup>{% endif %}
+                  
+                  {% endif %}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="text-left">
+            <small class="text-light opacity-50 text-xs text-left">
+                {% if match.status == 'FI' %}
+                
+                Game Set and Match {% if overall_winner == 'player' %} {{ player }}. {{player_pm.player}} {%else%} {{ opponent }}. {{opponent_pm.player}}{% endif %} 
+                wins the match 
+                {{ player_pm.set1_score }}{% if player_pm.set1_tie_score > 0 or opponent_pm.set1_tie_score > 0 %}({{ player_pm.set1_tie_score }}){% endif %}-{{ opponent_pm.set1_score }}{% if player_pm.set1_tie_score > 0 or opponent_pm.set1_tie_score > 0 %}({{ opponent_pm.set1_tie_score }}){% endif %} 
+                {% if player_pm.set2_score or opponent_pm.set2_score %}
+                {{ player_pm.set2_score }}{% if player_pm.set2_tie_score > 0 or opponent_pm.set2_tie_score > 0 %}({{ player_pm.set2_tie_score }}){% endif %}-{{ opponent_pm.set2_score }}{% if player_pm.set2_tie_score > 0 or opponent_pm.set2_tie_score > 0 %}({{ opponent_pm.set2_tie_score }}){% endif %} 
+                {% endif %}
+                {% if player_pm.set3_score or opponent_pm.set3_score %}
+                {{ player_pm.set3_score }}{% if player_pm.set3_tie_score > 0 or opponent_pm.set3_tie_score > 0 %}({{ player_pm.set3_tie_score }}){% endif %}-{{ opponent_pm.set3_score }}{% if player_pm.set3_tie_score > 0 or opponent_pm.set3_tie_score > 0 %}({{ opponent_pm.set3_tie_score }}){% endif %} 
+                {% endif %} 
+            
+            
+                {% elif match.status == 'CA' %}
+                    {% if player_pm.is_withdrawn %}
+                        {{ opponent }} is the winner. {{opponent_pm.opponent}} - technical loss
+                    {% elif opponent_pm.is_withdrawn %}
+                        {{ player }} is the winner. {{player_pm.opponent}} - technical loss
+                    {% endif %}
+                {% elif match.status == 'PD' %}
+                    Result coming soon
+                {% elif match.status == 'OD' %}
+                    Result coming soon
+                {% endif %}
+            </small>
+          </div>
+        </div>
+      </div>
+      <!-- Правый игрок -->
+      <div class="col-lg-4 col-xl-4 col-xxl-3 align-all-right d-none d-lg-block">
+        
+            <img src="{{ opponent.avatar.url }}" alt="{{ opponent }}" class="avatar-100xl rounded-circle img-border-info" style="border: 3px solid var(--bs-info);">
+            <div class="d-flex flex-column align-items-end bg-info px-4 rounded-pill mt-2 h-100">
+                <h4 class="mt-2 text-dark"><a href="{% url 'rivals:player_detail' opponent.id %}" class="text-dark">{{ opponent }}</a></h4>
+                <div class="text-dark small mt-n2 mb-2"> {{opponent.city | const_replace}} </div>
+            </div>
+      </div>
+    </div>
+  </div>
+  
+</div>
+
+ 
+
+<!-- Остальная часть страницы (например, статистика, форма ввода счета и т.д.) -->
+<div class="container mt-4">
+  
+  {% if request.user.is_authenticated %}
+  {% if request.user.player == player or request.user.player == opponent or request.user.is_staff %}
+  <div class="card mb-4">
+    <div class="card-body rounded-2 bg-gradient-blue">
+        <div class="d-flex justify-content-between align-items-center">
+          <div class="text-light"> Actions </div>
+          <div class="d-flex justify-content-between align-items-center">
+            <!-- Кнопка для открытия модального окна ввода счета -->
+            
+            {% if request.user.player == player_pm.player and player_pm.is_approved_by_player == False and player_pm.is_approved_by_opponent == True %}
+            <div class="text-center mx-2">
+              <a href="{% url 'rivals:approve_match_result' player_pm.match.pk %}" class="btn btn-light rounded-pill btn-sm">
+                Approve match result
+              </a>
+            </div>
+            {% elif request.user.player == opponent_pm.player and opponent_pm.is_approved_by_player == False and opponent_pm.is_approved_by_opponent == True %}
+            <div class="text-center mx-2">
+              <a href="{% url 'rivals:approve_match_result' player_pm.match.pk %}" class="btn btn-light rounded-pill btn-sm">
+                Approve match result
+              </a>
+            </div>
+            {% elif request.user.is_staff and not player_pm.submission_closed and not opponent_pm.submission_closed %}
+            <div class="text-center mx-2">
+              <a href="{% url 'rivals:approve_match_result_forced' player_pm.match.pk %}" class="btn btn-light rounded-pill btn-sm">
+                Forced result approval
+              </a>
+            </div>
+            {% endif %}
+            
+            
+            {% if player_pm.submission_closed and opponent_pm.submission_closed %}
+            <div class="text-center mx-2">
+              
+              <button type="button" class="btn btn-outline-light rounded-pill btn-sm" data-bs-toggle="modal" data-bs-target="#ticketModal">
+                 <i class="me-2" data-feather="help-circle"></i> Need help
+              </button>
+            </div>
+                          {% if request.user.is_staff %}
+                          <div class="text-center mx-2">
+                            <a href="{% url 'rivals:reopen_match_result' player_pm.match.pk %}" class="btn btn-outline-light rounded-pill btn-sm">
+                              Reopen match result
+                            </a>
+                          </div>
+                          {% endif %}
+            {% elif player_pm.match.status == 'FI' or opponent_pm.match.status == 'CA' %}
+            <div class="text-center mx-2">
+              <button type="button" class="btn btn-outline-light rounded-pill btn-sm" data-bs-toggle="modal" data-bs-target="#matchScoreModal">
+                Correct match result
+              </button>
+            </div>
+            
+            {% else %}
+              <div class="text-center mx-2">
+                <button type="button" class="btn btn-outline-light rounded-pill btn-sm" data-bs-toggle="modal" data-bs-target="#matchScoreModal">
+                  Enter match results
+                </button>
+              </div>
+              <div class="text-center mx-2">
+                <a class="btn btn-outline-light rounded-pill btn-sm" href="{% url 'rivals:stage_prolongation_request' match.pk %}">
+                  Request stage prolongation
+                </a>
+              </div>
+            {% endif %}
+
+            {% for token in review_tokens %}
+            {% if token.from_player == request.user.player and token.is_used == False %}
+            {% if token.to_player == opponent or token.to_player == player%}
+            <div class="text-center mx-2">
+              <a class="btn btn-outline-light rounded-pill btn-sm" href="{% url 'rivals:rate_opponent' token.to_player.pk %}">
+                Rate your opponent
+              </a>
+            </div>
+            {% endif %}
+            {% endif %}
+            {% endfor %}
+            
+
+            
+                </div>
+              </div>
+              </div>
+         </div>
+  {% endif %}
+  {% endif %}
+  <!-- Секция статистики матча -->
+  <div class="card mb-4">
+    <div class="card-header bg-secondary text-light">
+      <div class="text-center">Match Outcomes</div>
+    </div>
+    <div class="card-body">
+        <table class="table w-100">
+          <tbody>
+
+            <tr>
+              <td class="w-25">
+                <div class="text-start">
+                  {{player_pm.NTRP_before_match}}
+                </div>
+              </td>
+              <td class="w-50">
+                <div class="text-center">NTRP before match</div>
+              </td>
+              <td class="w-25">
+                <div class="text-end">
+                  {{opponent_pm.NTRP_before_match}}
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td class="w-25">
+                {% if player_pm.NTRP_change > 0%}
+                <div class="text-start text-success fw-bold">+{{player_pm.NTRP_change}}</div>
+                {% elif player_pm.NTRP_change < 0%}
+                <div class="text-start text-danger fw-bold">{{player_pm.NTRP_change}}</div>
+                {% else %}
+                <div class="text-start">{{player_pm.NTRP_change}}</div>
+                {% endif %}
+              </td>
+              <td class="w-50">
+                <div class="text-center">NTRP change</div>
+              </td>
+              <td class="w-25">
+                {% if opponent_pm.NTRP_change > 0%}
+                <div class="text-end text-success fw-bold">+{{opponent_pm.NTRP_change}}</div>
+                {% elif opponent_pm.NTRP_change < 0%}
+                <div class="text-end text-danger fw-bold">{{opponent_pm.NTRP_change}}</div>
+                {% else %}
+                <div class="text-end">{{opponent_pm.NTRP_change}}</div>
+                {% endif %}
+              </td>
+            </tr>
+
+            <tr>
+              <td class="w-25">
+                {% if player_pm.season_pts_gained > 0%}
+                <div class="text-start text-success fw-bold">+{{player_pm.season_pts_gained}}</div>
+                {% elif player_pm.season_pts_gained < 0%}
+                <div class="text-start text-danger fw-bold">{{player_pm.season_pts_gained}}</div>
+                {% else %}
+                <div class="text-start">{{player_pm.season_pts_gained}}</div>
+                {% endif %}
+              </td>
+              <td class="w-50">
+                <div class="text-center">Season points</div>
+              </td>
+              <td class="w-25">
+                {% if opponent_pm.season_pts_gained > 0%}
+                <div class="text-end text-success fw-bold">+{{opponent_pm.season_pts_gained}}</div>
+                {% elif opponent_pm.season_pts_gained < 0%}
+                <div class="text-end text-danger fw-bold">{{opponent_pm.season_pts_gained}}</div>
+                {% else %}
+                <div class="text-end">{{opponent_pm.season_pts_gained}}</div>
+                {% endif %}
+              </td>
+            </tr>
+
+
+          </tbody>
+        </table>
+    </div>
+  </div>
+  
+
+  <!-- Модальное окно с карточкой результатов -->
+  <div class="modal fade" id="matchScoreModal" tabindex="-1" aria-labelledby="matchScoreModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 800px; margin: auto;">
+      <div class="modal-content">
+        <!-- Заголовок с инфо об игроках -->
+        <div class="modal-header border-bottom">
+          <div class="container">
+            <div class="row w-100">
+              <!-- Информация о игроке -->
+              <div class="col-md-4 text-center">
+                <img src="{{ player.avatar.url }}" alt="{{ player }}" class="rounded-circle" style="width: 80px; height: 80px;">
+                <h5 class="mt-2">{{ player }}</h5>
+              </div>
+              <!-- Заголовок окна -->
+              <div class="col-md-4 text-center align-self-center">
+                <h4>Enter match results</h4>
+              </div>
+              <!-- Информация о сопернике -->
+              <div class="col-md-4 text-center">
+                <img src="{{ opponent.avatar.url }}" alt="{{ opponent }}" class="rounded-circle" style="width: 80px; height: 80px;">
+                <h5 class="mt-2">{{ opponent }}</h5>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Тело модального окна -->
+        <div class="modal-body">
+          <form method="POST" action="">
+            {% csrf_token %}
+            
+            
+            <!-- Table for sets -->
+            <table class="table table-borderless">
+              <tbody>
+                <!-- Withdrawal checkboxes row -->
+                 <tr style="border-bottom: 1px solid #ddd; ">
+                    <td>
+                        <div class="d-flex justify-content-end align-items-center">
+                            <div class="mb-1">
+                                <label for="player_withdrawn"> (Withdraw) RT </label> {{ dual_form.player_form.is_withdrawn }} 
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+
+                    </td>
+                    <td >
+                        <div class="d-flex align-items-center justify-content-start">
+                            <div class="mb-1">
+                                {{ dual_form.opponent_form.is_withdrawn }} <label for="opponent_withdrawn"> RT (Withdraw)</label>
+                            </div>
+                        </div>
+                    </td>
+                 </tr>
+                <!-- Set 1 row -->
+                <tr>
+                  <!-- Player side (left) -->
+                  <td class="text-left">
+                    <div class="d-flex flex-column align-items-end">
+                        <div class="mb-1">
+                            <label class="form-check-label">Winner</label> {{ dual_form.player_form.set1_won }} 
+                        </div>
+                        <div class="d-flex justify-content-end">
+                        <!-- On the left: tiebreak input (further from center) -->
+                        <div class="me-2">
+                            <label class="form-control-label small text-muted">Tiebreak</label>
+                            {{ dual_form.player_form.set1_tie_score }}
+                        </div>
+                        <!-- Closer to the center: set score -->
+                        <div>
+                            {{ dual_form.player_form.set1_score }}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  
+                  <!-- Central axis with set label -->
+                  <td class="text-center align-middle"><strong>1st</strong></td>
+                  
+                  <!-- Opponent side (right) -->
+                  <td class="text-right">
+                    <div class="d-flex flex-column align-items-start">
+                        <div class="mb-1">
+                           {{ dual_form.opponent_form.set1_won }}  <label class="form-check-label">Winner</label>
+                        </div>
+                        <div class="d-flex justify-content-start">
+                        <!-- Closer to the center: set score -->
+                        <div>
+                          {{ dual_form.opponent_form.set1_score }}
+                        </div>
+                        <!-- Tiebreak input (further from center) with left margin -->
+                        <div class="ms-2">
+                          <label class="form-control-label small text-muted">Tiebreak</label>
+                          {{ dual_form.opponent_form.set1_tie_score }}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+                
+                <!-- Set 2 row -->
+                <tr>
+                  <!-- Player side (left) -->
+                  <td class="text-left">
+                    <div class="d-flex flex-column align-items-end">
+                      <div class="mb-1">
+                        <label class="form-check-label">Winner</label> {{ dual_form.player_form.set2_won }} 
+                      </div>
+                      <div class="d-flex justify-content-end">
+                        <div class="me-2">
+                          <label class="form-control-label small text-muted">Tiebreak</label>
+                          {{ dual_form.player_form.set2_tie_score }}
+                        </div>
+                        <div>
+                          {{ dual_form.player_form.set2_score }}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  
+                  <!-- Central axis with set label -->
+                  <td class="text-center align-middle"><strong>2nd</strong></td>
+                  
+                  <!-- Opponent side (right) -->
+                  <td class="text-right">
+                    <div class="d-flex flex-column align-items-start">
+                      <div class="mb-1">
+                        {{ dual_form.opponent_form.set2_won }} <label class="form-check-label">Winner</label>
+                      </div>
+                      <div class="d-flex justify-content-start">
+                        <div>
+                          {{ dual_form.opponent_form.set2_score }}
+                        </div>
+                        <div class="ms-2">
+                          <label class="form-control-label small text-muted">Tiebreak</label>
+                          {{ dual_form.opponent_form.set2_tie_score }}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+                
+                <!-- Set 3 row -->
+                <tr>
+                  <!-- Player side (left) -->
+                  <td class="text-left">
+                    <div class="d-flex flex-column align-items-end">
+                      <!-- Winner checkbox -->
+                      <div class="mb-1">
+                         <label class="form-check-label">Winner</label> {{ dual_form.player_form.set3_won }}
+                      </div>
+                      <!-- 3rd set = tiebreak checkbox -->
+                      <div class="mb-1">
+                        <label class="form-check-label">3rd set = tiebreak</label> {{ dual_form.player_form.set3_is_tiebreak }} 
+                      </div>
+                      <div class="d-flex justify-content-end">
+                        <!-- For set 3, if tiebreak is entered via the common field below, leave empty here -->
+                        <div class="me-2">
+                          <label class="form-control-label small text-muted">Tiebreak</label>
+                          {{ dual_form.player_form.set3_tie_score }}
+                        </div>
+                        <!-- Set score input (ближе к оси) -->
+                        <div>
+                          {{ dual_form.player_form.set3_score }}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  
+                  <!-- Central axis with set label -->
+                  <td class="text-center align-middle"><strong>3rd</strong></td>
+                  
+                  <!-- Opponent side (right) -->
+                  <td class="text-right">
+                    <div class="d-flex flex-column align-items-start">
+                      <!-- Winner checkbox -->
+                      <div class="mb-1">
+                        {{ dual_form.opponent_form.set3_won }} <label class="form-check-label">Winner</label>
+                      </div>
+                      <!-- 3rd set = tiebreak checkbox -->
+                      <div class="mb-1">
+                        {{ dual_form.opponent_form.set3_is_tiebreak }} <label class="form-check-label">3rd set = tiebreak</label>
+                      </div>
+                      <div class="d-flex justify-content-start">
+                        <!-- Set score input (ближе к оси) -->
+                        <div>
+                          {{ dual_form.opponent_form.set3_score }}
+                        </div>
+                        <!-- Tiebreak input (дальше от оси) -->
+                        <div class="ms-2">
+                          <label class="form-control-label small text-muted">Tiebreak</label>
+                          {{ dual_form.opponent_form.set3_tie_score}}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            
+            <!-- Common match fields (removed common 3rd set tiebreak field) -->
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  {{ dual_form.court.label_tag }} {{ dual_form.court }}
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  {{ dual_form.game_date.label_tag }} {{ dual_form.game_date }}
+                </div>
+              </div>
+            </div>
+            
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+              <button type="submit" class="btn btn-success">Save Results</button>
+            </div>
+          </form>
+          
+          <!-- JavaScript for field synchronization -->
+            <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Предполагаем, что чекбоксы для tiebreak в 3‑м сете имеют ID:
+                // для игрока: "id_player-set3_is_tiebreak", для соперника: "id_opponent-set3_is_tiebreak".
+                // Поля ввода тай‑брейк счёта: "id_player-set3_tie_score" и "id_opponent-set3_tie_score".
+                const playerTiebreak = document.getElementById('id_player-set3_is_tiebreak');
+                const opponentTiebreak = document.getElementById('id_opponent-set3_is_tiebreak');
+                const playerTieScore = document.getElementById('id_player-set3_tie_score');
+                const opponentTieScore = document.getElementById('id_opponent-set3_tie_score');
+            
+                function toggleTiebreak(e) {
+                    const isChecked = e.target.checked;
+                    // Синхронизируем галочку у обоих игроков
+                    if (e.target === playerTiebreak && opponentTiebreak) {
+                        opponentTiebreak.checked = isChecked;
+                    } else if (e.target === opponentTiebreak && playerTiebreak) {
+                        playerTiebreak.checked = isChecked;
+                    }
+                    // Если галочка установлена – отключаем поля ввода тай‑брейк счёта, иначе включаем
+                    if (playerTieScore) {
+                        playerTieScore.disabled = isChecked;
+                    }
+                    if (opponentTieScore) {
+                        opponentTieScore.disabled = isChecked;
+                    }
+                }
+            
+                if (playerTiebreak) {
+                    playerTiebreak.addEventListener('change', toggleTiebreak);
+                }
+                if (opponentTiebreak) {
+                    opponentTiebreak.addEventListener('change', toggleTiebreak);
+                }
+            });
+
+          
+            document.addEventListener('DOMContentLoaded', function() {
+                // Для каждого сета (например, set1, set2, set3) предполагаем, что чекбоксы Winner имеют ID:
+                // для игрока: "id_player-setX_won", для соперника: "id_opponent-setX_won".
+                const sets = ['set1', 'set2', 'set3'];
+
+                sets.forEach(function(setId) {
+                    const playerWinner = document.getElementById(`id_player-${setId}_won`);
+                    const opponentWinner = document.getElementById(`id_opponent-${setId}_won`);
+
+                    if (playerWinner) {
+                        playerWinner.addEventListener('change', function() {
+                            if (playerWinner.checked && opponentWinner) {
+                                opponentWinner.checked = false;
+                            }
+                        });
+                    }
+                    if (opponentWinner) {
+                        opponentWinner.addEventListener('change', function() {
+                            if (opponentWinner.checked && playerWinner) {
+                                playerWinner.checked = false;
+                            }
+                        });
+                    }
+                });
+            });
+
+            document.addEventListener('DOMContentLoaded', function() {
+                const rtPlayer = document.getElementById('id_player_withdrawn');
+                const rtOpponent = document.getElementById('id_opponent_withdrawn');
+                
+                // Выбираем все поля, которые должны быть отключены при RT (но сами RT‑чекбоксы остаём активными)
+                const allFields = document.querySelectorAll('input, select, textarea');
+
+                // Функция для включения/выключения всех полей, кроме RT‑чекбоксов
+                function setDisabledFields(disabled) {
+                    allFields.forEach(function(el) {
+                        if (el !== rtPlayer && el !== rtOpponent) {
+                            el.disabled = disabled;
+                        }
+                    });
+                }
+
+                function toggleRT(e) {
+                    if (e.target === rtPlayer) {
+                        if (rtPlayer.checked) {
+                            // Если ставится галочка RT у игрока, то снимаем у оппонента и блокируем поля
+                            if (rtOpponent) rtOpponent.checked = false;
+                            setDisabledFields(true);
+                        } else {
+                            // Если RT у игрока снята и у оппонента тоже не стоит галочка – разблокируем поля
+                            if (!(rtOpponent && rtOpponent.checked)) {
+                                setDisabledFields(false);
+                            }
+                        }
+                    } else if (e.target === rtOpponent) {
+                        if (rtOpponent.checked) {
+                            // Если ставится галочка RT у оппонента, то снимаем у игрока и блокируем поля
+                            if (rtPlayer) rtPlayer.checked = false;
+                            setDisabledFields(true);
+                        } else {
+                            if (!(rtPlayer && rtPlayer.checked)) {
+                                setDisabledFields(false);
+                            }
+                        }
+                    }
+                }
+
+                if (rtPlayer) {
+                    rtPlayer.addEventListener('change', toggleRT);
+                }
+                if (rtOpponent) {
+                    rtOpponent.addEventListener('change', toggleRT);
+                }
+            });
+          </script>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Карточка с подробным результатом матча -->
+<div class="card mb-4">
+  <div class="card-header bg-dark text-white">
+      <h4 class="mb-0">Match results</h4>
+  </div>
+  <div class="card-body">
+    <div class="row align-items-center">
+      <!-- Информация о текущем игроке -->
+      <div class="col-md-4 text-right">
+        <img src="{{ player_pm.player.avatar.url }}" alt="{{ player_pm.player }}" class="rounded-circle" style="width:50px; height:50px;">
+        <p style="margin:0; font-size:14px;">
+          {% if player_pm.player.user.first_name and player_pm.player.user.last_name %}
+            {{ player_pm.player.user.first_name }}<br>{{ player_pm.player.user.last_name }}
+          {% else %}
+            {{ player_pm.player }}
+          {% endif %}
+        </p>
+      </div>
+      <!-- Результаты по сетам -->
+      <div class="col-md-4">
+        <table class="table table-sm table-borderless text-center mb-0">
+          <thead>
+            <tr>
+              <th>Set</th>
+              <th>Result</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Отображение результата 1-го сета -->
+            <tr>
+              <td>1st</td>
+              <td>
+                {% if player_pm.set1_won %}
+                  {{ player_pm.set1_score }}{% if player_pm.set1_tie_score %}<sup>{{ player_pm.set1_tie_score }}</sup>{% endif %} 
+                  <i class="fa fa-trophy" style="color:green;" title="Победа"></i>
+                {% else %}
+                  {{ player_pm.set1_score }}{% if player_pm.set1_tie_score %}<sup>{{ player_pm.set1_tie_score }}</sup>{% endif %}
+                {% endif %}
+                &ndash;
+                {% if opponent_pm.set1_won %}
+                  {{ opponent_pm.set1_score }}{% if opponent_pm.set1_tie_score %}<sup>{{ opponent_pm.set1_tie_score }}</sup>{% endif %} 
+                  <i class="fa fa-trophy" style="color:green;" title="Победа"></i>
+                {% else %}
+                  {{ opponent_pm.set1_score }}{% if opponent_pm.set1_tie_score %}<sup>{{ opponent_pm.set1_tie_score }}</sup>{% endif %}
+                {% endif %}
+              </td>
+            </tr>
+            <!-- Отображение результата 2-го сета -->
+            <tr>
+              <td>2nd</td>
+              <td>
+                {% if player_pm.set2_won %}
+                  {{ player_pm.set2_score }}{% if player_pm.set2_tie_score %}<sup>{{ player_pm.set2_tie_score }}</sup>{% endif %} 
+                  <i class="fa fa-trophy" style="color:green;" title="Победа"></i>
+                {% else %}
+                  {{ player_pm.set2_score }}{% if player_pm.set2_tie_score %}<sup>{{ player_pm.set2_tie_score }}</sup>{% endif %}
+                {% endif %}
+                &ndash;
+                {% if opponent_pm.set2_won %}
+                  {{ opponent_pm.set2_score }}{% if opponent_pm.set2_tie_score %}<sup>{{ opponent_pm.set2_tie_score }}</sup>{% endif %} 
+                  <i class="fa fa-trophy" style="color:green;" title="Победа"></i>
+                {% else %}
+                  {{ opponent_pm.set2_score }}{% if opponent_pm.set2_tie_score %}<sup>{{ opponent_pm.set2_tie_score }}</sup>{% endif %}
+                {% endif %}
+              </td>
+            </tr>
+            <!-- Отображение результата 3-го сета -->
+            <tr>
+              <td>3rd</td>
+              <td>
+                {% if player_pm.set3_won %}
+                  {{ player_pm.set3_score }}{% if player_pm.set3_tie_score %}<sup>{{ player_pm.set3_tie_score }}</sup>{% endif %} 
+                  <i class="fa fa-trophy" style="color:green;" title="Победа"></i>
+                {% else %}
+                  {{ player_pm.set3_score }}{% if player_pm.set3_tie_score %}<sup>{{ player_pm.set3_tie_score }}</sup>{% endif %}
+                {% endif %}
+                &ndash;
+                {% if opponent_pm.set3_won %}
+                  {{ opponent_pm.set3_score }}{% if opponent_pm.set3_tie_score %}<sup>{{ opponent_pm.set3_tie_score }}</sup>{% endif %} 
+                  <i class="fa fa-trophy" style="color:green;" title="Победа"></i>
+                {% else %}
+                  {{ opponent_pm.set3_score }}{% if opponent_pm.set3_tie_score %}<sup>{{ opponent_pm.set3_tie_score }}</sup>{% endif %}
+                {% endif %}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <!-- Информация о сопернике -->
+      <div class="col-md-4 text-left">
+        <img src="{{ opponent_pm.player.avatar.url }}" alt="{{ opponent_pm.player }}" class="rounded-circle" style="width:50px; height:50px;">
+        <p style="margin:0; font-size:14px;">
+          {% if opponent_pm.player.user.first_name and opponent_pm.player.user.last_name %}
+            {{ opponent_pm.player.user.first_name }}<br>{{ opponent_pm.player.user.last_name }}
+          {% else %}
+            {{ opponent_pm.player }}
+          {% endif %}
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+{% endblock %}

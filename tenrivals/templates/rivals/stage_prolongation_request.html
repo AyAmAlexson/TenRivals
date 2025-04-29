@@ -1,0 +1,69 @@
+{% extends 'default.html' %}
+{% load static %}
+{% load custom_tags %}
+{% load custom_filters %}
+
+{% block content %}
+
+            <div class="container-xl px-4 py-10">
+                <div class="row justify-content-center">
+                    <div class="col-sm-8 col-md-6">
+                        <div class="card shadow-lg border-0 rounded-lg mt-5">
+                            <div class="card-header justify-content-center">
+                                <h3 class="fw-light my-4">Stage Prolongation Request</h3>
+                            </div>
+                            <div class="card-body">
+                                <form method="POST">
+                                    {% csrf_token %}
+                                    
+                                    <!-- Tournament Info -->
+                                    <div class="mb-3 d-flex justify-content-between align-items-center w-100">
+                                        <label class="small mb-1 text-nowrap me-3 w-50">Tournament</label>
+                                        <div class="form-control-plaintext w-50">{{ tournament.title }}</div>
+                                    </div>
+
+                                    <!-- Current Stage End Date -->
+                                    <div class="mb-3 d-flex justify-content-between align-items-center w-100">
+                                        <label class="small mb-1 text-nowrap me-3 w-50">Current Stage End Date</label>
+                                        <div class="form-control-plaintext w-50">{{ tournament.current_stage_end_date|date:"d.m.Y" }}</div>
+                                    </div>
+
+                                    <!-- New End Date Input -->
+                                    <div class="mb-3 d-flex justify-content-between align-items-center w-100">
+                                        <label class="small mb-1 text-nowrap me-3 w-50" for="{{ form.to_date.id_for_label }}">New End Date</label>
+                                        <div class="form-control-plaintext w-50">{{ form.to_date }}</div>
+                                        {% if form.to_date.errors %}
+                                            <div class="small text-danger">
+                                                {{ form.to_date.errors }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+
+                                    {% if form.non_field_errors %}
+                                        <div class="alert alert-danger">
+                                            {{ form.non_field_errors }}
+                                        </div>
+                                    {% endif %}
+
+                                    <!-- Submit Button -->
+                                    <div class="d-flex align-items-center justify-content-center mt-4 mb-0">
+                                        <a class="btn btn-light me-2" href="{% url 'rivals:tournament_detail' tournament.pk %}">Cancel</a>
+                                        <button class="btn btn-primary ms-2" type="submit">Submit Request</button>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="card-footer text-center">
+                                <div class="small text-muted">
+                                    Your request will be reviewed by tournament administrators
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+     
+    
+
+{% endblock content %}
+
+

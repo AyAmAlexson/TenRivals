@@ -4,158 +4,186 @@
 {% load custom_filters %}
 {% block content %}
 
-    <main>
-        <!-- Main page content-->
-        <div class="container-xl px-4">
-            <div class="text-center my-10">
-                <h1 class="text-primary mb-2">All tennis tournaments in one place.</h1>
-                <p class="lead">Select a tournament according to your level and preferences. And let's go!</p>
-                <div class="justify-content-center col-lg-12">
-                    <form id="filter-form" method="get">
-                        <!-- Format Filter -->
-                        <div class="btn-group mb-2" role="group" aria-label="Select tournament gender">
-                            {% for choice in filterset.form.format %}
-                                <input class="btn-check" type="radio" id="{{ choice.id_for_label }}" name="format" value="{{choice.data.value}}" autocomplete="off" {% if choice.data.selected %} checked {% endif %} onchange="document.getElementById('filter-form').submit()"/>
-                                <label class="btn btn-outline-primary px-3 px-xl-4 px-lg-3" for="{{ choice.id_for_label }}">{{ choice.choice_label }}</label>
-                            {% endfor %}
+<header class="page-header page-header-dark bg-gradient-blue pb-2">
+    <div class="container-xl px-4">
+        <div class="page-header-content pt-10">
+            <div class="row align-items-center justify-content-between">
+                <div class="col-auto mt-4">
+                    <h1 class="page-header-title">
+                        <div class="page-header-icon">
+                            <i class="fas fa-trophy"></i>
                         </div>
-                        <!-- Gender Filter -->
-                        <div class="btn-group mb-2" role="group" aria-label="Select tournament gender">
-                            {% for choice in filterset.form.gender %}
-                                <input class="btn-check" type="radio" id="{{ choice.id_for_label }}" name="gender" value="{{choice.data.value}}" autocomplete="off" {% if choice.data.selected %} checked {% endif %} onchange="document.getElementById('filter-form').submit()"/>
-                                <label class="btn btn-outline-primary px-3 px-xl-4 px-lg-3" for="{{ choice.id_for_label }}">{{ choice.choice_label }}</label>
-                            {% endfor %}
-                        </div>
-                        <!-- Category Filter -->
-                        <div class="btn-group mb-2" role="group" aria-label="Select tournament category">
-                            {% for choice in filterset.form.category %}
-                                <input class="btn-check" type="radio" id="{{ choice.id_for_label }}" name="category" value="{{choice.data.value}}" autocomplete="off" {% if choice.data.selected %} checked {% endif %} onchange="document.getElementById('filter-form').submit()"/>
-                                <label class="btn btn-outline-primary px-3 px-xl-4 px-lg-3 " for="{{ choice.id_for_label }}">{{ choice.choice_label }}</label>
-                            {% endfor %}
-                        </div>
-                        <button type="submit" style="display:none;"></button> <!-- Скрытая кнопка submit -->
-                    </form>
-                    <script>
-                        function submitFilterForm() {
-                            document.getElementById('filter-form').submit();
-                        }
-                    </script>
+                        Tournaments
+                    </h1>
+                    <div class="page-header-subtitle">Select a tournament for you and let's get started!</div>
+                </div>
+              
+                <div mt-4>
+                    <nav class="mt-4 rounded " aria-label="breadcrumb">
+                        <ol class="breadcrumb px-3 py-2 rounded mb-0">
+                            <li class="breadcrumb-item"><a href="/">Home</a></li>
+                            <li class="breadcrumb-item active">Tournaments</a></li>
+                            
+                        </ol>
+                    </nav>
                 </div>
             </div>
+        </div>
+    </div>
+</header>
 
-            <!-- Tournaments columns-->
-            <div class="pricing-columns">
+<div class="container-xl px-4 mt-n5">
+    <!-- Introductory Card -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title">All Tennis Tournaments</h5>
+            {% if user.is_staff %}
+                <div><a href="{% url 'rivals:tournament_add' %}" class="btn btn-dark">
+                    <i class="fas fa-plus-circle me-2"></i> Add Tournament
+                </a>
+                </div>
+            {% endif %}
+            </div>
+            <div class="card-body">
+            <p class="card-body">Here you can manage and browse through all the tennis tournaments. Use the filters on the left to narrow down your search and find the perfect tournament for you.</p>
+        </div>
+    </div>
 
-                <div class="row justify-content-center">
-                    <!-- Tournaments column-->
-                    {% for tournament in tournaments %}
-                    <div class="col-12 col-xl-4 col-lg-6 mb-4 mb-xl-4">
-                        <a class="card post-preview border-top-lg border-bottom-0 border-start-0 border-end-0 {% if tournament.gender == 'M' %} border-primary bg-primary-soft {% elif tournament.gender == 'F' %} border-secondary bg-secondary-soft {% elif tournament.gender == 'X' %} border-success bg-success-soft {% endif %} lift h-100" href="">
-                            <div class='card-header {% if tournament.status == "CI" %} text-green {% elif tournament.status == "AC" %} text-blue {% else %} text-gray {% endif %}'>
-                                <span class="badge bg-glass-300 text-success rounded-pill py-2 px-3 mb-2">{{ tournament.gender|const_replace}}</span>
-                                <span class="badge bg-glass-300 text-success rounded-pill py-2 px-3 mb-2">{{ tournament.format|const_replace}}</span>
-                                <span class="badge bg-glass-300 text-secondary rounded-pill py-2 px-3 mb-2">{{ tournament.category|const_replace}}</span>
-                                <span class="badge bg-glass-300 text-primary rounded-pill py-2 px-3 mb-2">{{ tournament.type|const_replace}}</span>
+    <div class="row">
+        <!-- Tournament Filters -->
+        <div class="col-lg-3">
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-secondary text-white">
+                    <i class="fas fa-filter mr-2"></i> Tournament Filters
+                </div>
+                <div class="card-body">
+                    <form id="filter-form" method="get" action="{% url 'rivals:tournaments' %}">
+                        <!-- Tournament Format -->
+                        <div class="form-group">
+                            <label for="format">Format</label>
+                            <select class="form-control" name="format" id="format" onchange="document.getElementById('filter-form').submit()">
+                                <option value="">All Formats</option>
+                                {% for choice in filterset.form.format %}
+                                    <option value="{{ choice.data.value }}" {% if choice.data.selected %}selected{% endif %}>{{ choice.choice_label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
 
-                                <div class="text-IBM-Plex-extra-large text-dark py-3 mt-2">
-                                    {% if tournament.title %}
-                                        {{tournament.title}}
-                                    {% else %}
-                                        {{ tournament.city|const_replace|capitalize|minus_last_sym:4}} {{tournament.category|const_replace|capitalize}}
-                                        <p>CUP #{{tournament.pk}}</p>
-                                    {% endif %}
-                                </div>
+                        <!-- Tournament Gender -->
+                        <div class="form-group">
+                            <label for="gender">Gender</label>
+                            <select class="form-control" name="gender" id="gender" onchange="document.getElementById('filter-form').submit()">
+                                <option value="">All Genders</option>
+                                {% for choice in filterset.form.gender %}
+                                    <option value="{{ choice.data.value }}" {% if choice.data.selected %}selected{% endif %}>{{ choice.choice_label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
 
-                                <div class="pricing-columns-price d-flex align-items-center justify-content-between py-0" >
-                                    {{ tournament.status|const_replace}}
-<!--                                                <span data-feather="arrow-right"></span>-->
-                                    <span >{{tournament.players_enrolled}}/{{tournament.players_num}}</span>
-                                </div>
+                        <!-- Tournament Category -->
+                        <div class="form-group">
+                            <label for="category">Category</label>
+                            <select class="form-control" name="category" id="category" onchange="document.getElementById('filter-form').submit()">
+                                <option value="">All Categories</option>
+                                {% for choice in filterset.form.category %}
+                                    <option value="{{ choice.data.value }}" {% if choice.data.selected %}selected{% endif %}>{{ choice.choice_label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Hidden Field for User's Preferred City -->
+                        <input type="hidden" name="city" value="{{ user.player.preferred_city }}">
+
+                        <button type="submit" class="btn btn-primary mt-3 w-100">Filter</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tournament List -->
+        <div class="col-lg-9">
+            <!-- Tournaments Header -->
+         
+
+            <div class="row gx-5">
+                {% for tournament in tournaments %}
+                    <div class="col-xxl-4 col-xl-6 col-sm-6 mb-5">
+                        <a class="card lift h-100" href="{% url 'rivals:tournament_detail' tournament.pk %}">
+                            <div class="card-flag card-flag-dark card-flag-top-right">{{ tournament.status|const_replace }}</div>
+                            <img class="card-img-top" src="{% if tournament.image %}{{ tournament.image.url }}{% else %}{% static 'assets/img/illustrations/default tournament image.jpg' %}{% endif %}" alt="{{ tournament.title|default:'Unnamed Tournament' }}" style="object-fit: cover; height: 200px; width: 100%;" />
+                                <div class="card-body">
+                                    <h4 class="text-primary mb-1">{{ tournament.title|default:"Untitled Tournament" }}</h4>
+                                    <div class="d-flex justify-content-between mb">
+                                        <div class="small text-gray-500 mb-4">{{ tournament.type|const_replace }}</div>
+                                        <span class="text-muted small">
+                                            <i data-feather="map-pin" class="me-1"></i>{{ tournament.get_city_display }}
+                                        </span>
+                                    </div>
+                                    
+                                    <div class="small text-gray-800 fw-500">{{ tournament.gender|const_replace }} | {{ tournament.format|const_replace }} | {{ tournament.category|const_replace }}</div>
+                                    <div class="small text-gray-500">Registered Players: {{ tournament.players_enrolled }}/{{ tournament.players_num }}</div>
+                                
                             </div>
-
-
-                            <div class="card-body p-0 flex-grow-1 px-3">
-                                <div>
-                                    {% if tournament.players %}
-                                        <span class="badge bg-glass-300 rounded-pill text-gray-600 py-2 px-2 mb-2 mt-2"><i class="text-green feather-sm me-2" data-feather="x-circle"></i>{{tournament.players}}</span>
-                                    {% else %}
-                                        <span class="badge bg-glass-300 rounded-pill text-gray-600 py-2 px-2 mb-2 mt-2"><i class="text-green feather-sm me-2" data-feather="x-circle"></i>No Players Enrolled</span>
-                                    {% endif %}
-                                    {% for _ in tournament.players_left|times %}
-                                    <span class="badge bg-glass-300 rounded-pill text-gray-600 py-2 px-2 mb-2 mt-2"><i class="text-green feather-sm me-2" data-feather="plus-circle"></i>Free</span>
-                                    {%endfor%}
-                                </div>
+                            <div class="card-footer bg-transparent border-top d-flex align-items-center justify-content-between">
+                                <div class="small text-gray-500">View Details</div>
+                                <div class="small text-gray-500"><i data-feather="arrow-right"></i></div>
                             </div>
-
-
-                            {% if tournament.status == "CI" %}
-                            <div class="card-footer d-flex align-items-center justify-content-between" >
-                                Join!
-                                <i data-feather="arrow-right"></i>
-                            </div>
-                            {% elif tournament.status == "AC" %}
-                            <div class="card-footer d-flex align-items-center justify-content-between" >
-                                Details
-                                <i data-feather="arrow-right"></i>
-                            </div>
-                            {% elif tournament.status == "FI"%}
-                            <div class="card-footer d-flex align-items-center justify-content-between" >
-                                Results
-                                <i data-feather="arrow-right"></i>
-                            </div>
-                            {% endif %}
                         </a>
                     </div>
-                    {% endfor %}
-                </div>
+                {% empty %}
+                    <div class="col-12">
+                        <div class="alert alert-warning text-center" role="alert">
+                            No available tournaments for the selected filters.
+                        </div>
+                    </div>
+                {% endfor %}
             </div>
 
-            {# Добавляем пагинацию на страницу #}
+            <!-- Pagination -->
             <nav aria-label="Page navigation">
-                <ul class="pagination pagination-blog justify-content-center">
-
+                <ul class="pagination justify-content-center">
                     {% if page_obj.has_previous %}
                         <li class="page-item">
-                            <a class="page-link" href="?{% url_replace page=page_obj.previous_page_number %}" aria-label="Previous"><span aria-hidden="false">«</span></a>
+                            <a class="page-link" href="?{% url_replace page=page_obj.previous_page_number %}" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
                         </li>
                         <li class="page-item"><a class="page-link" href="?{% url_replace page=1 %}">1</a></li>
                         {% if page_obj.previous_page_number != 1 %}
-                            <li class="page-item disabled"><a class="page-link" href="#!">...</a></li>
+                            <li class="page-item disabled"><a class="page-link" href="#">...</a></li>
                             <li class="page-item"><a class="page-link" href="?{% url_replace page=page_obj.previous_page_number %}">{{ page_obj.previous_page_number }}</a></li>
                         {% endif %}
                     {% else %}
                         <li class="page-item disabled">
-                            <a class="page-link" href="" aria-label="Previous"><span aria-hidden="true">«</span></a>
+                            <a class="page-link" href="#" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
                         </li>
                     {% endif %}
-                    {# Информация о текущей странице #}
-                    <li class="page-item active"><a class="page-link">{{ page_obj.number }}</a></li>
-                    {# Информация о следующих страницах #}
+                    <!-- Additional page numbers can be added here -->
                     {% if page_obj.has_next %}
-                        <li class="page-item"><a class="page-link" href="?{% url_replace page=page_obj.next_page_number%}">{{ page_obj.next_page_number }}</a></li>
-                        {% if paginator.num_pages != page_obj.next_page_number %}
-                            <li class="page-item disabled"><a class="page-link" href="#!">...</a></li>
-                            <li class="page-item"><a class="page-link" href="?{% url_replace page=page_obj.paginator.num_pages %}">{{ page_obj.paginator.num_pages }}</a></li>
-                            <li class="page-item">
-                                <a class="page-link" href="?{% url_replace page=page_obj.next_page_number%}" aria-label="Next"><span aria-hidden="false">»</span></a>
-                            </li>
-                        {%else%}
-                            <li class="page-item">
-                                <a class="page-link" href="?{% url_replace page=page_obj.next_page_number%}" aria-label="Next"><span aria-hidden="false">»</span></a>
-                            </li>
+                        {% if page_obj.next_page_number != page_obj.paginator.num_pages %}
+                            <li class="page-item"><a class="page-link" href="?{% url_replace page=page_obj.next_page_number %}">{{ page_obj.next_page_number }}</a></li>
+                            <li class="page-item disabled"><a class="page-link" href="#">...</a></li>
                         {% endif %}
+                        <li class="page-item"><a class="page-link" href="?{% url_replace page=page_obj.paginator.num_pages %}">{{ page_obj.paginator.num_pages }}</a></li>
+                        <li class="page-item">
+                            <a class="page-link" href="?{% url_replace page=page_obj.next_page_number %}" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
                     {% else %}
                         <li class="page-item disabled">
-                            <a class="page-link" href="" aria-label="Next"><span aria-hidden="true">»</span></a>
+                            <a class="page-link" href="#" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
                         </li>
                     {% endif %}
                 </ul>
             </nav>
-            <hr class="my-10" />
         </div>
+    </div>
+</div>
 
-    </main>
 
-
-
-{% endblock content %}
+{% endblock %}

@@ -1,7 +1,60 @@
 from django.urls import path
-from .views import IndexView,TournamentsListView
+from .views import (
+    IndexView, TournamentsListView, PlayerUpdateView, 
+    AllRivalsView, BasicView, update_season_ranking, AdminTestView,
+    rate_opponent, player_detail, TournamentDetailView, join_tournament,
+    TournamentCreateView, TournamentUpdateView, update_current_stats_all, update_current_stats,
+    AdminPlayerUpdateView, add_player_to_tournament, remove_player_from_tournament,
+    tournament_activate, match_detail, tournament_restart, TodayView, switch_user, switch_back_to_admin, 
+    approve_match_result, implement_match_result_all, create_ticket, reopen_ticket, close_ticket,
+    reopen_match_result, check_overdue_matches, stage_prolongation_request, 
+    approve_stage_prolongation_request, reject_stage_prolongation_request, reopen_stage_prolongation_request,
+    PlayerWizardView, activate_onboarding
+)
+
+app_name = 'rivals'
 
 urlpatterns = [
     path('', IndexView.as_view(), name='rivals'),
     path('tournaments/', TournamentsListView.as_view(), name='tournaments'),
+    path('all_rivals/', AllRivalsView.as_view(), name='all_rivals'),
+    
+    path('player_update/', PlayerUpdateView.as_view(), name='player_update'),
+    
+    path('basic/', BasicView.as_view(), name='basic'),
+    path('update_season_ranking/', update_season_ranking, name='update_season_ranking'),
+    path('admin_test/', AdminTestView.as_view(), name='admin_test'),
+    path('player/<int:pk>/rate/', rate_opponent, name='rate_opponent'),
+    path('player/<int:pk>/', player_detail, name='player_detail'),
+    path('tournaments/<int:pk>/', TournamentDetailView.as_view(), name='tournament_detail'),
+    path('tournaments/<int:pk>/join/', join_tournament, name='join_tournament'),
+    
+    # Добавленные пути для создания и редактирования турниров
+    path('tournaments/add/', TournamentCreateView.as_view(), name='tournament_add'),
+    path('tournaments/<int:pk>/edit/', TournamentUpdateView.as_view(), name='tournament_edit'),
+    path('tournaments/<int:tournament_pk>/add-player/<int:player_pk>/', add_player_to_tournament, name='add_player_to_tournament'),
+    path('tournaments/<int:tournament_pk>/remove-player/<int:player_pk>/', remove_player_from_tournament, name='remove_player_from_tournament'),
+    path('tournaments/<int:pk>/activate/', tournament_activate, name='activate_tournament'),
+    path('tournaments/<int:pk>/restart/', tournament_restart, name='restart_tournament'),
+    path('update-current-stats-all/', update_current_stats_all, name='update_current_stats_all'),
+    path('update-current-stats/<int:pk>/', update_current_stats, name='update_current_stats'),
+    path('admin-player-update/<int:player_id>/', AdminPlayerUpdateView.as_view(), name='admin_player_update'),
+    path('matches/<int:pk>/', match_detail, name='match_detail'),
+    path('today/', TodayView.as_view(), name='today'),
+    path('switch-user/<int:user_id>/', switch_user, name='switch_user'),
+    path('switch-back-to-admin/', switch_back_to_admin, name='switch_back_to_admin'),
+    path('approve-match-result/<int:pk>/', approve_match_result, name='approve_match_result'),
+    path('approve-match-result/<int:pk>/forced/', approve_match_result, {'forced': True}, name='approve_match_result_forced'),
+    path('reopen-match-result/<int:match_pk>/', reopen_match_result, name='reopen_match_result'),
+    path('implement-match-result-all/', implement_match_result_all, name='implement_match_result_all'),
+    path('create-ticket/', create_ticket, name='create_ticket'),
+    path('reopen-ticket/<int:ticket_id>/', reopen_ticket, name='reopen_ticket'),
+    path('close-ticket/<int:ticket_id>/', close_ticket, name='close_ticket'),
+    path('check-overdue-matches/', check_overdue_matches, name='check_overdue_matches'),
+    path('stage-prolongation-request/<int:pk>/', stage_prolongation_request, name='stage_prolongation_request'),
+    path('approve-stage-prolongation-request/<int:pk>/', approve_stage_prolongation_request, name='approve_stage_prolongation_request'),
+    path('reject-stage-prolongation-request/<int:pk>/', reject_stage_prolongation_request, name='reject_stage_prolongation_request'),
+    path('reopen-stage-prolongation-request/<int:pk>/', reopen_stage_prolongation_request, name='reopen_stage_prolongation_request'),
+    path('player-wizard/', PlayerWizardView.as_view(), name='player_wizard'),
+    path('activate-onboarding/', activate_onboarding, name='activate_onboarding'),
 ]

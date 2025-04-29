@@ -1,0 +1,213 @@
+{% extends 'default.html' %}
+{% load static %}
+{% load custom_tags %}
+{% load custom_filters %}
+{% block content %}
+<div>
+    <main>
+        <header class="page-header page-header-dark bg-gradient-blue pb-2">
+            <div class="container-xl px-4">
+                <div class="page-header-content pt-10">
+                    <div class="row align-items-center justify-content-between">
+                        <div class="col-auto mt-4">
+                            <h1 class="page-header-title">
+                                <div class="page-header-icon"><i data-feather="users"></i></div>
+                                All rivals in one place
+                            </h1>
+                            <div class="page-header-subtitle">See your potential opponents. And let's go!</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+        <!-- Main page content-->
+        <div class="container-xl px-4 mt-n5">
+            <div class="card mb-4">
+                <div class="card-header">Filters</div>
+                <div class="card-body">
+                    <form id="filter-form" method="get">
+                        <!-- Gender Filter -->
+                        <div class="btn-group mb-2" role="group" aria-label="Select rivals' gender">
+                            {% for choice in filterset.form.gender %}
+                                <input class="btn-check" type="radio" id="{{ choice.id_for_label }}" name="gender" value="{{ choice.data.value }}" autocomplete="off" {% if choice.data.selected %} checked {% endif %} onchange="submitFilterForm()"/>
+                                <label class="btn btn-outline-primary px-3 px-xl-4 px-lg-3" for="{{ choice.id_for_label }}">{{ choice.choice_label }}</label>
+                            {% endfor %}
+                        </div>
+
+                        <!-- City Filter -->
+                        <div class="btn-group mb-2" role="group" aria-label="Select rivals' city">
+                            {% for choice in filterset.form.city %}
+                                <input class="btn-check" type="radio" id="{{ choice.id_for_label }}" name="city" value="{{ choice.data.value }}" autocomplete="off" {% if choice.data.selected %} checked {% endif %} onchange="submitFilterForm()"/>
+                                <label class="btn btn-outline-primary px-3 px-xl-4 px-lg-3" for="{{ choice.id_for_label }}">{{ choice.choice_label }}</label>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Category Filter -->
+                        <div class="btn-group mb-2" role="group" aria-label="Select rivals' category">
+                            {% for choice in filterset.form.category %}
+                                <input class="btn-check" type="radio" id="{{ choice.id_for_label }}" name="category" value="{{ choice.data.value }}" autocomplete="off" {% if choice.data.selected %} checked {% endif %} onchange="submitFilterForm()"/>
+                                <label class="btn btn-outline-primary px-3 px-xl-4 px-lg-3" for="{{ choice.id_for_label }}">{{ choice.choice_label }}</label>
+                            {% endfor %}
+                        </div>
+                        <button type="submit" style="display:none;"></button> <!-- Скрытая кнопка submit -->
+                    </form>
+                    <script>
+                        function submitFilterForm() {
+                            document.getElementById('filter-form').submit();
+                        }
+                    </script> 
+                </div>
+            </div>
+        </div>
+        <!-- Main page content-->
+        <div class="container-xl px-4 ">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    
+                        <span>{{ total_players_by_geo_and_category }} Rivals in Your Area.</span>
+                        <span class="text-muted small">{{ request.user.preferred_geo|const_replace }}: week {{ current_week }} / {{ current_season }}</span>
+                           
+                </div>
+                <div class="card-body">
+                    <table id="AllRivalsTable">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Avatar</th>
+                                <th>Name</th>
+                                <th>Gender</th>
+                                
+                                <th>City</th>
+                                <th>Category</th>
+                                <th>Games Played</th>
+                                <th>Games Won</th>
+                                <th>NTRP</th>
+                                <th>Rating Points</th>
+                                <th>Absolute Ranking</th>
+                                <th>Category Ranking</th>
+                                <th>Rival Since</th>
+                                {% if request.user.is_authenticated %}
+                                <th>Actions</th>
+                                {% endif %}
+                                
+                            </tr>
+                        </thead>
+                        <tfoot>
+                            <tr>
+                                <th>#</th>
+                                <th>Avatar</th>
+                                <th>Name</th>
+                                <th>Gender</th>
+                                
+                                <th>City</th>
+                                <th>Category</th>
+                                <th>Games Played</th>
+                                <th>Games Won</th>
+                                <th>NTRP</th>
+                                <th>Rating Points</th>
+                                <th>Absolute Ranking</th>
+                                <th>Category Ranking</th>
+                                <th>Rival Since</th>
+                                {% if request.user.is_authenticated %}
+                                <th>Actions</th>
+                                {% endif %}
+                            </tr>
+                        </tfoot>
+                        <tbody>
+
+                            {% for rival in rivals %}
+                                    <tr>
+                                        <td>{{ forloop.counter }}</td>
+                                        <td>
+                                            <a href="{% url 'rivals:player_detail' rival.pk %}">
+                                                <img src="{{ rival.avatar.url }}" alt="{{ rival.user.first_name }} {{ rival.user.last_name }} Avatar" class="img-fluid rounded-circle" style="width: 40px; height: 40px;" /></td>
+                                            </a>
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'rivals:player_detail' rival.pk %}">
+                                                {{ rival }} 
+                                                {% if rival.is_new %}
+                                                    <span class="badge bg-success small">New</span>
+                                                {% endif %}
+                                            </a>
+                                        </td>
+                                        <td>{{ rival.gender }}</td>
+                                        <td>{{ rival.city|const_replace }}</td>
+                                        <td>{{ rival.category|const_replace }}</td>
+                                        <td>{{ rival.current_stats.matches_played}}</td>
+                                        <td><span>{{ rival.current_stats.matches_won }} </span> | <span class="text-muted small">{{ rival.current_stats.win_rate }}</span></td>
+                                        
+                                        <td>{{ rival.current_stats.current_NTRP}}</td>
+                                        <td>{{ rival.current_stats.season_pts }}</td>
+                                        <td>{{ rival.current_stats.ranking_absolute }}</td>
+                                        <td>{{ rival.current_stats.ranking_category }}</td>
+                                        
+                                        
+                                        
+                                        <td>{{ rival.player_since|date:'d.m.Y' }}</td>
+                                        
+                                        {% if request.user.is_authenticated %}
+                                            {% if request.user.is_staff %}
+                                                <td>
+                                                    <a class="btn btn-datatable btn-icon btn-transparent-dark me-2 "id="navbarDropdownUserImage" href="javascript:void(0);" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fa-solid fa-ellipsis-vertical"></i></a>
+                                                    <div class="dropdown-menu dropdown-menu-end border-0 shadow animated--fade-in-up" aria-labelledby="navbarDropdownUserImage">
+                                                        <h6 class="dropdown-header d-flex align-items-center">
+                                                            <img src="{{ rival.avatar.url }}" alt="{{rival}} Avatar" class="img-fluid rounded-circle" style="width: 40px; height: 40px;" />
+                                                            <div class="dropdown-user-details ms-2">
+                                                                <div class="dropdown-user-details-name">{{ rival }}</div>
+                                                                <div class="dropdown-user-details-email">{{ rival.user.email }}</div>
+                                                            </div>
+                                                        </h6>
+                                                        <div class="dropdown-divider"></div>
+                                                        {% if user.is_staff %}
+                                                        <a class="dropdown-item d-flex align-items-center" href="{% url 'rivals:admin_player_update' rival.pk %}">
+                                                            <div class="dropdown-item-icon me-2"><i data-feather="settings"></i></div>
+                                                            <span>Account</span>
+                                                        </a>
+                                                        {% endif %}
+                                                        
+                                                        
+                                                        
+                                                    </div>
+                                                    
+                                                    <button class="btn btn-datatable btn-icon btn-transparent-dark"><i class="fa-regular fa-trash-can"></i></button>
+                                                </td>
+                                            {% else %}
+                                                <td>
+                                                    <button class="btn btn-outline-primary btn-outline-primary-gradient me-2"><i class="feather-regular feather-message-square"></i>Challenge Rival</button>
+                                                </td>
+                                            {% endif %}
+                                        {% endif %}
+                                    </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card card-icon mb-4">
+                <div class="row g-0">
+                    <div class="col-auto card-icon-aside bg-primary"><i class="me-1 text-white-50" data-feather="alert-triangle"></i></div>
+                    <div class="col">
+                        <div class="card-body py-5">
+                            <h5 class="card-title">Third-Party Documentation Available</h5>
+                            <p class="card-text">Simple DataTables is a third party plugin that is used to generate the demo table above. For more information about how to use Simple DataTables with your project, please visit the official documentation.</p>
+                            <a class="btn btn-primary btn-sm" href="https://github.com/fiduswriter/Simple-DataTables" target="_blank">
+                                <i class="me-1" data-feather="external-link"></i>
+                                Visit Simple DataTables Docs
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+            
+        
+
+            
+            <hr class="my-10" />
+        </div>
+
+   
+
+{% endblock content %}

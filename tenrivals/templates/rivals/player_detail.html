@@ -1,0 +1,885 @@
+{% extends 'basic.html' %}
+{% load static %}
+{% load custom_tags %}
+{% load custom_filters %}
+
+{% block content %}
+<div">
+    <main>
+        
+        <header class="page-header page-header-dark bg-gradient-blue pb-2">
+            <div class="container-xl px-4">
+                <div class="page-header-content pt-10">
+                    <div class="row align-items-center justify-content-between">
+                        <div class="col-auto mt-4">
+                            <h1 class="page-header-title">
+                                <div class="page-header-icon"><i data-feather="user"></i></div>
+                                {{ player }}
+                            </h1>
+                            <div class="page-header-subtitle">Detailed Information</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Main page content -->
+        <div class="container-xl px-4 mt-n5" style="min-width: 400px;">
+         
+            <div class="row">
+                
+                <div class="col-lg-4">
+                    <!-- Основная информация -->
+                    <div class="card card-angles mb-4">
+                        <div class="card-header">Player Information</div>
+                        <div class="card-body text-center">
+                            {% if player.avatar %}
+                                <img src="{{ player.avatar.url }}" alt="{{ player.user.first_name }} {{ player.user.last_name }}" class="img-fluid rounded-circle mb-4" style="width: 150px; height: 150px;" />
+                            {% else %}
+                                <img src="{% static 'assets/img/enroll new player.png' %}" alt="Default Avatar" class="img-fluid rounded-circle mb-4" style="width: 150px; height: 150px;" />
+                            {% endif %}
+                            <h2 class="text-primary">{{ player.user.first_name }} {{ player.user.last_name }}</h2>
+                            <div class="d-flex justify-content-center align-items-center mb-4">
+                                <span class="text-gray-700 mb-0 me-2">{{ player.city|const_replace }}</span>
+                                <span class="text-muted small mb-0 me-2">|</span>
+                                <span class="text-gray-700 mb-0 me-2">{{player.category|const_replace }}</span> 
+                                <span class="text-muted small mb-0 me-2">|</span>
+                                <span class="text-gray-700 mb-0 me-2">{{player.gender }}</span>
+                                
+                                
+                            </div>
+                            
+                            {% if user.is_authenticated and user.player != player  %}
+                            <div class="d-flex justify-content-center align-items-center mb-4">
+                                <button class="btn btn-gradient-brand rounded-pill" data-bs-toggle="modal" data-bs-target="#challengeModal">
+                                    <i data-feather="message-square" class="me-2"></i> Challenge Rival
+                                </button>
+                                {%if review_token %}
+                                    <a href="{% url 'rivals:rate_opponent' player.pk %}" class="btn btn-link fw-500">Rate Skills</a>
+                                {% endif %}
+                            </div>
+                            {% else %}
+                            <!-- Если пользователь не авторизован или не является игроком, то показать кнопку "изменить профиль"-->
+                            <div class="d-flex justify-content-center align-items-center mb-4">
+                                <a href="{% url 'rivals:player_update' %}" class="btn btn-link text-secondary fw-500">Edit Profile</a>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Оценка по атрибутам -->
+                    <div class="card mb-4">
+                        <div class="card-header">Player Power Attributes</div>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0"> Player Power: <strong>{{attributes.summary|floatformat:1}}</strong>/5 </h6> 
+                                <span class="text-xs text-muted">Responces: {{attributes.responses_amount}}</span>
+                            </div>
+                            <!-- Новый Polar Area график -->
+                            <div class="chart-area" style="height: 300px;">
+                                <canvas id="attributeChart"></canvas>
+                            </div>
+                            <ul class="list-group list-group-flush mb-4 mt-4">
+                                
+                                <li class="list-group-item small text-gray-600 d-flex justify-content-between">Forehand: <span>{{ attributes.forehand }}</span></li>
+                                <li class="list-group-item small text-gray-600 d-flex justify-content-between">Backhand: <span>{{ attributes.backhand }}</span></li>
+                                <li class="list-group-item small text-gray-600 d-flex justify-content-between">Rallies: <span>{{ attributes.rallies }}</span></li>
+                                <li class="list-group-item small text-gray-600 d-flex justify-content-between">Attack: <span>{{ attributes.attack }}</span></li>
+                                <li class="list-group-item small text-gray-600 d-flex justify-content-between">Serve: <span>{{ attributes.serve }}</span></li>
+                                <li class="list-group-item small text-gray-600 d-flex justify-content-between">Serve Return: <span>{{ attributes.serve_return }}</span> </li>
+                                <li class="list-group-item small text-gray-600 d-flex justify-content-between">Volleys: <span>{{ attributes.volleys }}</span></li>
+                                <li class="list-group-item small text-gray-600 d-flex justify-content-between">Summary: <span>{{ attributes.summary }}</span> </li>
+                            </ul> 
+                        </div>
+                    </div>
+                </div>
+
+
+                
+                <!-- Дополнительная информация -->
+                
+                <div class="col-12 col-lg-8 ">
+                    <div class="row">
+                        <!-- Widget 1: NTRP Level -->
+                        <div class="col-12 col-sm-6 col-lg-6 col-xl-3 col-xxl-3 mb-4">
+                            <div class="card border-start-lg border-start-primary h-100">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                       
+                                        
+                                        <!-- Информация -->
+                                        <div>
+                                            <div class="small fw-bold text-primary mb-1">NTRP Level</div>
+                                            <div class="h5">{{ current_stats.current_NTRP }} ({{ player.category|const_replace }})</div>
+                                            <!-- Изменение NTRP -->
+                                            {% if player.ntrp_change_percentage %}
+                                                <div class="text-xs fw-bold {% if player.ntrp_change_percentage > 0 %}text-success{% else %}text-danger{% endif %} d-inline-flex align-items-center">
+                                                    <i class="me-1" data-feather="{% if player.ntrp_change_percentage > 0 %}trending-up{% else %}trending-down{% endif %}"></i>
+                                                    {{ player.ntrp_change_percentage }}%
+                                                </div>
+                                            {% else %}
+                                                <div class="text-xs fw-bold text-muted d-inline-flex align-items-center">
+                                                    No Change
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        <!-- Иконка -->
+                                        <div>
+                                            <div class="me-0 me-sm-2 me-lg-4 me-xl-0 me-xxl-2"><i class="fas fa-rocket fa-2x text-gray-200"></i></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Widget 2: Season Points -->
+                        <div class="col-12 col-sm-6 col-lg-6 col-xl-3 col-xxl-3 mb-4">
+                            <div class="card border-start-lg border-start-success h-100">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        
+                                        
+                                        <!-- Информация -->
+                                        <div>
+                                            <div class="small fw-bold text-success mb-1">Season Points</div>
+                                            <div class="h5">{{ current_stats.season_pts }}</div>
+                                            <!-- Изменение Сезонных Очков -->
+                                            {% if player.season_points_change %}
+                                                <div class="text-xs fw-bold {% if player.season_points_change > 0 %}text-success{% else %}text-danger{% endif %} d-inline-flex align-items-center">
+                                                    <i class="me-1" data-feather="{% if player.season_points_change > 0 %}trending-up{% else %}trending-down{% endif %}"></i>
+                                                    {{ player.season_points_change }}%
+                                                </div>
+                                            {% else %}
+                                                <div class="text-xs fw-bold text-muted d-inline-flex align-items-center">
+                                                    No Change
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        <!-- Иконка -->
+                                        <div>
+                                            <div class="me-0 me-sm-2 me-lg-4 me-xl-0 me-xxl-2"><i class="fas fa-chart-line fa-2x text-gray-200"></i></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Widget 3: Absolute Ranking -->
+                        <div class="col-12 col-sm-6 col-lg-6 col-xl-3 col-xxl-3 mb-4">
+                            <div class="card border-start-lg border-start-warning h-100">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        
+                                        <!-- Информация -->
+                                        <div>
+                                            <div class="small fw-bold text-warning mb-1">Total Ranking</div>
+                                            <div class="h5">#{{ current_stats.ranking_absolute }}</div>
+                                            <!-- Изменение Ранжирования -->
+                                            {% if player.absolute_ranking_change %}
+                                                <div class="text-xs fw-bold {% if player.absolute_ranking_change > 0 %}text-success{% else %}text-danger{% endif %} d-inline-flex align-items-center">
+                                                    <i class="me-1" data-feather="{% if player.absolute_ranking_change > 0 %}trending-up{% else %}trending-down{% endif %}"></i>
+                                                    {{ player.absolute_ranking_change }}%
+                                                </div>
+                                            {% else %}
+                                                <div class="text-xs fw-bold text-muted d-inline-flex align-items-center">
+                                                    No Change
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        <!-- Иконка -->
+                                        <div>
+                                            <div class="me-0 me-sm-2 me-lg-4 me-xl-0 me-xxl-2"><i class="fas fa-ranking-star fa-2x text-gray-200"></i></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Widget 4: Category Ranking -->
+                        <div class="col-12 col-sm-6 col-lg-6 col-xl-3 col-xxl-3 mb-4">
+                            <div class="card border-start-lg border-start-info h-100">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        
+                                        <!-- Информация -->
+                                        <div>
+                                            <div class="small fw-bold text-info mb-1">Category Ranking</div>
+                                            <div class="h5">#{{ current_stats.ranking_category }}</div>
+                                            <!-- Изменение Категорийного Ранжирования -->
+                                            {% if player.category_ranking_change %}
+                                                <div class="text-xs fw-bold {% if player.category_ranking_change > 0 %}text-success{% else %}text-danger{% endif %} d-inline-flex align-items-center">
+                                                    <i class="me-1" data-feather="{% if player.category_ranking_change > 0 %}trending-up{% else %}trending-down{% endif %}"></i>
+                                                    {{ player.category_ranking_change }}%
+                                                </div>
+                                            {% else %}
+                                                <div class="text-xs fw-bold text-muted d-inline-flex align-items-center">
+                                                    No Change
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        <!-- Иконка -->
+                                        <div>
+                                            <div class="me-0 me-sm-2 me-lg-4 me-xl-0 me-xxl-2"><i class="fas fa-award fa-2x text-gray-200"></i></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                   
+
+                    <!-- Дополнительные Секции (например, Win Rate) -->
+                    
+                        <!-- Widget 5: Win Rate -->
+                        <div class="col-12 col-sm-6 col-lg-6 col-xl-3 col-xxl-3 mb-4">
+                            <div class="card border-start-lg border-start-danger h-100">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center justify-content-between h-100">
+                                        
+                                        <!-- Информация -->
+                                        <div class="d-flex flex-column h-100 justify-content-between">
+                                            <div>
+                                                <div class="small fw-bold text-danger mb-1">Win Rate</div>
+                                                <div class="h5">{{ current_stats.win_rate }}</div>
+                                            </div>
+                                                <!-- Изменение Win Rate -->
+                                                <div>
+                                                {% if player.win_rate_change %}
+                                                    <div class="text-xs fw-bold {% if player.win_rate_change > 0 %}text-success{% else %}text-danger{% endif %} d-inline-flex align-items-center">
+                                                        <i class="me-1" data-feather="{% if player.win_rate_change > 0 %}trending-up{% else %}trending-down{% endif %}"></i>
+                                                        {{ player.win_rate_change }}%
+                                                    </div>
+                                                {% else %}
+                                                    <div class="text-xs fw-bold text-muted d-inline-flex align-items-center">
+                                                        No Change
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <!-- Иконка -->
+                                        <div>
+                                            <div class="me-0 me-sm-2 me-lg-4 me-xl-0 me-xxl-2"><i class="fas fa-chart-pie fa-2x text-gray-200"></i></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Widget 7: Last 3 opponents  -->
+                        <div class="col-12 col-sm-6 col-lg-6 col-xl-3 col-xxl-3 mb-4">
+                            <div class="card border-start-lg border-start-primary h-100">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        
+                                        <!-- Информация -->
+                                        <div>
+                                            <div class="d-flex flex-column">
+                                                <div class="small fw-bold text-primary mb-1">Matches</div>
+                                                <div class="h5">{{ current_stats.matches_played }} <span class="text-xs text-muted">played</span></div>
+                                            </div>
+                                            <div>
+                                                <span class="text-xs me-0">{{ current_stats.matches_won }}</span><span class="text-xs text-muted">W</span>
+                                                <span class="text-xs me-0">{{ current_stats.matches_lost }}</span><span class="text-xs text-muted">L</span>
+                                                <span class="text-xs me-0">{{ current_stats.matches_rted }}</span><span class="text-xs text-muted">RT</span>
+                                                
+                                            </div>
+                                        </div>
+                                        <!-- Иконка -->
+                                        <div>
+                                            <div class="me-0 me-sm-2 me-lg-4 me-xl-0 me-xxl-2"><i class="fas fa-trophy fa-2x text-gray-200"></i></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-12 col-sm-12 col-lg-12 col-xl-6 col-xxl-6 mb-4">
+                            <div class="card card-angles border-start-lg border-start-secondary h-100">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        
+                                        <!-- Информация -->
+                                        
+                                        <div class="w-100">
+                                            <div class="d-flex flex-column">
+                                                <div class="small fw-bold text-secondary mb-1">Last 3 Rivals</div>
+                                                
+                                            </div>
+                                            
+                                            <div class="d-flex align-items-center justify-content-start w-100 mt-2">
+                                                {% for opponent in last_3_opponents %}
+                                        
+                                                    {% if opponent.is_winner %}
+                                                        <a class="rounded-pill lift-sm shadow-none border border-success bg-white me-2 me-sm-5 me-xl-1 me-xxl-4 text-decoration-none" href="{% url 'rivals:match_detail' opponent.match.pk %}">
+                                                    {% else %}
+                                                        <a class="rounded-pill lift-sm shadow-none border border-danger bg-white me-2 me-sm-5 me-xl-1 me-xxl-4 text-decoration-none" href="{% url 'rivals:match_detail' opponent.match.pk %}"> 
+                                                    {% endif %}
+                                                            <div class="d-flex align-items-center justify-content-between">
+                                                                <div class="avatar avatar mr-1 mx-1 my-1">  
+                                                                    
+                                                                        <img class="avatar-img img-fluid" src="{{ opponent.opponent.avatar.url }}" alt="{{ opponent.opponent }} avatar"/>
+                                                                    
+                                                                </div>
+                                                                <div class="d-flex flex-column justify-content-center ms-0 me-3">
+                                                                {% if opponent.is_winner %}
+                                                                    <div class="text-success text-xs text-center">Win</div>
+                                                                {% else %}
+                                                                    <div class="text-danger text-xs text-center">Lose</div>
+                                                                {% endif %}
+                                                                    <div class="text-muted text-xs text-center">
+                                                                        {{ opponent.match.date|days_ago  }}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </a>
+                                                
+                                            {% empty %}
+                                                <div class="avatar avatar-sm me-3 bg-gray-200 border border-secondary">
+                                                    <img class="avatar-img img-fluid " src="{% static 'assets/img/enroll new player.png' %}" alt="Default Player Image" />
+                                                </div>
+                                                <div class="text-muted text-xs text-center">Register for your first <a class="text-secondary" href="{% url 'rivals:tournaments' %}">tournament</a>!</div>
+                                            {% endfor %}
+                                                
+                                            </div>
+                                        </div>
+                                        <!-- Иконка -->
+                                        <div class="me-0 me-sm-2 me-lg-4 me-xl-0 me-xxl-2 d-none d-sm-block d-xl-none d-xxl-block">
+                                            <svg width="36" height="36" viewBox="0 0 705 705" class="text-gray-200">
+                                                <use href="{% static 'assets/img/tr-icon-white.svg' %}#icon"></use>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                   
+                    </div>
+                    <div class="row d-flex align-items-stretch">
+                    <!-- Динамика рейтинга -->
+                        <div class="col-xl-6 mb-4">
+                            <div class="card mb-4 h-100">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <span>Season Rating Dynamics</span><span class="text-muted small"> {{player.geo|const_replace}}</span>
+                                </div>
+                                <div class="card-body d-flex flex-column">
+                                    <div class="d-flex flex-column flex-grow-1">
+                                       
+                                            <div class="d-flex justify-content-center align-items-center">
+                                                
+                                                <div class="text-muted small d-flex align-items-center me-xl-2 me-xxl-4 me-4"> <i class="me-1" data-feather="bar-chart-2"></i> <span class="me-2"> Absolute Rating: </span> <strong> {{player.current_stats.ranking_absolute}}</strong></div>
+                                                <div class="text-muted small d-flex align-items-center ms-xl-2 ms-xxl-4 ms-4"> <i class="me-1" data-feather="bar-chart"></i> <span class="me-2">Category Rating ({{player.category|const_replace}}): </span> <strong> {{player.current_stats.ranking_category}}</strong></div>
+                                                
+                                            </div>
+                                        
+                                    </div>
+                                    <div class="chart-area flex-grow-1" style="height: 300px;">
+                                        <canvas id="ratingChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    
+                        <!-- Динамика уровня NTRP -->
+                        <div class="col-xl-6 mb-4">
+                            <div class="card mb-4 h-100">
+                                <div class="card-header">
+                                    NTRP Level Dynamics
+                                </div>
+                                <div class="card-body d-flex flex-column">
+                                    <div class="d-flex flex-column flex-grow-1">
+                                        
+                                            
+                                            <div class="d-flex justify-content-center align-items-center">
+                                                
+                                                    <div class="text-muted small d-flex align-items-center me-xl-2 me-xxl-4 me-4"> <i class="me-1" data-feather="arrow-up-circle"></i> <span class="me-2"> Max NTRP: </span> <strong> {{player.current_stats.max_NTRP}}</strong></div>
+                                                    <div class="text-muted small d-flex align-items-center ms-xl-2 ms-xxl-4 ms-4"> <i class="me-1" data-feather="arrow-down-circle"></i> <span class="me-2">Min NTRP: </span> <strong> {{player.current_stats.min_NTRP}}</strong></div>
+                                                
+                                            </div>
+                                       
+                                    </div>
+                                    <div class="chart-area flex-grow-1" style="height: 300px;">
+                                        <canvas id="ntrpChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        
+                    </div>
+                    
+                                    <!-- Секция с последними 3 оценками -->
+    <div class="card mb-4">
+        <div class="card-header">
+            Latest Reviews
+        </div>
+        <div class="card-body">
+            {% if last_three_ratings %}
+                <div class="list-group">
+                    {% for rating in last_three_ratings %}
+                        <div class="list-group-item list-group-item-action flex-column align-items-start">
+                            <div class="d-flex w-100 justify-content-between align-items-center no-wrap">
+                                <span class="d-flex align-items-center">
+                                    <img src="{{ rating.from_player.avatar.url }}" alt="{{ rating.from_player }} avatar" class="img-fluid rounded-circle mb-2" style="width: 30px; height: 30px;" />
+                                    <h6 class="mb-1 ms-2"><a href="{% url 'rivals:player_detail' rating.from_player.pk %}">{{ rating.from_player }} </a> rated <strong>{{rating.summary|floatformat:1}}</strong> in total</h5>
+                                </span>
+                                <small>{{ rating.date|date:"d.m.Y H:i" }}</small>
+                            </div>
+                            <p class="mb-1">
+                                
+                                <strong>{{ rating.forehand|floatformat:0 }}</strong> <span class="text-muted small">/5 forehand |</span>
+                                <strong>{{ rating.backhand|floatformat:0 }}</strong> <span class="text-muted small">/5 backhand |</span>
+                                <strong>{{ rating.rallies|floatformat:0 }}</strong> <span class="text-muted small">/5 rallies |</span>
+                                <strong>{{ rating.attack|floatformat:0 }}</strong> <span class="text-muted small">/5 attack |</span>
+                                <strong>{{ rating.serve|floatformat:0 }}</strong> <span class="text-muted small">/5 serve |</span>
+                                <strong>{{ rating.serve_return|floatformat:0 }}</strong> <span class="text-muted small">/5 serve return |</span>
+                                <strong>{{ rating.volleys|floatformat:0 }}</strong> <span class="text-muted small">/5 volleys</span>
+                            </p>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p>No reviews yet.</p>
+            {% endif %}
+        </div>
+    </div>
+
+
+                    <!-- Статистика по играм и матчам -->
+                    
+                    
+                    <!-- История участия в турнирах -->
+                    <div class="card mb-4">
+                        <div class="card-header">Tournaments</div>
+                        <div class="card-body">
+                            <h5 class="mb-3">Current Tournaments</h5>
+                            <div class="list-group">
+                                {% for pt in current_tournaments %}
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>
+                                            <a class="text-dark" href="{% url 'rivals:tournament_detail' pt.tournament.pk %}">{{ pt.tournament.title }}</a>
+                                        </strong><br>
+                                        <span class="small pe-1">
+                                            Round {{ pt.tournament.current_stage }} of {{ pt.tournament.stages_max }}
+                                        </span> &bull;
+                                        <span class="text-dark small px-1">
+                                            {{ pt.games_won }}-{{ pt.games_lost }} games
+                                        </span>
+                                        {% if pt.flow %}
+                                        &bull;
+                                        <span class="text-dark small px-1">
+                                            Flow: {{ pt.flow }}
+                                        </span>
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <span class="badge bg-primary">In Progress</span>
+                                    </div>
+                                </div>
+                                <hr>
+                                {% empty %}
+                                <div class="text-muted">No current tournament participation.</div>
+                                {% endfor %}
+                            </div>
+
+                            <h5 class="mt-4 mb-3">Past Tournaments</h5>
+                            <div class="list-group">
+                                {% for pt in past_tournaments %}
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>
+                                            <a class="text-dark" href="{% url 'rivals:tournament_detail' pt.tournament.pk %}">{{ pt.tournament.title }}</a>
+                                        </strong><br>
+                                        <span class="small pe-1">
+                                            {% if pt.result %}
+                                                Place {{ pt.result }} of {{ pt.tournament.players_num }}
+                                            {% endif %}
+                                        </span>
+                                        {% if pt.games_played > 0 %}
+                                        &bull;
+                                        <span class="text-dark small px-1">
+                                            {{ pt.games_won }}-{{ pt.games_lost }} games
+                                        </span>
+                                        {% endif %}
+                                        {% if pt.flow %}
+                                        &bull;
+                                        <span class="text-dark small px-1">
+                                            Flow: {{ pt.flow }}
+                                        </span>
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        {% if pt.is_withdrawn %}
+                                            <span class="badge bg-danger">Withdrawn</span>
+                                        {% else %}
+                                            <span class="badge bg-success">Completed</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <hr>
+                                {% empty %}
+                                <div class="text-muted">No past tournament participation.</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Предстоящие матчи -->
+                    <div class="card mb-4">
+                        <div class="card-header">Upcoming Matches</div>
+                        <div class="card-body">
+                            <div class="list-group">
+                                {% for match in upcoming_matches %}
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <strong>
+                                                <a class="text-dark" href="{% url 'rivals:player_detail' match.player.pk %}">{{match.player}}</a> 
+                                                <img src="{%static 'assets/img/tr-icon-vs-grad.svg' %}" alt="{{match.match.tournament.title}} logo" class="img-fluid rounded-circle mb-1 mx-2" style="width: 30px; height: 30px;" />
+                                                <a class="text-dark" href="{% url 'rivals:player_detail' match.opponent.pk %}">{{match.opponent}}</a>
+                                            </strong> <br>
+                                            <span class="small pe-1"><a class="text-dark" href="{% url 'rivals:tournament_detail' match.match.tournament.pk %}">{{ match.match.tournament.title }}</a></span> &bull;
+                                            <span class="text-dark small px-1">Round {{ match.match.tournament.current_stage }} of {{ match.match.tournament.stages_max }}</span> &bull;
+                                            <span class="text-dark small px-1">To play till {{ match.match.tournament.current_stage_end_date }}</span>
+                                        </div>
+                                        <div class="">
+                                            <a class="btn btn-dark py-2" href="{% url 'rivals:match_detail' match.match.pk %}"><i data-feather="edit" class="me-2"></i> Enter Score</a>
+                                        </div>
+                                        </div>
+                                        <hr>
+                                {% empty %}
+                                    <li>No upcoming matches.</li>
+                                {% endfor %}
+                                </div>
+                        </div>
+                    </div>
+                    
+
+
+                    <!-- Последние матчи -->
+                    <div>
+                    <div class="card card-scrollable mb-4">
+                        <div class="card-header">All Recent Matches</div>
+                        <div class="card-body">
+                            <table class="table table-striped table-hover table-sm table-responsive">
+                                <thead class="align-middle text-center vertical-align-middle">
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Opponent</th>
+                                        <th>Result</th>
+                                        <th>Score</th>
+                                        <th>View</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="align-middle text-center vertical-align-middle" >
+                                    {% for pm in recent_matches %}
+                                        <tr>
+                                            <td>{{ pm.match.date }}</td>
+                                            <td>
+                                                {% if pm.opponent %}
+                                                    <a href="{% url 'rivals:player_detail' pm.opponent.pk %}">{{ pm.opponent }}</a>
+                                                {% else %}
+                                                    Withdrawn
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if pm.is_winner %}
+                                                    <i class="text-success mb-0" data-feather="check-circle"></i>
+                                                {% elif pm.is_withdrawn %}
+                                                    <i class="text-dark mb-0" data-feather="log-out"></i>
+                                                {% else %}
+                                                    <i class="text-danger mb-0" data-feather="x-circle"></i>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ pm.match.get_str_score }}</td>
+                                            <td><a href="{% url 'rivals:match_detail' pm.match.pk %}"><i data-feather="external-link"></i></a></td>
+                                        </tr>
+                                    {% empty %}
+                                        <tr>
+                                            <td colspan="4">No recent matches available.</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Модальное окно для вызова на поединок -->
+    <div class="modal fade" id="challengeModal" tabindex="-1" aria-labelledby="challengeModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <form method="post" action="{% url 'rivals:player_detail' player.pk %}">
+            {% csrf_token %}
+            <div class="modal-header">
+              <h5 class="modal-title" id="challengeModalLabel">Challenge {{ player.user.first_name }}</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              {{ form.as_p }}
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+              <button type="submit" class="btn btn-primary">Send Challenge</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Скрипты для графиков -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+
+    <!-- Скрипты для передачи данных в JavaScript -->
+    {{ rating_labels|json_script:"rating-labels" }}
+    {{ rating_data|json_script:"rating-data" }}
+    {{ ntrp_labels|json_script:"ntrp-labels" }}
+    {{ ntrp_data|json_script:"ntrp-data" }}
+    {{ attribute_labels|json_script:"attribute-labels" }}
+    {{ attribute_data|json_script:"attribute-data" }}
+    {{ target_attribute_data|json_script:"target-attribute-data" }}
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Динамика рейтинга
+            var ctxRating = document.getElementById('ratingChart').getContext('2d');
+            var ratingLabels = JSON.parse(document.getElementById('rating-labels').textContent);
+            var ratingData = JSON.parse(document.getElementById('rating-data').textContent);
+            
+            var ratingChart = new Chart(ctxRating, {
+                type: 'line',
+                data: {
+                    labels: ratingLabels,
+                    datasets: [{
+                        label: 'Rating Points',
+                        data: ratingData,
+                        backgroundColor: 'rgba(0, 97, 242, 0.2)',
+                        borderColor: 'rgba(0, 97, 242, 1)',
+                        borderWidth: 3,
+                        fill: false,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false,
+                            position: 'top',
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: false,
+                            title: {
+                                display: true,
+                                text: 'Date'
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Points'
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Динамика уровня NTRP
+            var ctxNTRP = document.getElementById('ntrpChart').getContext('2d');
+            var ntrpLabels = JSON.parse(document.getElementById('ntrp-labels').textContent);
+            var ntrpData = JSON.parse(document.getElementById('ntrp-data').textContent);
+            
+            var ntrpChart = new Chart(ctxNTRP, {
+                type: 'line',
+                data: {
+                    labels: ntrpLabels,
+                    datasets: [{
+                        label: 'NTRP Level',
+                        data: ntrpData,
+                        backgroundColor: 'rgba(0, 150, 136, 0.2)',
+                        borderColor: 'rgba(0, 150, 136, 1)',
+                        borderWidth: 3,
+                        fill: false,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false,
+                            position: 'top',
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Date'
+                            }
+                        },
+                        y: {
+                            beginAtZero: false,
+                            title: {
+                                display: true,
+                                text: 'NTRP Level'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Polar Area график для Attribute Ratings
+            var ctxAttribute = document.getElementById('attributeChart').getContext('2d');
+            var attributeLabels = JSON.parse(document.getElementById('attribute-labels').textContent);
+            var attributeData = JSON.parse(document.getElementById('attribute-data').textContent);
+            var targetAttributeData = JSON.parse(document.getElementById('target-attribute-data').textContent);
+            
+            var attributeChart = new Chart(ctxAttribute, {
+                type: 'polarArea',
+                data: {
+                    labels: attributeLabels,
+                    datasets: [
+                        
+                        {
+                            label: 'Max rating',
+                            data: targetAttributeData,
+                            backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                            borderColor: 'rgba(200, 200, 200, 1)',
+                            borderWidth: 0.2,
+                            datalabels: {
+                                color: '#999',
+                                align: 'end',
+                                anchor: 'end',
+                                
+                                formatter: function(value, context) {
+                                    return context.chart.data.labels[context.dataIndex];
+                                },
+                                font: {
+                                    weight: 'bold'
+                                }
+                            }
+                        },
+                        {
+                            label: 'Attributes',
+                            data: attributeData,
+                            backgroundColor: [
+                                'rgba(255, 99, 132, 0.4)',
+                                'rgba(54, 162, 235, 0.4)',
+                                'rgba(255, 206, 86, 0.4)',
+                                'rgba(75, 192, 192, 0.4)',
+                                'rgba(153, 102, 255, 0.4)',
+                                'rgba(255, 159, 64, 0.4)',
+                                'rgba(199, 199, 199, 0.4)',
+                                'rgba(83, 102, 255, 0.4)'
+                            ],
+                            borderColor: [
+                                'rgba(255, 99, 132, 1)',
+                                'rgba(54, 162, 235, 1)',
+                                'rgba(255, 206, 86, 1)',
+                                'rgba(75, 192, 192, 1)',
+                                'rgba(153, 102, 255, 1)',
+                                'rgba(255, 159, 64, 1)',
+                                'rgba(199, 199, 199, 1)',
+                                'rgba(83, 102, 255, 1)'
+                            ],
+                            borderWidth: 1,
+                            datalabels: {
+                                display: false
+                            }
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    layout: {
+                        padding: {
+                            top: 20,
+                            bottom: 20,
+                            left: 38,
+                            right: 60
+                        }
+                    },
+                    scales: {
+                        r: {
+                            min: 0,
+                            max: 5,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        title: {
+                            display: false,
+                            font: {
+                                size: 14 // Увеличиваем размер шрифта заголовка
+                            },
+                            padding: {
+                                top: 0, // Увеличиваем отступ сверху
+                                bottom: 20 // Увеличиваем отступ снизу
+                            },
+                            text: "Attribute Ratings based on Rivals' reviews"
+                        }
+                    }
+                },
+                plugins: [ChartDataLabels]
+            });
+        });
+    </script>
+</div>
+
+<style>
+    .charts-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+
+    .chart-card {
+        flex: 1 1 45%;
+        min-width: 300px;
+        position: relative;
+    }
+
+    .chart-area {
+        width: 100%;
+        height: 300px;
+    }
+
+    #ratingChart,
+    #ntrpChart {
+        width: 100% !important;
+        height: 100% !important;
+    }
+
+    /* Опционально: Корректировка размеров для мобильных устройств */
+    @media (max-width: 768px) {
+        .chart-card {
+            flex: 1 1 100%;
+        }
+    }
+</style>
+
+{% endblock content %} 

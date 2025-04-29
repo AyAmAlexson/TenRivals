@@ -31,7 +31,7 @@
     // Collapse Navbar
     // Add styling fallback for when a transparent background .navbar-marketing is scrolled
     var navbarCollapse = function() {
-        const navbarMarketingTransparentFixed = document.body.querySelector('.navbar-marketing.bg-transparent.fixed-top');
+        const navbarMarketingTransparentFixed = document.body.querySelector('.navbar-marketing.fixed-top');
         if (!navbarMarketingTransparentFixed) {
             return;
         }
@@ -48,3 +48,60 @@
     document.addEventListener('scroll', navbarCollapse);
 
 });
+
+
+// Toggle the side navigation
+const sidebarToggle = document.body.querySelector('#sidebarToggle');
+if (sidebarToggle) {
+    // Uncomment Below to persist sidebar toggle between refreshes
+    // if (localStorage.getItem('sb|sidebar-toggle') === 'true') {
+    //     document.body.classList.toggle('sidenav-toggled');
+    // }
+    sidebarToggle.addEventListener('click', event => {
+        event.preventDefault();
+        document.body.classList.toggle('sidenav-toggled');
+        localStorage.setItem('sb|sidebar-toggle', document.body.classList.contains('sidenav-toggled'));
+    });
+}
+
+// Close side navigation when width < LG
+const sidenavContent = document.body.querySelector('#layoutSidenav_content');
+if (sidenavContent) {
+    sidenavContent.addEventListener('click', event => {
+        const BOOTSTRAP_LG_WIDTH = 992;
+        if (window.innerWidth >= 992) {
+            return;
+        }
+        if (document.body.classList.contains("sidenav-toggled")) {
+            document.body.classList.toggle("sidenav-toggled");
+        }
+    });
+}
+
+// Add active state to sidbar nav links
+let activatedPath = window.location.pathname.match(/([\w-]+\.html)/, '$1');
+
+if (activatedPath) {
+    activatedPath = activatedPath[0];
+} else {
+    activatedPath = 'index.html';
+}
+
+const targetAnchors = document.body.querySelectorAll('[href="' + activatedPath + '"].nav-link');
+
+targetAnchors.forEach(targetAnchor => {
+    let parentNode = targetAnchor.parentNode;
+    while (parentNode !== null && parentNode !== document.documentElement) {
+        if (parentNode.classList.contains('collapse')) {
+            parentNode.classList.add('show');
+            const parentNavLink = document.body.querySelector(
+                '[data-bs-target="#' + parentNode.id + '"]'
+            );
+            parentNavLink.classList.remove('collapsed');
+            parentNavLink.classList.add('active');
+        }
+        parentNode = parentNode.parentNode;
+    }
+    targetAnchor.classList.add('active');
+});
+

@@ -8,7 +8,7 @@ TOURNAMENT_TYPE = [
 TOURNAMENT_CATEGORY = [
     ('C0','Novice'),
     ('C1','Challenger'),
-    # ('C2','Tour'),
+    ('C2','Tour'),
     ('C3','Masters'),
     ('PR','Profi'),
 ]
@@ -41,6 +41,8 @@ DELETED_PAIR = '0'
 MATCH_STATUS = [
     ('PD', 'Pending'),
     ('FI', 'Finished'),
+    ('CA', 'Cancelled'),
+    ('OD', 'Overdue'),
 ]
 
 TR_GEOS = [
@@ -59,8 +61,75 @@ TR_CITIES = [
     ('SPB', 'St. Petersburg, RU'),
     ('MIL', 'Milano, IT'),
     ('ROM', 'Roma, IT'),
-    ('BEL', 'Belgrad, RS'),
+    ('BEL', 'Belgrade, RS'),
 
 ]
 
 CURRENT_SEASON = datetime.datetime.now().year
+
+FEMALE_PLAYERS_AVATARS = [
+    'avatars/photo___Caroline.png',
+    'avatars/photo___Karina.png',
+    'avatars/photo___Kate.png',
+    'avatars/photo___Milena.png',
+    'avatars/photo___Olga.png',
+    'avatars/photo___Ruzanna.png',
+]
+
+MALE_PLAYERS_AVATARS = [
+    'avatars/photo___Alex_2.png',
+    'avatars/photo___Bogdan.png',
+    'avatars/photo___Kamza.png',
+    'avatars/photo___Mitya.png',
+    'avatars/photo___Rufin.png',
+    'avatars/photo___Sanzhu.png',
+
+]
+
+TOKEN_STATUS = [
+    ('P', 'Pending'),
+    ('U', 'Used'),
+    ('E', 'Expired'),
+]
+
+TIMELINE_EVENT_TYPE = [
+    ('M', 'Match'),
+    ('R', 'Review'),
+    ('C', 'Challenge'),
+    ('N', 'New Rating'),
+    ('T', 'Tournament'),
+    ('P', 'Pair'),
+    ('S', 'Success'),
+    ('F', 'Failure'),
+    ('O', 'Other'),
+    ('E', 'Event'),
+    ('I', 'Info'),
+    ('W', 'Warning'),
+    ('D', 'Danger'),
+    ('L', 'Light'),
+    ('H', 'High'),
+    ('M', 'Medium'),
+]
+
+TIMELINE_EVENT_COLOR = [
+    ('1', 'primary'),
+    ('2', 'secondary'),
+    ('I', 'info'),
+    ('W', 'warning'),
+    ('D', 'danger'),
+    ('S', 'success'),
+    ('G', 'green'),
+    ('R', 'red'),
+    ('B', 'blue'),
+    ('Y', 'yellow'),
+    ('P', 'purple'),
+    ('O', 'orange'),
+    ('L', 'light'),
+    ('V', 'violet'),
+    ('G', 'gray'),
+    ('B', 'black'),
+    ('T', 'turquoise'),
+    ('M', 'magenta'),
+    ('C', 'cyan'),
+    ('A', 'aqua'),
+]

@@ -1,0 +1,408 @@
+{% extends 'default.html' %}
+{% load static %}
+{% load custom_tags %}
+{% load custom_filters %}
+
+{% block content %}
+
+<div class="container-xl px-4 mt-15">
+    <!-- Page Header -->
+    <header class="page-header page-header-compact page-header-light border-bottom bg-white mb-4">
+        <div class="container-xl px-4">
+            <div class="page-header-content">
+                <div class="row align-items-center justify-content-between pt-3">
+                    <div class="col-auto mb-3">
+                        <h1 class="page-header-title">
+                            <div class="page-header-icon"><i data-feather="user"></i></div>
+                            Account Settings - Profile {{ time_now|date:'M d Y' }}
+                        </h1>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main page content-->
+    <div class="container-xl px-4 mt-4">
+        <!-- Account page navigation-->
+        <nav class="nav nav-borders">
+            <a class="nav-link active ms-0" href="#">Profile</a>
+            <a class="nav-link" href="#">Billing</a>
+            <a class="nav-link" href="#">Security</a>
+            <a class="nav-link" href="#">Notifications</a>
+        </nav>
+        <hr class="mt-0 mb-4" />
+        <div class="row">
+            <div class="col-xl-4">
+                <!-- Profile picture card-->
+                <div class="card mt-4 mb-xl-0">
+                    <div class="card-header">Profile Picture</div>
+                    <div class="card-body text-center">
+                        <!-- Profile picture image-->
+                        {% if user.player.avatar %}
+                            <img class="img-account-profile rounded-circle mb-2" src="{{ user.player.avatar.url }}" alt="Profile Image" />
+                        {% else %}
+                            <img class="img-account-profile rounded-circle mb-2" src="{% static 'assets/img/Avatar Default Icon.svg' %}" alt="Profile Image" />
+                        {% endif %}
+                        <!-- Profile picture help block-->
+                        <div class="small font-italic text-muted mb-4">JPG or PNG, no larger than 5 MB</div>
+                        <!-- Profile picture upload form -->
+                        <form id="avatarForm" method="post" action="" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <input type="hidden" name="update_avatar" value="1">
+                            
+                            <!-- Hidden file input -->
+                            <input type="file" id="id_avatar" name="avatar" accept="image/jpeg,image/png" style="display: none;" onchange="previewAvatar(this);">
+                            
+                            {% for error in avatar_form.avatar.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                            
+                            <!-- Button to trigger file selection -->
+                            <label for="id_avatar" class="btn btn-primary mt-2" style="cursor: pointer;">
+                                Upload New Image
+                            </label>
+                        </form>
+                        
+                        <!-- Modal for avatar preview -->
+                        <div class="modal fade" id="avatarPreviewModal" tabindex="-1" aria-labelledby="avatarPreviewModalLabel" aria-hidden="true">
+                          <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                              <div class="modal-header">
+                                <h5 class="modal-title" id="avatarPreviewModalLabel">Image Preview</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                              </div>
+                              <div class="modal-body text-center">
+                                <img id="preview_img" src="#" alt="Preview Image" style="max-width: 100%; height: auto;">
+                              </div>
+                              <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="button" class="btn btn-primary" onclick="submitAvatarForm()">Save</button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <!-- JavaScript for managing the modal and form -->
+                        <script>
+                            // Function to preview the selected image and display the modal
+                            function previewAvatar(input) {
+                                if (input.files && input.files[0]) {
+                                    var reader = new FileReader();
+                                    
+                                    reader.onload = function(e) {
+                                        // Set the image source for preview
+                                        document.getElementById('preview_img').src = e.target.result;
+                                        
+                                        // Initialize and show the modal
+                                        var avatarPreviewModal = new bootstrap.Modal(document.getElementById('avatarPreviewModal'));
+                                        avatarPreviewModal.show();
+                                    }
+                                    
+                                    reader.readAsDataURL(input.files[0]);
+                                }
+                            }
+                        
+                            // Function to submit the form after clicking "Save" in the modal
+                            function submitAvatarForm() {
+                                document.getElementById('avatarForm').submit();
+                            }
+                        </script>
+                    </div>
+                </div>
+
+                <!-- Telegram account card -->
+                <div class="card mt-4">
+                    <div class="card-header">Telegram Account</div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="small mb-1">Current Telegram</label>
+                            <div class="input-group">
+                                <span class="input-group-text">@</span>
+                                <input type="text" class="form-control" 
+                                       value="{{ user.telegram }}" 
+                                       disabled>
+                                {% if user.is_telegram_verified %}
+                                    <span class="input-group-text text-success">
+                                        <i class="fas fa-check-circle"></i>
+                                    </span>
+                                {% else %}
+                                    <span class="input-group-text text-warning">
+                                        <i class="fas fa-exclamation-circle"></i>
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            {% if not user.is_telegram_verified %}
+                                <a href="{% url 'persons:verify_telegram' %}" class="btn btn-warning btn-sm">
+                                    Verify Telegram
+                                </a>
+                            {% endif %}
+                            <a href="{% url 'persons:change_telegram' %}" class="btn btn-primary btn-sm">
+                                Change Telegram
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- City selection card-->
+                <div class="card mt-4">
+                    <div class="card-header">Your City</div>
+                    <div class="card-body">
+                        <form method="post" action="">
+                            {% csrf_token %}
+                            <input type="hidden" name="update_city" value="1">
+                            {% for field in city_form %}
+                                <div class="mb-3">
+                                    <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                    {{ field }}
+                                    {% if field.help_text %}
+                                        <small class="form-text text-muted">{{ field.help_text }}</small>
+                                    {% endif %}
+                                    {% for error in field.errors %}
+                                        <div class="text-danger">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            {% endfor %}
+                            {% if city_form.non_field_errors %}
+                                <div class="text-danger">
+                                    {% for error in city_form.non_field_errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <button class="btn btn-primary" type="submit">Save</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-8 mt-4">
+                <!-- Account details card-->
+                <div class="card mb-4">
+                    <div class="card-header">Account Details</div>
+                    <div class="card-body">
+                        <form method="post" action="">
+                            {% csrf_token %}
+                            <input type="hidden" name="update_player" value="1">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label" for="{{ player_form.first_name.id_for_label }}">{{ player_form.first_name.label }}</label>
+                                    {{ player_form.first_name }}
+                                    {% for error in player_form.first_name.errors %}
+                                        <div class="text-danger">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label" for="{{ player_form.last_name.id_for_label }}">{{ player_form.last_name.label }}</label>
+                                    {{ player_form.last_name }}
+                                    {% for error in player_form.last_name.errors %}
+                                        <div class="text-danger">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            
+                            <!-- Mobile and Email -->
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label" for="{{ form.mobile.id_for_label }}">{{ player_form.mobile.label }}</label>
+                                    {{ player_form.mobile }}
+                                    {% for error in player_form.mobile.errors %}
+                                        <div class="text-danger">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label" for="{{ form.email.id_for_label }}">{{ player_form.email.label }}</label>
+                                    
+                                    {% if user.is_email_verified %}
+                                        <span class="badge bg-success rounded-pill">   Verified</span>
+                                    {% else %}
+                                        <span class="badge bg-warning rounded-pill">  Unverified</span>
+                                    {% endif %}
+                                    <div class="input-group">
+                                        {{ player_form.email }}
+                                        <a class="btn btn-outline-primary" type="button" href="#" data-bs-toggle="modal" data-bs-target="#changeEmailModal">
+                                            <i data-feather="edit"></i>
+                                        </a>
+                                    </div>
+                                    {% for error in player_form.email.errors %}
+                                        <div class="text-danger">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                                
+                            </div>
+                            <!-- Birth Date and Age -->
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label" for="{{ player_form.birthdate.id_for_label }}">{{ player_form.birthdate.label }}</label>
+                                    {{ player_form.birthdate }}
+                                    {% for error in player_form.birthdate.errors %}
+                                        <div class="text-danger">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label" for="id_age">Age</label>
+                                    <input type="text" id="id_age" value="{{ player.age }}" class="form-control disabled" readonly>
+                                </div>
+                            </div>
+                            <!-- Gender -->
+                            <div class="row">
+                                <div class="col-md-12 mb-3">
+                                    <label class="form-label">{{ player_form.gender.label }}</label>
+                                    <div>
+                                        {% for radio in player_form.gender %}
+                                            <div class="form-check form-check-inline">
+                                                {{ radio.tag }}
+                                                <label class="form-check-label" for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                    {% for error in player_form.gender.errors %}
+                                        <div class="text-danger">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <!-- height, weight, tennis experience -->
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label" for="{{ player_form.height.id_for_label }}">{{ player_form.height.label }}</label>
+                                    {{ player_form.height }}
+                                    {% for error in player_form.height.errors %}
+                                        <div class="text-danger">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label" for="{{ player_form.weight.id_for_label }}">{{ player_form.weight.label }}</label>
+                                    {{ player_form.weight }}
+                                    {% for error in player_form.weight.errors %}
+                                        <div class="text-danger">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label" for="{{ player_form.tennis_exp_year.id_for_label }}">{{ player_form.tennis_exp_year.label }}</label>
+                                    {{ player_form.tennis_exp_year }}
+                                    {% for error in player_form.tennis_exp_year.errors %}
+                                        <div class="text-danger">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+
+
+
+                            <!-- Availability -->
+                           
+                                
+                                    <div class="mb-3">
+                                        <label class="form-label" for="{{ player_form.availability.id_for_label }}">{{ player_form.availability.label }}</label>
+                                        {{ player_form.availability }}
+                                        {% if player_form.availability.help_text %}
+                                            <small class="form-text text-muted">{{ player_form.availability.help_text }}</small>
+                                        {% endif %}
+                                        {% for error in player_form.availability.errors %}
+                                            <div class="text-danger">{{ error }}</div>
+                                        {% endfor %}
+                                    </div>
+                                
+                          
+                            {% if player_form.non_field_errors %}
+                                <div class="text-danger">
+                                    {% for error in player_form.non_field_errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            
+                            <button class="btn btn-primary" type="submit">Save Changes</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Danger Zone -->
+                <div class="card mb-4 border-danger">
+                    <div class="card-header text-danger">
+                        <i class="fas fa-exclamation-triangle me-1"></i>
+                        Danger Zone
+                    </div>
+                    <div class="card-body">
+                        <p class="text-danger mb-2">Once you delete your account, there is no going back.</p>
+                        <a href="{% url 'persons:delete_profile' %}" class="btn btn-danger">
+                            Delete Account
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for avatar preview (оставляем без изменений, так как был принят) -->
+<div class="modal fade" id="avatarPreviewModal" tabindex="-1" aria-labelledby="avatarPreviewModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="avatarPreviewModalLabel">Image Preview</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-center">
+        <img id="preview_img" src="#" alt="Preview Image" style="max-width: 100%; height: auto;">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="submitAvatarForm()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- JavaScript for managing the modal and form (оставляем без изменений) -->
+<script>
+    // Function to preview the selected image and display the modal
+    function previewAvatar(input) {
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+            
+            reader.onload = function(e) {
+                // Set the image source for preview
+                document.getElementById('preview_img').src = e.target.result;
+                
+                // Initialize and show the modal
+                var avatarPreviewModal = new bootstrap.Modal(document.getElementById('avatarPreviewModal'));
+                avatarPreviewModal.show();
+            }
+            
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    // Function to submit the form after clicking "Save" in the modal
+    function submitAvatarForm() {
+        document.getElementById('avatarForm').submit();
+    }
+</script>
+
+    <!-- Модальное окно для смены электронной почты -->
+    <div class="modal fade" id="changeEmailModal" tabindex="-1" aria-labelledby="changeEmailModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <form method="post" action="{% url 'rivals:player_update' %}">
+              {% csrf_token %}
+              <input type="hidden" name="change_email" value="1">
+              <div class="modal-header">
+                <h5 class="modal-title" id="changeEmailModalLabel">Change Email</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <!-- Кастомная форма смены электронной почты -->
+                {{ account_change_email_form.as_p }}
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-primary">Change Email</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+{% endblock %} 

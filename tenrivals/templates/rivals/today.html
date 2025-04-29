@@ -1,0 +1,564 @@
+{% extends 'default.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block content %}
+
+<header class="page-header page-header-dark bg-dark pb-10 pt-10" style="max-height: 380px;">
+    <div class="container-xl px-4">
+        <div class="page-header-content pt-4">
+            <div class="row align-items-center justify-content-between">
+                <div class="col-auto mt-4">
+                    <h1 class="page-header-title d-none d-xl-block" style="
+                                                            transform: translate(-0%, -140px);
+                                                            
+                                                            object-fit: cover; 
+                                                            z-index: 11;
+                                                            position: relative;" >
+                        <div class="page-header-icon"><i data-feather="activity"></i></div>
+                        {%if player.is_new %}
+                            Welcome, let's get you started!
+                        {% else %}
+                            {% if player.first_name %}
+                                Welcome back, {{ player.first_name }}!
+                            {% else %}
+                                Welcome back!
+                            {% endif %}
+                        {% endif %}
+                    </h1>
+                    <div class="page-header-subtitle d-none d-xl-block  " style="transform: translate(-0%, -140px);
+                                                                object-fit: cover; 
+                                                                z-index: 11;
+                                                                position: relative;">
+                        Here's what's happening with your tennis activities today.
+                    </div>
+                </div>
+                <div class="col-12 col-xl-auto mt-4">
+                    <div class="position-relative d-inline-block" style="margin: 100px;">
+                        <!-- Кольца -->
+                        {% with ''|center:10 as range %}
+                        {% for i in range %}
+                            {% with forloop.counter0 as index %}
+                            
+                            <div class="position-absolute"
+                                    style="top: -25%;
+                                            left: 50%;
+                                            transform: translate(-50%, -50%);
+                                        width: {{ index|multiply:280|add:480 }}px; 
+                                        height: {{ index|multiply:280|add:480 }}px; 
+                                        border: {{ 10|subtract:index|multiply:10}}px solid rgba(255, 255, 255, {{ 5|subtract:index|multiply:0.05 }});
+                                        border-radius: 100%;
+                                        pointer-events: none;
+                                        z-index: {{ forloop.counter }};">
+                            </div>
+                            {% endwith %}
+                        {% endfor %}
+                        {% endwith %}
+                        
+                        <!-- Аватар -->
+                        {% if player.avatar %}
+                            <img src="{{ player.avatar.url }}" 
+                                 class="img-fluid rounded-circle position-relative" 
+                                 style="top: -25%;
+                                        left: 50%;  
+                                        transform: translate(-50%, -75%);
+                                        width: 200px; 
+                                        height: 200px; 
+                                        object-fit: cover; 
+                                        z-index: 11;
+                                        position: relative;
+                                        min-width: 200px;
+                                        min-height: 200px;" 
+                                        
+                                 alt="Player avatar">
+                        {% else %}
+                            <img src="{% static 'assets/img/Avatar Default Icon.svg' %}" alt="Player avatar" class="img-fluid rounded-circle position-relative" 
+                                         style="top: -25%;
+                                                left: 50%;  
+                                                transform: translate(-50%, -75%);
+                                                width: 200px; 
+                                                height: 200px; 
+                                                object-fit: cover; 
+                                                z-index: 11;
+                                                position: relative;
+                                                min-width: 200px;
+                                                min-height: 200px;" 
+                                        
+                                 alt="Player avatar">
+                        {% endif %}
+                            
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+
+<div class="container px-4" ">
+    
+    
+    <div class="row mt-n5"">
+        <!-- Welcome Card -->
+        <div class="mb-4 col-xl-4 col-xxl-4 position-relative" style="z-index: 11;">
+            <div class="card card-angles h-100">
+                <div class="card-body p-5">
+                    <div class="d-flex flex-column align-items-center justify-content-between h-100">
+                        <div>
+                        <div class="text-lgg text-white bg-accent mb-3 px-2">&nbsp;{{ today|date:'jS F, Y' }}&nbsp;</div>
+                        </div>
+                        <div class="text-lg fst-italic text-center fw-light text-muted">{{ inspiration_quote }}</div>
+                        
+                        
+                        <div class="d-flex justify-content-start align-items-center">
+                        <a class="btn btn-primary rounded-pill btn-sm mt-4 mx-2" href="{% url 'rivals:player_detail' player.pk %}">View Your Stats</a>
+                        <a class="btn btn-secondary rounded-pill btn-sm mt-4 mx-2" href="{% url 'rivals:player_update' %}">Manage Profile</a>
+                        </div>
+                        
+                        
+                    
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {%if onboarding.is_completed %}
+       
+        <div class="col-md-6 col-xl-4 col-xxl-4">
+            <!-- NTRP Rating Mini Card -->
+            
+            <div class="row">
+            <div class="col-6 mb-4 position-relative" style="z-index: 11;">
+                <a class="card lift border-start-lg border-start-primary h-100" href="{% url 'rivals:player_detail' player.pk %}">
+                    <div class="card-body position-relative">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-grow-1">
+                                <div class="small fw-bold text-primary mb-1 text-nowrap position-relative" style="z-index: 2">NTRP Rating</div>
+                                <div class="h3 position-relative" style="z-index: 2">{{ current_stats.current_NTRP }}</div>
+                                <div class="text-xs fw-bold {% if current_stats.season_NTRP_progress > 0 %}text-success{% else %}text-danger{% endif %} d-inline-flex align-items-center position-relative" style="z-index: 2">
+                                    {% if current_stats.season_NTRP_progress > 0 %}
+                                    <i data-feather="trending-up" class="me-1"></i>
+                                    {% else %}
+                                    <i data-feather="trending-down" class="me-1"></i>
+                                    {% endif %}
+                                    {{ current_stats.season_NTRP_progress }}
+                                </div>
+                            </div>
+                        </div>
+                        <i class="fas fa-chart-line fa-2x text-primary opacity-25 position-absolute end-0 top-50 translate-middle-y me-3" style="z-index: 1 "></i>
+                    </div>
+                </a>
+            </div>
+        
+
+            <!-- Power Card -->
+            <div class="col-6 mb-4 position-relative" style="z-index: 11;">
+                <a class="card lift border-start-lg border-start-secondary h-100" href="{% url 'rivals:player_detail' player.pk %}">
+                    <div class="card-body position-relative">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-grow-1">
+                                <div class="small fw-bold text-secondary mb-1 text-nowrap position-relative" style="z-index: 2">Player Power</div>
+                                {%if player.attributes.summary > 0%}
+                                
+                                <div class="h5 position-relative" style="z-index: 2">{{ player.attributes.summary }}</div>
+                                <div class="text-xs fw-bold text-secondary d-inline-flex align-items-center position-relative" style="z-index: 2">
+
+                                    {{ player.attributes.responses_amount }} reviews in total <br>
+                                    {{ new_reviews_amount }} new this week
+                                </div>
+                                {%else%}
+                                    <div class="h3 position-relative" style="z-index: 2">N/A</div>
+                                    <div class="text-xs fw-bold text-secondary d-inline-flex align-items-center position-relative" style="z-index: 2">
+                                        
+                                        No reviews yet
+                                    </div>
+                                {%endif%}
+                            </div>
+                        </div>
+                        <i class="fas fa-dumbbell fa-2x text-secondary opacity-25 position-absolute end-0 top-50 translate-middle-y me-3" style="z-index: 1"></i>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Win Rate Card -->
+            <div class="col-6 mb-4 position-relative" style="z-index: 11;">
+                <a class="card lift border-start-lg border-start-success h-100" href="{% url 'rivals:player_detail' player.pk %}">
+                    <div class="card-body position-relative">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-grow-1">
+                                <div class="small fw-bold text-success mb-1 text-nowrap position-relative" style="z-index: 2">Win Rate</div>
+                                <div class="h3 position-relative" style="z-index: 2">{{ current_stats.win_rate_this_season }}</div>
+                                <div class="text-xs fw-bold text-success d-inline-flex align-items-center position-relative" style="z-index: 2">
+                                    <i data-feather="check-circle" class="me-1"></i>
+                                    {{ current_stats.matches_won_this_season }}/{{ current_stats.matches_played_this_season }} this season
+                                </div>
+                            </div>
+                        </div>
+                        <i class="fas fa-percent fa-2x text-success opacity-25 position-absolute end-0 top-50 translate-middle-y me-3" style="z-index: 1"></i>
+                    </div>
+                </a>
+            </div>
+        
+            <!-- Season Points Card -->
+            <div class="col-6 mb-4 position-relative" style="z-index: 11;">
+                <a class="card lift border-start-lg border-start-info h-100" href="{% url 'rivals:player_detail' player.pk %}">
+                    <div class="card-body position-relative">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-grow-1">
+                                <div class="small fw-bold text-info mb-1 text-nowrap position-relative" style="z-index: 2">Season Points</div>
+                                <div class="h3 position-relative" style="z-index: 2">{{ current_stats.season_pts }}</div>
+                                <div class="text-xs fw-bold text-info d-inline-flex align-items-center position-relative" style="z-index: 2">
+                                    
+                                    + N{{ current_stats.season_pts_week_inc }} vs last week <br>
+                                    
+                                </div>
+                            </div>
+                        </div>
+                        <i class="fas fa-piggy-bank fa-2x text-info opacity-25 position-absolute end-0 top-50 translate-middle-y me-3" style="z-index: 1"></i>
+                    </div>
+                </a>
+            </div>
+        
+            <!-- Category Ranking Card -->
+            <div class="col-6 mb-4 position-relative" style="z-index: 11;">
+                <a class="card lift border-start-lg border-start-warning h-100" href="{% url 'rivals:player_detail' player.pk %}">
+                    <div class="card-body position-relative">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-grow-1">
+                                <div class="small fw-bold text-warning mb-1 text-nowrap position-relative" style="z-index: 2">Category Rank</div>
+                                <div class="h3 position-relative" style="z-index: 2">#{{ current_stats.ranking_category }}</div>
+                                <div class="text-xs fw-bold text-warning d-inline-flex align-items-center position-relative" style="z-index: 2">
+                                    {{player.category|const_replace}} category
+                                </div>
+                            </div>
+                        </div>
+                        <i class="fas fa-ranking-star fa-2x text-warning opacity-25 position-absolute end-0 top-50 translate-middle-y me-3" style="z-index: 1"></i>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Absolute Ranking Card -->
+            <div class="col-6 mb-4 position-relative" style="z-index: 11;">
+                <a class="card lift border-start-lg border-start-danger h-100" href="{% url 'rivals:player_detail' player.pk %}">
+                    <div class="card-body position-relative">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-grow-1">
+                                <div class="small fw-bold text-danger mb-1 text-nowrap position-relative" style="z-index: 2">Absolute Rank</div>
+                                <div class="h3 position-relative" style="z-index: 2">#{{ current_stats.ranking_absolute }}</div>
+                                <div class="text-xs fw-bold text-danger d-inline-flex align-items-center position-relative" style="z-index: 2">
+                                   
+                                    overall in {{request.user.preferred_city|const_replace}} <br>
+                                   </div>
+                            </div>
+                        </div>
+                        <i class="fas fa-ranking-star fa-2x text-danger opacity-25 position-absolute end-0 top-50 translate-middle-y me-3" style="z-index: 1"></i>
+                    </div>
+                </a>
+            </div>
+            
+            
+        
+        
+        
+        </div>
+    
+    
+    
+    </div>
+    {% else %}
+    
+        <div class="mb-4 col-xl-8 position-relative" style="z-index: 11;">
+            <div class="card card-header-actions card-scrollable h-100">
+                <div class="card-header">
+                    Onboarding
+                </div>
+                <div class="card-body">
+                    {%if not onboarding %}
+                    <div class="d-flex justify-content-center align-items-center w-100">
+                        <a class="btn btn-info rounded-pill btn-sm mt-4 mx-2 w-100" href="{% url 'rivals:activate_onboarding' %}">Activate Onboarding</a>
+                        </div>
+                    {%else%}
+                    <table class="table table-sm">
+                    {% for checkpoint in onboarding.ob_list %}
+                    {% if checkpoint.3 %}
+                        <tr class="text-muted">
+                    {% else %}
+                        <tr class="text-dark">
+                    {% endif %}
+                    <td><p class="card-text">{{ checkpoint.0 }}</p> </td>
+                    {% if not checkpoint.3 %}
+                    <td><a href="{{ checkpoint.1 }}" class="btn btn-sm btn-accent"> Go!</a> </td>
+                    {% else %}
+                    <td><p class="text-success fw-700">Done</p> </td>
+                    {% endif %}
+                    <td>+ {{ checkpoint.2 }} points</td>
+                    </tr>
+                    
+                    {% endfor %}
+                    </table>
+                    {% endif %}
+                    
+                </div>
+            </div>
+        </div>
+    {% endif %}
+        
+        
+        <!-- Timeline Events with Filter -->
+        <div class="mb-4 col-xl-4 position-relative" style="z-index: 11;">
+            <div class="card card-header-actions card-scrollable h-100">
+                <div class="card-header text-accent-dark">
+                    Recent Activity
+                    <div class="dropdown no-caret">
+                        <button class="btn btn-transparent-dark btn-icon dropdown-toggle" id="dropdownMenuButton" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-end animated--fade-in-up" aria-labelledby="dropdownMenuButton">
+                            <a class="dropdown-item" href="#!">
+                                <div class="dropdown-item-icon">
+                                    <i class="fas fa-trophy text-secondary"></i>
+                                </div>
+                                Tournaments
+                            </a>
+                            <a class="dropdown-item" href="#!">
+                                <div class="dropdown-item-icon">
+                                    <i class="fas fa-table-tennis text-primary"></i>
+                                </div>
+                                Matches
+                            </a>
+                            <a class="dropdown-item" href="#!">
+                                <div class="dropdown-item-icon">
+                                    <i class="fas fa-users text-info"></i>
+                                </div>
+                                Players
+                            </a>
+                            <a class="dropdown-item" href="#!">
+                                <div class="dropdown-item-icon">
+                                    <i class="fas fa-info-circle text-success"></i>
+                                </div>
+                                Service Updates
+                            </a>
+                            <a class="dropdown-item" href="#!">
+                                <div class="dropdown-item-icon">
+                                    <i class="fas fa-chart-line text-warning"></i>
+                                </div>
+                                Season Progress
+                            </a>
+                            <a class="dropdown-item" href="#!">
+                                <div class="dropdown-item-icon">
+                                    <i class="fas fa-user-plus text-pink"></i>
+                                </div>
+                                Onboarding
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body ps-0 ps-sm-4">
+                    <div class="timeline timeline-xs">
+                    
+                        {% for event in timeline_events %}
+                        <div class="timeline-item">
+                            <div class="timeline-item-marker">
+                                <div class="timeline-item-marker-text">{{ event.event_date|short_timesince }}</div>
+                                <div class="timeline-item-marker-indicator bg-{{ event.color|get_color }}"></div>
+                            </div>
+                            <div class="timeline-item-content">
+                                {{ event.text }} {% if event.from_player %} from {{event.from_player}} {%endif%} <a class="text-{{ event.color|get_color }}" href="{{ event.redirect_url }}">{{ event.action_text|default:'Details' }}</a>
+                                
+                            </div>
+                        </div>
+                        
+                        {% empty %}
+                        <p>No recent activity</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+            <!-- Tournaments Progress -->
+            <div class="col-xl-4 mb-4 position-relative" style="z-index: 11;">
+                <div class="card card-scrollable h-100">
+                    <div class="card-header text-secondary">
+                        {% if current_tournaments %}
+                            Current Tournaments
+                        {% else %}
+                            Recommended Tournaments
+                        {% endif %}
+                    </div>
+                    <div class="card-body">
+                        {% if current_tournaments %}
+                        <div class="row">
+                            {% for tournament in current_tournaments %}
+                            <div class="col-lg-6 col-xl-12 col-xxl-12">
+                                <div class="card shadow-none border-start-secondary border-start-lg my-2">
+                                    <div class="card-body">
+                                        <div class="d-flex align-items-center justify-content-between">
+                                            <div>
+                                                <div class="mb-0"><a class="text-secondary" href="{% url 'rivals:tournament_detail' tournament.pk %}">{{ tournament.title }}</a></div>
+                                                {%if tournament.status == 'AC' %}
+                                                <div class="small text-muted">Stage {{ tournament.current_stage }} of {{ tournament.stages_max }} | Flow: {{ tournament.playertournament_set.get.flow }}</div>
+                                                {%elif tournament.status == 'CI'%}
+                                                <div class="small text-muted">Check-in Open</div>
+                                                {%endif%}
+                                            </div>
+                                            <div class="ms-4">
+                                                <!-- Progress bar -->
+                                                
+                                                    {%if tournament.status == 'AC' %}
+                                                     
+                                                    <div class="d-flex justify-content-between">
+                                                            <div class="text-xs text-gray-500">Stage Progress</div>
+                                                        </div>
+                                                        <div class="progress" style="height: 0.8rem; width: 100px;">   
+                                                        <div class="progress-bar bg-primary" role="progressbar" style="width: {{ tournament.stage_progress }}%" 
+                                                            aria-valuenow="{{ tournament.stage_progress }}" aria-valuemin="0" aria-valuemax="100">
+                                                        </div>
+                                                    </div>
+                                                    {%elif tournament.status == 'CI'%}
+                                                    
+                                                    <div class="d-flex justify-content-between">
+                                                            <div class="text-xs text-gray-500">Check-in</div>
+                                                        </div>
+                                                        <div class="progress" style="height: 0.8rem; width: 100px;">
+                                                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ tournament.checkin_progress }}%" 
+                                                            aria-valuenow="{{ tournament.checkin_progress }}" aria-valuemin="0" aria-valuemax="100">
+                                                        </div>
+                                                    </div>
+                                                    {%endif%}
+                                                
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                            {% if recommended_tournaments %}
+                            <span>You have no current tournaments.</span> <br> 
+                            <span>Here are some recommended ones:</span>
+                                {% for tournament in recommended_tournaments %}
+                                <div class="card shadow-none border-start-secondary border-start-lg my-2">
+                                    <div class="card-body">
+                                        <div class="d-flex align-items-center justify-content-between">
+                                            <div>
+                                            <div class="mb-0"> <a class="text-secondary" href="{% url 'rivals:tournament_detail' tournament.pk %}">{{ tournament.title }}</a></div>
+                                            <div class="small text-muted">Status: {{ tournament.status|const_replace }}</div>
+                                            <div class="small text-muted"> {{ tournament.players_enrolled }}/{{ tournament.players_num }} players enrolled </div>
+                                            </div>
+                                            <div>
+                                            <a href="{% url 'rivals:tournament_detail' tournament.pk %}" class="btn btn-secondary btn-sm">Register</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <p>New tournaments coming soon!</p>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        <!-- Upcoming Matches -->
+        <div class="col-xl-4 mb-4 position-relative" style="z-index: 11;">
+            <div class="card card-scrollable h-100">
+                <div class="card-header">Upcoming Matches</div>
+                <div class="card-body">
+                    {% for match in upcoming_matches %}
+                    
+                        {% if match.status == 'FI' %}
+                            <div class="card my-2 shadow-none border-start-primary border-start-lg ">
+                        {% elif match.status == 'PD' %}
+                            <div class="card my-2 shadow-none border-start-info border-start-lg ">
+                        {% elif match.status == 'CA' %}
+                            <div class="card my-2 shadow-none border-start-dark border-start-lg ">
+                        {% elif match.status == 'OD' %}
+                            <div class="card my-2 shadow-none border-start-warning border-start-lg ">
+                        {% endif %}
+                    
+                                <div class="card-body">
+                                    
+                                        <div class="d-flex align-items-center justify-content-between">
+                                            <div class="d-flex flex-column me-2"> 
+                                            {% if player == match.players.all.0 %}
+                                                <a href="{% url 'rivals:player_detail' match.players.all.1.pk %}">vs {{ match.players.all.1 }}</a>
+                                            {% else %}
+                                                <a href="{% url 'rivals:player_detail' match.players.all.0.pk %}">vs {{ match.players.all.0 }}</a>
+                                            {% endif %}
+                                            <a href="{% url 'rivals:match_detail' match.pk %}" class="btn btn-primary btn-sm mt-1">Submit Score</a>
+                                            </div>
+                                            <div class="small text-muted ms-2">
+                                                <a class="text-muted" href="{% url 'rivals:tournament_detail' match.tournament.pk %}">{{ match.tournament.title }} <i class="fas fa-external-link-alt small"></i></a><br>
+                                                Due: {{ match.tournament.current_stage_end_date|date }} <br>
+                                                <a class="text-muted text-decoration-underline text-xs" href="{% url 'rivals:stage_prolongation_request' match.pk %}">(Request prolongation)</a>
+                                            </div>
+                                        </div>
+                                        
+                                    
+                                </div>
+                                
+                            </div>
+                    {% empty %}
+                        <p>No upcoming matches</p>
+                    {% endfor %}
+                
+                </div>
+            </div>
+        </div>
+
+        
+
+        <!-- Reviews -->
+        {% if review_tokens or match_results_to_approve %}
+        <div class="col-xl-4 mb-4 position-relative" style="z-index: 11;">
+            <div class="card card-scrollable h-100">
+                <div class="card-header text-info">Pending Reviews</div>
+                <div class="card-body">
+                    {% for match in match_results_to_approve %}
+                    <div class="card shadow-none border-start-primary border-start-lg my-2">
+                        <div class="card-body">
+                            <div class="d-flex">
+                                <div class="col-9">
+                                    <div>Approve match result</div>
+                                    <div>submitted <a class="text-primary" href="{% url 'rivals:player_detail' match.opponent.pk %}"> by {{ match.opponent }}:</a></div>
+                                    <div class="small text-muted">{{ match.match.get_str_score }}</div>
+                                </div>
+                                <div class="col-3 d-flex flex-column justify-content-center">
+                                    <div class="d-grid gap-1">
+                                        <a href="{% url 'rivals:approve_match_result' match.match.pk %}" class="btn btn-primary btn-sm">Approve</a>
+                                        <a href="{% url 'rivals:match_detail' match.match.pk %}" class="btn btn-secondary btn-sm">Correct</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    
+                    {% for token in review_tokens %}
+                    <div class="card shadow-none border-start-info border-start-lg my-2">
+                        <div class="card-body">
+                            <div class="d-flex">
+                                <div class="col-9">
+                                    <div>Rate <a class="text-info" href="{% url 'rivals:player_detail' token.to_player.pk %}">{{ token.to_player }}'s</a> skills</div>
+                                    <div class="small text-muted">After the match on {{ token.after_match.date|date }}</div>
+                                </div>
+                                <div class="col-3 d-flex flex-column justify-content-center">
+                                    <div class="d-grid gap-1">
+                                        <a href="{% url 'rivals:rate_opponent' token.to_player.pk %}" class="btn btn-info btn-sm">Rate</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Tennis News would go here if API integration is a  dded -->
+    </div>
+</div>
+{% endblock %} 

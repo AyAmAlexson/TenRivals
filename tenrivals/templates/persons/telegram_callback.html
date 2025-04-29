@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Telegram Authentication</title>
+</head>
+<body>
+    <p>Please wait while we process your request...</p>
+    <script>
+        // Функция для декодирования base64
+        function base64DecodeUnicode(str) {
+            return decodeURIComponent(atob(str).split('').map(function(c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+        }
+
+        // Функция извлечения параметров из URL-хеша
+        function getHashParams() {
+            var hash = window.location.hash.substring(1);
+            if (hash.startsWith('tgAuthResult=')) {
+                try {
+                    // Извлекаем base64-строку после tgAuthResult=
+                    var base64Data = hash.substring('tgAuthResult='.length);
+                    // Декодируем данные из base64 и парсим JSON
+                    var decodedData = base64DecodeUnicode(base64Data);
+                    return JSON.parse(decodedData);
+                } catch (e) {
+                    console.error('Error parsing Telegram auth data:', e);
+                    return null;
+                }
+            }
+            return null;
+        }
+
+        // Отправка данных Telegram на сервер методом POST
+        function sendTelegramAuthData(authData) {
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', window.location.href, true);
+            xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4) {
+                    if (xhr.status === 200) {
+                        var response = JSON.parse(xhr.responseText);
+                        if (response.success) {
+                            window.location.href = response.redirect_url || '/';
+                        } else {
+                            document.body.innerHTML = '<p>Ошибка: ' + response.error + '</p>';
+                        }
+                    } else {
+                        document.body.innerHTML = '<p>Ошибка сервера: ' + xhr.status + '</p>';
+                    }
+                }
+            };
+            console.log('Sending auth data:', authData); // Для отладки
+            xhr.send(JSON.stringify(authData));
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            var authData = getHashParams();
+            if (authData) {
+                // Очищаем хеш из URL
+                window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
+                sendTelegramAuthData(authData);
+            } else {
+                document.body.innerHTML = '<p>Данные авторизации Telegram не найдены.</p>';
+            }
+        });
+    </script>
+</body>
+</html> 

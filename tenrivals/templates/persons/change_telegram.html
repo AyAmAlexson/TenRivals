@@ -1,0 +1,67 @@
+{% extends 'default.html' %}
+{% load i18n %}
+
+{% block content %}
+
+<div id="layoutAuthentication" class="bg-gradient-primary-to-secondary">
+    <div id="layoutAuthentication_content">
+        <main class="mt-15">
+            <div class="container-fluid px-4 bg-gradient-primary-to-secondary">
+                <div class="row justify-content-center mt-15">
+                    <div class="col-lg-6">
+                        <div class="card mb-4">
+                            
+                            <div class="card-header justify-content-center">
+                                <h3 class="fw-light text-primary my-4">{% trans "Change Telegram Account" %}</h3>
+                            </div>
+                            <div class="card-body">
+                                {% if messages %}
+                                <div class="mb-4">
+                                    {% for message in messages %}
+                                    <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                                
+                                <div class="alert alert-info mb-4">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <div class="icon-stack icon-stack-sm bg-primary text-white me-2">
+                                            <i class="fas fa-info"></i>
+                                        </div>
+                                        <strong>{% trans "Important Information" %}</strong>
+                                    </div>
+                                    <p class="mb-0">
+                                        {% trans "After changing your Telegram account, you'll need to verify it again. A verification code will be sent to your new Telegram account." %}
+                                    </p>
+                                </div>
+                                
+                                <form method="post">
+                                    {% csrf_token %}
+                                    <div class="mb-4">
+                                        <label class="small mb-1" for="telegram_username">{% trans "New Telegram Username" %}</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">@</span>
+                                            <input class="form-control" id="telegram_username" name="telegram_username" type="text" placeholder="Enter new Telegram username" required />
+                                        </div>
+                                        <div class="small text-muted mt-1">{% trans "Enter your Telegram username without the @ symbol" %}</div>
+                                    </div>
+                                    <div class="d-grid">
+                                        <button class="btn btn-primary" type="submit">{% trans "Change Telegram Account" %}</button>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="card-footer">
+                                <div class="d-flex align-items-center justify-content-center">
+                                    <a href="{% url 'rivals:player_update' %}" class="btn btn-outline-primary btn-sm">
+                                        <i class="fas fa-arrow-left me-1"></i> {% trans "Back to Account" %}
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+{% endblock %} 

@@ -10,119 +10,158 @@
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
         <meta name="description" content="" />
         <meta name="author" content="" />
-        <title>10 Rivals - Online Amateur Tennis League</title>
+        <title>10 Tennis Rivals - Online Amateur Tennis League</title>
         <link href="{% static 'css/styles.css'%}" rel="stylesheet" />
-        <link rel="icon" type="image/x-icon" href="assets/img/favicon.png" />
+        <link rel="icon" type="image/x-icon" href="{% static 'assets/img/favicon.png'%}" />
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+       
         <script data-search-pseudo-elements defer src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.0/feather.min.js" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
     </head>
     <body>
         <div id="layoutDefault"  class="bg-purple-100">
             <div id="layoutDefault_content">
+                <main style="min-width: 340px">
                 <div>
                     <!-- Navbar-->
-                    <nav class="navbar navbar-marketing navbar-expand-lg bg-light navbar-light">
-                        <div class="container px-5">
-                            <a class="navbar-brand" href="/">
-                                <img src="{% static 'assets/img/TenRivals Logo.svg'%}" alt="Ten Rivals Logo" style="width: 128px; height: auto;">
+                    
+                    <nav class="navbar navbar-marketing navbar-expand-lg navbar-dark bg-dark fixed-top" style="z-index: 1000;">
+                        <div class="container px-4 px-md-none d-flex justify-content-between">
+                            
+                            <a class="navbar-brand text-primary-gradient" href="/">
+                                <img class="logo-img d-none d-lg-inline" src="{% static 'assets/img/TR Logo 3/tr_logo3_inline_reverse.svg'%}" alt="TENNIS RIVALS"> 
+                                <img class="logo-img d-lg-none" style="width: 120px;" src="{% static 'assets/img/TR Logo 3/tr_logo3_big_reverse_no_sub.svg'%}" alt="TENNIS RIVALS"> 
                             </a>
+                            
                             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation"><i data-feather="menu"></i></button>
                             <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                                <ul class="navbar-nav ms-auto me-lg-5">
-                                    <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
-                                    <li class="nav-item"><a class="nav-link" href="/tournaments/">Tournaments</a></li>
-                                    <li class="nav-item"><a class="nav-link" href="index.html">Ranking</a></li>
+                                <ul class="navbar-nav me-lg-5 align-items-center" style="margin-left: auto;">
+                            
+                                    <li class="nav-item"><a class="nav-link" href="{% url 'rivals:today' %}">Home</a></li>
+                                    <li class="nav-item"><a class="nav-link" href="{% url 'rivals:tournaments' %}">Tournaments</a></li>
+                                    <li class="nav-item"><a class="nav-link" href="{% url 'rivals:basic' %}">Ranking</a></li>
+                                    <li class="nav-item"><a class="nav-link" href="{% url 'rivals:all_rivals' %}">Rivals</a></li>
+                                    <li class="nav-item"><a class="nav-link" href="{% url 'rivals:basic' %}">FAQ</a></li>
 
-                                    <li class="nav-item"><a class="nav-link" href="index.html">FAQ</a></li>
-
-                                    <li class="nav-item dropdown dropdown-xl no-caret">
-                                        <a class="nav-link dropdown-toggle" id="navbarDropdownDemos" href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                            Landings
-                                            <i class="fas fa-chevron-right dropdown-arrow"></i>
+                                    
+                                    {% if user.is_authenticated %}
+                                    <li class="nav-item ">
+                                        <a class="nav-link d-flex align-items-center text-decoration-underline" href="{% url 'rivals:player_update' %}">
+                                            <i class="me-1" data-feather="map-pin"></i>
+                                            {{ request.user.player.city|const_replace }}
                                         </a>
-                                        <div class="dropdown-menu dropdown-menu-end animated--fade-in-up me-lg-n25 me-xl-n15" aria-labelledby="navbarDropdownDemos">
-                                            <div class="row g-0">
-                                                <div class="col-lg-5 p-lg-3 bg-gradient-primary text-white">
-                                                    <div class="d-flex h-100 w-100 align-items-center justify-content-center">
-                                                        <div class="text-white text-center z-1">
-                                                            <div class="mb-3">Multipurpose landing pages for a variety of projects.</div>
-                                                            <a class="btn btn-white btn-sm text-primary fw-500" href="index.html">View All</a>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="col-lg-7 p-lg-5">
-                                                    <div class="row">
-                                                        <div class="col-lg-6">
-                                                            <h6 class="dropdown-header text-primary">Applications</h6>
-                                                            <a class="dropdown-item" href="landing-app-mobile.html">Mobile App</a>
-                                                            <a class="dropdown-item" href="landing-app-desktop.html">Desktop App</a>
-                                                            <div class="dropdown-divider border-0"></div>
-                                                            <h6 class="dropdown-header text-primary">Business</h6>
-                                                            <a class="dropdown-item" href="landing-multipurpose.html">Multipurpose</a>
-                                                            <a class="dropdown-item" href="landing-agency.html">Agency</a>
-                                                            <a class="dropdown-item" href="landing-press.html">Press</a>
-                                                            <a class="dropdown-item" href="landing-directory.html">Directory</a>
-                                                            <a class="dropdown-item" href="landing-rental.html">Rental</a>
-                                                            <a class="dropdown-item" href="landing-real-estate.html">Real Estate</a>
-                                                            <a class="dropdown-item" href="landing-classifieds.html">Classifieds</a>
-                                                            <div class="dropdown-divider border-0"></div>
-                                                            <h6 class="dropdown-header text-primary">Lead Generation</h6>
-                                                            <a class="dropdown-item" href="landing-lead-capture.html">Lead Capture</a>
-                                                            <div class="dropdown-divider border-0 d-lg-none"></div>
-                                                        </div>
-                                                        <div class="col-lg-6">
-                                                            <h6 class="dropdown-header text-primary">Personal</h6>
-                                                            <a class="dropdown-item" href="landing-resume.html">Resume</a>
-                                                            <a class="dropdown-item" href="landing-portfolio.html">Portfolio</a>
-                                                            <div class="dropdown-divider border-0"></div>
-                                                            <h6 class="dropdown-header text-primary">Header Styles</h6>
-                                                            <a class="dropdown-item" href="header-basic.html">Basic</a>
-                                                            <a class="dropdown-item" href="header-basic-signup.html">Basic (Signup)</a>
-                                                            <a class="dropdown-item" href="header-graphic.html">Graphic</a>
-                                                            <a class="dropdown-item" href="header-graphic-signup.html">Graphic (Signup)</a>
-                                                            <a class="dropdown-item" href="header-video.html">
-                                                                Video Header
-                                                                <span class="badge bg-primary-soft text-primary ms-1">New!</span>
-                                                            </a>
-                                                            <a class="dropdown-item" href="header-inner-page.html">Inner Page</a>
-                                                            <a class="dropdown-item" href="header-nav-only.html">Nav Only</a>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
                                     </li>
-
-                                    <li class="nav-item dropdown">
-                                        <button class="btn fw-500 ms-lg-4 btn-primary dropdown-toggle" id="dropdownMenuButton" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                            {% if user.is_authenticated %}
-                                                {{ request.user.preferred_city|const_replace }}
+                                    {% endif %}
+                                    
+                                    {% if user.is_authenticated %}
+                                    
+                                    <li class="nav-item dropdown no-caret dropdown-user me-3 me-lg-4">
+                                        <a class="avatar avatar-lg dropdown-toggle" id="navbarDropdownUserImage" href="javascript:void(0);" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                            {% if user.player.avatar %}
+                                            <img src="{{ user.player.avatar.url }}" alt="Avatar" class="avatar-img img-fluid" />
                                             {% else %}
-                                                All Cities
+                                            <img src="{% static 'assets/img/Avatar Default Icon.svg' %}" alt="Avatar" class="avatar-img img-fluid" />
                                             {% endif %}
-                                        </button>
-                                        <div class="dropdown-menu animated--fade-in-up" aria-labelledby="dropdownMenuButton">
-                                            <div class="row g-0">
-                                                <div >
-                                                    {%for geo in geo_list%}
-
-                                                        <h6 class="dropdown-header text-primary">{{geo.1}}</h6>
-                                                        {% for city in cities_list %}
-                                                            {% if city.1|last_sym:2 == geo.0%} <a class="dropdown-item" href="#!">{{ city.1|minus_last_sym:4 }}</a> {% endif %}
-                                                        {% endfor %}
-                                                        <div class="dropdown-divider border-0"></div>
-                                                    {% endfor %}
-
+                                        </a>
+                                        <div class="dropdown-menu dropdown-menu-end border-0 shadow animated--fade-in-up" aria-labelledby="navbarDropdownUserImage">
+                                            <h6 class="dropdown-header d-flex align-items-center">
+                                                {% if user.player.avatar %}
+                                                <img src="{{ user.player.avatar.url }}" alt="Avatar" class="dropdown-user-img" />
+                                                {% else %}
+                                                <img src="{% static 'assets/img/Avatar Default Icon.svg' %}" alt="Avatar" class="dropdown-user-img" />
+                                                {% endif %}
+                                                <div class="dropdown-user-details ms-2">
+                                                    <div class="dropdown-user-details-name">{{ user.get_full_name }}</div>
+                                                    <div class="dropdown-user-details-email"><i class="fa-brands fa-telegram me-1"></i> {{ user.telegram }}</div>
                                                 </div>
-                                            </div>
+                                            </h6>
+                                            <div class="dropdown-divider"></div>
+                                            <a class="dropdown-item d-flex align-items-center" href="{% url 'rivals:player_update' %}">
+                                                <div class="dropdown-item-icon me-2"><i data-feather="settings"></i></div>
+                                                <span>Account</span>
+                                            </a>
+                                            {% if user.player %}
+                                            <a class="dropdown-item d-flex align-items-center" href="{% url 'rivals:player_wizard' %}">
+                                                <div class="dropdown-item-icon me-2"><i data-feather="sliders"></i></div>
+                                                <span>Player Wizard</span>
+                                            </a>
+                                            <a class="dropdown-item d-flex align-items-center" href="{% url 'rivals:player_detail' user.player.pk %}">
+                                                <div class="dropdown-item-icon me-2"><i data-feather="user"></i></div>
+                                                <span>My stats</span>
+                                            </a>
+                                            {% endif %}
+                                            {% if user.is_staff %}
+                                            <a class="dropdown-item d-flex align-items-center" href="{% url 'rivals:admin_test' %}">
+                                                <div class="dropdown-item-icon me-2"><i data-feather="unlock"></i></div>
+                                                <span>Admin test page</span>
+                                            </a>
+                                            
+                                            
+                                            {% endif %}
+                                            <a class="dropdown-item d-flex align-items-center" href="{% url 'account_logout' %}">
+                                                <div class="dropdown-item-icon me-2"><i data-feather="log-out"></i></div>
+                                                <span>Logout</span>
+                                            </a>
                                         </div>
                                     </li>
-                                    <li>
-                                        <a class="btn fw-500 ms-lg-4 btn-gradient-primary" href="{% url 'account_login' %}">
-                                            Login
-                                            <i class="ms-2" data-feather="arrow-right"></i>
+                                    {% if user.is_staff or request.session|has_session_key:'admin_user_id' or user.is_test_user %}
+                                    <li class="nav-item dropdown">
+                                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                            <i data-feather="users" class="me-2"></i> Switch User
                                         </a>
+                                        <ul class="dropdown-menu dropdown-menu-end">
+                                            {% if request.session|has_session_key:'admin_user_id' %}
+                                            <li>
+                                                <a class="dropdown-item d-flex align-items-center" href="{% url 'rivals:switch_back_to_admin' %}">
+                                                    <div class="me-2">
+                                                        <i data-feather="shield"></i>
+                                                    </div>
+                                                    <div>
+                                                        <div class="small">Switch back to</div>
+                                                        <div class="fw-bold">Admin Account</div>
+                                                    </div>
+                                                </a>
+                                            </li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            
+                                            {% else %}
+                                            {% for test_user in test_users %}
+                                            <li>
+                                                <a class="dropdown-item d-flex align-items-center" href="{% url 'rivals:switch_user' test_user.id %}">
+                                                    <div class="me-2">
+                                                        {% if test_user.id == user.id %}
+                                                        <i class="fas fa-check text-success"></i>
+                                                        {% endif %}
+                                                    </div>
+                                                    <div>
+                                                        <div class="small text-muted">{{ test_user.email }}</div>
+                                                        <div class="fw-bold">{{ test_user.get_full_name }}</div>
+                                                    </div>
+                                                </a>
+                                            </li>
+                                            {% endfor %}
+                                            {% endif %}
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li>
+                                                <a class="dropdown-item" href="/admin/auth/user/">
+                                                    <i class="fas fa-users-cog"></i> Manage Users
+                                                </a>
+                                            </li>
+                                        </ul>
                                     </li>
+                                    {% endif %}
+                                    {% else %}
+                                    
+                                    <li class="nav-item ms-2">
+                                        <a class="btn btn-outline-light rounded-pill btn-sm ms-2" type="button" href="{% url 'account_login' %}">
+                                           Login <i data-feather="log-in" class="ms-1"></i> 
+                                        </a>
+                                        
+                                    </li>
+                                    {% endif %}
 
                                 </ul>
 
@@ -131,6 +170,26 @@
                         </div>
                     </nav>
 
+                
+                          <!-- Блок сообщений (Toast) -->
+    {% if messages %}
+    <div class="toast-container position-fixed top-3 end-0 p-3">
+        {% for message in messages %}
+            <div class="toast fade-up" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="toast-header text-{{ message.tags }}">
+                    <i class="me-2" data-feather="alert-circle"></i>
+                    <strong class="me-auto text-capitalize">{{ message.tags }}</strong>
+                    <small id="server-time" class="text-muted ml-2">Just now</small>
+                    <button class="ml-2 mb-1 btn-close" type="button" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+                
+                    <div class="toast-body">
+                        {{ message }}
+                    </div>     
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
 
         {% block base_content %}
         {% block content %}
@@ -139,120 +198,338 @@
         {% endblock base_content %}
 
 
-                    <section class="bg-white py-10">
-                        <div class="container px-5">
-                            <div class="row gx-5 align-items-center">
-                                <div class="col-lg-6">
-                                    <h4>Get the app now!</h4>
-                                    <p class="lead mb-5 mb-lg-0">Ready to get started? Download the app now!</p>
-                                </div>
-                                <div class="col-lg-6 text-lg-end">
-                                    <a class="me-3" href="#!"><img src="assets/img/app-badges/app-store-badge.svg" style="height: 3rem" /></a>
-                                    <a href="#!"><img src="assets/img/app-badges/google-play-badge.svg" style="height: 3rem" /></a>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="svg-border-waves text-dark">
-                            <!-- Wave SVG Border-->
-                            <svg class="wave" style="pointer-events: none" fill="currentColor" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1920 75">
-                                <defs>
-                                    <style>
-                                        .a {
-                                            fill: none;
-                                        }
-                                        .b {
-                                            clip-path: url(#a);
-                                        }
-                                        .d {
-                                            opacity: 0.5;
-                                            isolation: isolate;
-                                        }
-                                    </style>
-                                </defs>
-                                <clippath id="a"><rect class="a" width="1920" height="75"></rect></clippath>
-                                <g class="b"><path class="c" d="M1963,327H-105V65A2647.49,2647.49,0,0,1,431,19c217.7,3.5,239.6,30.8,470,36,297.3,6.7,367.5-36.2,642-28a2511.41,2511.41,0,0,1,420,48"></path></g>
-                                <g class="b"><path class="d" d="M-127,404H1963V44c-140.1-28-343.3-46.7-566,22-75.5,23.3-118.5,45.9-162,64-48.6,20.2-404.7,128-784,0C355.2,97.7,341.6,78.3,235,50,86.6,10.6-41.8,6.9-127,10"></path></g>
-                                <g class="b"><path class="d" d="M1979,462-155,446V106C251.8,20.2,576.6,15.9,805,30c167.4,10.3,322.3,32.9,680,56,207,13.4,378,20.3,494,24"></path></g>
-                                <g class="b"><path class="d" d="M1998,484H-243V100c445.8,26.8,794.2-4.1,1035-39,141-20.4,231.1-40.1,378-45,349.6-11.6,636.7,73.8,828,150"></path></g>
-                            </svg>
-                        </div>
-                    </section>
-                </div>
+
+<section class="bg-white py-10">
+    <div class="container px-5">
+        <div class="row gx-5 align-items-center">
+            <div class="col-lg-6">
+                <h4>Get the app now!</h4>
+                <p class="lead mb-5 mb-lg-0">Ready to get started? Download the app now!</p>
             </div>
-            <div id="layoutDefault_footer">
-                <footer class="footer pt-10 pb-5 mt-auto bg-dark footer-dark">
-                    <div class="container px-5">
-                        <div class="row gx-5">
-                            <div class="col-lg-3">
-                                <div class="footer-brand">10* RIVALS</div>
-                                <div class="mb-3">Online Amateur Tennis League</div>
-                                <div class="icon-list-social mb-5">
-                                    <a class="icon-list-social-link" href="#!"><i class="fab fa-instagram"></i></a>
-                                    <a class="icon-list-social-link" href="#!"><i class="fab fa-facebook"></i></a>
-                                    <a class="icon-list-social-link" href="#!"><i class="fab fa-github"></i></a>
-                                    <a class="icon-list-social-link" href="#!"><i class="fab fa-twitter"></i></a>
-                                </div>
-                            </div>
-                            <div class="col-lg-9">
-                                <div class="row gx-5">
-                                    <div class="col-lg-3 col-md-6 mb-5 mb-lg-0">
-                                        <div class="text-uppercase-expanded text-xs mb-4">Product</div>
-                                        <ul class="list-unstyled mb-0">
-                                            <li class="mb-2"><a href="#!">Landing</a></li>
-                                            <li class="mb-2"><a href="#!">Pages</a></li>
-                                            <li class="mb-2"><a href="#!">Sections</a></li>
-                                            <li class="mb-2"><a href="#!">Documentation</a></li>
-                                            <li><a href="#!">Changelog</a></li>
-                                        </ul>
-                                    </div>
-                                    <div class="col-lg-3 col-md-6 mb-5 mb-lg-0">
-                                        <div class="text-uppercase-expanded text-xs mb-4">Technical</div>
-                                        <ul class="list-unstyled mb-0">
-                                            <li class="mb-2"><a href="#!">Documentation</a></li>
-                                            <li class="mb-2"><a href="#!">Changelog</a></li>
-                                            <li class="mb-2"><a href="#!">Theme Customizer</a></li>
-                                            <li><a href="#!">UI Kit</a></li>
-                                        </ul>
-                                    </div>
-                                    <div class="col-lg-3 col-md-6 mb-5 mb-md-0">
-                                        <div class="text-uppercase-expanded text-xs mb-4">Includes</div>
-                                        <ul class="list-unstyled mb-0">
-                                            <li class="mb-2"><a href="#!">Utilities</a></li>
-                                            <li class="mb-2"><a href="#!">Components</a></li>
-                                            <li class="mb-2"><a href="#!">Layouts</a></li>
-                                            <li class="mb-2"><a href="#!">Code Samples</a></li>
-                                            <li class="mb-2"><a href="#!">Products</a></li>
-                                            <li class="mb-2"><a href="#!">Affiliates</a></li>
-                                            <li><a href="#!">Updates</a></li>
-                                        </ul>
-                                    </div>
-                                    <div class="col-lg-3 col-md-6">
-                                        <div class="text-uppercase-expanded text-xs mb-4">Legal</div>
-                                        <ul class="list-unstyled mb-0">
-                                            <li class="mb-2"><a href="#!">Privacy Policy</a></li>
-                                            <li class="mb-2"><a href="#!">Terms and Conditions</a></li>
-                                            <li><a href="#!">License</a></li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <hr class="my-5" />
-                        <div class="row gx-5 align-items-center">
-                            <div class="col-md-6 small">Copyright &copy; Your Website 2023</div>
-                            <div class="col-md-6 text-md-end small">
-                                <a href="#!">Privacy Policy</a>
-                                &middot;
-                                <a href="#!">Terms &amp; Conditions</a>
-                            </div>
-                        </div>
-                    </div>
-                </footer>
+            <div class="col-lg-6 text-lg-end">
+                <a class="me-3" href="#!"><img src="{% static 'assets/img/app-badges/app-store-badge.svg' %}" style="height: 3rem" /></a>
+                <a href="#!"><img src="{% static 'assets/img/app-badges/google-play-badge.svg' %}" style="height: 3rem" /></a>
             </div>
         </div>
+    </div>
+    <div class="svg-border-waves text-dark">
+        <!-- Wave SVG Border-->
+        <svg class="wave" style="pointer-events: none" fill="currentColor" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1920 75">
+            <defs>
+                <style>
+                    .a {
+                        fill: none;
+                    }
+                    .b {
+                        clip-path: url(#a);
+                    }
+                    .d {
+                        opacity: 0.5;
+                        isolation: isolate;
+                    }
+                </style>
+            </defs>
+            <clippath id="a"><rect class="a" width="1920" height="75"></rect></clippath>
+            <g class="b"><path class="c" d="M1963,327H-105V65A2647.49,2647.49,0,0,1,431,19c217.7,3.5,239.6,30.8,470,36,297.3,6.7,367.5-36.2,642-28a2511.41,2511.41,0,0,1,420,48"></path></g>
+            <g class="b"><path class="d" d="M-127,404H1963V44c-140.1-28-343.3-46.7-566,22-75.5,23.3-118.5,45.9-162,64-48.6,20.2-404.7,128-784,0C355.2,97.7,341.6,78.3,235,50,86.6,10.6-41.8,6.9-127,10"></path></g>
+            <g class="b"><path class="d" d="M1979,462-155,446V106C251.8,20.2,576.6,15.9,805,30c167.4,10.3,322.3,32.9,680,56,207,13.4,378,20.3,494,24"></path></g>
+            <g class="b"><path class="d" d="M1998,484H-243V100c445.8,26.8,794.2-4.1,1035-39,141-20.4,231.1-40.1,378-45,349.6-11.6,636.7,73.8,828,150"></path></g>
+        </svg>
+    </div>
+</section>
+</main>
+</div>
+<div id="layoutDefault_footer">
+<footer class="footer pt-10 pb-5 mt-auto bg-dark footer-dark">
+<div class="container px-5">
+    <div class="row gx-5">
+        <div class="col-lg-3">
+            <div class="footer-brand">SB UI Kit Pro</div>
+            <div class="mb-3">Design made easy</div>
+            <a href="http://www.freepik.com">Designed by Freepik</a>
+            <div class="icon-list-social mb-5">
+                <a class="icon-list-social-link" href="#!"><i class="fab fa-instagram"></i></a>
+                <a class="icon-list-social-link" href="#!"><i class="fab fa-facebook"></i></a>
+                <a class="icon-list-social-link" href="#!"><i class="fab fa-github"></i></a>
+                <a class="icon-list-social-link" href="#!"><i class="fab fa-twitter"></i></a>
+            </div>
+        </div>
+        <div class="col-lg-9">
+            <div class="row gx-5">
+                <div class="col-lg-3 col-md-6 mb-5 mb-lg-0">
+                    <div class="text-uppercase-expanded text-xs mb-4">Product</div>
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2"><a href="#!">Landing</a></li>
+                        <li class="mb-2"><a href="#!">Pages</a></li>
+                        <li class="mb-2"><a href="#!">Sections</a></li>
+                        <li class="mb-2"><a href="#!">Documentation</a></li>
+                        <li><a href="#!">Changelog</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-5 mb-lg-0">
+                    <div class="text-uppercase-expanded text-xs mb-4">Technical</div>
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2"><a href="#!">Documentation</a></li>
+                        <li class="mb-2"><a href="#!">Changelog</a></li>
+                        <li class="mb-2"><a href="#!">Theme Customizer</a></li>
+                        <li><a href="#!">UI Kit</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-5 mb-md-0">
+                    <div class="text-uppercase-expanded text-xs mb-4">Includes</div>
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2"><a href="#!">Utilities</a></li>
+                        <li class="mb-2"><a href="#!">Components</a></li>
+                        <li class="mb-2"><a href="#!">Layouts</a></li>
+                        <li class="mb-2"><a href="#!">Code Samples</a></li>
+                        <li class="mb-2"><a href="#!">Products</a></li>
+                        <li class="mb-2"><a href="#!">Affiliates</a></li>
+                        <li><a href="#!">Updates</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="text-uppercase-expanded text-xs mb-4">Legal</div>
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2"><a href="#!">Privacy Policy</a></li>
+                        <li class="mb-2"><a href="#!">Terms and Conditions</a></li>
+                        <li><a href="#!">License</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    <hr class="my-5" />
+    <div class="row gx-5 align-items-center">
+        <div class="col-md-6 small">Copyright &copy; Your Website 2023</div>
+        <div class="col-md-6 text-md-end small">
+            <a href="#!">Privacy Policy</a>
+            &middot;
+            <a href="#!">Terms &amp; Conditions</a>
+        </div>
+    </div>
+</div>
+</footer>
+</div>
+</div>
+
+{% if user.is_authenticated %}
+    <!-- Floating Action Button -->
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1030;">
+        <button type="button" class="btn btn-gradient-brand rounded-circle shadow-lg" 
+                data-bs-toggle="modal" 
+                data-bs-target="#ticketModal"
+                style="width: 60px; height: 60px;">
+            <i data-feather="message-circle"></i>
+        </button>
+    </div>
+
+    <!-- Ticket Modal -->
+    <div class="modal fade" id="ticketModal" tabindex="-1" aria-labelledby="ticketModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="ticketModalLabel">Send Message</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="ticketForm" method="post" action="{% url 'rivals:create_ticket' %}">
+                    {% csrf_token %}
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="{{ ticket_form.message.id_for_label }}">Message:</label>
+                            {{ ticket_form.message }}
+                            {% if ticket_form.message.errors %}
+                                <div class="invalid-feedback">
+                                    {{ ticket_form.message.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Submit Ticket</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add JavaScript for form handling -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('ticketForm');
+            const modal = document.getElementById('ticketModal');
+            const bootstrapModal = new bootstrap.Modal(modal);
+
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                this.submit(); // Просто отправляем форму обычным способом
+                form.reset();
+                bootstrapModal.hide();
+            });
+        });
+    </script>
+{% endif %}
+{% block extra_js %}
+{% endblock extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+<script>
+    // Автоматическое отображение и закрытие Toast через 10 секунд
+    document.addEventListener('DOMContentLoaded', function () {
+        const toastElements = document.querySelectorAll('.toast');
+        toastElements.forEach(toastEl => {
+            const bsToast = new bootstrap.Toast(toastEl, {
+                delay: 10000,
+                autohide: true
+            });
+            bsToast.show();
+        });
+
+        // Отображение времени сервера с учётом часового пояса пользователя
+        const serverTimeElement = document.getElementById('server-time');
+        if (serverTimeElement) {  // Добавляем проверку
+            const serverTime = "{{ server_time|date:'c' }}",  // Используем формат ISO 8601
+                  serverDate = new Date(serverTime),
+                  options = {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      second: '2-digit',
+                      hour12: false,
+                      timeZoneName: 'short'
+                  };
+
+            // Отображение отформатированного времени
+            const formattedTime = serverDate.toLocaleString(undefined, options);
+            serverTimeElement.textContent = `${formattedTime}`;
+        }
+        
+        // Дополнительная проверка navbarCollapse
+        const navbarMarketingTransparentFixed = document.body.querySelector('.navbar-marketing.fixed-top');
+        console.log('Navbar element:', navbarMarketingTransparentFixed);
+        if (navbarMarketingTransparentFixed) {
+            window.addEventListener('scroll', function() {
+                if (window.scrollY > 0) {
+                    navbarMarketingTransparentFixed.classList.add('navbar-scrolled');
+                    console.log('Added navbar-scrolled class');
+                } else {
+                    navbarMarketingTransparentFixed.classList.remove('navbar-scrolled');
+                    console.log('Removed navbar-scrolled class');
+                }
+            });
+        }
+    });
+</script>
+<script src="{% static 'js/scripts.js'%}"></script>
 
 
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
-        <script src="{% static 'js/scripts.js'%}"></script>
-    </body>
+
+    
+<script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+<script>
+    AOS.init({
+        disable: 'mobile',
+        duration: 600,
+        once: true,
+    });
+</script>
+<script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+<script>
+AOS.init({
+disable: 'mobile',
+duration: 600,
+once: true,
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/umd/simple-datatables.min.js" crossorigin="anonymous"></script>
+
+<script>
+    // Инициализация таблиц
+    function initTables() {
+        const tables = {
+            'ticketsTable': '#ticketsTable',
+            'matchesTable': '#overdueMatchesTable',
+            'rivalsTable': '#AllRivalsTable',
+            'tableAddPlayers': '#tableAddPlayers'
+        };
+
+        Object.entries(tables).forEach(([name, selector]) => {
+            try {
+                if (document.querySelector(selector)) {
+                    window[name] = new simpleDatatables.DataTable(selector);
+                    console.log(`Table ${name} initialized`);
+                }
+            } catch (e) {
+                console.error(`Error initializing ${name}:`, e);
+            }
+        });
+    }
+
+    // Инициализация Feather Icons
+    function initFeather() {
+        if (window.feather) {
+            feather.replace();
+            console.log('Feather icons initialized');
+        }
+    }
+
+    // Наблюдатель за изменениями в DOM
+    const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            if (mutation.addedNodes.length) {
+                initFeather();
+            }
+        });
+    });
+
+    // Запуск всех инициализаций
+    document.addEventListener('DOMContentLoaded', () => {
+        initFeather();
+        initTables();
+
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+
+        document.addEventListener('htmx:afterSwap', () => {
+            initFeather();
+            initTables();
+        });
+    });
+</script>
+
+<script>
+function onTelegramAuth(user) {
+    console.log('Telegram auth callback received:', user);  // Добавляем логирование
+    
+    // Add CSRF token to headers
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    
+    fetch('{% url "persons:telegram_callback" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken,
+        },
+        body: JSON.stringify(user)
+    })
+    .then(response => {
+        console.log('Response received:', response);  // Добавляем логирование
+        return response.json();
+    })
+    .then(data => {
+        console.log('Data received:', data);  // Добавляем логирование
+        if (data.success) {
+            window.location.href = data.redirect_url;
+        } else {
+            alert('Authentication failed: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Authentication failed. Please try again.');
+    });
+}
+</script>
+</body>
 </html>

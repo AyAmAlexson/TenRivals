@@ -1,0 +1,185 @@
+{% extends 'default.html' %}
+{% load static %}
+{% block content %}
+
+<div class="container-xl px-4 mt-4">
+    <div class="card mb-4">
+        <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">Give rating to {{ player_to_rate.user.get_full_name }}</h6>
+                <a href="{% url 'rivals:player_detail' player_to_rate.pk %}" class="btn btn-secondary btn-sm">Back</a>
+            </div>
+        </div>
+        <div class="card-body">
+            <form method="post" id="ratingForm">
+                {% csrf_token %}
+                <div class="row">
+                    <!-- Левая колонка с ползунками -->
+                    <div class="col-lg-8">
+                        {% for field in form %}
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <label for="{{ field.id_for_label }}" class="form-label mb-0">{{ field.label }}</label>
+                                <span class="badge bg-primary" id="value-{{ field.name }}">3</span>
+                            </div>
+                            <input type="range" 
+                                   class="form-range rating-slider mb-1" 
+                                   id="{{ field.id_for_label }}" 
+                                   name="{{ field.name }}"
+                                   min="0" 
+                                   max="6" 
+                                   step="0.1" 
+                                   value="3"
+                                   data-field-name="{{ field.name }}">
+                            <input type="hidden" 
+                                   id="hidden-{{ field.name }}" 
+                                   name="{{ field.name }}" 
+                                   value="3">
+                            <div class="d-flex justify-content-between px-2 mt-1">
+                                <small class="text-muted" style="width: 20%; text-align: center;">Weak</small>
+                                <small class="text-muted" style="width: 20%; text-align: center;">Unstable</small>
+                                <small class="text-muted" style="width: 20%; text-align: center;">Stable</small>
+                                <small class="text-muted" style="width: 20%; text-align: center;">Perfect</small>
+                                <small class="text-muted" style="width: 20%; text-align: center;">Superpower</small>
+                            </div>
+                            {% if field.errors %}
+                                <div class="text-danger">
+                                    {{ field.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                        <div class="d-flex justify-content-end mt-4">
+                            <button type="submit" class="btn btn-success me-2">Save</button>
+                            <a href="{% url 'rivals:player_detail' player_to_rate.pk %}" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </div>
+
+                    <!-- Правая колонка с графиком -->
+                    <div class="col-lg-4">
+                        <div class="chart-area" style="height: 300px;">
+                            <canvas id="attributeChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Передача данных в JavaScript -->
+{{ attribute_labels|json_script:"attribute-labels" }}
+
+<!-- Подключение Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const attributeLabels = JSON.parse(document.getElementById('attribute-labels').textContent);
+        const sliders = document.querySelectorAll('.rating-slider');
+        let chart;
+
+        function roundToValidValue(value) {
+            // Преобразуем значение от 0-6 в 1-5
+            if (value < 0.5) return 1;
+            if (value > 5.5) return 5;
+            return Math.round(value);
+        }
+
+        function updateChart() {
+            const data = Array.from(sliders).map(slider => {
+                const hiddenInput = document.getElementById(`hidden-${slider.dataset.fieldName}`);
+                return parseInt(hiddenInput.value);
+            });
+            
+            if (chart) {
+                chart.destroy();
+            }
+
+            const ctx = document.getElementById('attributeChart').getContext('2d');
+            chart = new Chart(ctx, {
+                type: 'polarArea',
+                data: {
+                    labels: attributeLabels,
+                    datasets: [{
+                        label: 'Attributes',
+                        data: data,
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.2)',
+                            'rgba(54, 162, 235, 0.2)',
+                            'rgba(255, 206, 86, 0.2)',
+                            'rgba(75, 192, 192, 0.2)',
+                            'rgba(153, 102, 255, 0.2)',
+                            'rgba(255, 159, 64, 0.2)',
+                            'rgba(199, 199, 199, 0.2)',
+                            'rgba(83, 102, 255, 0.2)'
+                        ],
+                        borderColor: [
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(153, 102, 255, 1)',
+                            'rgba(255, 159, 64, 1)',
+                            'rgba(199, 199, 199, 1)',
+                            'rgba(83, 102, 255, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        title: {
+                            display: true,
+                            text: 'Attributes Overview'
+                        }
+                    },
+                    scales: {
+                        r: {
+                            min: 1,
+                            max: 5,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Обработчики для ползунков
+        sliders.forEach(slider => {
+            const valueSpan = document.getElementById(`value-${slider.dataset.fieldName}`);
+            const hiddenInput = document.getElementById(`hidden-${slider.dataset.fieldName}`);
+            
+            slider.addEventListener('input', function() {
+                const roundedValue = roundToValidValue(this.value);
+                valueSpan.textContent = roundedValue;
+                hiddenInput.value = roundedValue;
+                updateChart();
+            });
+
+            // Установка начального значения
+            const roundedValue = roundToValidValue(slider.value);
+            valueSpan.textContent = roundedValue;
+            hiddenInput.value = roundedValue;
+        });
+
+        // Обработка отправки формы
+        document.getElementById('ratingForm').addEventListener('submit', function(e) {
+            sliders.forEach(slider => {
+                const hiddenInput = document.getElementById(`hidden-${slider.dataset.fieldName}`);
+                slider.value = hiddenInput.value;
+            });
+        });
+
+        // Инициализация графика
+        updateChart();
+    });
+</script>
+
+{% endblock content %} 

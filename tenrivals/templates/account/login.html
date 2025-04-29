@@ -1,0 +1,157 @@
+{% extends "default.html" %}
+{% load i18n %}
+{% load account %}
+
+{% block head_title %}{% trans "Sign In" %}{% endblock %}
+
+{% block content %}
+<div id="layoutAuthentication" class="bg-dual-color-primary-secondary">
+    <div id="layoutAuthentication_content">
+    
+            <div class="container-xl px-4">
+                <div class="row justify-content-center">
+                    <div class="col-lg-5">
+                        <!-- Basic login form-->
+                        <div class="card shadow-lg border-0 rounded-lg mt-15">
+                            <div class="card-header justify-content-center">
+                                <h3 class="fw-light text-secondary my-4">{% trans "Sign In" %}</h3>
+                            </div>
+                            <div class="card-body">
+                                {% if form.errors %}
+                                <div class="alert alert-danger mb-3">
+                                    {% if form.non_field_errors %}
+                                        {{ form.non_field_errors }}
+                                    {% else %}
+                                        {% trans "Please correct the errors below." %}
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+
+                                <!-- Login form-->
+                                <form class="login" method="POST" action="{% url 'account_login' %}">
+                                    {% csrf_token %}
+
+                                    <!-- Form Group (email)-->
+                                    <div class="mb-3">
+                                        <label class="small mb-1" for="{{ form.login.id_for_label }}">{% trans "Email" %}</label>
+                                        {{ form.login }}
+                                        {% if form.login.errors %}
+                                        <div class="small text-danger mt-1">
+                                            {{ form.login.errors }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Form Group (password)-->
+                                    <div class="mb-3">
+                                        <label class="small mb-1" for="{{ form.password.id_for_label }}">{% trans "Password" %}</label>
+                                        {{ form.password }}
+                                        {% if form.password.errors %}
+                                        <div class="small text-danger mt-1">
+                                            {{ form.password.errors }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Form Group (remember me checkbox)-->
+                                    {% if form.remember %}
+                                    <div class="mb-3">
+                                        <div class="form-check">
+                                            {{ form.remember }}
+                                            <label class="form-check-label" for="{{ form.remember.id_for_label }}">
+                                                {% trans "Remember me" %}
+                                            </label>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+
+                                    <!-- Form Group (login box)-->
+                                    <div class="d-flex align-items-center justify-content-between mt-4 mb-0">
+                                        <a class="small" href="{% url 'persons:account_password_request_tg' %}">
+                                            {% trans "Forgot Password?" %}
+                                        </a>
+                                        <button class="btn btn-primary" type="submit">
+                                            {% trans "Sign In" %}
+                                        </button>
+                                    </div>
+                                      
+
+                                    {% if redirect_field_value %}
+                                    <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+                                    {% endif %}
+                                </form>
+                            </div>
+                            <div class="card-footer text-center">
+                                <div class="small">
+                                    <a href="{% url 'account_signup' %}">
+                                        {% trans "Need an account? Sign up!" %}
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script type="text/javascript">
+    // Функция для получения параметров из URL фрагмента
+    function getHashParams() {
+        const hash = window.location.hash.substring(1);
+        if (!hash) return null;
+        
+        // Проверяем наличие tgAuthResult
+        if (hash.indexOf('tgAuthResult=') !== 0) return null;
+        
+        try {
+            // Декодируем JSON из фрагмента
+            const jsonStr = decodeURIComponent(hash.substring('tgAuthResult='.length));
+            return JSON.parse(jsonStr);
+        } catch (e) {
+            console.error('Error parsing Telegram auth data:', e);
+            return null;
+        }
+    }
+
+    // Проверяем хеш при загрузке страницы
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Checking for Telegram auth data...');
+        const authData = getHashParams();
+        
+        if (authData) {
+            console.log('Found Telegram auth data', authData);
+            // Очищаем хеш
+            window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
+            
+            const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            
+            // Отправляем данные на сервер
+            fetch('/persons/telegram/callback/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify(authData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = data.redirect_url || '/';
+                } else {
+                    alert('Ошибка авторизации: ' + (data.error || 'Неизвестная ошибка'));
+                }
+            })
+            .catch(error => {
+                console.error('Auth error:', error);
+                alert('Ошибка авторизации. Пожалуйста, попробуйте снова.');
+            });
+        }
+    });
+</script>
+{% endblock %} 

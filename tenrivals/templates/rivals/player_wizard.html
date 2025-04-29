@@ -1,0 +1,719 @@
+{% extends 'default.html' %}
+{% load i18n %}
+{% load static %}
+{% load custom_tags %}
+{% load custom_filters %}
+
+{% block head_title %}{% trans "Player Profile Setup" %}{% endblock %}
+
+{% block content %}
+<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+    <div class="container-xl px-4">
+        <div class="page-header-content pt-10">
+            <div class="row align-items-center justify-content-between">
+                <div class="col-auto mt-4">
+                    <h1 class="page-header-title">
+                        <div class="page-header-icon"><i data-feather="user-plus"></i></div>
+                        {% trans "Player Profile Setup" %}
+                    </h1>
+                    <div class="page-header-subtitle">{% trans "Complete your player profile to start participating" %}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Main page content-->
+<div class="container-xl px-4 mt-n10">
+    <!-- Wizard card example with navigation-->
+    <div class="card">
+        <div class="card-header border-bottom">
+            <!-- Wizard navigation-->
+            <div class="nav nav-pills nav-justified flex-column flex-xl-row nav-wizard" id="cardTab" role="tablist">
+                <!-- Wizard navigation item 1: Enter Telegram -->
+                {# Активен, если stage=1 и visual_step=1. Зеленый, если stage=2 #}
+                <a class="nav-item nav-link {% if stage == 1 and visual_step == 1 %}active{% endif %} {% if stage == 2 %}text-success fw-500 wizard-step-complete{% endif %}" id="wizard1-tab" href="#wizard1" data-bs-toggle="tab" role="tab" aria-controls="wizard1" aria-selected="{% if stage == 1 and visual_step == 1 %}true{% else %}false{% endif %}">
+                    <div class="wizard-step-icon">1</div>
+                    <div class="wizard-step-text">
+                        <div class="wizard-step-text-name">{% trans "Telegram Account" %}</div>
+                        <div class="wizard-step-text-details">{% trans "Link your Telegram" %}</div>
+                    </div>
+                </a>
+                 <!-- Wizard navigation item 2: Verify Telegram -->
+                 {# Активен, если stage=1 и visual_step=2. Зеленый, если stage=2. Заблокирован, если stage=1 и visual_step=1 #}
+                 <a class="nav-item nav-link {% if stage == 1 and visual_step == 2 %}active{% endif %} {% if stage == 2 %}text-success fw-500 wizard-step-complete{% endif %} {% if stage == 1 and visual_step == 1 %}disabled{% endif %}" id="wizard2-tab" href="#wizard2" data-bs-toggle="tab" role="tab" aria-controls="wizard2" aria-selected="{% if stage == 1 and visual_step == 2 %}true{% else %}false{% endif %}">
+                    <div class="wizard-step-icon">2</div>
+                    <div class="wizard-step-text">
+                        <div class="wizard-step-text-name">{% trans "Verify Telegram" %}</div>
+                        <div class="wizard-step-text-details">{% trans "Confirm via code or link" %}</div>
+                    </div>
+                </a>
+                <!-- Wizard navigation item 3: Personal Info -->
+                 {# Активен, если stage=2 и visual_step=3. Заблокирован, если stage=1 #}
+                <a class="nav-item nav-link {% if stage == 2 and visual_step == 3 %}active{% endif %} {% if stage == 1 %}disabled{% endif %}" id="wizard3-tab" href="#wizard3" data-bs-toggle="tab" role="tab" aria-controls="wizard3" aria-selected="{% if stage == 2 and visual_step == 3 %}true{% else %}false{% endif %}">
+                    <div class="wizard-step-icon">3</div>
+                    <div class="wizard-step-text">
+                        <div class="wizard-step-text-name">{% trans "Personal Information" %}</div>
+                        <div class="wizard-step-text-details">{% trans "Basic details about you" %}</div>
+                    </div>
+                </a>
+                <!-- Wizard navigation item 4: Tennis Profile -->
+                 {# Активен, если stage=2 и visual_step=4. Заблокирован, если stage=1 #}
+                <a class="nav-item nav-link {% if stage == 2 and visual_step == 4 %}active{% endif %} {% if stage == 1 %}disabled{% endif %}" id="wizard4-tab" href="#wizard4" data-bs-toggle="tab" role="tab" aria-controls="wizard4" aria-selected="{% if stage == 2 and visual_step == 4 %}true{% else %}false{% endif %}">
+                    <div class="wizard-step-icon">4</div>
+                    <div class="wizard-step-text">
+                        <div class="wizard-step-text-name">{% trans "Tennis Profile" %}</div>
+                        <div class="wizard-step-text-details">{% trans "Your physical stats & experience" %}</div>
+                    </div>
+                </a>
+                <!-- Wizard navigation item 5: Review & Submit -->
+                 {# Активен, если stage=2 и visual_step=5. Заблокирован, если stage=1 #}
+                <a class="nav-item nav-link {% if stage == 2 and visual_step == 5 %}active{% endif %} {% if stage == 1 %}disabled{% endif %}" id="wizard5-tab" href="#wizard5" data-bs-toggle="tab" role="tab" aria-controls="wizard5" aria-selected="{% if stage == 2 and visual_step == 5 %}true{% else %}false{% endif %}">
+                    <div class="wizard-step-icon">5</div>
+                    <div class="wizard-step-text">
+                        <div class="wizard-step-text-name">{% trans "Review & Submit" %}</div>
+                        <div class="wizard-step-text-details">{% trans "Review and submit your profile" %}</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+        <div class="card-body">
+            {% if messages %}
+            <div class="row justify-content-center">
+                <div class="col-xxl-8 col-xl-10"> {# Сделаем немного шире для сообщений #}
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Форма обертывает все шаги -->
+             <form method="post" enctype="multipart/form-data" id="player-wizard-form">
+                 {% csrf_token %}
+                 <input type="hidden" name="stage" value="{{ stage }}"> {# Текущий ЛОГИЧЕСКИЙ этап (1 или 2) #}
+                 <input type="hidden" name="visual_step" id="visual_step_input" value="{{ visual_step }}"> {# Текущий ВИЗУАЛЬНЫЙ шаг (1-5) #}
+
+                 <div class="tab-content" id="cardTabContent">
+                    <!-- ================== Wizard tab pane item 1: Enter Telegram ================== -->
+                    <div class="tab-pane py-5 py-xl-10 fade {% if stage == 1 and visual_step == 1 %}show active{% endif %}" id="wizard1" role="tabpanel" aria-labelledby="wizard1-tab">
+                        <div class="row justify-content-center">
+                            <div class="col-xxl-6 col-xl-8">
+                                <h3 class="text-primary">{% trans "Step 1: Link Telegram" %}</h3>
+                                <h5 class="card-title mb-4">{% trans "Enter your Telegram username" %}</h5>
+
+                                <!-- Инструкция -->
+                                <div class="alert alert-info small">
+                                     <h6 class="alert-heading">{% trans "Why Telegram?" %}</h6>
+                                     <p>{% trans "Telegram is essential for tournament communication, receiving match notifications, and important updates. Please ensure you have a username set up." %}</p>
+                                     <strong>{% trans "How to find or set your username:" %}</strong>
+                                     <ol class="mb-0">
+                                         <li>{% trans "Open Telegram app." %}</li>
+                                         <li>{% trans "Go to Settings." %}</li>
+                                         <li>{% trans "If you see 'Username' listed, that's it! Enter it below (without the leading '@')." %}</li>
+                                         <li>{% trans "If you see 'None' or no username, tap it to set one up. It must be unique, 5-32 characters, using a-z, 0-9, and underscores." %}</li>
+                                     </ol>
+                                </div>
+
+                                <!-- Форма ввода ника -->
+                                {% if add_telegram_form %}
+                                <div class="mb-3">
+                                    <label for="{{ add_telegram_form.telegram_username.id_for_label }}" class="small mb-1">{{ add_telegram_form.telegram_username.label }}</label>
+                                    {{ add_telegram_form.telegram_username }}
+                                    {% if add_telegram_form.telegram_username.help_text %}
+                                        <div class="form-text small">{{ add_telegram_form.telegram_username.help_text }}</div>
+                                    {% endif %}
+                                    {% if add_telegram_form.telegram_username.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ add_telegram_form.telegram_username.errors|first }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                {% else %}
+                                <p class="text-danger">{% trans "Error loading Telegram form." %}</p>
+                                {% endif %}
+
+                                <hr class="my-4" />
+                                <div class="d-flex justify-content-end">
+                                    {# Кнопка "Next" здесь - это отправка формы ника #}
+                                    <button class="btn btn-primary" type="submit" name="submit_telegram_username">
+                                         {% trans "Save & Proceed to Verification" %} <i data-feather="arrow-right" class="ms-1"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- ================== Wizard tab pane item 2: Verify Telegram ================== -->
+                    <div class="tab-pane py-5 py-xl-10 fade {% if stage == 1 and visual_step == 2 %}show active{% endif %}" id="wizard2" role="tabpanel" aria-labelledby="wizard2-tab">
+                         <div class="row justify-content-center">
+                            <div class="col-xxl-8 col-xl-10"> {# Шире для опций верификации #}
+                                <h3 class="text-primary">{% trans "Step 2: Verify Telegram" %}</h3>
+                                {% if telegram_username_current %}
+                                    <h5 class="card-title mb-4">{% blocktrans with username=telegram_username_current %}Confirm your account @{{ username }}{% endblocktrans %}</h5>
+                                {% else %}
+                                    <h5 class="card-title mb-4">{% trans "Verification Options" %}</h5>
+                                {% endif %}
+
+                                <!-- Опции верификации -->
+                                <div class="row mt-4">
+                                    <!-- Метод QR -->
+                                    <div class="col-md-6 mb-4">
+                                        <div class="card h-100 border-0 shadow-sm">
+                                            <div class="card-body p-4 text-center">
+                                                <div class="mb-3 text-secondary"><i class="fas fa-qrcode fa-3x"></i></div>
+                                                <h5 class="text-secondary">{% trans "Verify via QR Code or Link" %}</h5>
+                                                <p class="small text-muted mb-3">{% trans "Fastest way! Scan or click below." %}</p>
+                                                {% if qr_code_base64 %}
+                                                    <div class="mx-auto mb-3 p-2 bg-white rounded border" style="width: 180px; height: 180px;">
+                                                        <img src="data:image/png;base64,{{ qr_code_base64 }}" class="img-fluid" alt="Verification QR Code">
+                                                    </div>
+                                                    <a href="{{ deep_link }}" class="btn btn-outline-secondary w-100 mb-2" target="_blank">
+                                                        <i class="fab fa-telegram-plane me-1"></i> {% trans "Click Link to Verify" %}
+                                                    </a>
+                                                {% else %}
+                                                    <p class="text-danger small">{% trans "QR code/link generation failed. Check bot settings." %}</p>
+                                                {% endif %}
+                                                <p class="small text-muted mt-3">
+                                                    {% trans "After verifying, click 'Check Status & Continue' below." %}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Метод ручного ввода кода -->
+                                    <div class="col-md-6 mb-4">
+                                        <div class="card h-100 border-0 shadow-sm">
+                                             <div class="card-body p-4 text-center">
+                                                 <div class="mb-3 text-primary"><i class="fas fa-keyboard fa-3x"></i></div>
+                                                 <h5 class="text-primary">{% trans "Verify Manually" %}</h5>
+                                                 <p class="small text-muted mb-3">{% trans "Enter the 6-digit code sent to your Telegram." %}</p>
+                                             </div>
+                                             <hr class="m-0">
+                                             <div class="card-body p-4">
+                                                  <p class="small text-muted text-center">
+                                                     {% if telegram_bot_name %}
+                                                        {% blocktrans with bot_name=telegram_bot_name %}Check messages from <strong>@{{ bot_name }}</strong>.{% endblocktrans %}
+                                                     {% else %}
+                                                         {% trans "Bot information not available." %}
+                                                     {% endif %}
+                                                  </p>
+                                                  {# Форма для ручного ввода кода #}
+                                                  {% if manual_code_form %}
+                                                      <div class="mb-3">
+                                                          <label for="{{ manual_code_form.verification_code.id_for_label }}" class="form-label small visually-hidden">{% trans "Verification Code" %}</label>
+                                                          {{ manual_code_form.verification_code }}
+                                                          {% if manual_code_form.verification_code.errors %}
+                                                          <div class="invalid-feedback d-block">
+                                                              {{ manual_code_form.verification_code.errors|first }}
+                                                          </div>
+                                                          {% endif %}
+                                                          {% if manual_code_form.verification_code.help_text %}
+                                                             <div class="form-text small mt-1">{{ manual_code_form.verification_code.help_text }}</div>
+                                                         {% endif %}
+                                                      </div>
+                                                      <div class="d-grid">
+                                                          {# Кнопка отправки кода #}
+                                                          <button class="btn btn-primary" type="submit" name="submit_verification_code">
+                                                              <i class="fas fa-check-circle me-1"></i> {% trans "Verify Code & Continue" %}
+                                                          </button>
+                                                      </div>
+                                                  {% else %}
+                                                      <p class="text-danger">{% trans "Error loading code form." %}</p>
+                                                  {% endif %}
+                                             </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <hr class="my-4" />
+                                <div class="d-flex justify-content-between">
+                                     <button class="btn btn-light prev-step" type="button" data-step="2">
+                                         <i data-feather="arrow-left" class="me-1"></i> {% trans "Back to Username" %}
+                                     </button>
+                                     {# Кнопка проверки статуса #}
+                                     <button class="btn btn-secondary" type="submit" name="check_verification_status">
+                                         <i data-feather="refresh-cw" class="me-1"></i> {% trans "Check Status & Continue" %}
+                                     </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- ================== Wizard tab pane item 3: Personal Info ================== -->
+                    <div class="tab-pane py-5 py-xl-10 fade {% if stage == 2 and visual_step == 3 %}show active{% endif %}" id="wizard3" role="tabpanel" aria-labelledby="wizard3-tab">
+                        <div class="row justify-content-center">
+                            <div class="col-xxl-6 col-xl-8">
+                                <h3 class="text-primary">{% trans "Step 3" %}</h3>
+                                <h5 class="card-title mb-4">{% trans "Enter your personal information" %}</h5>
+                                {# Здесь должны быть поля формы profile_form для этого шага #}
+                                {# Пример: #}
+                                <div class="mb-3">
+                                    <label class="small mb-1" for="{{ profile_form.first_name.id_for_label }}">{{ profile_form.first_name.label }}</label>
+                                    {{ profile_form.first_name }}
+                                    {% if profile_form.first_name.errors %}<div class="small text-danger">{{ profile_form.first_name.errors|first }}</div>{% endif %}
+                                </div>
+                                <div class="mb-3">
+                                    <label class="small mb-1" for="{{ profile_form.last_name.id_for_label }}">{{ profile_form.last_name.label }}</label>
+                                    {{ profile_form.last_name }}
+                                     {% if profile_form.last_name.errors %}<div class="small text-danger">{{ profile_form.last_name.errors|first }}</div>{% endif %}
+                                </div>
+                                 <div class="mb-3">
+                                    <label class="small mb-1">Email address (cannot be changed here)</label>
+                                    <input type="email" class="form-control" value="{{ user.email }}" disabled>
+                                </div>
+                                 <div class="row gx-3">
+                                    <div class="mb-3 col-md-6">
+                                        <label class="small mb-1" for="{{ profile_form.mobile.id_for_label }}">Mobile number</label>
+                                        {{ profile_form.mobile }}
+                                        {% if profile_form.mobile.errors %}<div class="small text-danger">{{ profile_form.mobile.errors }}</div>{% endif %}
+                                    </div>
+                                     <div class="mb-3 col-md-6">
+                                        <label class="small mb-1" for="{{ profile_form.birthdate.id_for_label }}">Birthdate</label>
+                                        {{ profile_form.birthdate }}
+                                        {% if profile_form.birthdate.errors %}<div class="small text-danger">{{ profile_form.birthdate.errors }}</div>{% endif %}
+                                    </div>
+                                </div>
+                                 <div class="row gx-3">
+                                     <div class="mb-3 col-md-6">
+                                        <label class="small mb-1" for="{{ profile_form.city.id_for_label }}">City</label>
+                                        {{ profile_form.city }}
+                                         {% if profile_form.city.errors %}<div class="small text-danger">{{ profile_form.city.errors }}</div>{% endif %}
+                                    </div>
+                                    <div class="mb-3 col-md-6">
+                                        <label class="mb-1">Gender</label>
+                                        <div class="d-flex flex-column">
+                                            {% for radio in profile_form.gender %}
+                                            <div class="form-check mb-2">
+                                                {{ radio.tag }}
+                                                <label class="form-check-label" for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                        {% if profile_form.gender.errors %}<div class="small text-danger">{{ profile_form.gender.errors }}</div>{% endif %}
+                                    </div>
+                                </div>
+                                 <div class="mb-3">
+                                    <label class="small mb-1" for="{{ profile_form.avatar.id_for_label }}">{{ profile_form.avatar.label }}</label>
+                                    <div class="avatar-upload">
+                                        {# Логика превью аватара #}
+                                        <div class="avatar-preview mb-3" style="margin: 0 auto; width: 150px; height: 150px; border-radius: 50%; overflow: hidden; border: 2px solid #ced4da; position: relative;">
+                                            <img id="avatar-preview-image" src="{{ player.get_avatar_url|default:'/static/assets/img/illustrations/profiles/profile-1.png' }}"
+                                                style="width: 100%; height: 100%; object-fit: cover;" alt="Avatar Preview">
+                                            <div class="overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease;">
+                                                <i class="fas fa-camera text-white" style="font-size: 24px;"></i>
+                                            </div>
+                                        </div>
+                                        <div class="avatar-edit text-center mt-2">
+                                             {{ profile_form.avatar }} {# Скрытый input #}
+                                             <label for="{{ profile_form.avatar.id_for_label }}" class="btn btn-sm btn-primary">
+                                                 <i class="fas fa-upload me-1"></i> Choose Image
+                                             </label>
+                                             {% if profile_form.avatar.help_text %}<div class="form-text small mt-1">{{ profile_form.avatar.help_text }}</div>{% endif %}
+                                             {% if profile_form.avatar.errors %}<div class="small text-danger mt-1">{{ profile_form.avatar.errors|first }}</div>{% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <hr class="my-4" />
+                                <div class="d-flex justify-content-end">
+                                     <button class="btn btn-primary next-step" type="button" data-step="3">
+                                         {% trans "Next" %} <i data-feather="arrow-right" class="ms-1"></i>
+                                     </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- ================== Wizard tab pane item 4: Tennis Profile ================== -->
+                    <div class="tab-pane py-5 py-xl-10 fade {% if stage == 2 and visual_step == 4 %}show active{% endif %}" id="wizard4" role="tabpanel" aria-labelledby="wizard4-tab">
+                         <div class="row justify-content-center">
+                            <div class="col-xxl-6 col-xl-8">
+                                <h3 class="text-primary">{% trans "Step 4" %}</h3>
+                                <h5 class="card-title mb-4">{% trans "Your tennis profile and skill level" %}</h5>
+
+                                <!-- Физические атрибуты -->
+                                <div class="card mb-4">
+                                    <div class="card-header">{% trans "Physical Attributes" %}</div>
+                                    <div class="card-body">
+                                        {# Поля height, weight, availability как были #}
+                                        <div class="row gx-3">
+                                            <div class="mb-3 col-md-6">
+                                                <label class="small mb-1" for="{{ profile_form.height.id_for_label }}">{{ profile_form.height.label }}</label>
+                                                {{ profile_form.height }}
+                                                {% if profile_form.height.help_text %}<div class="small text-muted">{{ profile_form.height.help_text }}</div>{% endif %}
+                                                {% if profile_form.height.errors %}<div class="small text-danger">{{ profile_form.height.errors|first }}</div>{% endif %}
+                                            </div>
+                                            <div class="mb-3 col-md-6">
+                                                <label class="small mb-1" for="{{ profile_form.weight.id_for_label }}">{{ profile_form.weight.label }}</label>
+                                                {{ profile_form.weight }}
+                                                {% if profile_form.weight.help_text %}<div class="small text-muted">{{ profile_form.weight.help_text }}</div>{% endif %}
+                                                {% if profile_form.weight.errors %}<div class="small text-danger">{{ profile_form.weight.errors|first }}</div>{% endif %}
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="small mb-1" for="{{ profile_form.availability.id_for_label }}">{{ profile_form.availability.label }}</label>
+                                            {{ profile_form.availability }}
+                                            {% if profile_form.availability.help_text %}<div class="small text-muted">{{ profile_form.availability.help_text }}</div>{% endif %}
+                                            {% if profile_form.availability.errors %}<div class="small text-danger">{{ profile_form.availability.errors|first }}</div>{% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Опыт и Оценка Навыков -->
+                                <div class="card mb-4">
+                                    <div class="card-header">{% trans "Tennis Experience & Skill Assessment" %}</div>
+                                    <div class="card-body">
+                                         <div class="mb-3">
+                                            <label class="small mb-1" for="{{ profile_form.tennis_exp_year.id_for_label }}">{{ profile_form.tennis_exp_year.label }}</label>
+                                            {{ profile_form.tennis_exp_year }}
+                                            {% if profile_form.tennis_exp_year.help_text %}<div class="small text-muted">{{ profile_form.tennis_exp_year.help_text }}</div>{% endif %}
+                                            {% if profile_form.tennis_exp_year.errors %}<div class="small text-danger">{{ profile_form.tennis_exp_year.errors|first }}</div>{% endif %}
+                                        </div>
+
+                                        {# --- ИСПРАВЛЕННЫЙ РЕНДЕРИНГ РАДИОКНОПОК --- #}
+                                        {% with fields_to_render=profile_form.visible_fields %}
+                                            {% for field in fields_to_render %}
+                                                {% if field.name in "experience_level playing_frequency technical_level serve_level match_experience" %}
+                                                    <div class="mb-4">
+                                                        <label class="mb-1 fw-bold">{{ field.label }}</label> {# Сделал лейбл жирным для отделения #}
+                                                        {% for radio in field %} {# Итерируемся по опциям виджета #}
+                                                        <div class="form-check"> {# Обертка для каждой радиокнопки #}
+                                                            {{ radio.tag }}
+                                                            <label class="form-check-label" for="{{ radio.id_for_label }}">
+                                                                {{ radio.choice_label }}
+                                                            </label>
+                                                        </div>
+                                                        {% endfor %}
+                                                        {% if field.errors %}
+                                                        <div class="small text-danger mt-1">{{ field.errors|first }}</div>
+                                                        {% endif %}
+                                                         {% if field.help_text %}
+                                                        <div class="form-text small mt-1">{{ field.help_text }}</div>
+                                                        {% endif %}
+                                                    </div>
+                                                {% endif %}
+                                            {% endfor %}
+                                        {% endwith %}
+                                        {# --- КОНЕЦ ИСПРАВЛЕННОГО РЕНДЕРИНГА --- #}
+                                    </div>
+                                </div>
+
+                                <hr class="my-4" />
+                                <div class="d-flex justify-content-between">
+                                    <button class="btn btn-light prev-step" type="button" data-step="4"> <i data-feather="arrow-left" class="me-1"></i> {% trans "Previous" %} </button>
+                                    <button class="btn btn-primary next-step" type="button" data-step="4"> {% trans "Next" %} <i data-feather="arrow-right" class="ms-1"></i> </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- ================== Wizard tab pane item 5: Review & Submit ================== -->
+                     <div class="tab-pane py-5 py-xl-10 fade {% if stage == 2 and visual_step == 5 %}show active{% endif %}" id="wizard5" role="tabpanel" aria-labelledby="wizard5-tab">
+                        <div class="row justify-content-center">
+                            <div class="col-xxl-6 col-xl-8">
+                                <h3 class="text-primary">{% trans "Step 5" %}</h3>
+                                <h5 class="card-title mb-4">{% trans "Review your information and submit" %}</h5>
+                                {# Здесь секция обзора и кнопка Submit #}
+
+                                <div class="text-center mb-4">
+                                    <div style="width: 150px; height: 150px; border-radius: 50%; overflow: hidden; margin: 0 auto; border: 2px solid #ced4da;">
+                                        <img id="review_avatar" src="{{ player.get_avatar_url|default:'/static/assets/img/illustrations/profiles/profile-1.png' }}"
+                                             style="width: 100%; height: 100%; object-fit: cover;" alt="Avatar Preview">
+                                    </div>
+                                </div>
+
+                                <div class="card mb-4 ntrp-card">
+                                    <div class="card-header bg-primary text-white"><h5 class="mb-0">Your Calculated Tennis Rating</h5></div>
+                                    <div class="card-body text-center">
+                                        <div class="row align-items-center">
+                                            <div class="col-md-6 mb-3 mb-md-0">
+                                                <h5 class="text-muted mb-2">NTRP Rating</h5>
+                                                <div class="ntrp-value" id="calculated_ntrp">-.-</div>
+                                                <div class="small text-muted">National Tennis Rating Program scale</div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <h5 class="text-muted mb-2">Player Category</h5>
+                                                <div class="category-value" id="calculated_category">--</div>
+                                                <div class="small text-muted">Your tournament category group</div>
+                                            </div>
+                                        </div>
+                                        <div class="alert alert-info mt-4 mb-0"><i class="fas fa-info-circle me-2"></i> This rating is calculated based on your tennis experience...</div>
+                                    </div>
+                                </div>
+
+                                <div class="card mb-4">
+                                     <div class="card-header d-flex justify-content-between align-items-center">
+                                         Personal Information <button type="button" class="btn btn-sm btn-light edit-step" data-step="3"><i data-feather="edit-2" class="me-1"></i> Edit</button>
+                                     </div>
+                                     <div class="card-body">
+                                         <div class="row small"><div class="col-sm-4 text-truncate"><em>Full Name:</em></div><div class="col" id="review_full_name"></div></div>
+                                         <div class="row small"><div class="col-sm-4 text-truncate"><em>Email:</em></div><div class="col" id="review_email"></div></div>
+                                         <div class="row small"><div class="col-sm-4 text-truncate"><em>Mobile:</em></div><div class="col" id="review_mobile"></div></div>
+                                         <div class="row small"><div class="col-sm-4 text-truncate"><em>Birthdate:</em></div><div class="col" id="review_birthdate"></div></div>
+                                         <div class="row small"><div class="col-sm-4 text-truncate"><em>Gender:</em></div><div class="col" id="review_gender"></div></div>
+                                         <div class="row small"><div class="col-sm-4 text-truncate"><em>City:</em></div><div class="col" id="review_city"></div></div>
+                                     </div>
+                                </div>
+
+                                <div class="card mb-4">
+                                      <div class="card-header d-flex justify-content-between align-items-center">
+                                          Physical & Tennis Info <button type="button" class="btn btn-sm btn-light edit-step" data-step="4"><i data-feather="edit-2" class="me-1"></i> Edit</button>
+                                     </div>
+                                     <div class="card-body">
+                                         <div class="row small"><div class="col-sm-4 text-truncate"><em>Height:</em></div><div class="col" id="review_height"></div></div>
+                                         <div class="row small"><div class="col-sm-4 text-truncate"><em>Weight:</em></div><div class="col" id="review_weight"></div></div>
+                                         <div class="row small"><div class="col-sm-4 text-truncate"><em>Availability:</em></div><div class="col" id="review_availability"></div></div>
+                                         <div class="row small"><div class="col-sm-4 text-truncate"><em>Started playing in:</em></div><div class="col" id="review_tennis_exp_year"></div></div>
+                                         <div class="row small"><div class="col-sm-4 text-truncate"><em>Experience level:</em></div><div class="col" id="review_experience_level"></div></div>
+                                         <div class="row small"><div class="col-sm-4 text-truncate"><em>Playing frequency:</em></div><div class="col" id="review_playing_frequency"></div></div>
+                                         <div class="row small"><div class="col-sm-4 text-truncate"><em>Technical level:</em></div><div class="col" id="review_technical_level"></div></div>
+                                         <div class="row small"><div class="col-sm-4 text-truncate"><em>Serve level:</em></div><div class="col" id="review_serve_level"></div></div>
+                                         <div class="row small"><div class="col-sm-4 text-truncate"><em>Match experience:</em></div><div class="col" id="review_match_experience"></div></div>
+                                     </div>
+                                </div>
+
+                                {% if profile_form.errors %}
+                                    <div class="alert alert-danger mt-4">
+                                        <strong>{% trans "Please correct the errors below:" %}</strong>
+                                        {{ profile_form.non_field_errors }}
+                                        <ul>
+                                            {% for field, errors in profile_form.errors.items %}
+                                                {% if field != '__all__' %}
+                                                    <li>{{ field }}: {{ errors|first }}</li>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </ul>
+                                         <p><small>{% trans "You might need to go back to previous steps using the 'Edit' buttons to fix them." %}</small></p>
+                                    </div>
+                                {% endif %}
+
+                                <hr class="my-4" />
+                                <div class="d-flex justify-content-between">
+                                    <button class="btn btn-light prev-step" type="button" data-step="5">
+                                        <i data-feather="arrow-left" class="me-1"></i> {% trans "Previous" %}
+                                    </button>
+                                    {# Финальная кнопка отправки всей формы #}
+                                    <button class="btn btn-primary" type="submit" name="submit_profile">
+                                        {% trans "Submit Profile" %}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                 </div> {# end tab-content #}
+            </form> {# end form #}
+        </div> {# end card-body #}
+    </div> {# end card #}
+</div>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('player-wizard-form');
+    const currentVisualStepInput = document.getElementById('visual_step_input');
+    const wizardTabs = {
+        1: document.getElementById('wizard1-tab'),
+        2: document.getElementById('wizard2-tab'),
+        3: document.getElementById('wizard3-tab'),
+        4: document.getElementById('wizard4-tab'),
+        5: document.getElementById('wizard5-tab')
+    };
+    const tabPanes = {
+        1: document.getElementById('wizard1'),
+        2: document.getElementById('wizard2'),
+        3: document.getElementById('wizard3'),
+        4: document.getElementById('wizard4'),
+        5: document.getElementById('wizard5')
+    };
+    const nextButtons = document.querySelectorAll('.next-step');
+    const prevButtons = document.querySelectorAll('.prev-step');
+    const editButtons = document.querySelectorAll('.edit-step'); // Кнопки Edit на шаге обзора
+    const isTelegramVerified = {{ user.is_telegram_verified|yesno:"true,false" }}; // Начальный статус верификации
+
+    // --- Функции для получения значений (аналогично старому JS) ---
+    function getValueById(id) { const el = document.getElementById(id); return el ? el.value : ''; }
+    function getSelectTextById(id) { const el = document.getElementById(id); return el ? el.options[el.selectedIndex]?.text || '' : '';}
+    function getSelectedRadioText(name) { const el = document.querySelector(`input[name="${name}"]:checked`); return el ? el.nextElementSibling?.textContent.trim() || '' : '';}
+    function getSelectedRadioValue(name) { const el = document.querySelector(`input[name="${name}"]:checked`); return el ? el.value : '0'; }
+
+    // --- Функции расчета NTRP и Категории (аналогично старому JS) ---
+    function calculateNTRP() {
+        const formElements = form.elements;
+        const experience = parseInt(getSelectedRadioValue(formElements['{{ profile_form.experience_level.html_name }}']?.name || 'experience_level')) || 0;
+        const frequency = parseInt(getSelectedRadioValue(formElements['{{ profile_form.playing_frequency.html_name }}']?.name || 'playing_frequency')) || 0;
+        const technique = parseInt(getSelectedRadioValue(formElements['{{ profile_form.technical_level.html_name }}']?.name || 'technical_level')) || 0;
+        const serve = parseInt(getSelectedRadioValue(formElements['{{ profile_form.serve_level.html_name }}']?.name || 'serve_level')) || 0;
+        const matches = parseInt(getSelectedRadioValue(formElements['{{ profile_form.match_experience.html_name }}']?.name || 'match_experience')) || 0;
+        const totalPoints = experience + frequency + technique + serve + matches;
+        const ntrp = 1.0 + (totalPoints / 2000) * 6.0;
+        return Math.round(ntrp * 10) / 10;
+    }
+    function determineCategory(ntrp) {
+        if (ntrp < 2.0) return 'C0';
+        else if (ntrp < 3.5) return 'C1';
+        else if (ntrp < 4.5) return 'C3'; // Проверь свои константы категорий
+        else if (ntrp < 7.0) return 'C4';
+        else return 'C5';
+    }
+
+    // --- Функция обновления обзора (Шаг 5) - ИСПРАВЛЕННАЯ ---
+    function updateReview() {
+        const formElements = form.elements; // Получаем все элементы формы
+
+        // Функция для получения значения по *имени* поля (более надежно, чем по ID)
+        function getValueByName(fieldName) {
+            const element = formElements[fieldName];
+            if (!element) return '-'; // Элемент не найден
+
+            // Для select - берем текст выбранной опции
+            if (element.tagName === 'SELECT' && element.selectedIndex >= 0) {
+                 return element.options[element.selectedIndex]?.text || '-';
+            }
+            // Для большинства input - просто value
+            return element.value || '-';
+        }
+
+         // Функция для получения текста выбранного радио (оставляем как было)
+        function getSelectedRadioText(name) {
+            const element = document.querySelector(`input[name="${name}"]:checked`);
+            return element ? element.nextElementSibling?.textContent.trim() || '-' : '-';
+        }
+
+        // Обновляем поля обзора, используя ИМЕНА полей из Django формы
+        document.getElementById('review_full_name').textContent = `${getValueByName('{{ profile_form.first_name.html_name }}')} ${getValueByName('{{ profile_form.last_name.html_name }}')}`;
+        document.getElementById('review_email').textContent = "{{ user.email }}"; // Не меняется
+        document.getElementById('review_mobile').textContent = getValueByName('{{ profile_form.mobile.html_name }}');
+        document.getElementById('review_birthdate').textContent = getValueByName('{{ profile_form.birthdate.html_name }}');
+        document.getElementById('review_gender').textContent = getSelectedRadioText('{{ profile_form.gender.html_name }}');
+        document.getElementById('review_city').textContent = getValueByName('{{ profile_form.city.html_name }}'); // Используем getValueByName для select
+        document.getElementById('review_height').textContent = `${getValueByName('{{ profile_form.height.html_name }}')} cm`;
+        document.getElementById('review_weight').textContent = `${getValueByName('{{ profile_form.weight.html_name }}')} kg`;
+        document.getElementById('review_availability').textContent = getValueByName('{{ profile_form.availability.html_name }}') || 'Not specified';
+        document.getElementById('review_tennis_exp_year').textContent = getValueByName('{{ profile_form.tennis_exp_year.html_name }}');
+        document.getElementById('review_experience_level').textContent = getSelectedRadioText('{{ profile_form.experience_level.html_name }}');
+        document.getElementById('review_playing_frequency').textContent = getSelectedRadioText('{{ profile_form.playing_frequency.html_name }}');
+        document.getElementById('review_technical_level').textContent = getSelectedRadioText('{{ profile_form.technical_level.html_name }}');
+        document.getElementById('review_serve_level').textContent = getSelectedRadioText('{{ profile_form.serve_level.html_name }}');
+        document.getElementById('review_match_experience').textContent = getSelectedRadioText('{{ profile_form.match_experience.html_name }}');
+
+        // Расчет NTRP и категории (оставляем как было)
+        const ntrpValue = calculateNTRP(); // Эта функция использует getSelectedRadioValue, которая ищет по name
+        const categoryValue = determineCategory(ntrpValue);
+        document.getElementById('calculated_ntrp').textContent = ntrpValue.toFixed(1);
+        document.getElementById('calculated_category').textContent = categoryValue;
+
+        // Обновление аватара (оставляем как было)
+        const avatarPreview = document.getElementById('avatar-preview-image');
+        const avatarReview = document.getElementById('review_avatar');
+        if(avatarPreview && avatarReview) { avatarReview.src = avatarPreview.src; }
+    }
+
+    // --- Функция перехода между шагами ---
+    function goToStep(stepIndex) {
+        // Проверка на попытку перехода к заблокированным шагам
+        if (stepIndex > 2 && !isTelegramVerified) {
+            console.warn("Cannot proceed to step " + stepIndex + " without Telegram verification.");
+            // Можно показать сообщение пользователю
+             if (wizardTabs[2]) {
+                 const tab = new bootstrap.Tab(wizardTabs[2]);
+                 tab.show(); // Показать шаг 2 снова
+             }
+            return; // Не переходить
+        }
+
+        currentVisualStepInput.value = stepIndex;
+
+        Object.values(tabPanes).forEach(pane => pane?.classList.remove('show', 'active'));
+        if (tabPanes[stepIndex]) {
+            tabPanes[stepIndex].classList.add('show', 'active');
+        }
+
+        Object.values(wizardTabs).forEach(tab => tab?.classList.remove('active'));
+         if (wizardTabs[stepIndex]) {
+            wizardTabs[stepIndex].classList.add('active');
+            // Убираем disabled только если шаг > 2 и верификация пройдена
+            if(stepIndex > 2 && isTelegramVerified) {
+                 wizardTabs[stepIndex]?.classList.remove('disabled');
+            }
+        }
+
+        if (stepIndex === 5) { updateReview(); }
+        window.scrollTo(0, 0);
+    }
+
+    // --- Инициализация и обработчики событий ---
+
+    // Обработчики для кнопок Next
+    nextButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const currentStep = parseInt(this.getAttribute('data-step'));
+            // Здесь можно добавить валидацию полей JS перед переходом
+            goToStep(currentStep + 1);
+        });
+    });
+
+    // Обработчики для кнопок Previous
+    prevButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const currentStep = parseInt(this.getAttribute('data-step'));
+            goToStep(currentStep - 1);
+        });
+    });
+
+     // Обработчики для кнопок Edit на шаге обзора
+     editButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const targetStep = parseInt(this.getAttribute('data-step'));
+            goToStep(targetStep);
+        });
+    });
+
+    // Обновляем расчет NTRP при изменении радио-кнопок
+    const ntrpRadios = form.querySelectorAll('input[name*="experience_level"], input[name*="playing_frequency"], input[name*="technical_level"], input[name*="serve_level"], input[name*="match_experience"]');
+    ntrpRadios.forEach(radio => radio.addEventListener('change', updateReview)); // Обновляем весь обзор
+
+    // Настройка предпросмотра аватара
+    function setupAvatarPreview() {
+        const input = document.getElementById('{{ profile_form.avatar.id_for_label }}');
+        const preview = document.getElementById('avatar-preview-image');
+        const previewContainer = document.querySelector('.avatar-preview');
+
+        if(input && preview && previewContainer) {
+            previewContainer.addEventListener('click', () => input.click());
+            input.addEventListener('change', function() {
+                const file = this.files[0];
+                if(file && file.type.match('image.*')) {
+                    if(file.size > 5 * 1024 * 1024) { alert('File too large (max 5MB)'); return; }
+                    const reader = new FileReader();
+                    reader.onload = function(e) { preview.src = e.target.result; updateReview(); } // Обновляем и обзор
+                    reader.readAsDataURL(file);
+                } else if (file) { alert('Please select an image file.'); }
+            });
+        }
+    }
+    setupAvatarPreview();
+
+    // Инициализация при загрузке: Устанавливаем правильные классы disabled/complete
+     if (isTelegramVerified) {
+         wizardTabs[1]?.classList.add('text-success', 'fw-500', 'wizard-step-complete');
+         wizardTabs[2]?.classList.add('text-success', 'fw-500', 'wizard-step-complete');
+         wizardTabs[3]?.classList.remove('disabled');
+         wizardTabs[4]?.classList.remove('disabled');
+         wizardTabs[5]?.classList.remove('disabled');
+     } else {
+         wizardTabs[3]?.classList.add('disabled');
+         wizardTabs[4]?.classList.add('disabled');
+         wizardTabs[5]?.classList.add('disabled');
+     }
+
+     // Инициализация обзора, если мы сразу на шаге 5
+     const initialStep = parseInt(currentVisualStepInput.value);
+     if (initialStep === 5) {
+         updateReview();
+     } else if(initialStep === 1 || initialStep === 2) {
+         // На шагах 1 и 2, предрасчет NTRP для показа на шаге 5
+         updateReview();
+     }
+
+});
+</script>
+{% endblock content %}

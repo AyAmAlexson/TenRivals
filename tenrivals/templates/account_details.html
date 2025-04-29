@@ -1,0 +1,62 @@
+{% extends 'default.html' %}
+{% load static %}
+{% load custom_tags %}
+{% load custom_filters %}
+{% block content %}
+
+<div class="container-xl px-4 mt-4">
+    <h1 class="page-header-title">
+        <div class="page-header-icon"><i data-feather="user"></i></div>
+        Account Details
+    </h1>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- User Information Card -->
+            <div class="card mb-4">
+                <div class="card-header">User Information</div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">Username: {{ account_details.username }}</li>
+                        <li class="list-group-item">Email: {{ account_details.email }}</li>
+                        <li class="list-group-item">Mobile: {{ account_details.mobile }}</li>
+                        <li class="list-group-item">Preferred City: {{ account_details.preferred_city|const_replace }}</li>
+                        <li class="list-group-item">Preferred Geo: {{ account_details.preferred_geo|const_replace }}</li>
+                        <li class="list-group-item">Is Player: {{ account_details.is_player }}</li>
+                        <li class="list-group-item">Is Author: {{ account_details.is_author }}</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Player Information Card -->
+            {% if player %}
+            <div class="card mb-4">
+                <div class="card-header">Player Information</div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">Birthdate: {{ player.birthdate }}</li>
+                        <li class="list-group-item">Gender: {{ player.gender|const_replace }}</li>
+                        <li class="list-group-item">Geo: {{ player.geo|const_replace }}</li>
+                        <li class="list-group-item">City: {{ player.city|const_replace }}</li>
+                        <li class="list-group-item">Height: {{ player.height }}</li>
+                        <li class="list-group-item">Weight: {{ player.weight }}</li>
+                        <li class="list-group-item">Tennis Experience Year: {{ player.tennis_exp_year }}</li>
+                        <li class="list-group-item">Availability: {{ player.availability }}</li>
+                        <li class="list-group-item">Avatar: <img src="{{ player.avatar.url }}" alt="Avatar" class="img-fluid rounded-circle" /></li>
+                        <li class="list-group-item">Current Level: {{ player.level_current }}</li>
+                        <li class="list-group-item">Rating Points: {{ player.rating_pts }}</li>
+                        <li class="list-group-item">Attributes: {{ player.attributes }}</li>
+                        <li class="list-group-item">Is New: {{ player.is_new }}</li>
+                    </ul>
+                </div>
+            </div>
+            {% else %}
+            <p>No player information available.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <a href="{% url 'rivals:player_update' %}" class="btn btn-secondary">Update Player Information</a>
+</div>
+
+{% endblock content %}

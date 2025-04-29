@@ -1,0 +1,248 @@
+{% extends "default.html" %}
+{% load i18n %}
+{% load account socialaccount %}
+
+{% block head_title %}{% trans "Sign Up" %}{% endblock %}
+
+{% block content %}
+
+<div id="layoutAuthentication" class="bg-dual-color-primary-accent">
+    <div id="layoutAuthentication_content">
+       
+            <div class="container-xl px-4 mt-15">
+                <div class="row justify-content-center">
+                    <div class="col-lg-5">
+                        <!-- Basic registration form-->
+                        <div class="card shadow-lg border-0 rounded-lg">
+                        <div class="card-header justify-content-center">
+                            <h3 class="fw-light text-secondary my-4">{% trans "Create Account" %}</h3>
+                        </div>
+                            <div class="card-body">
+                                
+                                
+                               
+                                <!-- Registration form -->
+                                <form class="signup" id="signup_form" method="post" action="{% url 'account_signup' %}">
+                                    {% csrf_token %}
+                                    
+                                    {% if form.errors %}
+                                    <div class="alert alert-danger mb-3">
+                                         {% if form.non_field_errors %}
+                                            {{ form.non_field_errors }}
+                                        {% else %}
+                                            {% trans "Please correct the errors below." %}
+                                        {% endif %}
+                                    </div>
+                                    {% endif %}
+
+                                    <!-- Form Group (email) -->
+                                    <div class="mb-3">
+                                         <label class="small mb-1" for="{{ form.email.id_for_label }}">{% trans "Email" %}</label>
+                                         {{ form.email }}
+                                         {% if form.email.errors %}
+                                         <div class="small text-danger mt-1">{{ form.email.errors }}</div>
+                                         {% endif %}
+                                    </div>
+
+                                    
+                                    
+                                    
+                                    <!-- Form Group (password)-->
+                                    <div class="mb-3">
+                                        <label class="small mb-1" for="{{ form.password1.id_for_label }}">{% trans "Password" %}</label>
+                                        {{ form.password1 }}
+                                            {% if form.password1.errors %}
+                                            <div class="small text-danger mt-1">{{ form.password1.errors }}</div>
+                                            {% endif %}
+                                    </div>
+                                
+                                    <!-- Form Group (confirm password)-->
+                                    <div class="mb-3">
+                                        <label class="small mb-1" for="{{ form.password2.id_for_label }}">{% trans "Confirm Password" %}</label>
+                                        {{ form.password2 }}
+                                            {% if form.password2.errors %}
+                                            <div class="small text-danger mt-1">{{ form.password2.errors }}</div>
+                                            {% endif %}
+                                    </div>
+                                    
+                                    
+
+                               
+
+                                    <!-- Скрытое поле username -->
+                                    <input type="hidden" name="username" id="id_username" value="" />
+
+                                    {% if redirect_field_value %}
+                                    <input type="hidden" name="{{ redirect_field_name }}" 
+                                           value="{{ redirect_field_value }}" />
+                                    {% endif %}
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <!-- Checkboxes -->
+                                        <div class="flex-column align-items-center"> 
+                                            <div class="my-2">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" value="true" id="id_terms" name="terms_accepted" required>
+                                                    <label class="form-check-label small" for="id_terms">
+                                                        {% trans "I accept the" %} <a href="#">{% trans "Terms and Conditions" %}</a>
+                                                    </label>
+                                                    <!-- Placeholder for potential server-side validation error for this checkbox -->
+                                                    <!-- <div class="small text-danger mt-1">{{ form.terms_accepted.errors }}</div> -->
+                                                </div>
+                                            </div>
+                                            <div class="mb-2"> {# Немного больше отступ снизу #}
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" value="true" checked="True" id="id_newsletter" name="newsletter_opt_in">
+                                                    <label class="form-check-label small" for="id_newsletter">
+                                                        {% trans "I agree to receive news and offers" %}
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!-- End Checkboxes -->
+
+                                        <!-- Form Group (create account submit)-->
+                                        
+                                        <button class="btn btn-primary btn-lg" id="submit" type="submit">
+                                            {% trans "Create Account" %}
+                                        </button>
+                                    
+                                    </div>
+                                </form>
+                            </div>
+                            <hr class="my-0" />
+                            <div class="card-body px-5 py-4">
+                                <div class="small text-center">
+                                    {% trans "Already have an account?" %}
+                                    <a href="{% url 'account_login' %}">{% trans "Sign in!" %}</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Telegram Auth Handler -->
+<script>
+// Функция для получения параметров из URL фрагмента
+function getHashParams() {
+    const hash = window.location.hash.substring(1);
+    if (!hash) return null;
+    
+    // Проверяем наличие tgAuthResult
+    if (hash.indexOf('tgAuthResult=') !== 0) return null;
+    
+    try {
+        // Декодируем JSON из фрагмента
+        const jsonStr = decodeURIComponent(hash.substring('tgAuthResult='.length));
+        const result = JSON.parse(jsonStr);
+        console.log('Decoded Telegram auth data:', result);
+        return result;
+    } catch (e) {
+        console.error('Error parsing Telegram auth data:', e);
+        return null;
+    }
+}
+
+// Функция отправки данных авторизации на сервер
+function sendTelegramAuthData(authData) {
+    console.log('Sending Telegram auth data to server:', authData);
+    
+    // Получаем CSRF токен из куки или из мета-тега
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    
+    const csrftoken = getCookie('csrftoken') || 
+                     document.querySelector('[name="csrfmiddlewaretoken"]')?.value || 
+                     document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    
+    // Делаем запрос
+    fetch('/persons/telegram/callback/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': csrftoken
+        },
+        body: JSON.stringify(authData),
+        credentials: 'same-origin'
+    })
+    .then(response => {
+        console.log('Server response status:', response.status);
+        return response.json();
+    })
+    .then(data => {
+        console.log('Server processed data:', data);
+        if (data.success) {
+            // Очищаем URL и перенаправляем
+            window.location.href = data.redirect_url || '/';
+        } else {
+            alert('Ошибка авторизации: ' + (data.error || 'Неизвестная ошибка'));
+        }
+    })
+    .catch(error => {
+        console.error('Auth error:', error);
+        alert('Ошибка авторизации. Пожалуйста, попробуйте снова.');
+    });
+}
+
+// Проверяем хеш при загрузке страницы
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Page loaded, checking for Telegram auth data...');
+    console.log('Current URL hash:', window.location.hash);
+    
+    const authData = getHashParams();
+    
+    if (authData) {
+        console.log('Found Telegram auth data:', authData);
+        // Очищаем хеш
+        window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
+        // Отправляем данные на сервер
+        sendTelegramAuthData(authData);
+    } else {
+        console.log('No Telegram auth data found in URL');
+    }
+});
+
+// Обратная совместимость с виджетом
+function onTelegramAuth(user) {
+    console.log('Telegram widget callback received:', user);
+    sendTelegramAuthData(user);
+}
+</script>
+
+<!-- Для отладки -->
+<!-- Bot name: {{ telegram_bot_name }} -->
+
+<!-- Telegram Login Widget 
+{% if telegram_bot_name %}
+<script async src="https://telegram.org/js/telegram-widget.js?22" 
+        data-telegram-login="{{ telegram_bot_name }}" 
+        data-size="large" 
+        data-radius="8"
+        data-onauth="onTelegramAuth(user)"
+        data-request-access="write">
+</script>
+{% else %}
+<div class="alert alert-warning">
+    Telegram authentication temporarily unavailable
+</div>
+{% endif %}
+
+-->
+{% endblock %} 
