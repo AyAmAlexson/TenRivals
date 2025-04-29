@@ -2352,7 +2352,7 @@ class PlayerWizardStep3View(PlayerWizardBaseView):
                      'first_name': self.request.user.first_name,
                      'last_name': self.request.user.last_name,
                      # 'email': self.request.user.email, # Email обычно не редактируется здесь
-                     'mobile': player.mobile if player.mobile else '',
+                     'mobile': self.request.user.mobile if self.request.user.mobile else '',
                      'birthdate': player.birthdate if player.birthdate else None,
                      'city': player.city.name if player.city else '',
                      'gender': player.gender if player.gender else '',
