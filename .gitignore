@@ -155,4 +155,4 @@ cython_debug/
 
 # Custom ignores
 tenrivals/templates reserve/
-tenrivals/celerybeat-schedule-wal
+tenrivals/celerybeat-schedule-*.db
