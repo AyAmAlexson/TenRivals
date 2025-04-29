@@ -18,13 +18,13 @@ SECRET_KEY = env('SECRET_KEY')
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    'tenrivals-b413e3f2778a.herokuapp.com',
+    'https://ten-rivals-ee84d08ca066.herokuapp.com/',
     '127.0.0.1',
     'distinct-shrimp-slightly.ngrok-free.app'
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    'https://tenrivals-b413e3f2778a.herokuapp.com',
+    'https://ten-rivals-ee84d08ca066.herokuapp.com/',
     'http://localhost:8000',
     'http://127.0.0.1:8000',
     'http://localhost:80',
