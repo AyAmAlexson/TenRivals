@@ -106,6 +106,7 @@ __pypackages__/
 
 # Celery stuff
 celerybeat-schedule
+celerybeat-schedule*
 celerybeat.pid
 
 # SageMath parsed files
@@ -153,4 +154,5 @@ cython_debug/
 
 
 # Custom ignores
-tenrivals/tenrivals/templates/templates reserve/
+tenrivals/templates reserve/
+tenrivals/celerybeat-schedule-wal
