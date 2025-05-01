@@ -32,17 +32,21 @@ from io import BytesIO
 
 logger = logging.getLogger(__name__)
 
-# Инициализация бота
-if settings.TELEGRAM_BOT_TOKEN and settings.TELEGRAM_BOT_USERNAME and settings.TELEGRAM_BOT_ID:
-    try:
-        bot = telebot.TeleBot(settings.TELEGRAM_BOT_TOKEN)
-        logger.info(f"Telegram bot {settings.TELEGRAM_BOT_USERNAME}, ID: {settings.TELEGRAM_BOT_ID} initialized successfully")
-    except Exception as e:
-        bot = None
-        logger.error(f"Failed to initialize Telegram bot: {e}")
-else:
-    bot = None
-    logger.warning("Telegram bot configuration is missing")
+def get_telegram_bot_instance():
+    """Возвращает инициализированный экземпляр бота или None."""
+    if settings.TELEGRAM_BOT_TOKEN and settings.TELEGRAM_BOT_USERNAME and settings.TELEGRAM_BOT_ID:
+        try:
+            # Создаем экземпляр ТОЛЬКО при вызове функции
+            bot_instance = telebot.TeleBot(settings.TELEGRAM_BOT_TOKEN)
+            # Логгирование можно оставить здесь или убрать, если не нужно при каждом получении
+            # logger.info(f"Telegram bot instance requested and created.")
+            return bot_instance
+        except Exception as e:
+            logger.error(f"Failed to create Telegram bot instance: {e}")
+            return None
+    else:
+        logger.warning("Telegram bot configuration is missing, cannot create instance.")
+        return None
 
 class CustomLoginView(LoginView):
     form_class = CustomLoginForm
@@ -171,6 +175,7 @@ def verify_telegram(request):
     # Логика отправки кода остается прежней, но скрываем уведомления об ошибках,
     # так как у пользователя есть альтернативный метод
     send_code_success = False
+    bot = get_telegram_bot_instance()
     if bot:
         try:
             telegram_username = verification.telegram_username
@@ -497,6 +502,7 @@ def resend_verification_code(request):
         sent_successfully = False
         error_message = ""
         
+        bot = get_telegram_bot_instance()
         if bot:
             telegram_id = verification.telegram_id
             telegram_username = verification.telegram_username
