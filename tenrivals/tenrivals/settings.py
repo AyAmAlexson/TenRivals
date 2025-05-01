@@ -55,6 +55,8 @@ INSTALLED_APPS = [
     'allauth.socialaccount.providers.facebook',
     'widget_tweaks',
 
+    'django_celery_beat'
+
 
 ]
 
