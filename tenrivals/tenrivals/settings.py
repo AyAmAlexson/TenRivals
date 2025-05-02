@@ -46,7 +46,6 @@ INSTALLED_APPS = [
 
     'persons',
     'rivals.apps.RivalsConfig',
-    'debug_toolbar',
     
     'allauth',
     'allauth.account',
@@ -60,9 +59,6 @@ INSTALLED_APPS = [
 
 ]
 
-INTERNAL_IPS = [
-       '127.0.0.1',
-   ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -76,8 +72,22 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.contrib.flatpages.middleware.FlatpageFallbackMiddleware',
     'persons.middleware.PlayerWizardMiddleware',
-    'debug_toolbar.middleware.DebugToolbarMiddleware',
+    
 ]
+
+
+if DEBUG:
+    INSTALLED_APPS.append('debug_toolbar')
+    MIDDLEWARE.insert(0, 'debug_toolbar.middleware.DebugToolbarMiddleware')
+
+
+    INTERNAL_IPS = [
+        '127.0.0.1',
+    ]
+    DEBUG_TOOLBAR_CONFIG = {
+       'SHOW_TOOLBAR_CALLBACK': lambda request: True,
+       'RESULTS_CACHE_SIZE': 100,
+   }
 
 ROOT_URLCONF = 'tenrivals.urls'
 
@@ -307,11 +317,6 @@ LOGGING = {
         },
     },
 }
-
-DEBUG_TOOLBAR_CONFIG = {
-       'SHOW_TOOLBAR_CALLBACK': lambda request: True,  # Всегда показывать панель
-       'RESULTS_CACHE_SIZE': 100,  # Размер кэша результатов
-   }
 
 MESSAGE_TAGS = {
     messages.DEBUG: 'secondary',
