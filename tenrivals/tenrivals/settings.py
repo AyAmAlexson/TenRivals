@@ -153,9 +153,59 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+
+IS_PRODUCTION = 'HEROKU' in os.environ
+
+if IS_PRODUCTION:
+    # --- Настройки для Heroku (используем AWS S3) ---
+
+    # Читаем ключи и настройки S3 из переменных окружения Heroku
+    AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
+    AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
+    AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
+    AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME')
+    AWS_S3_CUSTOM_DOMAIN = os.environ.get('AWS_S3_CUSTOM_DOMAIN', None) # Необязательно, для CDN
+
+    # Проверка наличия обязательных переменных на Heroku
+    if not all([AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_STORAGE_BUCKET_NAME, AWS_S3_REGION_NAME]):
+        raise ValueError("AWS S3 credentials are not fully configured in Heroku environment variables.")
+
+    # Настройки django-storages для S3
+    AWS_S3_SIGNATURE_VERSION = 's3v4'
+    AWS_S3_FILE_OVERWRITE = False # Не перезаписывать файлы при загрузке с тем же именем
+    AWS_DEFAULT_ACL = None        # Используем Bucket Policy для публичного чтения
+    AWS_S3_VERIFY = True          # Проверять SSL сертификат при подключении к S3
+
+    # Указываем Django использовать S3 для хранения медиафайлов по умолчанию
+    DEFAULT_FILE_STORAGE = 'storages.backends.s3.S3Storage'
+
+    # Указываем папку внутри бакета, куда будут загружаться медиафайлы
+    AWS_LOCATION = 'media'
+
+    # Формируем публичный URL для доступа к медиафайлам
+    if AWS_S3_CUSTOM_DOMAIN:
+        MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/{AWS_LOCATION}/'
+    else:
+        MEDIA_URL = f'https://{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com/{AWS_LOCATION}/'
+
+    # MEDIA_ROOT не используется при хранении в S3
+    MEDIA_ROOT = None # Явно указываем None для ясности
+
+else:
+    # Используем стандартное файловое хранилище
+    DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
+
+    # URL для доступа к медиафайлам через сервер разработки Django
+    MEDIA_URL = '/media/'
+
+    # Локальная папка для хранения медиафайлов
+    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+    # Создаем папку media локально при запуске, если ее нет
+    os.makedirs(MEDIA_ROOT, exist_ok=True)
+
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
