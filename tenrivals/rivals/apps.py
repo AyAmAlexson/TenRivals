@@ -7,3 +7,4 @@ class RivalsConfig(AppConfig):
 
     def ready(self):
         import rivals.tasks  # Важно для регистрации задач
+        import rivals.signals # Импортируем сигналы при готовности приложения

@@ -45,7 +45,7 @@ INSTALLED_APPS = [
     'django.contrib.flatpages',
 
     'persons',
-    'rivals',
+    'rivals.apps.RivalsConfig',
     'debug_toolbar',
     
     'allauth',

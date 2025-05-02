@@ -119,12 +119,10 @@ class Player(models.Model):
     def __str__(self):
         return self.get_full_name()
 
-    # Метод для получения URL аватара или URL по умолчанию
     def get_avatar_url(self):
         if self.avatar and hasattr(self.avatar, 'url'):
             return self.avatar.url
-        return 'https://placehold.co/150x150?text=Avatar'
-
+        return '/static/assets/img/Avatar Default Icon.svg' 
 
 def get_deleted_player():
     from persons.models import CustomUser
