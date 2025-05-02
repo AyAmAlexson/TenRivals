@@ -15,7 +15,7 @@ environ.Env.read_env()
 
 SECRET_KEY = env('SECRET_KEY')
 # DEBUG = (os.environ.get('DEBUG_VALUE') == 'True')
-DEBUG = True
+DEBUG = (os.environ.get('DEBUG_VALUE', 'False') == 'True')
 
 ALLOWED_HOSTS = [
     'https://ten-rivals-ee84d08ca066.herokuapp.com/',
@@ -269,21 +269,41 @@ LOGGING = {
             'formatter': 'verbose',
         },
         'console': {
-            'level': 'DEBUG',
+            'level': 'INFO',
             'class': 'logging.StreamHandler',
             'formatter': 'simple',
         },
     },
     'loggers': {
-        'persons': {  # логгер для вашего приложения
+        'persons': {
             'handlers': ['file', 'console'],
             'level': 'DEBUG',
-            'propagate': True,
+            'propagate': False,
         },
-        'django': {  # логгер для Django
+        'rivals': {
             'handlers': ['file', 'console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'django': {
+            'handlers': ['console', 'file'],
             'level': 'INFO',
-            'propagate': True,
+            'propagate': False,
+        },
+        'botocore': {
+            'handlers': ['console', 'file'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+        'boto3': {
+            'handlers': ['console', 'file'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+        'urllib3': {
+             'handlers': ['console', 'file'],
+             'level': 'WARNING',
+             'propagate': False,
         },
     },
 }
