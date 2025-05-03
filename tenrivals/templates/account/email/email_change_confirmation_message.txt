@@ -1,0 +1,12 @@
+{% load i18n %}{% autoescape off %}
+{% blocktrans %}Hello from {{ current_site.name }}!{% endblocktrans %}
+
+{% blocktrans %}You're receiving this email because you requested an email address change on {{ current_site.name }}.{% endblocktrans %}
+
+{% blocktrans %}Please go to the following page to confirm the change:{% endblocktrans %}
+{{ confirmation_link }}
+
+{% blocktrans %}Thank you for using {{ current_site.name }}!{% endblocktrans %}
+{% blocktrans %}{{ current_site.name }}{% endblocktrans %}
+
+{% endautoescape %}

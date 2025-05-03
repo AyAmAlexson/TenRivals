@@ -12,6 +12,7 @@ from django.conf import settings
 from .services import generate_verification_code_service
 from django.utils.translation import gettext_lazy as _
 from django.urls import reverse
+from django.contrib.sites.shortcuts import get_current_site
 
 
 def generate_verification_code():
@@ -125,40 +126,41 @@ class ChangeEmailForm(forms.Form):
         # Отправляем письмо для подтверждения
         token = default_token_generator.make_token(user)
         uid = urlsafe_base64_encode(force_bytes(user.pk))
+        key = f"{uid}:{token}" # Формат может зависеть от версии allauth
 
-        # Получаем ключ подтверждения от allauth (он объединяет uid и token)
-        # Для allauth ключ передается как один параметр в URL
-        key = f"{uid}:{token}" # Формат может зависеть от версии allauth, но обычно так
-                              # Или используем метод allauth для генерации, если он есть
-
-        # Генерируем ПОЛНЫЙ URL с помощью reverse и имени allauth-шаблона
-        # Стандартное имя для подтверждения email в allauth - 'account_confirm_email'
         relative_url = reverse('account_confirm_email', kwargs={'key': key})
         confirmation_link = self.request.build_absolute_uri(relative_url)
 
+        # --- ИЗМЕНЕНИЕ: Используем новый шаблон и добавляем сайт в контекст ---
+        current_site = get_current_site(self.request)
         context = {
             'user': user,
             'confirmation_link': confirmation_link,
+            'current_site': current_site, # Добавляем сайт для использования в шаблоне
         }
-
-        # Пример использования стандартного текстового шаблона allauth:
+        # Используем новый шаблон, созданный для смены email
+        email_template_name = 'account/email/email_change_confirmation_message.txt'
         email_subject = _('Confirm Your Email Address Change')
-        email_template_name = 'account/email/email_confirmation_message.txt' # Текстовый шаблон allauth
-        # Если хотите HTML, укажите 'account/email/email_confirmation_message.html'
-        # и передайте html_message=message в send_mail
-        
         message = render_to_string(email_template_name, context)
+        # --- КОНЕЦ ИЗМЕНЕНИЙ ---
 
-        send_mail(
-            email_subject, # Используем переменную для темы
-            message,
-            settings.DEFAULT_FROM_EMAIL,
-            [new_email],
-            # html_message=message, # Раскомментируйте, если используете HTML шаблон
-        )
-        logger.info(f"Email change confirmation sent to {new_email} for user {user.username}")
-
-        return user
+        try:
+            send_mail(
+                email_subject,
+                message,
+                settings.DEFAULT_FROM_EMAIL,
+                [new_email],
+                # html_message=message, # Если создадите HTML-версию шаблона
+            )
+            logger.info(f"Email change confirmation sent to {new_email} for user {user.username}")
+            # Успешный выход из save после отправки
+            return user
+        except Exception as e:
+             # Если send_mail действительно вызвал ошибку (маловероятно с console backend)
+             logger.error(f"Error actually sending email in ChangeEmailForm for {user.username}: {e}", exc_info=True)
+             # Поднимаем ошибку выше, чтобы внешний try...except ее поймал
+             # или возвращаем None/False для индикации проблемы
+             raise e # Или return None
 
 
 class PasswordResetRequestTelegramForm(forms.Form):
