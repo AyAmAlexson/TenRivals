@@ -382,7 +382,7 @@ class PlayerUpdateView(View):
                     email_form.save()
                     print(">>> [DEBUG] Logger AFTER save:", logger) 
                     logger.info("Email change initiated for user: %s", request.user)
-                    print(">>> [DEBUG] Logger AFTER logger inside try:", logger) 
+                    print(">>> [DEBUG] Logger AFTER logger inside try   :", logger) 
                     messages.success(
                         request,
                         "Please check your new email address for confirmation link."
@@ -394,7 +394,8 @@ class PlayerUpdateView(View):
                     messages.error(request, "Error sending confirmation email.")
             else:
                 logger.error("Email change form errors: %s", email_form.errors)
-                messages.error(request, "Please correct the errors below.")
+                print(">>> [DEBUG] Logger AFTER logger inside except:", logger) 
+                messages.error(request, "Error in email change form")
             
             # Переинициализируем остальные формы
             player_form = PlayerUpdateForm(instance=player)
