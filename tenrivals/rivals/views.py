@@ -93,18 +93,6 @@ from django.utils.translation import gettext_lazy as _
 # Initialize logger
 logger = logging.getLogger(__name__)
 
-# Get User model
-User = get_user_model()
-
-# Initialize Telegram bot if token is configured
-if settings.TELEGRAM_BOT_TOKEN:
-    try:
-        bot = telebot.TeleBot(settings.TELEGRAM_BOT_TOKEN)
-    except Exception as e:
-        logger.error(f"Failed to initialize Telegram bot: {e}")
-        bot = None
-else:
-    bot = None
 
 class IndexView(TemplateView):
     template_name = 'tr-landing.html'
@@ -1593,6 +1581,7 @@ class TodayView(LoginRequiredMixin, TemplateView):
 @staff_member_required
 def switch_user(request, user_id):
     """Позволяет админу быстро переключиться на другого пользователя"""
+    User = get_user_model()
     if request.user.is_staff:
         try:
             # Сначала сохраняем ID админа
@@ -1629,6 +1618,7 @@ def switch_user(request, user_id):
 @staff_member_required
 def switch_back_to_admin(request):
     """Возвращает админа в его аккаунт"""
+    User = get_user_model()
     admin_id = request.session.get('admin_user_id')
     
     if not admin_id:
