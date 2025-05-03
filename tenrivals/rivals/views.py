@@ -316,7 +316,7 @@ class PlayerUpdateView(View):
         player = request.user.player
         
 
-        email_form = ChangeEmailForm(player_form_data = request.POST if 'update_player' in request.POST else None
+        player_form_data = request.POST if 'update_player' in request.POST else None
         player_form = PlayerUpdateForm(player_form_data, instance=player)
 
         city_form_data = request.POST if 'update_city' in request.POST else None
@@ -334,7 +334,7 @@ class PlayerUpdateView(View):
             data=email_form_data,
             initial={'old_email': request.user.email} # <--- Добавляем initial
         )
-        
+
         logger.debug("Получен POST-запрос: %s", request.POST)
 
         if 'update_player' in request.POST:
