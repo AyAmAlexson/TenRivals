@@ -391,10 +391,11 @@ class PlayerUpdateView(View):
                 except Exception as e:
                     print(">>> [DEBUG] Logger INSIDE except:", logger) 
                     logger.error("Error changing email: %s", e)
+                    print(">>> [DEBUG] Logger AFTER logger inside except:", logger)
                     messages.error(request, "Error sending confirmation email.")
             else:
                 logger.error("Email change form errors: %s", email_form.errors)
-                print(">>> [DEBUG] Logger AFTER logger inside except:", logger) 
+                print(">>> [DEBUG] Logger AFTER logger inside else:", logger)
                 messages.error(request, "Error in email change form")
             
             # Переинициализируем остальные формы
