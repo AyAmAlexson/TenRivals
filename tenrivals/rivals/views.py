@@ -376,15 +376,20 @@ class PlayerUpdateView(View):
             logger.debug("Processing email change form.")
             email_form = ChangeEmailForm(user=request.user, request=request, data=request.POST)
             if email_form.is_valid():
+                print(">>> [DEBUG] Logger BEFORE try:", logger) 
                 try:
+                    print(">>> [DEBUG] Logger INSIDE try:", logger) 
                     email_form.save()
+                    print(">>> [DEBUG] Logger AFTER save:", logger) 
                     logger.info("Email change initiated for user: %s", request.user)
+                    print(">>> [DEBUG] Logger AFTER logger inside try:", logger) 
                     messages.success(
                         request,
                         "Please check your new email address for confirmation link."
                     )
                     return redirect('rivals:player_update')
                 except Exception as e:
+                    print(">>> [DEBUG] Logger INSIDE except:", logger) 
                     logger.error("Error changing email: %s", e)
                     messages.error(request, "Error sending confirmation email.")
             else:
@@ -399,6 +404,8 @@ class PlayerUpdateView(View):
                 initial={'city': player.city}
             )
             avatar_form = AvatarUpdateForm(instance=player)
+            email_form = ChangeEmailForm(user=request.user, request=request) # Переинициализируем форму email для контекста
+            
             
             context = {
                 'player_form': player_form,
