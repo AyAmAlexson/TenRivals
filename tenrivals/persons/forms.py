@@ -116,6 +116,8 @@ class ChangeEmailForm(forms.Form):
         self.user = user
         self.request = request
         super().__init__(*args, **kwargs)
+        if self.user:
+            self.fields['old_email'].initial = self.user.email
 
     def clean_email(self):
         email = self.cleaned_data['email']
@@ -134,20 +136,15 @@ class ChangeEmailForm(forms.Form):
             raise forms.ValidationError('Invalid password.')
         return password
 
-    @transaction.atomic
     def save(self):
         new_email = self.cleaned_data['email'].lower()
         user = self.user
         request = self.request
 
         try:
-            email_address, created = EmailAddress.objects.get_or_create(
-                user=user,
-                email=new_email,
-                defaults={'verified': False, 'primary': False}
-            )
+            
 
-            send_email_confirmation(request, email_address, signup=False)
+            send_email_confirmation(request, user, signup=False, email=new_email)
 
             logger.info(f"Confirmation email sent to {new_email} for user {user.username} via allauth.")
 
