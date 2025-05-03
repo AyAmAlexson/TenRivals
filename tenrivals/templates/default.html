@@ -173,13 +173,13 @@
                 
                           <!-- Блок сообщений (Toast) -->
     {% if messages %}
-    <div class="toast-container position-fixed top-3 end-0 p-3">
+    <div class="toast-container position-fixed top-5 end-0 p-3">
         {% for message in messages %}
             <div class="toast fade-up" role="alert" aria-live="assertive" aria-atomic="true">
                 <div class="toast-header text-{{ message.tags }}">
                     <i class="me-2" data-feather="alert-circle"></i>
                     <strong class="me-auto text-capitalize">{{ message.tags }}</strong>
-                    <small id="server-time" class="text-muted ml-2">Just now</small>
+                    <small class="text-muted ml-2">Just now</small>
                     <button class="ml-2 mb-1 btn-close" type="button" data-bs-dismiss="toast" aria-label="Close"></button>
                 </div>
                 
