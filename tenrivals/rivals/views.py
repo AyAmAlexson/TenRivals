@@ -390,8 +390,15 @@ class PlayerUpdateView(View):
                     return redirect('rivals:player_update')
                 except Exception as e:
                     print(">>> [DEBUG] Logger INSIDE except:", logger) 
-                    #logger.error("Error changing email: %s", e)
-                    print(">>> [DEBUG] ERROR witout logger INSIDE except:", e)
+                    print(">>> [DEBUG] TYPE of exception 'e':", type(e)) # Посмотрим тип исключения
+                    print(">>> [DEBUG] REPR of exception 'e':", repr(e)) # Посмотрим представление исключения
+                    try:
+                        logger.error("Error changing email: %s", e)
+                    except NameError as ne:
+                        print("!!! Confirmed NameError during logger.error:", ne)
+                        # Попробуем залогировать через logging напрямую, если logger.error сломался
+                        logging.error("Error changing email for user %s (original error: %r): %s", request.user.email, e, ne)
+                    
                     print(">>> [DEBUG] Logger AFTER logger inside except:", logger)
                     messages.error(request, "Error sending confirmation email.")
             else:
