@@ -376,34 +376,25 @@ class PlayerUpdateView(View):
             logger.debug("Processing email change form.")
             email_form = ChangeEmailForm(user=request.user, request=request, data=request.POST)
             if email_form.is_valid():
-                print(">>> [DEBUG] Logger BEFORE try:", logger) 
+                
                 try:
-                    print(">>> [DEBUG] Logger INSIDE try:", logger) 
+                    
                     email_form.save()
-                    print(">>> [DEBUG] Logger AFTER save:", logger) 
+                    
                     logger.info("Email change initiated for user: %s", request.user)
-                    print(">>> [DEBUG] Logger AFTER logger inside try   :", logger) 
+                    
                     messages.success(
                         request,
                         "Please check your new email address for confirmation link."
                     )
                     return redirect('rivals:player_update')
                 except Exception as e:
-                    print(">>> [DEBUG] Logger INSIDE except:", logger) 
-                    print(">>> [DEBUG] TYPE of exception 'e':", type(e)) # Посмотрим тип исключения
-                    print(">>> [DEBUG] REPR of exception 'e':", repr(e)) # Посмотрим представление исключения
-                    try:
-                        logger.error("Error changing email: %s", e)
-                    except NameError as ne:
-                        print("!!! Confirmed NameError during logger.error:", ne)
-                        # Попробуем залогировать через logging напрямую, если logger.error сломался
-                        logging.error("Error changing email for user %s (original error: %r): %s", request.user.email, e, ne)
                     
-                    print(">>> [DEBUG] Logger AFTER logger inside except:", logger)
+                    logging.error("Error during email change process for user %s (error occurred in form save likely): %r", request.user.email, e) 
                     messages.error(request, "Error sending confirmation email.")
             else:
                 logger.error("Email change form errors: %s", email_form.errors)
-                print(">>> [DEBUG] Logger AFTER logger inside else:", logger)
+               
                 messages.error(request, "Error in email change form")
             
             # Переинициализируем остальные формы
