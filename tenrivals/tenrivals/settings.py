@@ -290,11 +290,11 @@ LOGGING = {
             'level': 'DEBUG',
             'propagate': False,
         },
-        'rivals': {
-            'handlers': ['file', 'console'],
-            'level': 'DEBUG',
-            'propagate': False,
-        },
+        # 'rivals': {  # <--- Временно закомментируем этот блок
+        #     'handlers': ['file', 'console'],
+        #     'level': 'DEBUG',
+        #     'propagate': False,
+        # },
         'django': {
             'handlers': ['console', 'file'],
             'level': 'INFO',
