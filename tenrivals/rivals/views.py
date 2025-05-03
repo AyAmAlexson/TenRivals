@@ -272,6 +272,7 @@ class AdminPlayerUpdateView(View):
         return reverse('rivals:player_detail', kwargs={'pk': self.player.pk})
 
 class PlayerUpdateView(View):
+
     def get(self, request, *args, **kwargs):
         server_time = timezone.now()
         player = request.user.player
@@ -282,7 +283,13 @@ class PlayerUpdateView(View):
             initial={'city': player.city}
         )
         avatar_form = AvatarUpdateForm(instance=player)
-        email_form = ChangeEmailForm(user=request.user, request=request)
+        
+        email_form = ChangeEmailForm(
+            user=request.user,
+            request=request,
+            initial={'old_email': request.user.email} 
+        )
+
 
         # Получаем или создаем запись верификации Telegram
         telegram_verification, created = TelegramVerification.objects.get_or_create(
@@ -307,6 +314,26 @@ class PlayerUpdateView(View):
 
     def post(self, request, *args, **kwargs):
         player = request.user.player
+        
+
+        email_form = ChangeEmailForm(player_form_data = request.POST if 'update_player' in request.POST else None
+        player_form = PlayerUpdateForm(player_form_data, instance=player)
+
+        city_form_data = request.POST if 'update_city' in request.POST else None
+        city_form = CityUpdateForm(city_form_data, geo_list=TR_GEOS, cities_list=TR_CITIES, initial={'city': player.city})
+
+        avatar_form_data = request.POST if 'update_avatar' in request.POST else None
+        avatar_form_files = request.FILES if 'update_avatar' in request.POST else None
+        avatar_form = AvatarUpdateForm(avatar_form_data, avatar_form_files, instance=player)
+
+        email_form_data = request.POST if 'change_email' in request.POST else None
+        # --- Инициализируем email_form с initial И data (если есть) ---
+        email_form = ChangeEmailForm(
+            user=request.user,
+            request=request,
+            data=email_form_data,
+            initial={'old_email': request.user.email} # <--- Добавляем initial
+        )
         
         logger.debug("Получен POST-запрос: %s", request.POST)
 

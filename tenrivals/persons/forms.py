@@ -16,7 +16,7 @@ import logging
 from allauth.account.models import EmailAddress
 from allauth.account.utils import send_email_confirmation
 from django.db import transaction
-
+from django.contrib import messages
 logger = logging.getLogger(__name__)
 
 class CustomLoginForm(LoginForm):
@@ -87,9 +87,17 @@ class TelegramVerificationForm(forms.Form):
 
 
 class ChangeEmailForm(forms.Form):
+    old_email = forms.EmailField(widget=forms.EmailInput(attrs={
+        'class': 'form-control form-control-solid',
+        'placeholder': 'Your Current Email Address',
+        'label': 'Your Current Email Address',
+        'readonly': True,
+        'disabled': True
+    }))
     email = forms.EmailField(widget=forms.EmailInput(attrs={
         'class': 'form-control form-control-solid',
-        'placeholder': 'New Email Address'
+        'placeholder': 'New Email Address',
+        'label': 'New Email Address'
     }))
     password = forms.CharField(widget=forms.PasswordInput(attrs={
         'class': 'form-control form-control-solid',
@@ -104,14 +112,17 @@ class ChangeEmailForm(forms.Form):
     def clean_email(self):
         email = self.cleaned_data['email']
         if EmailAddress.objects.filter(email__iexact=email).exclude(user=self.user).exists():
+             messages.error(self.request, 'This email is already in use. Please check the email address you enter and try again.')
              raise forms.ValidationError('This email is already in use.')
         if self.user.email.lower() == email.lower():
+            messages.error(self.request, 'This is already your current email address.')
             raise forms.ValidationError('This is already your current email address.')
         return email
 
     def clean_password(self):
         password = self.cleaned_data['password']
         if not self.user.check_password(password):
+            messages.error(self.request, 'Invalid password. Please check your current password and try again.')
             raise forms.ValidationError('Invalid password.')
         return password
 
