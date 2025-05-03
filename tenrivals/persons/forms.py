@@ -87,22 +87,30 @@ class TelegramVerificationForm(forms.Form):
 
 
 class ChangeEmailForm(forms.Form):
-    old_email = forms.EmailField(widget=forms.EmailInput(attrs={
-        'class': 'form-control form-control-solid',
-        'placeholder': 'Your Current Email Address',
-        'label': 'Your Current Email Address',
-        'readonly': True,
-        'disabled': True
-    }))
-    email = forms.EmailField(widget=forms.EmailInput(attrs={
-        'class': 'form-control form-control-solid',
-        'placeholder': 'New Email Address',
-        'label': 'New Email Address'
-    }))
-    password = forms.CharField(widget=forms.PasswordInput(attrs={
-        'class': 'form-control form-control-solid',
-        'placeholder': 'Current Password'
-    }))
+    old_email = forms.EmailField(
+        label='Your Current Email Address',
+        widget=forms.EmailInput(attrs={
+            'class': 'form-control form-control-solid',
+            'placeholder': 'Your Current Email Address',
+            'readonly': True,
+            'disabled': True
+        }),
+        required=False
+    )
+    email = forms.EmailField(
+        label='New Email Address',
+        widget=forms.EmailInput(attrs={
+            'class': 'form-control form-control-solid',
+            'placeholder': 'New Email Address',
+        })
+    )
+    password = forms.CharField(
+        label='Password',
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control form-control-solid',
+            'placeholder': 'Current Password'
+        })
+    )
 
     def __init__(self, user, request, *args, **kwargs):
         self.user = user
