@@ -13,6 +13,9 @@ from django.utils.translation import gettext_lazy as _
 from django.urls import reverse
 from django.contrib.sites.shortcuts import get_current_site
 import logging
+from allauth.account.models import EmailAddress
+from allauth.account.utils import send_email_confirmation
+from django.db import transaction
 
 logger = logging.getLogger(__name__)
 
@@ -100,9 +103,10 @@ class ChangeEmailForm(forms.Form):
 
     def clean_email(self):
         email = self.cleaned_data['email']
-        User = get_user_model()
-        if User.objects.filter(email=email).exclude(pk=self.user.pk).exists():
-            raise forms.ValidationError('This email is already in use.')
+        if EmailAddress.objects.filter(email__iexact=email).exclude(user=self.user).exists():
+             raise forms.ValidationError('This email is already in use.')
+        if self.user.email.lower() == email.lower():
+            raise forms.ValidationError('This is already your current email address.')
         return email
 
     def clean_password(self):
@@ -111,53 +115,28 @@ class ChangeEmailForm(forms.Form):
             raise forms.ValidationError('Invalid password.')
         return password
 
+    @transaction.atomic
     def save(self):
-        new_email = self.cleaned_data['email']
+        new_email = self.cleaned_data['email'].lower()
         user = self.user
-        
-        # Сохраняем новый email
-        user.email = new_email
-        user.is_email_verified = False
-        user.save(update_fields=['email', 'is_email_verified'])
+        request = self.request
 
-        # Отправляем письмо для подтверждения
-        token = default_token_generator.make_token(user)
-        uid = urlsafe_base64_encode(force_bytes(user.pk))
-        key = f"{uid}:{token}" # Формат может зависеть от версии allauth
-
-        relative_url = reverse('account_confirm_email', kwargs={'key': key})
-        confirmation_link = self.request.build_absolute_uri(relative_url)
-
-        # --- ИЗМЕНЕНИЕ: Используем новый шаблон и добавляем сайт в контекст ---
-        current_site = get_current_site(self.request)
-        context = {
-            'user': user,
-            'confirmation_link': confirmation_link,
-            'current_site': current_site, # Добавляем сайт для использования в шаблоне
-        }
-        # Используем новый шаблон, созданный для смены email
-        email_template_name = 'account/email/email_change_confirmation_message.txt'
-        email_subject = _('Confirm Your Email Address Change')
-        message = render_to_string(email_template_name, context)
-        # --- КОНЕЦ ИЗМЕНЕНИЙ ---
-        
         try:
-            send_mail(
-                email_subject,
-                message,
-                settings.DEFAULT_FROM_EMAIL,
-                [new_email],
-                # html_message=message, # Если создадите HTML-версию шаблона
+            email_address, created = EmailAddress.objects.get_or_create(
+                user=user,
+                email=new_email,
+                defaults={'verified': False, 'primary': False}
             )
-            logger.info(f"Email change confirmation sent to {new_email} for user {user.username}")
-            # Успешный выход из save после отправки
+
+            send_email_confirmation(request, email_address, signup=False)
+
+            logger.info(f"Confirmation email sent to {new_email} for user {user.username} via allauth.")
+
             return user
+
         except Exception as e:
-             # Если send_mail действительно вызвал ошибку (маловероятно с console backend)
-             logger.error(f"Error actually sending email in ChangeEmailForm for {user.username}: {e}", exc_info=True)
-             # Поднимаем ошибку выше, чтобы внешний try...except ее поймал
-             # или возвращаем None/False для индикации проблемы
-             raise e # Или return None
+             logger.error(f"Error during allauth email change process for {user.username}: {e}", exc_info=True)
+             raise e
 
 
 class PasswordResetRequestTelegramForm(forms.Form):
