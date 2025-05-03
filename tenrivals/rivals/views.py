@@ -390,7 +390,8 @@ class PlayerUpdateView(View):
                     return redirect('rivals:player_update')
                 except Exception as e:
                     print(">>> [DEBUG] Logger INSIDE except:", logger) 
-                    logger.error("Error changing email: %s", e)
+                    #logger.error("Error changing email: %s", e)
+                    print(">>> [DEBUG] ERROR witout logger INSIDE except:", e)
                     print(">>> [DEBUG] Logger AFTER logger inside except:", logger)
                     messages.error(request, "Error sending confirmation email.")
             else:
