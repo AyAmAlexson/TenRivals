@@ -1,7 +1,91 @@
 from django.shortcuts import get_object_or_404
-from .models import Match, PlayerMatch, TimelineEvent, PlayerSeasonStats, Tournament, PlayerTournament
+from .models import Match, PlayerMatch, TimelineEvent, PlayerSeasonStats, Tournament, PlayerTournament, Award
 from django.urls import reverse
 from datetime import datetime
+import logging
+
+logger = logging.getLogger(__name__)
+
+def apply_award_service(award:Award):
+    """
+        Применяет очки из Award к статистике игрока за сезон/неделю.
+    """
+    if award.is_implemented:
+        logger.warning(f"Attempted to apply already implemented award {award.pk}.")
+        return False
+
+    try:
+        player_season_stats_week = PlayerSeasonStats.objects.get(season=award.season, week=award.week, player=award.player)
+        logger.debug(f"Applying award {award.pk} to player {award.player.pk} in season {award.season} week {award.week}")
+
+
+        if award.award_type == 'SP':
+            logger.debug(f"Adding {award.amount} points to player {award.player.pk} in season {award.season} week {award.week}")
+            player_season_stats_week.season_pts += award.amount
+            
+            logger.debug(f"PlayerSeasonStats for player {award.player.pk} in season {award.season} week {award.week} updated to {player_season_stats_week.season_pts} points")
+        elif award.award_type == 'NT':
+            logger.debug(f"Adding {award.amount} NTRP to player {award.player.pk} in season {award.season} week {award.week}")
+            player_season_stats_week.season_final_NTRP += award.amount
+            logger.debug(f"PlayerSeasonStats for player {award.player.pk} in season {award.season} week {award.week} updated to {player_season_stats_week.season_final_NTRP} NTRP")
+        else:
+            logger.error(f"Unknown award type {award.award_type} for award {award.pk}")
+            return False
+        
+        player_season_stats_week.save()
+        logger.debug(f"PlayerSeasonStats saved for player {award.player.pk} in season {award.season} week {award.week}")
+        return True
+    
+    except PlayerSeasonStats.DoesNotExist:
+        logger.error(f"Could not find PlayerSeasonStats for award {award.pk}")
+        return False
+    except Exception as e:
+        logger.error(f"Error applying award {award.pk}: {e}", exc_info=True)
+        return False
+
+
+def rewoke_award_service(award:Award):
+    """
+        Снимает очки из Award с статистики игрока за сезон/неделю.
+    """
+    if not award.is_implemented:
+        logger.warning(f"Attempted to rewoke already rewoke award {award.pk}.")
+        return False
+    
+    try:
+        if award.award_type == 'SP':
+            player_season_stats_week = PlayerSeasonStats.objects.get(season=award.season, week=award.week, player=award.player)
+
+    except PlayerSeasonStats.DoesNotExist:
+        logger.error(f"Could not find PlayerSeasonStats for award {award.pk}")
+        return False
+    except Exception as e:
+        logger.error(f"Error rewoving award {award.pk}: {e}", exc_info=True)
+        return False
+    
+    
+
+
+
+def implement_match_result_for_player_service(pss:PlayerSeasonStats, winner:bool, rt:bool, opp_rt:bool, pts_gained:int, NTRP_change:int):
+    if winner:
+        if not opp_rt:
+            pss.matches_won += 1
+            pss.matches_played += 1
+    elif rt:
+        pss.matches_rted += 1
+        pss.matches_lost += 1
+        pss.matches_played += 1
+    else:
+        pss.matches_lost += 1
+        pss.matches_played += 1
+    
+    pss.season_pts += pts_gained
+    pss.season_final_NTRP += NTRP_change
+    pss.max_season_NTRP = max(pss.max_season_NTRP, pss.season_final_NTRP)
+    pss.min_season_NTRP = min(pss.min_season_NTRP, pss.season_final_NTRP)
+
+    pss.save()
 
 def apply_match_result_service(player_pm_pk):
     player_pm = get_object_or_404(PlayerMatch, pk=player_pm_pk)
@@ -9,12 +93,11 @@ def apply_match_result_service(player_pm_pk):
     player = player_pm.player
     if not player_pm.is_implemented:
         player_season_stats_week,created = PlayerSeasonStats.objects.get_or_create(season=match.date.year, week=match.date.isocalendar()[1], player=player)
-        player_season_stats_week.implement_match_result(winner=player_pm.is_winner, rt=player_pm.is_withdrawn, opp_rt=player_pm.opponent_is_withdrawn, pts_gained=player_pm.season_pts_gained, NTRP_change=player_pm.NTRP_change)
-        
-        
+        implement_match_result_for_player_service(pss=player_season_stats_week, winner=player_pm.is_winner, rt=player_pm.is_withdrawn, opp_rt=player_pm.opponent_is_withdrawn, pts_gained=player_pm.season_pts_gained, NTRP_change=player_pm.NTRP_change)
+
         player_season_stats_later_weeks = PlayerSeasonStats.objects.filter(season=match.date.year, week__gt=match.date.isocalendar()[1], player=player)
         for player_season_stats_week in player_season_stats_later_weeks:
-            player_season_stats_week.implement_match_result(winner=player_pm.is_winner, rt=player_pm.is_withdrawn, opp_rt=player_pm.opponent_is_withdrawn, pts_gained=player_pm.season_pts_gained, NTRP_change=player_pm.NTRP_change)
+            implement_match_result_for_player_service(pss=player_season_stats_week, winner=player_pm.is_winner, rt=player_pm.is_withdrawn, opp_rt=player_pm.opponent_is_withdrawn, pts_gained=player_pm.season_pts_gained, NTRP_change=player_pm.NTRP_change)
         player_pm.is_implemented = True
         player_pm.save()
 
@@ -34,6 +117,32 @@ def apply_match_result_service(player_pm_pk):
         return True
     else:
         return False
+
+
+
+def exclude_match_result_for_player_service(pss:PlayerSeasonStats, winner:bool, rt:bool, opp_rt:bool, pts_gained:int, NTRP_change:int):
+    if winner:
+        if not opp_rt:
+            pss.matches_won = max(0, pss.matches_won - 1)
+            pss.matches_played = max(0, pss.matches_played - 1)
+    elif rt:
+        pss.matches_rted = max(0, pss.matches_rted - 1)
+        pss.matches_lost = max(0, pss.matches_lost - 1)
+        pss.matches_played = max(0, pss.matches_played - 1)
+    else:
+        pss.matches_lost = max(0, pss.matches_lost - 1)
+        pss.matches_played = max(0, pss.matches_played - 1)
+    
+    if pss.max_season_NTRP == pss.season_final_NTRP:
+        pss.max_season_NTRP = max(0, pss.max_season_NTRP - NTRP_change)
+    if pss.min_season_NTRP == pss.season_final_NTRP:
+        pss.min_season_NTRP = max(0, pss.season_final_NTRP - NTRP_change)
+
+    pss.season_pts = max(0, pss.season_pts - pts_gained)
+    pss.season_final_NTRP = max(0, pss.season_final_NTRP - NTRP_change)
+    
+    pss.save()
+
 
 def delete_match_result_service(player_pm_pk):
     player_pm = get_object_or_404(PlayerMatch, pk=player_pm_pk)
@@ -55,6 +164,11 @@ def delete_match_result_service(player_pm_pk):
     player_tournament.save()
     player_pm.save()
 
+
+
+
+
+
 def approve_match_result_service(pk, forced=False, by_timeout=False):
     match = get_object_or_404(Match, pk=pk)
     player = match.players.all().order_by('pk').first()
@@ -62,7 +176,6 @@ def approve_match_result_service(pk, forced=False, by_timeout=False):
     player_pm = PlayerMatch.objects.get(match=match, player=player, opponent=opponent)
     opponent_pm = PlayerMatch.objects.get(match=match, player=opponent, opponent=player)
     
-    # Вся логика из approve_match_result, но без использования request и messages    
     if player_pm.is_approved_by_player:
         player_pm.is_approved_by_player = True
         player_pm.is_approved_by_opponent = True

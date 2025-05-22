@@ -11092,12 +11092,12 @@ textarea.form-control-lg {
 
 .bg-dual-color-primary-accent {
   background: linear-gradient(to right, #0FB0A8 0%, #0FB0A8 calc(50% - 20px), #EAEAEA calc(50% - 20px), #EAEAEA calc(50% + 20px), #FB000D calc(50% + 20px), #FB000D 100%); 
-  min-height: 100vh;
+  /* min-height: 100vh; */
 }
 
 .bg-dual-color-primary-secondary {
   background: linear-gradient(to right, #0FB0A8 0%, #0FB0A8 calc(50% - 20px), #EAEAEA calc(50% - 20px), #EAEAEA calc(50% + 20px), #28A4DA calc(50% + 20px), #28A4DA 100%); 
-  min-height: 100vh;
+  /* min-height: 100vh; */
 }
 
 .bg-secondary {

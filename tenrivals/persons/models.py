@@ -22,7 +22,6 @@ class CustomUser(AbstractUser):
     is_test_user = models.BooleanField(default=False)
     preferred_city = models.CharField(max_length=3, choices=TR_CITIES, default='TBI')
     preferred_geo = models.CharField(max_length=2, choices=TR_GEOS, default='GE')
-    is_email_verified = models.BooleanField(default=False)
     is_telegram_verified = models.BooleanField(default=False)
 
     newsletter_opt_in = models.BooleanField(

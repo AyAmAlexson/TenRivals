@@ -269,9 +269,11 @@
     
         <div class="mb-4 col-xl-8 position-relative" style="z-index: 11;">
             <div class="card card-header-actions card-scrollable h-100">
-                <div class="card-header">
-                    Onboarding
+                <div class="card-header justify-content-between">
+                    <div>Onboarding</div>
+                    <div><strong class="text-muted">{{ onboarding.get_total_awards_received }}</strong><span class="text-muted">/{{ onboarding.get_total_cost }} points received</span></div>
                 </div>
+
                 <div class="card-body">
                     {%if not onboarding %}
                     <div class="d-flex justify-content-center align-items-center w-100">
@@ -279,7 +281,7 @@
                         </div>
                     {%else%}
                     <table class="table table-sm">
-                    {% for checkpoint in onboarding.ob_list %}
+                    {% for checkpoint in onboarding.ob_list_sorted %}
                     {% if checkpoint.3 %}
                         <tr class="text-muted">
                     {% else %}

@@ -23,7 +23,7 @@ from django.views.decorators.http import require_http_methods
 from django.utils.decorators import method_decorator
 from django.contrib.admin.views.decorators import staff_member_required
 from django.utils.timezone import now
-
+from allauth.account.models import EmailAddress
 
 # Python standard library
 from datetime import datetime, UTC, timedelta, date
@@ -33,8 +33,7 @@ import string
 from functools import wraps
 
 
-# Third party
-import telebot
+
 
 # Local imports
 from .const import TR_GEOS, TR_CITIES
@@ -82,6 +81,7 @@ from .models import (
     PlayerOnboarding
 )
 from persons.models import CustomUser, TelegramVerification
+from persons.views import get_telegram_bot_instance
 from persons.forms import ChangeEmailForm, TelegramVerificationForm
 from persons.services import generate_verification_code_service
 import qrcode
@@ -301,6 +301,9 @@ class PlayerUpdateView(View):
             }
         )
 
+        primary_email_address = EmailAddress.objects.get_primary(request.user)
+        is_email_verified = primary_email_address.verified if primary_email_address else False
+
         context = {
             'player_form': player_form,
             'city_form': city_form,
@@ -309,6 +312,7 @@ class PlayerUpdateView(View):
             'account_change_email_form': email_form,
             'server_time': server_time,
             'telegram_verification': telegram_verification,
+            'is_email_verified': is_email_verified,
         }
         return render(request, 'rivals/player_update.html', context)
 
@@ -470,7 +474,7 @@ class PlayerUpdateView(View):
                 
                 # Отправляем новый код верификации через бота
                 try:
-                    bot = telebot.TeleBot(settings.TELEGRAM_BOT_TOKEN)
+                    bot = get_telegram_bot_instance()
                     message = f"Your verification code is: {telegram_verification.verification_code}"
                     bot.send_message(new_telegram, message)
                     logger.info("Verification code sent to Telegram: %s", new_telegram)
@@ -513,8 +517,6 @@ class PlayerUpdateView(View):
     def get_success_url(self):
         return reverse('rivals:player_update')
         
-
-
 class AllRivalsView(ListView):
     model = Player
     template_name = 'rivals/all_rivals.html'
@@ -2086,7 +2088,6 @@ def determine_category_from_ntrp(ntrp_int):
     else: return 'C5'
 # === Конец вспомогательных функций ===
 
-# === НОВЫЕ VIEWS ДЛЯ ВИЗАРДА ===
 
 class PlayerWizardBaseView(LoginRequiredMixin, FormView):
     """Базовый класс для шагов визарда"""
@@ -2136,10 +2137,9 @@ class PlayerWizardBaseView(LoginRequiredMixin, FormView):
         # Более сложная проверка доступа будет в каждом конкретном view
         return super().dispatch(request, *args, **kwargs)
 
-
 class PlayerWizardStep1View(PlayerWizardBaseView):
     """Шаг 1: Ввод ника Telegram"""
-    template_name = 'rivals/player_wizard_step1.html' # <--- ДОБАВЬТЕ ЭТУ СТРОКУ
+    template_name = 'rivals/player_wizard_step1.html' 
     form_class = AddTelegramUsernameForm
     success_url = reverse_lazy('rivals:player_wizard_step2')
     step = 1
@@ -2157,11 +2157,13 @@ class PlayerWizardStep1View(PlayerWizardBaseView):
 
     def form_valid(self, form):
         # Выполняем действия Шага 1 (сохранение ника, отправка кода) ПЕРЕД сохранением в сессию
+        
         user = self.request.user
         verification, verification_created = TelegramVerification.objects.get_or_create(user=user)
         tg_username = form.cleaned_data['telegram_username']
 
         # Проверка уникальности (важно!)
+
         if TelegramVerification.objects.filter(
             telegram_username__iexact=tg_username
             ).exclude(user=user).exists() or CustomUser.objects.filter(
@@ -2169,6 +2171,8 @@ class PlayerWizardStep1View(PlayerWizardBaseView):
                 ).exclude(pk=user.pk).exists():
              messages.error(self.request, f"Telegram username '@{tg_username}' is already associated with another account.")
              return self.form_invalid(form) # Возвращаем с ошибкой
+
+        
 
         # Сохраняем ник и генерируем код
         user.telegram = tg_username # Сохраняем в CustomUser
@@ -2181,8 +2185,13 @@ class PlayerWizardStep1View(PlayerWizardBaseView):
         user.save(update_fields=['telegram', 'is_telegram_verified'])
         verification.save()
         logger.info(f"Username @{tg_username} saved for {user.email}. New verification code generated.")
-
+        
+        
+        logger.info(f"DEBUG Username @{tg_username} code: {verification.verification_code}. DELETE THIS LINE!!!")
+        
+        
         # Отправляем код ботом (ваш код без изменений)
+        bot = get_telegram_bot_instance()
         if bot:
             try:
                 chat_info = bot.get_chat(f"@{tg_username}")
@@ -2199,7 +2208,7 @@ class PlayerWizardStep1View(PlayerWizardBaseView):
                 logger.error(f"Error sending code via bot for {user.email}: {e}")
                 messages.warning(self.request, f"Could not send code to @{tg_username}. Please use QR/Link or manual code entry.")
         else:
-            messages.info(self.request, "Telegram bot not configured. Please use QR/Link or manual code entry.")
+            messages.info(self.request, "Telegram bot not configured. Please use QR/Link or manual code entry. Or verify later.")
 
         # Теперь вызываем родительский form_valid для сохранения данных в сессию и редиректа
         return super().form_valid(form)
@@ -2335,7 +2344,6 @@ class PlayerWizardStep2View(PlayerWizardBaseView):
         else:
             messages.error(request, "Invalid action.")
             return self.get(request, *args, **kwargs)
-
 
 class PlayerWizardStep3View(PlayerWizardBaseView):
     """Шаг 3: Личная информация + Аватар"""
@@ -2665,7 +2673,7 @@ class PlayerWizardStep5View(LoginRequiredMixin, View):
 
     # --- NO get_form_kwargs, form_valid, form_invalid needed ---
 
-# ... (остальной код файла) ...
+
 
 def activate_onboarding(request):
     player = request.user.player

@@ -856,6 +856,10 @@ class AddTelegramUsernameForm(forms.Form):
         help_text="Enter your Telegram username (starting with a letter, 5-32 chars, a-z, 0-9, _)"
     )
 
+    def __init__(self, *args, request=None, **kwargs):
+        self.request = request  # Сохраняем request
+        super().__init__(*args, **kwargs)
+
     def clean_telegram_username(self):
         """
         Валидация ника Telegram: удаляем '@', проверяем длину и символы.
@@ -873,10 +877,6 @@ class AddTelegramUsernameForm(forms.Form):
                 "Invalid Telegram username format. Must start with a letter, "
                 "contain 5-32 alphanumeric characters or underscores."
             )
-
-        
-        if CustomUser.objects.filter(telegram=tg_username).exists() or TelegramVerification.objects.filter(telegram_username=tg_username).exists():
-            raise forms.ValidationError("This Telegram username is already associated with another account.")
 
         return tg_username
 

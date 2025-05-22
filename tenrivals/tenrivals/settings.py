@@ -113,10 +113,24 @@ TEMPLATES = [
 WSGI_APPLICATION = 'tenrivals.wsgi.application'
 
 
+'''
+
 DATABASE_URL = env('DATABASE_URL')
 db_from_env = dj_database_url.config(default=DATABASE_URL)
 DATABASES = {'default': db_from_env}
 CONN_MAX_AGE = int(os.environ.get("CONN_MAX_AGE", 600))
+'''
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'tenrivals_local_dev',
+        'USER': 'am',
+        'PASSWORD': 'tyghbn67',
+        'HOST': 'localhost', 
+        'PORT': '5432', # 
+    }
+}
+
 
 
 AUTHENTICATION_BACKENDS = [
@@ -233,6 +247,8 @@ ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
 ACCOUNT_CONFIRM_EMAIL_ON_GET = True
 ACCOUNT_USER_MODEL_USERNAME_FIELD = 'username'
 ACCOUNT_ADAPTER = 'persons.adapters.CustomAccountAdapter'
+ACCOUNT_CHANGE_EMAIL = True
+
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 # EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'

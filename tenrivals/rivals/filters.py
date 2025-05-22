@@ -62,6 +62,8 @@ class AllRivalsFilter(FilterSet):
         widget=forms.RadioSelect()
     )
 
+    
+
     class Meta:
         model = Player
         fields = ['gender', 'geo', 'city', 'category']

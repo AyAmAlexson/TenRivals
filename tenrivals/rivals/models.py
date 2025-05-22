@@ -31,6 +31,28 @@ def next_monday():
 def current_week():
     return date.today().isocalendar()[1]
 
+AWARD_TYPE = [
+    ('SP', 'Season Points'),
+    ('NT', 'NTRP Points'),
+
+]
+
+AWARD_RECEIVED_VIA = [
+    ('OB', 'Onboarding'),
+    ('MW', 'Match Win'),
+    ('ML', 'Match Loss'),
+    ('MR', 'Match RTed'),
+    ('SP', 'Stage Prolongation'),
+    ('OR', 'Opponent Review'),
+    ('WC', 'Wizard Completion'),
+    ('TR', 'Tournament Result'),
+
+    
+]
+
+   
+
+    
 
 class Player(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='player')
@@ -63,6 +85,10 @@ class Player(models.Model):
         if self.user:
             self.first_name = self.user.first_name
             self.last_name = self.user.last_name
+
+        from .models import PlayerOnboarding
+        ob, created = PlayerOnboarding.objects.get_or_create(player=self)
+        
         super().save(*args, **kwargs)
         # Инвалидируем кэш при изменении
         cache.delete(f'player_name_{self.pk}')
@@ -159,6 +185,22 @@ def get_deleted_player():
 
     return deleted_player
 
+class Award(models.Model):
+    player = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='awards')
+    amount = models.IntegerField(default=0)
+
+    season = models.PositiveIntegerField(default=date.today().year)
+    week = models.PositiveIntegerField(default=current_week())
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_modified = models.DateTimeField(auto_now=True)
+    
+    award_type = models.CharField(max_length=2, choices=AWARD_TYPE)
+    received_via = models.CharField(max_length=2, choices=AWARD_RECEIVED_VIA)
+    
+    is_implemented = models.BooleanField(default=False)
+
+    
 class Attributes(models.Model):
     forehand = models.FloatField(default=0)
     backhand = models.FloatField(default=0)
@@ -650,48 +692,9 @@ class PlayerSeasonStats(models.Model):
     def win_rate(self):
         return f'{int(self.matches_won / self.matches_played * 100)}%'
         
-    def implement_match_result(self, winner:bool, rt:bool, opp_rt:bool, pts_gained:int, NTRP_change:int):
-        if winner:
-            if not opp_rt:
-                self.matches_won += 1
-                self.matches_played += 1
-        elif rt:
-            self.matches_rted += 1
-            self.matches_lost += 1
-            self.matches_played += 1
-        else:
-            self.matches_lost += 1
-            self.matches_played += 1
-        
-        self.season_pts += pts_gained
-        self.season_final_NTRP += NTRP_change
-        self.max_season_NTRP = max(self.max_season_NTRP, self.season_final_NTRP)
-        self.min_season_NTRP = min(self.min_season_NTRP, self.season_final_NTRP)
 
-        self.save()
 
-    def exclude_match_result(self, winner:bool, rt:bool, opp_rt:bool, pts_gained:int, NTRP_change:int):
-        if winner:
-            if not opp_rt:
-                self.matches_won = max(0, self.matches_won - 1)
-                self.matches_played = max(0, self.matches_played - 1)
-        elif rt:
-            self.matches_rted = max(0, self.matches_rted - 1)
-            self.matches_lost = max(0, self.matches_lost - 1)
-            self.matches_played = max(0, self.matches_played - 1)
-        else:
-            self.matches_lost = max(0, self.matches_lost - 1)
-            self.matches_played = max(0, self.matches_played - 1)
-        
-        if self.max_season_NTRP == self.season_final_NTRP:
-            self.max_season_NTRP = max(0, self.max_season_NTRP - NTRP_change)
-        if self.min_season_NTRP == self.season_final_NTRP:
-            self.min_season_NTRP = max(0, self.season_final_NTRP - NTRP_change)
 
-        self.season_pts = max(0, self.season_pts - pts_gained)
-        self.season_final_NTRP = max(0, self.season_final_NTRP - NTRP_change)
-        
-        self.save()
 
     def save(self, *args, **kwargs):
         self.geo = self.player.geo
@@ -938,6 +941,21 @@ class StageProlongationRequest(models.Model):
         self.is_approved = False
         self.save()
 
+
+ONBOARDING_ITEMS_COST = {
+        'tg_verify': 5,
+        'main_info': 3,
+        'additional_info': 2,
+        'avatar': 3,
+        'wizard': 3,
+        'email_verify': 1,
+        'first_tournament': 3,
+        'first_match': 3,
+        'first_opponent_review': 2,
+
+    }
+
+
 class PlayerOnboarding(models.Model):
     player = models.OneToOneField(Player, on_delete=models.CASCADE, related_name='onboarding')
     is_completed = models.BooleanField(default=False)
@@ -973,34 +991,58 @@ class PlayerOnboarding(models.Model):
 
     ob_wizard_completed = models.BooleanField(default=False)
 
+   
     def save(self, *args, **kwargs):
         if self.ob_first_name and self.ob_last_name and self.ob_birthdate and self.ob_gender and self.ob_city:
             self.ob_main_info = True
-            self.save()
+            new_award = Award.objects.create(
+                player=self.player,
+                award_type='SP',
+                received_via='OB',
+                amount=ONBOARDING_ITEMS_COST['main_info'],
+            )
+            
+           
         if self.ob_height and self.ob_weight and self.ob_tennis_exp_years and self.ob_availability:
             self.ob_additional_info = True
-            self.save()
-        
+            new_award = Award.objects.create(
+                player=self.player,
+                award_type='SP',
+                received_via='OB',
+                amount=ONBOARDING_ITEMS_COST['additional_info'],
+            )   
+            
         if self.ob_main_info and self.ob_additional_info and self.ob_avatar and self.ob_first_tournament_registration and self.ob_first_match_played and self.ob_first_opponent_review and self.ob_wizard_completed:
             self.is_completed = True
-            self.save()
+
         super().save(*args, **kwargs)
-    
+
     def ob_list(self):
         result = []
-        
-        
-        result.append(('Verify your Telegram', reverse('rivals:player_update'),5,self.ob_verify_tg))
-        result.append(('Update your profile info: name, birthdate, gender, city', reverse('rivals:player_update'),3,self.ob_main_info))
-        result.append(('Update your additional info: height, weight, tennis experience, availability', reverse('rivals:player_update'),2,self.ob_additional_info))
-        result.append(('Upload your avatar', reverse('rivals:player_update'),3,self.ob_avatar))
-        result.append(('Complete the skill evaluation', reverse('rivals:player_wizard_step1'),3,self.ob_wizard_completed))
-        result.append(('Verify your email', reverse('rivals:player_update'),1,self.ob_verify_email))
-        result.append(('Register in your first tournament', reverse('rivals:tournaments'),3,self.ob_first_tournament_registration))
-        result.append(('Play your first match', "",3,self.ob_first_match_played))
-        result.append(('Rate your first opponent after the match', "",2,self.ob_first_opponent_review))
-        
+        result.append(('Verify your Telegram', reverse('rivals:player_update'),ONBOARDING_ITEMS_COST['tg_verify'],self.ob_verify_tg))
+        result.append(('Update your profile info: name, birthdate, gender, city', reverse('rivals:player_update'),ONBOARDING_ITEMS_COST['main_info'],self.ob_main_info))
+        result.append(('Update your additional info: height, weight, tennis experience, availability', reverse('rivals:player_update'),ONBOARDING_ITEMS_COST['additional_info'],self.ob_additional_info))
+        result.append(('Upload your avatar', reverse('rivals:player_update'),ONBOARDING_ITEMS_COST['avatar'],self.ob_avatar))
+        result.append(('Complete your skill evaluation', reverse('rivals:player_wizard_step1'),ONBOARDING_ITEMS_COST['wizard'],self.ob_wizard_completed))
+        result.append(('Verify your email', reverse('rivals:player_update'),ONBOARDING_ITEMS_COST['email_verify'],self.ob_verify_email))
+        result.append(('Register in your first tournament', reverse('rivals:tournaments'),ONBOARDING_ITEMS_COST['first_tournament'],self.ob_first_tournament_registration))
+        result.append(('Play your first match', "",ONBOARDING_ITEMS_COST['first_match'],self.ob_first_match_played))
+        result.append(('Rate your first opponent after the match', "",ONBOARDING_ITEMS_COST['first_opponent_review'],self.ob_first_opponent_review))
         return result
 
 
+    def get_total_cost(self):
+        return sum(item[2] for item in self.ob_list())
+    
+    def get_total_awards_received(self):
+        return sum(item[2] for item in self.ob_list() if item[3])
+    
+    def get_remaining_cost(self):
+        return self.get_total_cost() - self.get_totalawards_received()
+    
+    def ob_list_sorted(self):
+        turn_one=sorted(self.ob_list(), key=lambda x: x[2])
+        turn_two=sorted(turn_one, key=lambda x: x[3])
+        return turn_two
+    
    

@@ -6,7 +6,7 @@
 {% block head_title %}{% trans "Player Profile Setup - Step 1" %}{% endblock %}
 
 {% block content %}
-<header class="page-header page-header-dark bg-gradient-primary-to-secondary pb-10">
+<header class="page-header page-header-dark bg-dual-color-primary-accent pb-10">
     <div class="container-xl px-4">
         <div class="page-header-content pt-10">
             <div class="row align-items-center justify-content-between">
@@ -25,6 +25,48 @@
 <!-- Main page content-->
 <div class="container-xl px-4 mt-n10">
     <div class="card">
+        <div class="nav nav-pills nav-justified flex-column flex-xl-row nav-wizard" id="cardTab" role="tablist">
+            <!-- Wizard navigation item 1-->
+            <a class="nav-item nav-link {% if step == 1 %}active{% endif %}" id="wizard1-tab" href="{% url 'rivals:player_wizard_step1' %}" data-bs-toggle="tab" role="tab" aria-controls="wizard1" aria-selected="{% if step == 1 %}true{% else %}false{% endif %}">
+                <div class="wizard-step-icon">1</div>
+                <div class="wizard-step-text">
+                    <div class="wizard-step-text-name">Telegram</div>
+                    <div class="wizard-step-text-details">Link your Telegram account</div>
+                </div>
+            </a>
+            <!-- Wizard navigation item 2-->
+            <a class="nav-item nav-link {% if step == 2 %}active{% endif %}" id="wizard1-tab" href="{% url 'rivals:player_wizard_step2' %}" data-bs-toggle="tab" role="tab" aria-controls="wizard2" aria-selected="{% if step == 2 %}true{% else %}false{% endif %}">
+                <div class="wizard-step-icon">2</div>
+                <div class="wizard-step-text">
+                    <div class="wizard-step-text-name">Verification</div>
+                    <div class="wizard-step-text-details">Verify your Telegram account</div>
+                </div>
+            </a>
+            <!-- Wizard navigation item 3-->
+            <a class="nav-item nav-link {% if step == 3 %}active{% endif %}" id="wizard1-tab" href="{% url 'rivals:player_wizard_step3' %}" data-bs-toggle="tab" role="tab" aria-controls="wizard3" aria-selected="{% if step == 3 %}true{% else %}false{% endif %}">
+                <div class="wizard-step-icon">3</div>
+                <div class="wizard-step-text">
+                    <div class="wizard-step-text-name">Personal</div>
+                    <div class="wizard-step-text-details">Basic details about you</div>
+                </div>
+            </a>
+            <!-- Wizard navigation item 4 -->
+            <a class="nav-item nav-link {% if step == 4 %}active{% endif %}" id="wizard2-tab" href="{% url 'rivals:player_wizard_step4' %}" data-bs-toggle="tab" role="tab" aria-controls="wizard4" aria-selected="{% if step == 4 %}true{% else %}false{% endif %}">
+                <div class="wizard-step-icon">4</div>
+                <div class="wizard-step-text">
+                    <div class="wizard-step-text-name">Skills</div>
+                    <div class="wizard-step-text-details">Your tennis skiils self evaluation</div>
+                </div>
+            </a>
+            <!-- Wizard navigation item 5 -->
+            <a class="nav-item nav-link {% if step == 5 %}active{% endif %}" id="wizard3-tab" href="{% url 'rivals:player_wizard_step5' %}" data-bs-toggle="tab" role="tab" aria-controls="wizard5" aria-selected="{% if step == 5 %}true{% else %}false{% endif %}">
+                <div class="wizard-step-icon">5</div>
+                <div class="wizard-step-text">
+                    <div class="wizard-step-text-name">Review</div>
+                    <div class="wizard-step-text-details">Review and submit your profile</div>
+                </div>
+            </a>
+        </div>
         <div class="card-body">
             {% if messages %}
             <div class="row justify-content-center mb-4">
@@ -46,6 +88,26 @@
                          <h3 class="text-primary">{% trans "Step 1: Link Telegram" %}</h3>
                          <h5 class="card-title mb-4">{% trans "Enter your Telegram username" %}</h5>
 
+                        <!-- Форма ввода ника -->
+                        <div class="mb-3">
+                            <label for="{{ form.telegram_username.id_for_label }}" class="small mb-1">{{ form.telegram_username.label }}</label>
+                            {{ form.telegram_username }} {# Рендеринг поля из формы #}
+                            {% if form.telegram_username.help_text %}
+                                <div class="form-text small">{{ form.telegram_username.help_text }}</div>
+                            {% endif %}
+                            {% if form.telegram_username.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.telegram_username.errors|first }}
+                                </div>
+                            {% endif %}
+                            {% if form.non_field_errors %}
+                               <div class="invalid-feedback d-block">
+                                   {{ form.non_field_errors|first }}
+                               </div>
+                            {% endif %}
+                        </div>
+
+
                          <!-- Инструкция -->
                          <div class="alert alert-info small mb-4">
                               <h6 class="alert-heading">{% trans "Why Telegram?" %}</h6>
@@ -59,24 +121,7 @@
                               </ol>
                          </div>
 
-                         <!-- Форма ввода ника -->
-                         <div class="mb-3">
-                             <label for="{{ form.telegram_username.id_for_label }}" class="small mb-1">{{ form.telegram_username.label }}</label>
-                             {{ form.telegram_username }} {# Рендеринг поля из формы #}
-                             {% if form.telegram_username.help_text %}
-                                 <div class="form-text small">{{ form.telegram_username.help_text }}</div>
-                             {% endif %}
-                             {% if form.telegram_username.errors %}
-                                 <div class="invalid-feedback d-block">
-                                     {{ form.telegram_username.errors|first }}
-                                 </div>
-                             {% endif %}
-                             {% if form.non_field_errors %}
-                                <div class="invalid-feedback d-block">
-                                    {{ form.non_field_errors|first }}
-                                </div>
-                             {% endif %}
-                         </div>
+                         
 
                          <hr class="my-4" />
                          <div class="d-flex justify-content-end">

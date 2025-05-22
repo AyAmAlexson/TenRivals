@@ -111,6 +111,7 @@ def verify_telegram(request):
     )
     
     logger.info(f"Verification object: {verification}, Created: {created}")
+    print(f"DEBUG!!! TG_VC: {verification['verification_code']}")
     
     # Проверяем, соответствует ли telegram в верификации текущему telegram пользователя
     if verification.telegram_username != request.user.telegram:

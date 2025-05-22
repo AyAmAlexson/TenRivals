@@ -215,8 +215,8 @@
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label" for="{{ form.email.id_for_label }}">{{ player_form.email.label }}</label>
                                     
-                                    {% if user.is_email_verified %}
-                                        <span class="badge bg-success rounded-pill">   Verified</span>
+                                    {% if is_email_verified %}
+                                        <span class="badge bg-success rounded-pill">  Verified</span>
                                     {% else %}
                                         <span class="badge bg-warning rounded-pill">  Unverified</span>
                                     {% endif %}

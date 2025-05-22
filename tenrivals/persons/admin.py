@@ -6,8 +6,8 @@ from rivals.models import Player
 
 
 class CustomUserAdmin(BaseUserAdmin):
-    list_display = ('email', 'first_name', 'last_name', 'is_staff', 'is_telegram_verified', 'is_player', 'is_author', 'is_test_user', 'is_email_verified')
-    list_filter = ('is_staff', 'is_superuser', 'is_active', 'groups', 'is_telegram_verified', 'is_player', 'is_author', 'is_test_user', 'is_email_verified')
+    list_display = ('email', 'first_name', 'last_name', 'is_staff', 'is_telegram_verified', 'is_player', 'is_author', 'is_test_user')
+    list_filter = ('is_staff', 'is_superuser', 'is_active', 'groups', 'is_telegram_verified', 'is_player', 'is_author', 'is_test_user')
 
     fieldsets = (
         (None, {'fields': ('email', 'password')}),

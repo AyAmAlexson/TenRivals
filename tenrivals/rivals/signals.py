@@ -1,8 +1,11 @@
 from django.db import models
-from django.db.models.signals import pre_save, post_delete # Импортируем сигналы
+from django.db.models.signals import pre_save, post_delete, post_save # Импортируем сигналы
 from django.dispatch import receiver # Импортируем декоратор receiver
 from persons.models import CustomUser
-from .models import Player
+from .models import Player, PlayerOnboarding
+from allauth.account.models import EmailAddress
+from allauth.account.signals import email_confirmed
+
 
 
 @receiver(pre_save, sender=Player)
@@ -43,6 +46,61 @@ def delete_avatar_on_delete(sender, instance, **kwargs):
             # Удаляем файл из хранилища
             instance.avatar.delete(save=False) # save=False здесь не так критично, как в pre_save, но для единообразия
 
-# --- КОНЕЦ ДОБАВЛЕНИЯ СИГНАЛОВ ---
+@receiver(email_confirmed)
+def on_email_confirmed(sender, request, email_address, **kwargs):
+    """
+    Действие при подтверждении email-адреса.
+    """
+    user = email_address.user
+    player = Player.objects.get(user=user)
+    try:
+        player_onboarding = PlayerOnboarding.objects.get(player=player)
+        player_onboarding.ob_verify_email = True
+        player_onboarding.save()
+    except PlayerOnboarding.DoesNotExist:
+        pass
+    
+    
+@receiver(post_save, sender=Player)
+def on_player_save(sender, instance, **kwargs):
+    """
+    Действие при сохранении объекта Player.
+    """
+    player_onboarding = PlayerOnboarding.objects.get(player=instance)
+    if instance.first_name not in [None, '']:
+        player_onboarding.ob_first_name = True
+    if instance.last_name not in [None, '']:
+        player_onboarding.ob_last_name = True
+    if instance.birthdate not in [None, '']:
+        player_onboarding.ob_birthdate = True
+    if instance.gender not in [None, '']:
+        player_onboarding.ob_gender = True
+    if instance.city not in [None, '']:
+        player_onboarding.ob_city = True
+    if instance.avatar:
+        player_onboarding.ob_avatar = True
+    if instance.weight:
+        player_onboarding.ob_weight = True
+    if instance.height:
+        player_onboarding.ob_height = True
+    if instance.tennis_exp_years not in [None,]:
+        player_onboarding.ob_tennis_exp_years = True
+        
+    if instance.availability:
+        player_onboarding.ob_availability = True
 
-# ... остальной код models.py ...
+    
+    player_onboarding.save()
+
+
+@receiver(post_save, sender=CustomUser)
+def on_user_save(sender, instance, **kwargs):
+    """
+    Действие при сохранении объекта CustomUser.
+    """
+    if instance.is_telegram_verified:
+        player_onboarding = PlayerOnboarding.objects.get(player=instance.player)
+        player_onboarding.ob_verify_tg = True
+        player_onboarding.save()
+    else:
+        pass

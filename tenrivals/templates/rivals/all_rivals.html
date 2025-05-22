@@ -3,70 +3,88 @@
 {% load custom_tags %}
 {% load custom_filters %}
 {% block content %}
-<div>
-    <main>
-        <header class="page-header page-header-dark bg-gradient-blue pb-2">
-            <div class="container-xl px-4">
-                <div class="page-header-content pt-10">
-                    <div class="row align-items-center justify-content-between">
-                        <div class="col-auto mt-4">
-                            <h1 class="page-header-title">
-                                <div class="page-header-icon"><i data-feather="users"></i></div>
-                                All rivals in one place
-                            </h1>
-                            <div class="page-header-subtitle">See your potential opponents. And let's go!</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </header>
-        <!-- Main page content-->
-        <div class="container-xl px-4 mt-n5">
-            <div class="card mb-4">
-                <div class="card-header">Filters</div>
-                <div class="card-body">
-                    <form id="filter-form" method="get">
-                        <!-- Gender Filter -->
-                        <div class="btn-group mb-2" role="group" aria-label="Select rivals' gender">
-                            {% for choice in filterset.form.gender %}
-                                <input class="btn-check" type="radio" id="{{ choice.id_for_label }}" name="gender" value="{{ choice.data.value }}" autocomplete="off" {% if choice.data.selected %} checked {% endif %} onchange="submitFilterForm()"/>
-                                <label class="btn btn-outline-primary px-3 px-xl-4 px-lg-3" for="{{ choice.id_for_label }}">{{ choice.choice_label }}</label>
-                            {% endfor %}
-                        </div>
 
-                        <!-- City Filter -->
-                        <div class="btn-group mb-2" role="group" aria-label="Select rivals' city">
-                            {% for choice in filterset.form.city %}
-                                <input class="btn-check" type="radio" id="{{ choice.id_for_label }}" name="city" value="{{ choice.data.value }}" autocomplete="off" {% if choice.data.selected %} checked {% endif %} onchange="submitFilterForm()"/>
-                                <label class="btn btn-outline-primary px-3 px-xl-4 px-lg-3" for="{{ choice.id_for_label }}">{{ choice.choice_label }}</label>
-                            {% endfor %}
-                        </div>
-
-                        <!-- Category Filter -->
-                        <div class="btn-group mb-2" role="group" aria-label="Select rivals' category">
-                            {% for choice in filterset.form.category %}
-                                <input class="btn-check" type="radio" id="{{ choice.id_for_label }}" name="category" value="{{ choice.data.value }}" autocomplete="off" {% if choice.data.selected %} checked {% endif %} onchange="submitFilterForm()"/>
-                                <label class="btn btn-outline-primary px-3 px-xl-4 px-lg-3" for="{{ choice.id_for_label }}">{{ choice.choice_label }}</label>
-                            {% endfor %}
-                        </div>
-                        <button type="submit" style="display:none;"></button> <!-- Скрытая кнопка submit -->
-                    </form>
-                    <script>
-                        function submitFilterForm() {
-                            document.getElementById('filter-form').submit();
-                        }
-                    </script> 
+<header class="page-header page-header-dark bg-dual-color-primary-accent pb-2">
+    <div class="container-xl px-4">
+        <div class="page-header-content pt-10">
+            <div class="row align-items-center justify-content-between">
+                <div class="col-auto mt-4">
+                    <h1 class="page-header-title">
+                        <div class="page-header-icon"><i data-feather="users"></i></div>
+                        All rivals in one place
+                    </h1>
+                    <div class="page-header-subtitle">See your potential opponents. And let's go!</div>
                 </div>
             </div>
         </div>
-        <!-- Main page content-->
-        <div class="container-xl px-4 ">
+    </div>
+</header>
+
+
+
+<!-- Main page content-->
+<div class="container-xl px-4 mt-n5">
+    <div class="row">
+        <div class="col-md-3">
+            
+            <div class="card card-collapsable mb-4">
+                <a class="card-header text-secondary" href="#collapseFilter" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="collapseFilter">Filters
+                    <div class="card-collapsable-arrow">
+                        <i class="fas fa-chevron-down"></i> <!-- Стрелка вниз по умолчанию -->
+                    </div>
+                </a>
+                <div class="collapse" id="collapseFilter"> <!-- Убран класс "show" -->
+                    <div class="card-body ">
+                        <form id="filter-form" method="get">
+                            <!-- Gender Filter -->
+                            <div class="text-muted text-center text-uppercase-expanded text-xs mb-4">Gender</div>
+                            <div class="mb-2 d-flex flex-column" role="group" aria-label="Select rivals' gender">
+                                {% for choice in filterset.form.gender %}
+                                    <input class="btn-check " type="radio" id="{{ choice.id_for_label }}" name="gender" value="{{ choice.data.value }}" autocomplete="off" {% if choice.data.selected %} checked {% endif %} onchange="submitFilterForm()"/>
+                                    <label class="btn btn-outline-dark border-0 rounded-pill btn-sm px-3 px-xl-4 px-lg-3" for="{{ choice.id_for_label }}">{{ choice.choice_label }}</label>
+                                {% endfor %}
+                            </div>
+                            <hr>
+                            
+                            {% if not request.user.is_authenticated %}
+                                <!-- City Filter -->
+                                <div class="text-muted text-center text-uppercase-expanded text-xs mb-4">City</div>
+                                <div class="mb-2 d-flex flex-column" role="group" aria-label="Select rivals' city">
+                                    {% for choice in filterset.form.city %}
+                                        <input class="btn-check" type="radio" id="{{ choice.id_for_label }}" name="city" value="{{ choice.data.value }}" autocomplete="off" {% if choice.data.selected %} checked {% endif %} onchange="submitFilterForm()"/>
+                                        <label class="btn btn-outline-primary border-0 rounded-pill btn-sm px-3 px-xl-4 px-lg-3" for="{{ choice.id_for_label }}">{{ choice.choice_label }}</label>
+                                    {% endfor %}
+                                </div>
+                            <hr>
+                            {% endif %}
+    
+                            <!-- Category Filter -->
+                            <div class="text-muted text-center text-uppercase-expanded text-xs mb-4">Category</div>
+                            <div class="d-flex flex-column mb-2" role="group" aria-label="Select rivals' category">
+                                {% for choice in filterset.form.category %}
+                                    <input class="btn-check" type="radio" id="{{ choice.id_for_label }}" name="category" value="{{ choice.data.value }}" autocomplete="off" {% if choice.data.selected %} checked {% endif %} onchange="submitFilterForm()"/>
+                                    <label class="btn btn-outline-dark border-0 rounded-pill btn-sm  px-3 px-xl-4 px-lg-3" for="{{ choice.id_for_label }}">{{ choice.choice_label }}</label>
+                                {% endfor %}
+                            </div>
+                            <button type="submit" style="display:none;"></button> <!-- Скрытая кнопка submit -->
+                        </form>
+                        <script>
+                            function submitFilterForm() {
+                                document.getElementById('filter-form').submit();
+                            }
+                        </script> 
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-9">
             <div class="card mb-4">
-                <div class="card-header d-flex justify-content-between align-items-center">
+                <div class="card-header d-flex justify-content-between align-items-center text-secondary">
                     
-                        <span>{{ total_players_by_geo_and_category }} Rivals in Your Area.</span>
-                        <span class="text-muted small">{{ request.user.preferred_geo|const_replace }}: week {{ current_week }} / {{ current_season }}</span>
-                           
+                        <span>{{ total_players_by_geo_and_category}} Rivals in Your Area.</span>
+                        <span class="text-muted small">{% if filterset.form.city.value %} {{ filterset.form.city.value|const_replace }}: {%else%} All Cities: {% endif %} week {{ current_week }} / {{ current_season }}</span>
+                        
                 </div>
                 <div class="card-body">
                     <table id="AllRivalsTable">
@@ -184,9 +202,16 @@
                     </table>
                 </div>
             </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-auto">
             <div class="card card-icon mb-4">
                 <div class="row g-0">
-                    <div class="col-auto card-icon-aside bg-primary"><i class="me-1 text-white-50" data-feather="alert-triangle"></i></div>
+                    <div class="col-auto card-icon-aside bg-primary">
+                        <i class="me-1 text-white-50" data-feather="alert-triangle"></i>
+                    </div>
                     <div class="col">
                         <div class="card-body py-5">
                             <h5 class="card-title">Third-Party Documentation Available</h5>
@@ -200,14 +225,66 @@
                 </div>
             </div>
         </div>
-        
-            
-        
+    </div>
 
-            
-            <hr class="my-10" />
-        </div>
+</div>
 
-   
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const collapseFilterElement = document.getElementById('collapseFilter');
+        if (!collapseFilterElement) {
+            return;
+        }
+        
+        // Получаем или создаем экземпляр Bootstrap Collapse
+        const bsCollapse = bootstrap.Collapse.getOrCreateInstance(collapseFilterElement, {
+            toggle: false // Не переключать состояние при инициализации
+        });
+    
+        const collapseTrigger = document.querySelector('a[href="#collapseFilter"]');
+        if (!collapseTrigger) {
+            return;
+        }
+        const arrowIcon = collapseTrigger.querySelector('.fas');
+    
+        function updateCollapseBasedOnScreenSize() {
+            const isLgOrUp = window.innerWidth >= 992; // Стандартная точка останова 'lg' в Bootstrap 5
+    
+            if (isLgOrUp) {
+                // Если экран большой и элемент не показан (и не в процессе показа)
+                if (!collapseFilterElement.classList.contains('show') && !collapseFilterElement.classList.contains('collapsing')) {
+                     bsCollapse.show();
+                }
+            } else {
+                // Если экран маленький и элемент показан (и не в процессе скрытия)
+                 if (collapseFilterElement.classList.contains('show') && !collapseFilterElement.classList.contains('collapsing')) {
+                     bsCollapse.hide();
+                }
+            }
+        }
+        
+        // Первоначальная настройка состояния при загрузке страницы
+        updateCollapseBasedOnScreenSize();
+    
+        // Обновление состояния при изменении размера окна
+        window.addEventListener('resize', updateCollapseBasedOnScreenSize);
+    
+        // Обновление иконки стрелки и aria-expanded при событиях Bootstrap
+        if (arrowIcon) {
+            collapseFilterElement.addEventListener('shown.bs.collapse', function () {
+                collapseTrigger.setAttribute('aria-expanded', 'true');
+                arrowIcon.classList.remove('fa-chevron-down');
+                arrowIcon.classList.add('fa-chevron-up');
+            });
+    
+            collapseFilterElement.addEventListener('hidden.bs.collapse', function () {
+                collapseTrigger.setAttribute('aria-expanded', 'false');
+                arrowIcon.classList.remove('fa-chevron-up');
+                arrowIcon.classList.add('fa-chevron-down');
+            });
+        }
+    });
+    </script>
+
 
 {% endblock content %}
