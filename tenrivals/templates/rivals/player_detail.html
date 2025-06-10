@@ -57,13 +57,23 @@
                                 {%if review_token %}
                                     <a href="{% url 'rivals:rate_opponent' player.pk %}" class="btn btn-link fw-500">Rate Skills</a>
                                 {% endif %}
+                                
                             </div>
                             {% else %}
-                            <!-- Если пользователь не авторизован или не является игроком, то показать кнопку "изменить профиль"-->
                             <div class="d-flex justify-content-center align-items-center mb-4">
-                                <a href="{% url 'rivals:player_update' %}" class="btn btn-link text-secondary fw-500">Edit Profile</a>
+                                
+                                <!-- Если пользователь не авторизован или не является игроком, то показать кнопку "изменить профиль"-->
+                                
+                                <a href="{% url 'rivals:player_update' %}" class="btn btn-link text-secondary fw-500">
+                                    Edit Profile
+                                </a>
+                                
+                                <a class="btn btn-transparent-dark btn-icon btn-sm" type="button" href="{% url 'rivals:update_current_player_stats' %}">
+                                    <i data-feather="refresh-cw"></i>
+                                </a>
                             </div>
                             {% endif %}
+                            
                         </div>
                     </div>
                     

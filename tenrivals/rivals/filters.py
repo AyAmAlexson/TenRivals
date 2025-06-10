@@ -1,4 +1,3 @@
-
 from django_filters import FilterSet, ChoiceFilter
 from django.forms import DateInput
 import django_filters
@@ -17,8 +16,8 @@ class TournamentsQuickFilter(FilterSet):
     geo = ChoiceFilter(choices=TR_GEOS, field_name='geo', label="", empty_label='All Countries', widget=forms.RadioSelect())
     city = ChoiceFilter(choices=TR_CITIES, field_name='city', label="", empty_label='All Cities', widget=forms.RadioSelect())
     
-    format = ChoiceFilter(choices=TOURNAMENT_FORMAT, field_name='format', label="", empty_label=None, widget=forms.RadioSelect())
-    status = ChoiceFilter(choices=TOURNAMENT_STATUS, field_name='status', label="", empty_label='All Statuses', widget=forms.RadioSelect())
+    format = ChoiceFilter(choices=TOURNAMENT_FORMAT, field_name='format', label="", empty_label=None, widget=forms.RadioSelect(), initial='S')
+    status = ChoiceFilter(choices=TOURNAMENT_STATUS, field_name='status', label="", empty_label='All', widget=forms.RadioSelect())
     category = ChoiceFilter(choices=TOURNAMENT_CATEGORY, field_name='category', label="", empty_label="All", widget=forms.RadioSelect())
 
     class Meta:
@@ -27,6 +26,10 @@ class TournamentsQuickFilter(FilterSet):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        if not self.data:
+            self.form.initial['format'] = 'S'
+            self.form.fields['format'].initial = 'S'
+            self.form.fields['format'].widget.attrs['checked'] = 'checked'
         
 
 

@@ -3,128 +3,154 @@
 {% load static %}
 
 {% block content %}
-<div id="layoutAuthentication">
+<div id="layoutAuthentication" class="bg-dual-color-primary-secondary">
     <div id="layoutAuthentication_content">
-        <main>
+    
             <div class="container-xl px-4">
-                <div class="row justify-content-center">
+                <div class="row justify-content-center  mt-10">
                     <div class="col-lg-8 col-xl-7">
                         <!-- Header -->
                         <div class="card mt-5 border-0 shadow-lg">
                             <div class="card-body p-5 text-center">
-                                <div class="mb-4" style="color: #0061f2;">
+                                <div class="mb-4 text-secondary">
                                     <i data-feather="check-circle" style="height: 3rem; width: 3rem;"></i>
                                 </div>
-                                <div class="h3 text-primary mb-0">{% trans "Verify Your Telegram Account" %}</div>
+                                <div class="h3  text-secondary mb-0">{% trans "Verify Your Telegram Account" %}</div>
                                 <div class="text-muted mb-4">{% trans "To start using Tennis Rivals, you need to verify your Telegram account." %}</div>
                             </div>
                         </div>
+                        
+                        
+                            
 
-                        {% if messages %}
-                        <div class="mt-4">
-                            {% for message in messages %}
-                            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-                            {% endfor %}
-                        </div>
-                        {% endif %}
-
-                        <div class="row mt-4">
-                            <!-- Manual Verification Method (Left Side) -->
-                            <div class="col-md-6 mb-4">
-                                <div class="card h-100 border-0 shadow-lg">
-                                    <div class="card-body p-5 text-center">
-                                        <div class="mb-4">
-                                            <i class="fas fa-user-check fa-3x text-primary"></i>
-                                        </div>
-                                        <div class="h3 text-primary">{% trans "Manual Verification" %}</div>
-                                        <p class="text-muted mb-4">{% trans "Verify with our Telegram bot directly" %}</p>
-                                    </div>
-                                    <hr class="m-0">
-                                    <div class="card-body p-5">
-                                        <div class="mb-4">
-                                            <h5 class="mb-3">1. {% trans "Start our Telegram bot" %}</h5>
-                                            <p class="small text-muted mb-3">{% trans "Open our bot in Telegram and start a conversation:" %}</p>
-                                            <a href="https://t.me/{{ telegram_bot_name }}" class="btn btn-primary w-100" target="_blank">
-                                                <i class="fab fa-telegram-plane me-1"></i> @{{ telegram_bot_name }}
-                                            </a>
-                                        </div>
-                                        
-                                        <div class="mb-4">
-                                            <h5 class="mb-3">2. {% trans "Send verification code" %}</h5>
-                                            <p class="small text-muted mb-3">{% trans "After starting the bot, send yourself a verification code:" %}</p>
-                                            <form method="get" action="{% url 'persons:resend_verification_code' %}">
-                                                <button type="submit" class="btn btn-outline-primary w-100">
-                                                    <i class="fas fa-paper-plane me-1"></i> {% trans "Send Code to Telegram" %}
-                                                </button>
-                                            </form>
-                                        </div>
-                                        
-                                        <div class="mb-0">
-                                            <h5 class="mb-3">3. {% trans "Enter the code" %}</h5>
-                                            <p class="small text-muted mb-3">{% trans "Enter the 6-digit code you received:" %}</p>
-                                            <form method="post">
-                                                {% csrf_token %}
-                                                <div class="mb-3">
-                                                    <input 
-                                                        class="form-control form-control-lg text-center" 
-                                                        id="{{ form.verification_code.id_for_label }}" 
-                                                        name="{{ form.verification_code.html_name }}" 
-                                                        type="text" 
-                                                        placeholder="0a0aaa" 
-                                                        maxlength="6" 
-                                                        autocomplete="off"
-                                                        style="letter-spacing: 0.5rem; font-weight: 500;" 
-                                                    />
-                                                    {% if form.verification_code.errors %}
-                                                    <div class="small text-danger mt-1">{{ form.verification_code.errors }}</div>
-                                                    {% endif %}
-                                                </div>
-                                                <div class="d-grid">
-                                                    <button class="btn btn-primary" type="submit">
-                                                        <i class="fas fa-check-circle me-1"></i> {% trans "Verify Account" %}
-                                                    </button>
-                                                </div>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- QR Code Verification Method (Right Side) -->
-                            <div class="col-md-6 mb-4">
-                                <div class="card h-100 border-0 shadow-lg">
-                                    <div class="card-body p-5 text-center">
-                                        <div class="mb-4">
-                                            <i class="fas fa-qrcode fa-3x text-secondary"></i>
-                                        </div>
-                                        <div class="h3 text-secondary">{% trans "QR Code Verification" %}</div>
-                                        <p class="text-muted mb-4">{% trans "Faster verification using QR code" %}</p>
-                                    </div>
-                                    <hr class="m-0">
-                                    <div class="card-body p-5">
-                                        <div class="mb-4 text-center">
-                                            <h5 class="mb-3">{% trans "Scan this QR code" %}</h5>
-                                            <p class="small text-muted mb-4">{% trans "Use your phone's camera to scan:" %}</p>
-                                            
-                                            <div class="mx-auto mb-4 p-3 bg-white rounded border" style="width: 200px; height: 200px;">
-                                                <img src="data:image/png;base64,{{ qr_code_base64 }}" class="img-fluid" alt="Verification QR Code">
+                        
+                        <div class="card my-4 border-0 shadow-lg">
+                            <div class="card-body p-4">
+                                <div class="d-flex w-100 justify-content-center text-center">
+                                    
+                                    
+                                    <div class="mb-0 mt-4">
+                                        <h5 class="mb-3">1. {% trans "Start" %} <span class=" text-primary"> @{{ telegram_bot_name }} </span> {% trans "with your Telegram account:" %} <span class=" text-primary"> {{request.user.telegram}}</span></h5> 
+                                        <hr class="mx-5 mt-5">
+                                        <div class="row m-5">
+                                            <div class="col-sm-5 d-sm-none d-flex flex-column justify-content-between">
+                                                <div class="mb-3">{% trans "Press this button" %} </div>
+                                                <a href="{{ deep_link }}" class="btn btn-outline-secondary" target="_blank">
+                                                    <i class="fab fa-telegram-plane me-1"></i> {{telegram_bot_name}}
+                                                </a>
                                             </div>
                                             
-                                            <a href="{{ deep_link }}" class="btn btn-outline-secondary w-100" target="_blank">
-                                                <i class="fab fa-telegram-plane me-1"></i> {% trans "Or Click This Link" %}
-                                            </a>
-                                        </div>
-                                        
-                                        <div class="mb-4">
-                                            <h5 class="mb-3">{% trans "Get your code automatically" %}</h5>
-                                            <p class="small text-muted">{% trans "After scanning, our bot will automatically send your verification code. Then enter it in the form on the left." %}</p>
+                                            <div class="col-sm-5 d-none d-sm-block d-flex flex-column justify-content-between">
+                                                <h6 class="mb-3">{% trans "Press this button" %} </h6>
+                                                
+                                                <div class="position-relative" style="padding-bottom: 100%">
+                                                    <div class="position-absolute top-0 start-0 w-100 h-100">
+                                                        <div class="p-3 bg-white rounded border d-flex flex-column align-items-center justify-content-center w-100 h-100">
+                                                            <p class="small text-muted mb-3">{% trans "Open and start the bot in Telegram" %}</p>
+                                                            <a href="{{ deep_link }}" class="btn btn-outline-secondary" target="_blank">
+                                                                <i class="fab fa-telegram-plane me-1"></i> Open 
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-2 d-none d-sm-block d-flex flex-column justify-content-center">
+                                                <h6 class="mb-3">{% trans "OR" %}</h6>
+                                            </div>
+                                            <div class="col-5 d-none d-sm-block d-flex flex-column justify-content-between">
+                                                <h6 class="mb-3">{% trans "Scan this QR code" %}</h6>
+                                                
+                                                <div class="position-relative" style="padding-bottom: 100%">
+                                                    <div class="position-absolute top-0 start-0 w-100 h-100">
+                                                        <div class="p-3 bg-white rounded border d-flex align-items-center justify-content-center w-100 h-100">
+                                                            <img src="data:image/png;base64,{{ qr_code_base64 }}" class="img-fluid" alt="Verification QR Code">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        
-                        <div class="card mb-5 border-0 shadow-lg">
+
+                        <div class="card mb-4 border-0 shadow-lg">
+                            <div class="card-body p-4">
+                                <div class="d-flex w-100 justify-content-center text-center">
+                                    
+                                    
+                                    <div class="mb-0 mt-4">
+                                        <h5 class="mb-3">2. {% trans "Get the verification code" %}</h5>
+                                        <hr class="mx-5 mt-5">
+                                        <p class="mb-3 position-relative">
+                                            Send this command to the bot: 
+                                            <span class="text-primary copy-command" 
+                                                  onclick="copyCommandAndShowToast(this)" 
+                                                  data-command="/verify" 
+                                                  style="cursor: pointer"
+                                                  title="Click to copy"
+                                            >/verify</span>
+                                            
+                                            <!-- Тост размещаем прямо под командой -->
+                                            <span class="copy-toast position-absolute start-50 translate-middle-x" 
+                                                  style="display: none; top: 100%; background: rgba(25, 135, 84, 0.9); color: white; 
+                                                         padding: 4px 12px; border-radius: 4px; font-size: 0.875rem; 
+                                                         white-space: nowrap; margin-top: 8px;">
+                                                Copied!
+                                            </span>
+                                        </p>
+                                        
+                                        <div class="d-flex flex-column align-items-start text-start" >
+                                            <p class="small text-muted text-start mb-0" > Make shure that: </p>
+                                            <p class="small text-muted text-start mb-0" > 1. The bot is running</p>
+                                            <p class="small text-muted text-start" > 2. The bot is running under your account <span class=" text-primary"> {{request.user.telegram}}</span></p>
+                                            
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <div class="card mb-4 border-0 shadow-lg">
+                            <div class="card-body p-4">
+                                <div class="d-flex w-100 justify-content-center text-center">
+                                    
+                                    
+                                    <div class="mb-0 mt-4">
+                                        <h5 class="mb-3">3. {% trans "Enter the code" %}</h5>
+                                        <hr class="mx-5 mt-5">
+                                        <div class="mb-3">{% trans "Enter the 6-digit code you received:" %}</div>
+                                        <form method="post">
+                                            {% csrf_token %}
+                                            <div class="mb-3">
+                                                <input 
+                                                    class="form-control form-control-lg text-center" 
+                                                    id="{{ form.verification_code.id_for_label }}" 
+                                                    name="{{ form.verification_code.html_name }}" 
+                                                    type="text" 
+                                                    placeholder="0a0aaa" 
+                                                    maxlength="6" 
+                                                    autocomplete="off"
+                                                    style="letter-spacing: 0.5rem; font-weight: 500;" 
+                                                />
+                                                {% if form.verification_code.errors %}
+                                                <div class="small text-danger mt-1">{{ form.verification_code.errors }}</div>
+                                                {% endif %}
+                                            </div>
+                                            <div class="d-grid">
+                                                <button class="btn btn-primary" type="submit">
+                                                    <i class="fas fa-check-circle me-1"></i> {% trans "Verify Account" %}
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <div class="card mb-4 border-0 shadow-lg">
                             <div class="card-body p-4">
                                 <div class="d-flex">
                                     <div class="me-3 text-primary">
@@ -142,9 +168,12 @@
                     </div>
                 </div>
             </div>
-        </main>
+
+        </div>
     </div>
 </div>
+
+
 
 <script>
 // Функция для получения параметров из URL
@@ -191,5 +220,26 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+
+function copyCommandAndShowToast(element) {
+    const command = element.dataset.command;
+    const toast = element.parentElement.querySelector('.copy-toast');
+    
+    navigator.clipboard.writeText(command)
+        .then(() => {
+            // Визуальный фидбэк на элементе
+            element.classList.add('text-success');
+            setTimeout(() => element.classList.remove('text-success'), 1000);
+            
+            // Показываем тост
+            toast.style.display = 'block';
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 2000);
+        })
+        .catch(err => {
+            console.error('Failed to copy:', err);
+        });
+}
 </script>
 {% endblock %} 

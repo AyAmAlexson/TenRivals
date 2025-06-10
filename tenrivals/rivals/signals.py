@@ -2,9 +2,11 @@ from django.db import models
 from django.db.models.signals import pre_save, post_delete, post_save # Импортируем сигналы
 from django.dispatch import receiver # Импортируем декоратор receiver
 from persons.models import CustomUser
-from .models import Player, PlayerOnboarding
+from .models import Player, PlayerOnboarding, PlayerTournament, Award
 from allauth.account.models import EmailAddress
 from allauth.account.signals import email_confirmed
+from .const import ONBOARDING_ITEMS_COST
+from .services import apply_award_service
 
 
 
@@ -100,7 +102,37 @@ def on_user_save(sender, instance, **kwargs):
     """
     if instance.is_telegram_verified:
         player_onboarding = PlayerOnboarding.objects.get(player=instance.player)
-        player_onboarding.ob_verify_tg = True
-        player_onboarding.save()
+        if not player_onboarding.is_completed and not player_onboarding.ob_verify_tg:
+            player_onboarding.ob_verify_tg = True
+            player_onboarding.save()
+            new_award = Award.objects.create(
+                player=instance.player,
+                award_type='SP',
+                received_via='OB',
+                amount=ONBOARDING_ITEMS_COST['tg_verify'],
+            )   
+            apply_award_service(award=new_award)
     else:
         pass
+
+
+
+@receiver(post_save, sender=PlayerTournament)
+def on_playertournament_save(sender, instance, **kwargs):
+    """
+    Действие при сохранении объекта PlayerTournament.
+    """
+
+    player = instance.player
+    player_onboarding = PlayerOnboarding.objects.get(player=player)
+    if not player_onboarding.is_completed and not player_onboarding.ob_first_tournament_registration:
+        player_onboarding.ob_first_tournament_registration = True
+        player_onboarding.save()
+        new_award = Award.objects.create(
+                player=instance.player,
+                award_type='SP',
+                received_via='OB',
+                amount=ONBOARDING_ITEMS_COST['first_tournament'],
+            )   
+        apply_award_service(award=new_award)
+        

@@ -1,10 +1,30 @@
 from django.shortcuts import get_object_or_404
-from .models import Match, PlayerMatch, TimelineEvent, PlayerSeasonStats, Tournament, PlayerTournament, Award
+from .models import Match, PlayerMatch, TimelineEvent, PlayerSeasonStats, Tournament, PlayerTournament, Award, PlayerCurrentStats, PlayerSeasonStats, Player
 from django.urls import reverse
-from datetime import datetime
+from datetime import datetime, date, timedelta
 import logging
+from django.db.models import Sum, Min, Max, OuterRef, Subquery
+from django.db import transaction
+from django.core.exceptions import ValidationError
 
 logger = logging.getLogger(__name__)
+from .const import DEFAULT_NTRP, DEFAULT_RANKING
+
+def today():
+    return date.today()
+def tomorrow():
+    return datetime.now().date() + timedelta(days=1)
+def next_monday():
+    next_week = tomorrow() + timedelta(days=7)
+    days_until_monday = (7 - next_week.weekday()) % 7
+    return next_week + timedelta(days=days_until_monday)
+def current_week():
+    return date.today().isocalendar()[1]
+def current_season():
+    return date.today().year
+
+
+
 
 def apply_award_service(award:Award):
     """
@@ -22,12 +42,33 @@ def apply_award_service(award:Award):
         if award.award_type == 'SP':
             logger.debug(f"Adding {award.amount} points to player {award.player.pk} in season {award.season} week {award.week}")
             player_season_stats_week.season_pts += award.amount
-            
+            award.is_implemented = True
+            award.save()
             logger.debug(f"PlayerSeasonStats for player {award.player.pk} in season {award.season} week {award.week} updated to {player_season_stats_week.season_pts} points")
+        
+            event = TimelineEvent.objects.create(
+                player=award.player,
+                event_type='B',
+                color='M',
+                text=f"Awarded {award.amount} {award.award_type} for {award.received_via} in season {award.season} week {award.week}"
+            )
+
+            event.save()
+
         elif award.award_type == 'NT':
             logger.debug(f"Adding {award.amount} NTRP to player {award.player.pk} in season {award.season} week {award.week}")
             player_season_stats_week.season_final_NTRP += award.amount
+            award.is_implemented = True
+            award.save()
             logger.debug(f"PlayerSeasonStats for player {award.player.pk} in season {award.season} week {award.week} updated to {player_season_stats_week.season_final_NTRP} NTRP")
+            event = TimelineEvent.objects.create(
+                player=award.player,
+                event_type='B',
+                color='M',
+                text=f"Awarded {award.amount} {award.award_type} for {award.received_via} in season {award.season} week {award.week}"
+            )
+
+            event.save()
         else:
             logger.error(f"Unknown award type {award.award_type} for award {award.pk}")
             return False
@@ -55,7 +96,7 @@ def rewoke_award_service(award:Award):
     try:
         if award.award_type == 'SP':
             player_season_stats_week = PlayerSeasonStats.objects.get(season=award.season, week=award.week, player=award.player)
-
+            
     except PlayerSeasonStats.DoesNotExist:
         logger.error(f"Could not find PlayerSeasonStats for award {award.pk}")
         return False
@@ -305,3 +346,171 @@ def check_overdue_matches_service():
         return count
     else:
         return False 
+    
+def update_current_player_stats_service(player: Player) -> bool:
+    """
+    Обновляет текущую статистику игрока на основе его сезонной статистики.
+    
+    Args:
+        player (Player): объект игрока
+        
+    Returns:
+        bool: True если обновление прошло успешно, False в случае ошибки
+        
+    Raises:
+        ValidationError: если player невалидный
+    """
+    if not player:
+        raise ValidationError("Player object is required")
+        
+    try:
+        with transaction.atomic():
+            pcs, _ = PlayerCurrentStats.objects.get_or_create(player=player)
+            
+            # Получаем последнюю статистику игрока
+            pss_last_week = PlayerSeasonStats.objects.filter(
+                player=player
+            ).order_by('-week', '-season').first()
+            
+            if not pss_last_week:
+                logger.warning(f"No PlayerSeasonStats found for player {player.pk}")
+                _set_default_stats(pcs)
+                return True
+                
+            # Устанавливаем текущий NTRP
+            pcs.current_NTRP = pss_last_week.season_final_NTRP
+            
+            # Подзапрос для получения последних недель каждого сезона
+            last_weeks = PlayerSeasonStats.objects.filter(
+                player=player,
+                season=OuterRef('season')
+            ).order_by('-week').values('week')[:1]
+            
+            # Получаем агрегированную статистику по всем сезонам
+            pss_all_last_weeks = PlayerSeasonStats.objects.filter(
+                player=player,
+                week=Subquery(last_weeks)
+            ).aggregate(
+                total_matches_played=Sum('matches_played'),
+                total_matches_won=Sum('matches_won'),
+                total_matches_lost=Sum('matches_lost'),
+                total_matches_rted=Sum('matches_rted'),
+                min_ntrp=Min('min_season_NTRP'),
+                max_ntrp=Max('max_season_NTRP')
+            )
+            
+            # Обновляем общую статистику с проверкой на None
+            pcs.matches_played = pss_all_last_weeks['total_matches_played'] or 0
+            pcs.matches_won = pss_all_last_weeks['total_matches_won'] or 0
+            pcs.matches_lost = pss_all_last_weeks['total_matches_lost'] or 0
+            pcs.matches_rted = pss_all_last_weeks['total_matches_rted'] or 0
+            pcs.min_NTRP = pss_all_last_weeks['min_ntrp'] or DEFAULT_NTRP
+            pcs.max_NTRP = pss_all_last_weeks['max_ntrp'] or DEFAULT_NTRP
+            
+            # Обновляем статистику текущего сезона
+            if pss_last_week.season == current_season():
+                _update_current_season_stats(pcs, pss_last_week)
+            else:
+                _reset_current_season_stats(pcs, pss_last_week)
+            
+            pcs.save()
+            return True
+            
+    except Exception as e:
+        logger.error(f"Error updating stats for player {player.pk}: {str(e)}", exc_info=True)
+        return False
+
+def _set_default_stats(pcs: PlayerCurrentStats) -> None:
+    """Устанавливает значения по умолчанию для статистики"""
+    pcs.current_NTRP = DEFAULT_NTRP
+    pcs.matches_played = 0
+    pcs.matches_won = 0
+    pcs.matches_rted = 0
+    pcs.matches_lost = 0
+    pcs.min_NTRP = DEFAULT_NTRP
+    pcs.max_NTRP = DEFAULT_NTRP
+    pcs.matches_played_this_season = 0
+    pcs.matches_won_this_season = 0
+    pcs.matches_rted_this_season = 0
+    pcs.matches_lost_this_season = 0
+    pcs.season_pts = 0
+    pcs.season_start_NTRP = DEFAULT_NTRP
+    pcs.max_NTRP_this_season = DEFAULT_NTRP
+    pcs.min_NTRP_this_season = DEFAULT_NTRP
+    pcs.ranking_absolute = DEFAULT_RANKING
+    pcs.ranking_category = DEFAULT_RANKING
+    pcs.save()
+
+def _update_current_season_stats(pcs: PlayerCurrentStats, pss_last_week: PlayerSeasonStats) -> None:
+    """Обновляет статистику текущего сезона"""
+    pcs.matches_played_this_season = pss_last_week.matches_played
+    pcs.matches_won_this_season = pss_last_week.matches_won
+    pcs.matches_rted_this_season = pss_last_week.matches_rted
+    pcs.matches_lost_this_season = pss_last_week.matches_lost
+    pcs.season_pts = pss_last_week.season_pts
+    pcs.season_start_NTRP = pss_last_week.season_start_NTRP
+    pcs.max_NTRP_this_season = pss_last_week.max_season_NTRP
+    pcs.min_NTRP_this_season = pss_last_week.min_season_NTRP
+    pcs.ranking_absolute = pss_last_week.ranking_absolute
+    pcs.ranking_category = pss_last_week.ranking_category
+
+def _reset_current_season_stats(pcs: PlayerCurrentStats, pss_last_week: PlayerSeasonStats) -> None:
+    """Сбрасывает статистику для нового сезона"""
+    pcs.matches_played_this_season = 0
+    pcs.matches_won_this_season = 0
+    pcs.matches_rted_this_season = 0
+    pcs.matches_lost_this_season = 0
+    pcs.season_pts = 0
+    pcs.season_start_NTRP = pss_last_week.season_final_NTRP
+    pcs.max_NTRP_this_season = pss_last_week.season_final_NTRP
+    pcs.min_NTRP_this_season = pss_last_week.season_final_NTRP
+    pcs.ranking_absolute = DEFAULT_RANKING
+    pcs.ranking_category = DEFAULT_RANKING
+
+
+def pss_special_get_or_create_service(player: Player) -> tuple[PlayerSeasonStats, bool]:
+    """
+    Returns:
+        tuple[PlayerSeasonStats, bool]: PlayerSeasonStats object and boolean indicating if the player is new
+        PlayerSeasonStats: PlayerSeasonStats object
+        bool: True if the player is new, False otherwise
+    """
+    try:
+
+        pss, created = PlayerSeasonStats.objects.get_or_create(player=player, season=current_season(), week=current_week())
+        logger.debug(f"NICEEEE! PlayerSeasonStats created: {created}")
+    except Exception as e:
+        logger.error(f"Error getting or creating PlayerSeasonStats: {e}")
+
+    if created:
+        previous_pss = PlayerSeasonStats.objects.filter(player=player, season=current_season(), week__lt=current_week()).order_by('-week').first()
+        if previous_pss:
+            is_new_player = False
+            if previous_pss.season == current_season():
+                pss.season_start_NTRP = previous_pss.season_final_NTRP
+                pss.season_final_NTRP = previous_pss.season_final_NTRP
+                pss.season_pts = previous_pss.season_pts
+                pss.matches_played = previous_pss.matches_played
+                pss.matches_won = previous_pss.matches_won
+                pss.matches_lost = previous_pss.matches_lost
+                pss.matches_rted = previous_pss.matches_rted
+                pss.max_season_NTRP = previous_pss.max_season_NTRP
+                pss.min_season_NTRP = previous_pss.min_season_NTRP
+                pss.save()
+            else:
+                is_new_player = True
+                pss.season_start_NTRP = previous_pss.season_final_NTRP
+                pss.season_final_NTRP = previous_pss.season_final_NTRP
+                pss.season_pts = 0
+                pss.matches_played = previous_pss.matches_played
+                pss.matches_won = previous_pss.matches_won
+                pss.matches_lost = previous_pss.matches_lost
+                pss.matches_rted = previous_pss.matches_rted
+                pss.max_season_NTRP = previous_pss.season_final_NTRP
+                pss.min_season_NTRP = previous_pss.season_final_NTRP
+                pss.save()
+    else:
+        is_new_player = False
+
+    
+    return pss, is_new_player

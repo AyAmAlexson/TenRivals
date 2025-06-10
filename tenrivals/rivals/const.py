@@ -108,7 +108,7 @@ TIMELINE_EVENT_TYPE = [
     ('D', 'Danger'),
     ('L', 'Light'),
     ('H', 'High'),
-    ('M', 'Medium'),
+    ('B', 'Onboarding'),
 ]
 
 TIMELINE_EVENT_COLOR = [
@@ -133,3 +133,38 @@ TIMELINE_EVENT_COLOR = [
     ('C', 'cyan'),
     ('A', 'aqua'),
 ]
+
+ONBOARDING_ITEMS_COST = {
+        'tg_verify': 5,
+        'main_info': 3,
+        'additional_info': 2,
+        'avatar': 3,
+        'wizard': 3,
+        'email_verify': 1,
+        'first_tournament': 3,
+        'first_match': 3,
+        'first_opponent_review': 2,
+
+    }
+
+AWARD_TYPE = [
+    ('SP', 'Season Points'),
+    ('NT', 'NTRP Points'),
+
+]
+
+AWARD_RECEIVED_VIA = [
+    ('OB', 'Onboarding'),
+    ('MW', 'Match Win'),
+    ('ML', 'Match Loss'),
+    ('MR', 'Match RTed'),
+    ('SP', 'Stage Prolongation'),
+    ('OR', 'Opponent Review'),
+    ('WC', 'Wizard Completion'),
+    ('TR', 'Tournament Result'),
+
+    
+]
+
+DEFAULT_NTRP = 1000
+DEFAULT_RANKING = 0

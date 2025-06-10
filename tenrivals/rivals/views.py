@@ -18,7 +18,7 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.shortcuts import redirect
 from django.http import HttpResponse
-from django.db.models import QuerySet, Q
+from django.db.models import QuerySet, Q, Prefetch
 from django.views.decorators.http import require_http_methods
 from django.utils.decorators import method_decorator
 from django.contrib.admin.views.decorators import staff_member_required
@@ -31,7 +31,6 @@ import logging
 import random
 import string
 from functools import wraps
-
 
 
 
@@ -50,15 +49,19 @@ from .forms import (
     EXPERIENCE_CHOICES, FREQUENCY_CHOICES, LEVEL_CHOICES, SERVE_CHOICES, MATCH_CHOICES
 )
 # Импорты констант
-from .const import GENDER, TR_GEOS, TR_CITIES
+from .const import GENDER, TR_GEOS, TR_CITIES, ONBOARDING_ITEMS_COST, AWARD_RECEIVED_VIA, AWARD_TYPE
 
 from .services import (
     approve_match_result_service,
     reopen_match_result_service,
     check_overdue_matches_service,
     apply_match_result_service,
-    delete_match_result_service
+    delete_match_result_service,
+    update_current_player_stats_service,
+    pss_special_get_or_create_service,
+    apply_award_service
 )
+
 from .filters import TournamentsQuickFilter, AllRivalsFilter
 from .models import (
     Tournament,
@@ -78,7 +81,8 @@ from .models import (
     Ticket,
     StageProlongationRequest,
     TimelineEvent,
-    PlayerOnboarding
+    PlayerOnboarding,
+    Award
 )
 from persons.models import CustomUser, TelegramVerification
 from persons.views import get_telegram_bot_instance
@@ -534,6 +538,7 @@ class AllRivalsView(ListView):
             except AttributeError:
                 preferred_geo = None
 
+
         # Инициализация фильтра с обновленным запросом
         self.filterset = AllRivalsFilter(get_query, queryset)
 
@@ -568,6 +573,7 @@ class AllRivalsView(ListView):
         context['total_players_by_geo_and_category'] = self.total_players_by_geo_and_category
         context['current_week'] = date.today().isocalendar()[1]
         context['current_season'] = date.today().year
+        context['geo'] = self.request.user.preferred_geo
         
         return context
     
@@ -587,12 +593,8 @@ class TournamentsListView(ListView):
         # Получаем обычный запрос
         queryset = super().get_queryset()
         get_query = self.request.GET.copy()
-        #if 'geo' not in get_query:
-        #    get_query['geo'] = 'GE'
-        ##if 'city' not in get_query:
-        #    get_query['city'] = 'TBI'
-        #if 'format' not in get_query:
-        #    get_query['format'] = 'S'
+        if 'format' not in get_query:
+            get_query['format'] = 'S'
         # Используем наш класс фильтрации.
         # Сохраняем нашу фильтрацию в объекте класса,
         # чтобы потом добавить в контекст и использовать в шаблоне.
@@ -667,84 +669,17 @@ def start_new_week(season=date.today().year, week=date.today().isocalendar()[1])
                 player_season_week.save()
 
 def update_current_stats(players:QuerySet):
-    current_season = date.today().year
-    current_week = date.today().isocalendar()[1]
     
     for player in players:
-        player_current_stats, created = PlayerCurrentStats.objects.get_or_create(player=player)
-        player_current_stats.updated_week = current_week
-        player_current_stats.updated_season = current_season
-
-        last_week_stats = PlayerSeasonStats.objects.filter(player=player).order_by('-season','-week').first()
-        if last_week_stats:
-            
-            player_current_stats.matches_played_this_season = last_week_stats.matches_played
-            player_current_stats.matches_won_this_season = last_week_stats.matches_won
-            player_current_stats.matches_rted_this_season = last_week_stats.matches_rted
-            player_current_stats.matches_lost_this_season = last_week_stats.matches_lost
-            player_current_stats.season_pts = last_week_stats.season_pts
-            player_current_stats.current_NTRP = last_week_stats.season_final_NTRP
-            player_current_stats.max_NTRP_this_season = last_week_stats.max_season_NTRP
-            player_current_stats.min_NTRP_this_season = last_week_stats.min_season_NTRP
-            player_current_stats.ranking_absolute = last_week_stats.ranking_absolute
-            player_current_stats.ranking_category = last_week_stats.ranking_category
-
-            if last_week_stats.max_season_NTRP > player_current_stats.max_NTRP:
-                player_current_stats.max_NTRP = last_week_stats.max_season_NTRP
-            if last_week_stats.min_season_NTRP < player_current_stats.min_NTRP:
-                player_current_stats.min_NTRP = last_week_stats.min_season_NTRP
-
-            player_current_stats.season_start_NTRP = last_week_stats.season_start_NTRP
-        
-        last_weeks = PlayerSeasonStats.objects.filter(player=player).values('season').annotate(max_week=Max('week'))
-        latest_season_stats = PlayerSeasonStats.objects.filter(player=player, week__in=[entry['max_week'] for entry in last_weeks])
-        player_current_stats.matches_played = latest_season_stats.aggregate(total_matches=Sum('matches_played'))['total_matches'] or 0 
-        player_current_stats.matches_won = latest_season_stats.aggregate(won_matches=Sum('matches_won'))['won_matches'] or 0 
-        player_current_stats.matches_rted = latest_season_stats.aggregate(rted_matches=Sum('matches_rted'))['rted_matches'] or 0 
-        player_current_stats.matches_lost = latest_season_stats.aggregate(lost_matches=Sum('matches_lost'))['lost_matches'] or 0 
-
-        player_current_stats.save()
+        update_current_player_stats_service(player)
 
     return redirect('rivals:player_detail', pk=player.pk)
 
 def update_current_stats_all(request):
-    current_season = date.today().year
-    current_week = date.today().isocalendar()[1]
 
     players = Player.objects.all()
     for player in players:
-        player_current_stats, created = PlayerCurrentStats.objects.get_or_create(player=player)
-        player_current_stats.updated_week = current_week
-        player_current_stats.updated_season = current_season
-        last_week_stats = PlayerSeasonStats.objects.filter(player=player).order_by('-season','-week').first()
-        if last_week_stats:
-            player_current_stats.matches_played_this_season = last_week_stats.matches_played
-            player_current_stats.matches_won_this_season = last_week_stats.matches_won
-            player_current_stats.matches_rted_this_season = last_week_stats.matches_rted
-            player_current_stats.matches_lost_this_season = last_week_stats.matches_lost
-            player_current_stats.season_pts = last_week_stats.season_pts
-            player_current_stats.current_NTRP = last_week_stats.season_final_NTRP
-            player_current_stats.max_NTRP_this_season = last_week_stats.max_season_NTRP
-            player_current_stats.min_NTRP_this_season = last_week_stats.min_season_NTRP
-
-            if last_week_stats.max_season_NTRP > player_current_stats.max_NTRP:
-                player_current_stats.max_NTRP = last_week_stats.max_season_NTRP
-            if last_week_stats.min_season_NTRP < player_current_stats.min_NTRP:
-                player_current_stats.min_NTRP = last_week_stats.min_season_NTRP
-
-            player_current_stats.season_start_NTRP = last_week_stats.season_start_NTRP
-
-            player_current_stats.ranking_absolute = last_week_stats.ranking_absolute
-            player_current_stats.ranking_category = last_week_stats.ranking_category
-
-        last_weeks = PlayerSeasonStats.objects.filter(player=player).values('season').annotate(max_week=Max('week'))
-        latest_season_stats = PlayerSeasonStats.objects.filter(player=player, week__in=[entry['max_week'] for entry in last_weeks])
-        player_current_stats.matches_played = latest_season_stats.aggregate(total_matches=Sum('matches_played'))['total_matches'] or 0 
-        player_current_stats.matches_won = latest_season_stats.aggregate(won_matches=Sum('matches_won'))['won_matches'] or 0 
-        player_current_stats.matches_rted = latest_season_stats.aggregate(rted_matches=Sum('matches_rted'))['rted_matches'] or 0 
-        player_current_stats.matches_lost = latest_season_stats.aggregate(lost_matches=Sum('matches_lost'))['lost_matches'] or 0 
-        player_current_stats.save()
-
+        update_current_player_stats_service(player)
     
     return redirect('rivals:all_rivals')
 
@@ -1762,300 +1697,7 @@ def reopen_stage_prolongation_request(request, pk):
 def generate_verification_code():
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
 
-''' === СТАРЫЙ ВИЗАРД === 
 
-class PlayerWizardView(LoginRequiredMixin, View):
-    template_name = 'rivals/player_wizard.html'
-    add_telegram_form_class = AddTelegramUsernameForm
-    player_profile_form_class = PlayerWizardForm
-    manual_code_form_class = TelegramVerificationForm
-
-    def get_verification_context(self, user, verification):
-        """Готовит контекст для отображения опций верификации (Шаг 2)."""
-        context = {}
-        bot_username = settings.TELEGRAM_BOT_USERNAME
-        if bot_username and verification.verification_code:
-            start_param = f"verify_{verification.verification_code}"
-            deep_link = f"https://t.me/{bot_username}?start={start_param}"
-            context['deep_link'] = deep_link
-
-            try:
-                qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_L, box_size=10, border=4)
-                qr.add_data(deep_link)
-                qr.make(fit=True)
-                img = qr.make_image(fill_color="black", back_color="white")
-                buffer = BytesIO()
-                img.save(buffer, format="PNG")
-                qr_code_base64 = base64.b64encode(buffer.getvalue()).decode()
-                context['qr_code_base64'] = qr_code_base64
-            except Exception as e:
-                 logger.error(f"Error generating QR code for user {user.email}: {e}")
-                 # В случае ошибки, устанавливаем None, чтобы кнопка "Retry" появилась
-                 context['qr_code_base64'] = None # <--- Убедитесь, что здесь None при ошибке
-                 context['qr_code_error'] = True # Можно добавить флаг ошибки
-
-            context['telegram_bot_name'] = bot_username
-            # Используем имя из verification, если оно там есть, иначе из user.telegram
-            context['telegram_username_current'] = verification.telegram_username or user.telegram
-        else:
-            logger.warning(f"Cannot generate verification links for user {user.email}. Bot username or code missing.")
-            context['deep_link'] = None
-            context['qr_code_base64'] = None
-            context['telegram_bot_name'] = None
-            context['telegram_username_current'] = verification.telegram_username or user.telegram # Все равно покажем имя
-            context['qr_code_error'] = True # Добавляем флаг ошибки
-
-        context['manual_code_form'] = self.manual_code_form_class()
-        return context
-
-    def get(self, request, *args, **kwargs):
-        user = request.user
-        context = {}
-        player, player_created = Player.objects.get_or_create(user=user)
-        # onboarding, onboarding_created = PlayerOnboarding.objects.get_or_create(player=player)
-
-        # Определяем ЛОГИЧЕСКИЙ этап
-        if user.is_telegram_verified:
-            stage = 2
-        else:
-            stage = 1
-
-        context['stage'] = stage
-
-        # Определяем ВИЗУАЛЬНЫЙ шаг
-        visual_step = 1
-        if stage == 1:
-            verification, verification_created = TelegramVerification.objects.get_or_create(
-                user=user,
-                defaults={'verification_code': generate_verification_code()} # Используем локальную функцию
-            )
-            if not verification.verification_code:
-                 verification.verification_code = generate_verification_code() # Используем локальную функцию
-                 verification.save()
-
-            current_telegram_username = verification.telegram_username or user.telegram # Ищем имя в двух местах
-            if current_telegram_username:
-                visual_step = 2
-                context.update(self.get_verification_context(user, verification))
-            else:
-                visual_step = 1
-
-            context['add_telegram_form'] = self.add_telegram_form_class(
-                 initial={'telegram_username': current_telegram_username}
-            )
-
-        elif stage == 2:
-            visual_step = 3
-            context['profile_form'] = self.player_profile_form_class(instance=player, user=user)
-
-        context['visual_step'] = visual_step
-        logger.info(f"User {user.email} GET request. Stage: {stage}, Visual Step: {visual_step}")
-
-        return render(request, self.template_name, context)
-
-    def post(self, request, *args, **kwargs):
-        user = request.user
-        player = get_object_or_404(Player, user=user)
-        # Получаем или создаем объект верификации СРАЗУ
-        verification, verification_created = TelegramVerification.objects.get_or_create(
-            user=user,
-            defaults={'verification_code': generate_verification_code()}
-        )
-        context = {}
-
-        action = None
-        if 'submit_telegram_username' in request.POST:
-            action = 'submit_username'
-            current_visual_step = 1
-        elif 'submit_verification_code' in request.POST:
-            action = 'submit_code'
-            current_visual_step = 2
-        elif 'check_verification_status' in request.POST:
-            action = 'check_status'
-            current_visual_step = 2
-        # === НОВАЯ ПРОВЕРКА ===
-        elif 'retry_verification_generation' in request.POST:
-            action = 'retry_generation'
-            current_visual_step = 2
-        # =====================
-        elif 'submit_profile' in request.POST:
-            action = 'submit_profile'
-            current_visual_step = 5
-        else:
-             try:
-                 current_visual_step = int(request.POST.get('visual_step', 1))
-             except ValueError:
-                 current_visual_step = 1
-             action = 'unknown'
-
-        logger.info(f"User {user.email} POST request. Action: {action}, Visual Step: {current_visual_step}")
-
-        # --- Обработка Шага 1: Отправка ника ---
-        if action == 'submit_username':
-            # ... (ваш существующий код для submit_username, НО используйте verification из начала post) ...
-            # Замените все verification = ... на просто использование verification
-            # Пример изменения:
-            context['visual_step'] = 1
-            add_telegram_form = self.add_telegram_form_class(request.POST)
-            if add_telegram_form.is_valid():
-                tg_username = add_telegram_form.cleaned_data['telegram_username']
-                # Проверка уникальности (оставляем как есть)
-                if TelegramVerification.objects.filter(
-                    telegram_username__iexact=tg_username
-                    ).exclude(user=user).exists() or CustomUser.objects.filter(
-                        telegram__iexact=tg_username # Проверяем и поле CustomUser.telegram
-                        ).exclude(pk=user.pk).exists():
-                     messages.error(request, f"Telegram username '@{tg_username}' is already associated with another account.")
-                     context['add_telegram_form'] = add_telegram_form
-                     context['stage'] = 1
-                     return render(request, self.template_name, context)
-
-                # Сохраняем ник и генерируем код
-                user.telegram = tg_username # Сохраняем в CustomUser
-                verification.telegram_username = tg_username # Сохраняем в TelegramVerification
-                verification.is_verified = False
-                user.is_telegram_verified = False
-                verification.telegram_id = '' # Сбрасываем ID при смене ника
-                # Генерируем НОВЫЙ код при смене ника
-                verification.verification_code = generate_verification_code()
-                user.save(update_fields=['telegram', 'is_telegram_verified'])
-                verification.save()
-                logger.info(f"Username @{tg_username} saved for {user.email}. New verification code generated.")
-
-                # Отправляем код ботом (ваш код без изменений)
-                if bot:
-                    try:
-                        chat_info = bot.get_chat(f"@{tg_username}")
-                        if chat_info and chat_info.id:
-                            message_text = f'Your Tennis Rivals verification code: *{verification.verification_code}*'
-                            bot.send_message(chat_info.id, message_text, parse_mode='Markdown')
-                            verification.telegram_id = str(chat_info.id) # Сохраняем ID
-                            verification.save(update_fields=['telegram_id'])
-                            messages.success(request, f"Verification code sent to @{tg_username}. Please check your Telegram or use other methods below.")
-                        else:
-                            logger.warning(f"Could not find Telegram user @{tg_username} to send the code.")
-                            messages.warning(request, "Could not find Telegram user to send the code.")
-                    except Exception as e:
-                        logger.error(f"Error sending code via bot for {user.email}: {e}")
-                        messages.warning(request, f"Could not send code to @{tg_username}. Please use QR/Link or manual code entry.")
-                else:
-                    messages.info(request, "Telegram bot not configured. Please use QR/Link or manual code entry.")
-
-                return redirect('rivals:player_wizard')
-            else:
-                context['add_telegram_form'] = add_telegram_form
-                context['stage'] = 1
-                return render(request, self.template_name, context)
-
-        # --- Обработка Шага 2: Отправка кода ---
-        elif action == 'submit_code':
-            # ... (ваш существующий код для submit_code, используйте verification из начала post) ...
-            context['visual_step'] = 2
-            context['stage'] = 1
-            manual_code_form = self.manual_code_form_class(request.POST)
-            if manual_code_form.is_valid():
-                entered_code = manual_code_form.cleaned_data['verification_code']
-                # Сверяем с кодом из объекта verification
-                if verification.verification_code and verification.verification_code == entered_code:
-                    verification.is_verified = True
-                    verification.verified_at = now()
-                    user.is_telegram_verified = True
-                    verification.save()
-                    user.save(update_fields=['is_telegram_verified'])
-                    messages.success(request, "Telegram verified successfully!")
-                    logger.info(f"Telegram manually verified for {user.email}")
-                    return redirect('rivals:player_wizard')
-                else:
-                    messages.error(request, "Invalid verification code.")
-                    logger.warning(f"Invalid manual code for user {user.email}")
-            # Контекст для ререндера Шага 2
-            context['manual_code_form'] = manual_code_form
-            context['add_telegram_form'] = self.add_telegram_form_class(initial={'telegram_username': verification.telegram_username or user.telegram})
-            context.update(self.get_verification_context(user, verification))
-            return render(request, self.template_name, context)
-
-        # --- Обработка Шага 2: Проверка статуса ---
-        elif action == 'check_status':
-             # ... (ваш существующий код для check_status, используйте user.is_telegram_verified) ...
-            context['visual_step'] = 2
-            context['stage'] = 1
-            # Просто проверяем флаг на пользователе
-            if user.is_telegram_verified:
-                messages.success(request, "Verification confirmed! Proceed to the next step.")
-                logger.info(f"Verification check successful for {user.email}")
-                return redirect('rivals:player_wizard')
-            else:
-                messages.info(request, "Telegram verification is not completed yet. Please verify using the methods above or try checking again later.")
-                logger.info(f"Verification check failed for {user.email}")
-                # Контекст для ререндера Шага 2
-                context['manual_code_form'] = self.manual_code_form_class()
-                context['add_telegram_form'] = self.add_telegram_form_class(initial={'telegram_username': verification.telegram_username or user.telegram})
-                context.update(self.get_verification_context(user, verification))
-                return render(request, self.template_name, context)
-
-        # === НОВЫЙ ОБРАБОТЧИК ===
-        elif action == 'retry_generation':
-            context['visual_step'] = 2 # Остаемся на шаге 2
-            context['stage'] = 1      # Остаемся на этапе верификации
-            logger.info(f"User {user.email} attempting retry verification generation.")
-
-            # Убедимся, что код верификации существует
-            if not verification.verification_code:
-                verification.verification_code = generate_verification_code()
-                verification.save()
-                logger.info(f"Generated new verification code for {user.email} during retry.")
-
-            # Здесь НЕ пытаемся снова отправить код ботом, т.к. проблема
-            # скорее всего была в генерации QR/ссылки. GET-запрос сам
-            # перегенерирует контекст с QR/ссылкой.
-
-            messages.info(request, "Attempting to regenerate verification options...")
-            # Просто перенаправляем на GET-обработчик этого же визарда.
-            # GET-обработчик вызовет get_verification_context и отобразит
-            # актуальные данные (включая QR/ссылку, если генерация теперь удастся).
-            return redirect('rivals:player_wizard')
-        # ========================
-
-        # --- Обработка Шага 5: Отправка профиля ---
-        elif action == 'submit_profile':
-            # ... (ваш существующий код для submit_profile) ...
-            context['visual_step'] = 5
-            context['stage'] = 2
-            if not user.is_telegram_verified:
-                messages.error(request, "Telegram verification is required before submitting profile.")
-                return redirect('rivals:player_wizard')
-
-            profile_form = self.player_profile_form_class(
-                request.POST, request.FILES, instance=player, user=user
-            )
-            if profile_form.is_valid():
-                # Сохраняем профиль и устанавливаем is_new=False внутри формы
-                saved_player = profile_form.save()
-                messages.success(request, "Your profile has been completed successfully!")
-                logger.info(f"Profile saved and is_new set to False for user {user.email}")
-                # Возможно, стоит проверить PlayerOnboarding и завершить его
-                try:
-                    onboarding = PlayerOnboarding.objects.get(player=saved_player)
-                    onboarding.is_completed = True
-                    onboarding.completed_at = now()
-                    onboarding.save()
-                except PlayerOnboarding.DoesNotExist:
-                    pass # Или создать его как завершенный
-
-                return redirect('rivals:today')
-            else:
-                logger.warning(f"Profile form errors for user {user.email}: {profile_form.errors.as_json()}")
-                context['profile_form'] = profile_form
-                # Передаем stage и visual_step для корректного ререндера
-                return render(request, self.template_name, context)
-
-        # --- Неизвестное действие ---
-        else:
-            messages.error(request, "Invalid action submitted.")
-            logger.warning(f"Unknown POST action for user {user.email}")
-            return redirect('rivals:player_wizard')
-
-'''
 # === Вспомогательные функции для Шага 5 ===
 def calculate_ntrp_from_data(data):
     """Рассчитывает NTRP из словаря данных."""
@@ -2107,11 +1749,12 @@ class PlayerWizardBaseView(LoginRequiredMixin, FormView):
 
         cleaned_data_serializable = {}
         for key, value in form.cleaned_data.items():
-            # Теперь 'forms' здесь определен
+            # Пропускаем файловые поля
             if isinstance(form.fields.get(key), (forms.FileField, forms.ImageField)):
-                 logger.debug(f"Skipping file field '{key}' for session serialization.")
-                 continue
+                logger.debug(f"Skipping file field '{key}' for session serialization.")
+                continue
 
+            # Преобразуем объекты date в строки ISO
             if isinstance(value, date):
                 cleaned_data_serializable[key] = value.isoformat()
             else:
@@ -2131,10 +1774,8 @@ class PlayerWizardBaseView(LoginRequiredMixin, FormView):
         return super().form_valid(form)
     
     def dispatch(self, request, *args, **kwargs):
-         # Проверка доступа к шагу (базовая)
         if not request.user.is_authenticated:
             return self.handle_no_permission()
-        # Более сложная проверка доступа будет в каждом конкретном view
         return super().dispatch(request, *args, **kwargs)
 
 class PlayerWizardStep1View(PlayerWizardBaseView):
@@ -2160,6 +1801,11 @@ class PlayerWizardStep1View(PlayerWizardBaseView):
         
         user = self.request.user
         verification, verification_created = TelegramVerification.objects.get_or_create(user=user)
+        
+        if user.is_telegram_verified:
+            messages.error(self.request, "Your Telegram account is already verified. You can change it in your account settings.")
+            return redirect('rivals:player_wizard_step3')
+        
         tg_username = form.cleaned_data['telegram_username']
 
         # Проверка уникальности (важно!)
@@ -2223,10 +1869,8 @@ class PlayerWizardStep2View(PlayerWizardBaseView):
     def dispatch(self, request, *args, **kwargs):
         # Проверка: нельзя попасть сюда, если не введен ник на шаге 1
         wizard_data = request.session.get('wizard_data', {})
-        if 'step1_data' not in wizard_data or not wizard_data['step1_data'].get('telegram_username'):
-            messages.warning(request, "Please enter your Telegram username first.")
-            return redirect('rivals:player_wizard_step1')
-        # Проверка: если уже верифицирован, пропускаем шаг
+
+# Проверка: если уже верифицирован, пропускаем шаг
         if request.user.is_telegram_verified:
             logger.info(f"User {request.user.email} already verified, skipping step 2.")
             # Сохраним пустые данные для шага 2 в сессию, чтобы показать его как пройденный
@@ -2234,6 +1878,12 @@ class PlayerWizardStep2View(PlayerWizardBaseView):
             request.session['wizard_data'] = wizard_data
             request.session.modified = True
             return redirect(self.get_success_url())
+        
+
+        if 'step1_data' not in wizard_data or not wizard_data['step1_data'].get('telegram_username'):
+            messages.warning(request, "Please enter your Telegram username first.")
+            return redirect('rivals:player_wizard_step1')
+        
         return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
@@ -2522,25 +2172,31 @@ class PlayerWizardStep5View(LoginRequiredMixin, View):
     template_name = 'rivals/player_wizard_step5.html'
     step = 5
 
-    # Auxiliary function remains the same
     def get_all_wizard_data(self, request, convert_date=False):
         wizard_data = request.session.get('wizard_data', {})
         all_data = {}
+        
         for i in range(1, self.step):
             step_key = f'step{i}_data'
             step_data = wizard_data.get(step_key, {})
+            
             if isinstance(step_data, dict):
-                if convert_date:
-                    birthdate_str = step_data.get('birthdate')
-                    if birthdate_str and isinstance(birthdate_str, str):
+                processed_data = {}
+                for key, value in step_data.items():
+                    if convert_date and isinstance(value, str) and key == 'birthdate':
                         try:
-                            step_data['birthdate'] = date.fromisoformat(birthdate_str)
+                            processed_data[key] = date.fromisoformat(value)
                         except (ValueError, TypeError):
-                            logger.error(f"Could not convert birthdate '{birthdate_str}' back to date object.")
-                            step_data.pop('birthdate', None)
-                all_data.update(step_data)
+                            logger.error(f"Could not convert birthdate '{value}' back to date object.")
+                            processed_data[key] = None
+                    elif isinstance(value, date):
+                        processed_data[key] = value.isoformat()
+                    else:
+                        processed_data[key] = value
+                all_data.update(processed_data)
             else:
                 logger.warning(f"Data for {step_key} in session is not a dict: {step_data}")
+                
         logger.debug(f"Collected all_data (convert_date={convert_date}) for Step 5: {all_data}")
         return all_data
 
@@ -2594,82 +2250,110 @@ class PlayerWizardStep5View(LoginRequiredMixin, View):
 
         return render(request, self.template_name, context)
 
-    # Simplified post method - NO VALIDATION HERE
-    @transaction.atomic # Wrap in transaction for safety
+    def save_player_data(self, request, all_data, player_instance):
+        """Отдельный метод для сохранения данных игрока"""
+        # Обновляем данные пользователя
+        player_instance.user.first_name = all_data.get('first_name', player_instance.user.first_name)
+        player_instance.user.last_name = all_data.get('last_name', player_instance.user.last_name)
+        if new_mobile := all_data.get('mobile'):
+            player_instance.user.mobile = new_mobile
+        player_instance.user.save(update_fields=['first_name', 'last_name', 'mobile'])
+
+        # Обновляем данные игрока
+        player_fields = ['birthdate', 'city', 'gender', 'height', 'weight', 
+                        'tennis_exp_year', 'availability']
+        for field in player_fields:
+            if field in all_data:
+                setattr(player_instance, field, all_data[field])
+        
+        # Сохраняем базовые данные игрока
+        player_instance.is_new = False
+        player_instance.save()
+
+        return player_instance
+
+    def handle_ntrp_calculation(self, all_data, player_instance):
+        """Отдельный метод для расчета и сохранения NTRP"""
+        ntrp_int = calculate_ntrp_from_data(all_data)
+        pss, is_new_player = pss_special_get_or_create_service(player_instance)
+        
+        if is_new_player:
+            pss.season_start_NTRP = ntrp_int
+            pss.season_final_NTRP = ntrp_int
+            pss.season_pts = 0
+            pss.matches_played = pss.matches_won = pss.matches_lost = pss.matches_rted = 0
+            pss.max_season_NTRP = pss.min_season_NTRP = ntrp_int
+            pss.save()
+            
+            player_instance.category = determine_category_from_ntrp(ntrp_int)
+            player_instance.save()
+            return True
+        return False
+
+    def handle_onboarding(self, player_instance):
+        """Отдельный метод для обработки онбординга"""
+        onboarding, created = PlayerOnboarding.objects.get_or_create(player=player_instance)
+        award_needed = created or not onboarding.ob_wizard_completed
+        
+        if award_needed:
+            onboarding.ob_wizard_completed = True
+            onboarding.save()
+            
+            new_award = Award.objects.create(
+                player=player_instance,
+                award_type='SP',
+                received_via='WC',
+                amount=ONBOARDING_ITEMS_COST['wizard']
+            )
+            apply_award_service(new_award)
+
     def post(self, request, *args, **kwargs):
-        logger.info(f"Processing POST for Step 5 confirmation by {request.user.email}.")
+        """Обработка POST-запроса с защитой от потери данных"""
+        logger.info(f"Processing POST for Step 5 confirmation by {request.user.email}")
+        
+        # Сохраняем данные сессии в временную переменную
+        wizard_data_backup = request.session.get('wizard_data', {})
         all_data = self.get_all_wizard_data(request, convert_date=True)
 
-        player_instance = None
         try:
-            player_instance = request.user.player
-        except Player.DoesNotExist:
-             logger.error(f"Player does not exist for user {request.user.email} during Step 5 POST")
-             messages.error(request, _("User profile not found. Cannot complete setup.")) # Используем _ здесь
-             return redirect('rivals:player_wizard_step1')
+            with transaction.atomic():
+                # Получаем или создаем игрока
+                try:
+                    player_instance = request.user.player
+                except Player.DoesNotExist:
+                    logger.error(f"Player does not exist for user {request.user.email}")
+                    messages.error(request, _("User profile not found. Cannot complete setup."))
+                    return redirect('rivals:player_wizard_step1')
 
-        try:
-            logger.debug(f"Updating player instance {player_instance.pk} with data subset: { {k:v for k,v in all_data.items() if k in ['first_name','last_name','birthdate','city','gender','height','weight','tennis_exp_year','availability']} }") # Логируем только то, что сохраняем
+                # Сохраняем основные данные игрока
+                player_instance = self.save_player_data(request, all_data, player_instance)
+                
+                # Обрабатываем NTRP и статистику
+                try:
+                    is_new_player = self.handle_ntrp_calculation(all_data, player_instance)
+                    if is_new_player:
+                        update_current_player_stats(request)
+                    else:
+                        messages.warning(request, _("You are already active player. Recalculation will be available next season."))
+                except Exception as ntrp_error:
+                    logger.error(f"NTRP calculation failed: {ntrp_error}")
+                    # Продолжаем выполнение, так как это некритическая ошибка
 
-            # --- Обновляем поля, которые ЕСТЬ в модели Player ---
-            player_instance.user.first_name = all_data.get('first_name', player_instance.user.first_name)
-            player_instance.user.last_name = all_data.get('last_name', player_instance.user.last_name)
-            # Mobile в CustomUser
-            new_mobile = all_data.get('mobile')
-            if new_mobile is not None:
-                player_instance.user.mobile = new_mobile
-                player_instance.user.save(update_fields=['mobile'])
+                # Обрабатываем онбординг и награды
+                self.handle_onboarding(player_instance)
 
-            if 'birthdate' in all_data:
-                player_instance.birthdate = all_data['birthdate']
-            if 'city' in all_data:
-                 player_instance.city = all_data['city'] # Assuming CharField
-            player_instance.gender = all_data.get('gender', player_instance.gender)
-            player_instance.height = all_data.get('height', player_instance.height)
-            player_instance.weight = all_data.get('weight', player_instance.weight)
-            player_instance.tennis_exp_year = all_data.get('tennis_exp_year', player_instance.tennis_exp_year)
-            player_instance.availability = all_data.get('availability', player_instance.availability)
-
-            # --- НЕ обновляем поля, которых нет в модели ---
-            # player_instance.experience_level = ...
-            # player_instance.playing_frequency = ...
-            # player_instance.technical_level = ...
-            # player_instance.serve_level = ...
-            # player_instance.match_experience = ...
-
-            # --- Рассчитываем и сохраняем ТОЛЬКО NTRP (если поле есть) ---
-            try:
-                 ntrp_int = calculate_ntrp_from_data(all_data)
-                 # Убедитесь, что поле 'rating_ntrp' существует в модели Player!
-                 player_instance.rating_ntrp = ntrp_int
-                 logger.info(f"Calculated and set rating_ntrp = {ntrp_int}")
-            except AttributeError:
-                 logger.error("Model Player does not have field 'rating_ntrp'. Cannot save calculated NTRP.")
-            except Exception as ntrp_error:
-                 logger.error(f"Could not calculate/set NTRP during final save: {ntrp_error}")
-                 # player_instance.rating_ntrp = 0 # Или не трогать поле
-
-            # --- Mark profile complete ---
-            player_instance.is_new = False
-
-
-            # --- Сохраняем player (user сохранен отдельно) ---
-            player_instance.save()
-            logger.info(f"Player instance {player_instance.pk} updated successfully.")
-
-            # ... (onboarding, session pop, redirect) ...
-            onboarding, onboarding_created = PlayerOnboarding.objects.get_or_create(player=player_instance)
-
-        
-            request.session.pop('wizard_data', None)
-            messages.success(request, _("Your profile has been completed successfully!")) # Используем _ здесь
-            return redirect('rivals:today')
+                # Только после успешного сохранения всех данных удаляем данные из сессии
+                request.session.pop('wizard_data', None)
+                messages.success(request, _("Your profile has been completed successfully!"))
+                return redirect('rivals:today')
 
         except Exception as e:
-             logger.exception(f"Error during final DIRECT save for wizard user {request.user.email}: {e}")
-             # Используем _ здесь
-             messages.error(request, _("An error occurred while saving your profile. Please try again or contact support."))
-             return redirect(request.path)
+            logger.exception(f"Error during final save for wizard user {request.user.email}: {e}")
+            # Восстанавливаем данные сессии
+            request.session['wizard_data'] = wizard_data_backup
+            request.session.modified = True
+            messages.error(request, _(f"An error occurred while saving your profile. Please try again or contact support."))
+            return redirect(request.path)
 
     # --- NO get_form_kwargs, form_valid, form_invalid needed ---
 
@@ -2679,3 +2363,12 @@ def activate_onboarding(request):
     player = request.user.player
     onboarding, created = PlayerOnboarding.objects.get_or_create(player=player)
     return redirect('rivals:today')
+
+
+def update_current_player_stats(request):
+    player = request.user.player
+    if update_current_player_stats_service(player):
+        messages.success(request, _("Your stats have been updated successfully!"))
+    else:
+        messages.error(request, _("Could not update your stats. Please try again or contact support."))
+    return redirect('rivals:player_detail', player.pk)

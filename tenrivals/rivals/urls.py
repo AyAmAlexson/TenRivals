@@ -15,7 +15,8 @@ from .views import (
     PlayerWizardStep3View,
     PlayerWizardStep4View,
     PlayerWizardStep5View,
-    activate_onboarding
+    activate_onboarding,
+    update_current_player_stats,
 )
 
 app_name = 'rivals'
@@ -68,4 +69,5 @@ urlpatterns = [
     path('player-wizard/step4/', PlayerWizardStep4View.as_view(), name='player_wizard_step4'),
     path('player-wizard/step5/', PlayerWizardStep5View.as_view(), name='player_wizard_step5'),
     path('activate-onboarding/', activate_onboarding, name='activate_onboarding'),
+    path('update-current-player-stats/', update_current_player_stats, name='update_current_player_stats'),
 ]

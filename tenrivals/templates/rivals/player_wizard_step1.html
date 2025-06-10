@@ -86,6 +86,8 @@
                      <form method="post" id="wizard-step1-form">
                          {% csrf_token %}
                          <h3 class="text-primary">{% trans "Step 1: Link Telegram" %}</h3>
+
+                         {% if request.user.is_authenticated and not request.user.is_telegram_verified %}
                          <h5 class="card-title mb-4">{% trans "Enter your Telegram username" %}</h5>
 
                         <!-- Форма ввода ника -->
@@ -121,14 +123,29 @@
                               </ol>
                          </div>
 
-                         
-
                          <hr class="my-4" />
                          <div class="d-flex justify-content-end">
                              <button class="btn btn-primary" type="submit">
                                   {% trans "Save & Proceed to Verification" %} <i data-feather="arrow-right" class="ms-1"></i>
                              </button>
                          </div>
+
+                         {%elif request.user.is_authenticated and request.user.is_telegram_verified %}
+                         <div class="alert alert-success">Your Telegram account {{request.user.telegram}} is verified.</div>
+                         <div class="text-muted small">If you want to change your Telegram account, click here:</div>
+                         <a href="{% url 'persons:change_telegram' %}" class="btn btn-light"> 
+                            <i data-feather="arrow-up-circle" class="me-1"></i> {% trans "Change Telegram" %}
+                         </a>
+
+                         <hr class="my-4" />
+                         <div class="d-flex justify-content-end">
+                             <a class="btn btn-primary" href="{% url 'rivals:player_wizard_step2' %}">
+                                  {% trans "Proceed" %} <i data-feather="arrow-right" class="ms-1"></i>
+                             </a>
+                         </div>
+                         {% endif %}
+
+                         
                      </form>
                 </div>
             </div>

@@ -2,7 +2,7 @@ from django.db import models
 from persons.models import CustomUser
 from .const import TOURNAMENT_GENDER, TOURNAMENT_FORMAT, TOURNAMENT_CATEGORY, TOURNAMENT_STATUS, TOURNAMENT_TYPE, GENDER, TOKEN_STATUS
 from .const import DELETED_PAIR, MATCH_STATUS, TR_GEOS, CURRENT_SEASON, TR_CITIES
-from .const import TIMELINE_EVENT_TYPE, TIMELINE_EVENT_COLOR
+from .const import TIMELINE_EVENT_TYPE, TIMELINE_EVENT_COLOR,ONBOARDING_ITEMS_COST, AWARD_RECEIVED_VIA, AWARD_TYPE
 
 from datetime import date, datetime, timedelta
 from django.utils.timezone import now
@@ -30,25 +30,10 @@ def next_monday():
     return next_week + timedelta(days=days_until_monday)
 def current_week():
     return date.today().isocalendar()[1]
+def current_season():
+    return date.today().year
 
-AWARD_TYPE = [
-    ('SP', 'Season Points'),
-    ('NT', 'NTRP Points'),
 
-]
-
-AWARD_RECEIVED_VIA = [
-    ('OB', 'Onboarding'),
-    ('MW', 'Match Win'),
-    ('ML', 'Match Loss'),
-    ('MR', 'Match RTed'),
-    ('SP', 'Stage Prolongation'),
-    ('OR', 'Opponent Review'),
-    ('WC', 'Wizard Completion'),
-    ('TR', 'Tournament Result'),
-
-    
-]
 
    
 
@@ -87,7 +72,9 @@ class Player(models.Model):
             self.last_name = self.user.last_name
 
         from .models import PlayerOnboarding
-        ob, created = PlayerOnboarding.objects.get_or_create(player=self)
+        ob, ob_created = PlayerOnboarding.objects.get_or_create(player=self)
+        pss, pss_created = PlayerSeasonStats.objects.get_or_create(player=self, season=current_season(), week=current_week())
+        pcs, pcs_created = PlayerCurrentStats.objects.get_or_create(player=self)
         
         super().save(*args, **kwargs)
         # Инвалидируем кэш при изменении
@@ -691,9 +678,6 @@ class PlayerSeasonStats(models.Model):
     @property
     def win_rate(self):
         return f'{int(self.matches_won / self.matches_played * 100)}%'
-        
-
-
 
 
     def save(self, *args, **kwargs):
@@ -746,15 +730,7 @@ class PlayerCurrentStats(models.Model):
         else:
             return '-%'
         
-    def update_current_stats(self):
-        self.matches_played = Match.objects.filter(player=self).count()
-        self.matches_won = PlayerMatch.objects.filter(player=self, is_winner=True, opponent_is_withdrawn=False).count()
-        self.matches_rted = PlayerMatch.objects.filter(player=self, is_withdrawn=True).count()
-        self.matches_lost = PlayerMatch.objects.filter(player=self, is_winner=False).count()
 
-        self.matches_played_this_season = PlayerMatch.objects.filter(player=self, match__season=current_season()).count()
-        self.matches_won_this_season = PlayerMatch.objects.filter(player=self, is_winner=True, opponent_is_withdrawn=False, match__season=current_season()).count()
-        self.save()
 
 class PairSeasonStats(models.Model):
     pair = models.ForeignKey(Pair, on_delete=models.CASCADE, related_name='season_stats')
@@ -942,18 +918,6 @@ class StageProlongationRequest(models.Model):
         self.save()
 
 
-ONBOARDING_ITEMS_COST = {
-        'tg_verify': 5,
-        'main_info': 3,
-        'additional_info': 2,
-        'avatar': 3,
-        'wizard': 3,
-        'email_verify': 1,
-        'first_tournament': 3,
-        'first_match': 3,
-        'first_opponent_review': 2,
-
-    }
 
 
 class PlayerOnboarding(models.Model):

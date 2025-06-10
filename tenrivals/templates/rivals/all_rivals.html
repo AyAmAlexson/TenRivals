@@ -46,7 +46,7 @@
                             </div>
                             <hr>
                             
-                            {% if not request.user.is_authenticated %}
+                            
                                 <!-- City Filter -->
                                 <div class="text-muted text-center text-uppercase-expanded text-xs mb-4">City</div>
                                 <div class="mb-2 d-flex flex-column" role="group" aria-label="Select rivals' city">
@@ -56,7 +56,7 @@
                                     {% endfor %}
                                 </div>
                             <hr>
-                            {% endif %}
+                           
     
                             <!-- Category Filter -->
                             <div class="text-muted text-center text-uppercase-expanded text-xs mb-4">Category</div>
@@ -82,8 +82,8 @@
             <div class="card mb-4">
                 <div class="card-header d-flex justify-content-between align-items-center text-secondary">
                     
-                        <span>{{ total_players_by_geo_and_category}} Rivals in Your Area.</span>
-                        <span class="text-muted small">{% if filterset.form.city.value %} {{ filterset.form.city.value|const_replace }}: {%else%} All Cities: {% endif %} week {{ current_week }} / {{ current_season }}</span>
+                        <span>{{ total_players_by_geo_and_category}} Rivals in Your Area: {{geo|const_replace}}.</span>
+                        <span class="text-muted small">{% if filterset.form.city.value %} {{ filterset.form.city.value|const_replace }}: {%elif geo %}  {{ geo|const_replace }}: {%else%} All Cities: {% endif %} week {{ current_week }} / {{ current_season }}</span>
                         
                 </div>
                 <div class="card-body">

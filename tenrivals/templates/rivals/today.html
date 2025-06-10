@@ -271,7 +271,7 @@
             <div class="card card-header-actions card-scrollable h-100">
                 <div class="card-header justify-content-between">
                     <div>Onboarding</div>
-                    <div><strong class="text-muted">{{ onboarding.get_total_awards_received }}</strong><span class="text-muted">/{{ onboarding.get_total_cost }} points received</span></div>
+                    <div class="fw-300"><strong class="text-muted">{{ onboarding.get_total_awards_received }}</strong><span class="text-muted">/{{ onboarding.get_total_cost }} points received</span></div>
                 </div>
 
                 <div class="card-body">
@@ -289,9 +289,9 @@
                     {% endif %}
                     <td><p class="card-text">{{ checkpoint.0 }}</p> </td>
                     {% if not checkpoint.3 %}
-                    <td><a href="{{ checkpoint.1 }}" class="btn btn-sm btn-accent"> Go!</a> </td>
+                    <td class="text-center"><a href="{{ checkpoint.1 }}" class="btn btn-sm btn-accent rounded-0"> Go!</a> </td>
                     {% else %}
-                    <td><p class="text-success fw-700">Done</p> </td>
+                    <td class="text-center"><i data-feather="check-circle" class="text-success me-1"></i> </td>
                     {% endif %}
                     <td>+ {{ checkpoint.2 }} points</td>
                     </tr>
