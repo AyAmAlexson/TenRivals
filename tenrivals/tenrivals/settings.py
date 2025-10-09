@@ -14,13 +14,12 @@ env = environ.Env()
 environ.Env.read_env()
 
 SECRET_KEY = env('SECRET_KEY')
-# DEBUG = (os.environ.get('DEBUG_VALUE') == 'True')
-# DEBUG = (os.environ.get('DEBUG_VALUE', 'False') == 'True')
-DEBUG = True
+# DEBUG controlled via env; default False (production-safe)
+DEBUG = env.bool('DEBUG', default=False)
 
 ALLOWED_HOSTS = [
-    'https://ten-rivals-ee84d08ca066.herokuapp.com/',
     '127.0.0.1',
+    '.herokuapp.com',
     'distinct-shrimp-slightly.ngrok-free.app'
 ]
 
