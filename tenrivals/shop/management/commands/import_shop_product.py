@@ -327,14 +327,18 @@ class Command(BaseCommand):
                     attributes=attributes or {},
                 )
 
-        # Attach up to 3 images (as before)
-        for idx, img_url in enumerate(images[:3], start=1):
+        # Attach up to 5 images
+        for idx, img_url in enumerate(images[:5], start=1):
             try:
                 data = self.fetch_image_bytes(img_url, referer=url)
                 if data is None:
                     continue
                 filename = urlparse(img_url).path.split('/')[-1] or f'image_{idx}.jpg'
-                getattr(target_obj, f'image_{idx}').save(filename, ContentFile(data), save=False)
+                # Support image_4 and image_5
+                field_name = f'image_{idx}'
+                if not hasattr(target_obj, field_name):
+                    break
+                getattr(target_obj, field_name).save(filename, ContentFile(data), save=False)
             except Exception:
                 continue
         target_obj.save()

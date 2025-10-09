@@ -15,6 +15,9 @@ class Command(BaseCommand):
         headers = {
             'User-Agent': 'Mozilla/5.0 (compatible; rehydrate/1.0)'
         }
+        # Some CDNs require Referer; add for Tennis Warehouse Europe images
+        if 'img.tenniswarehouse-europe.com' in url:
+            headers['Referer'] = 'https://www.tenniswarehouse-europe.com/'
         try:
             resp = requests.get(url, timeout=20, headers=headers)
             resp.raise_for_status()
@@ -31,29 +34,30 @@ class Command(BaseCommand):
 
         updated = 0
         for p in qs:
-            urls = []
-            # prefer explicit source list in attributes
+            candidate_urls: list[str] = []
+            # 1) explicit list from attributes
             if isinstance(p.attributes, dict) and p.attributes.get('source_images'):
-                urls = p.attributes['source_images']
-            # fallback to current images' URLs
-            else:
-                for f in (p.image_1, p.image_2, p.image_3):
-                    if f and hasattr(f, 'url'):
-                        urls.append(f.url)
-            # If still empty or local media paths, derive from saved filenames like CODE-1.jpg
-            if (not urls) or all(u.startswith('/media/') for u in urls):
-                filenames = []
-                for f in (p.image_1, p.image_2, p.image_3):
-                    if f and getattr(f, 'name', None):
-                        filenames.append(f.name.split('/')[-1])
-                code = None
-                for fn in filenames:
-                    if '-' in fn:
-                        code = fn.split('-')[0]
-                        break
-                if code:
-                    base = 'https://img.tenniswarehouse-europe.com/watermark/rs.php?path='
-                    urls = [f"{base}{code}-{i}.jpg&nw=1462" for i in range(1, 7)]
+                candidate_urls.extend(p.attributes['source_images'])
+            # 2) existing file URLs (may 404 on prod if file missing, we'll test)
+            for f in (p.image_1, p.image_2, p.image_3):
+                if f and getattr(f, 'url', None):
+                    try:
+                        candidate_urls.append(f.url)
+                    except Exception:
+                        pass
+            # 3) derive by code from existing file names like CODE-1.jpg
+            filenames = []
+            for f in (p.image_1, p.image_2, p.image_3):
+                if f and getattr(f, 'name', None):
+                    filenames.append(f.name.split('/')[-1])
+            code = None
+            for fn in filenames:
+                if '-' in fn:
+                    code = fn.split('-')[0]
+                    break
+            if code:
+                base = 'https://img.tenniswarehouse-europe.com/watermark/rs.php?path='
+                candidate_urls.extend([f"{base}{code}-{i}.jpg&nw=1462" for i in range(1, 7)])
             if not urls:
                 continue
 
@@ -61,15 +65,25 @@ class Command(BaseCommand):
             p.image_1 = None
             p.image_2 = None
             p.image_3 = None
+            if hasattr(p, 'image_4'):
+                p.image_4 = None
+            if hasattr(p, 'image_5'):
+                p.image_5 = None
 
             slot = 1
-            for u in urls[:3]:
+            seen = set()
+            for u in candidate_urls:
+                if u in seen:
+                    continue
+                seen.add(u)
                 data = self.fetch_image_bytes(u)
                 if not data:
                     continue
                 filename = urlparse(u).path.split('/')[-1] or f'image_{slot}.jpg'
                 getattr(p, f'image_{slot}').save(filename, ContentFile(data), save=False)
                 slot += 1
+                if slot > 5:
+                    break
             p.save()
             updated += 1
 

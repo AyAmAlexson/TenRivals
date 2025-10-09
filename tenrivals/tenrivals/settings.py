@@ -16,6 +16,7 @@ environ.Env.read_env()
 SECRET_KEY = env('SECRET_KEY')
 # DEBUG controlled via env; default False (production-safe)
 DEBUG = env.bool('DEBUG', default=False)
+USE_S3 = env.bool('USE_S3', default=('DYNO' in os.environ))
 
 ALLOWED_HOSTS = [
     '127.0.0.1',
@@ -180,7 +181,7 @@ STATICFILES_DIRS = [
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 
-IS_PRODUCTION = 'HEROKU' in os.environ
+IS_PRODUCTION = USE_S3
 
 if IS_PRODUCTION:
     # --- Настройки для Heroku (используем AWS S3) ---

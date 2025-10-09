@@ -62,6 +62,8 @@ class Product(models.Model):
     image_1 = models.ImageField(upload_to='shop/products/', null=True, blank=True)
     image_2 = models.ImageField(upload_to='shop/products/', null=True, blank=True)
     image_3 = models.ImageField(upload_to='shop/products/', null=True, blank=True)
+    image_4 = models.ImageField(upload_to='shop/products/', null=True, blank=True)
+    image_5 = models.ImageField(upload_to='shop/products/', null=True, blank=True)
 
     # Optional categorization
     category = models.ForeignKey(Category, null=True, blank=True, on_delete=models.SET_NULL, related_name='products')
@@ -88,7 +90,7 @@ class Product(models.Model):
 
     @property
     def main_image(self):
-        return self.image_1 or self.image_2 or self.image_3
+        return self.image_1 or self.image_2 or self.image_3 or self.image_4 or self.image_5
 
     @property
     def sizes_list(self):
