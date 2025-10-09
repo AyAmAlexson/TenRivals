@@ -2372,3 +2372,6 @@ def update_current_player_stats(request):
     else:
         messages.error(request, _("Could not update your stats. Please try again or contact support."))
     return redirect('rivals:player_detail', player.pk)
+
+def test_cards(request):
+    return render(request, 'rivals/test_cards.html')

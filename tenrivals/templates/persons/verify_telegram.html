@@ -8,7 +8,7 @@
     
             <div class="container-xl px-4">
                 <div class="row justify-content-center  mt-10">
-                    <div class="col-lg-8 col-xl-7">
+                    <div class="col-lg-11 col-xl-10">
                         <!-- Header -->
                         <div class="card mt-5 border-0 shadow-lg">
                             <div class="card-body p-5 text-center">
@@ -16,54 +16,146 @@
                                     <i data-feather="check-circle" style="height: 3rem; width: 3rem;"></i>
                                 </div>
                                 <div class="h3  text-secondary mb-0">{% trans "Verify Your Telegram Account" %}</div>
-                                <div class="text-muted mb-4">{% trans "To start using Tennis Rivals, you need to verify your Telegram account." %}</div>
+                                <div class="text-muted mb-2">{% trans "To start using Tennis Rivals, you need to verify your Telegram account." %}</div>
                             </div>
                         </div>
-                        
-                        
-                            
+                    
 
-                        
-                        <div class="card my-4 border-0 shadow-lg">
-                            <div class="card-body p-4">
-                                <div class="d-flex w-100 justify-content-center text-center">
-                                    
-                                    
-                                    <div class="mb-0 mt-4">
-                                        <h5 class="mb-3">1. {% trans "Start" %} <span class=" text-primary"> @{{ telegram_bot_name }} </span> {% trans "with your Telegram account:" %} <span class=" text-primary"> {{request.user.telegram}}</span></h5> 
-                                        <hr class="mx-5 mt-5">
-                                        <div class="row m-5">
-                                            <div class="col-sm-5 d-sm-none d-flex flex-column justify-content-between">
-                                                <div class="mb-3">{% trans "Press this button" %} </div>
-                                                <a href="{{ deep_link }}" class="btn btn-outline-secondary" target="_blank">
-                                                    <i class="fab fa-telegram-plane me-1"></i> {{telegram_bot_name}}
-                                                </a>
+                        <div class="row g-4 py-4">
+                            <!-- Шаг 1 -->
+                            <div class="col-md-4 d-flex">
+                                <div class="card border-0 shadow-lg h-100 w-100">
+                                    <div class="card-body p-4 d-flex flex-column h-100">
+                                        <!-- Шапка карточки одинаковой высоты -->
+                                        <div class="d-flex align-items-end mb-3" style="min-height: 3.5rem;">
+                                            <div class="step-number text-primary opacity-25 me-3">01</div>
+                                            <h5 class="h5 mb-0 lh-sm">
+                                                {% trans "Open the bot in Telegram" %}<br>
+                                                <i class="fab fa-telegram-plane"></i>
+                                            </h5>
+                                        </div>
+                                        <hr class="w-100 my-3">
+
+                                        <!-- Контент -->
+                                        <div class="flex-grow-1 d-flex flex-column justify-content-between">
+                                            <div class="text-center mb-4">
+                                                <div class="action-text">
+                                                    {% trans "Start" %} 
+                                                    <a href="{{ deep_link }}" class="text-primary fw-medium" target="_blank">
+                                                        {{telegram_bot_name}} 
+                                                        <i class="fa-solid fa-arrow-up-right-from-square small"></i>
+                                                    </a>
+                                                </div>
+                                                <div class="text-muted small mt-2">
+                                                    {% trans "with your account" %} 
+                                                    <span class="text-primary">{{request.user.telegram}}</span>
+                                                </div>
                                             </div>
-                                            
-                                            <div class="col-sm-5 d-none d-sm-block d-flex flex-column justify-content-between">
-                                                <h6 class="mb-3">{% trans "Press this button" %} </h6>
-                                                
-                                                <div class="position-relative" style="padding-bottom: 100%">
-                                                    <div class="position-absolute top-0 start-0 w-100 h-100">
-                                                        <div class="p-3 bg-white rounded border d-flex flex-column align-items-center justify-content-center w-100 h-100">
-                                                            <p class="small text-muted mb-3">{% trans "Open and start the bot in Telegram" %}</p>
-                                                            <a href="{{ deep_link }}" class="btn btn-outline-secondary" target="_blank">
-                                                                <i class="fab fa-telegram-plane me-1"></i> Open 
-                                                            </a>
+                                            <div class="card-footer-content mt-auto">
+                                                <div class="text-center">
+                                                    <div class="text-muted small mb-3">{% trans "Or scan QR code" %}</div>
+                                                    <div class="content-box mx-auto">
+                                                        <div class="bg-white rounded border p-3">
+                                                            <img src="data:image/png;base64,{{ qr_code_base64 }}" 
+                                                                 class="img-fluid" alt="QR Code">
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="col-2 d-none d-sm-block d-flex flex-column justify-content-center">
-                                                <h6 class="mb-3">{% trans "OR" %}</h6>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        
+                            <!-- Шаг 2 -->
+                            <div class="col-md-4 d-flex">
+                                <div class="card border-0 shadow-lg h-100 w-100">
+                                    <div class="card-body p-4 d-flex flex-column h-100">
+                                        <div class="d-flex align-items-end mb-3" style="min-height: 3.5rem;">
+                                            <div class="step-number text-primary opacity-25 me-3">02</div>
+                                            <h5 class="h5 mb-0 lh-sm">
+                                                {% trans "Get verification code" %}<br>
+                                                <i class="fas fa-key"></i>
+                                            </h5>
+                                        </div>
+                                        <hr class="w-100 my-3">
+
+                                        <div class="flex-grow-1 d-flex flex-column justify-content-between">
+                                            <div class="text-center mb-4">
+                                                <div class="action-text">
+                                                    {% trans "Send this command to the bot:" %}
+                                                </div>
+                                                <div class="command-text mt-2">
+                                                    <span class="text-primary copy-command fw-medium" 
+                                                          onclick="copyCommandAndShowToast(this)" 
+                                                          data-command="/verify" 
+                                                          style="cursor: pointer">/verify</span>
+                                                </div>
                                             </div>
-                                            <div class="col-5 d-none d-sm-block d-flex flex-column justify-content-between">
-                                                <h6 class="mb-3">{% trans "Scan this QR code" %}</h6>
-                                                
-                                                <div class="position-relative" style="padding-bottom: 100%">
-                                                    <div class="position-absolute top-0 start-0 w-100 h-100">
-                                                        <div class="p-3 bg-white rounded border d-flex align-items-center justify-content-center w-100 h-100">
-                                                            <img src="data:image/png;base64,{{ qr_code_base64 }}" class="img-fluid" alt="Verification QR Code">
+                                            <div class="card-footer-content mt-auto">
+                                                <div class="text-center">
+                                                    <div class="text-muted small mb-3">{% trans "Make sure that:" %}</div>
+                                                    <div class="content-box mx-auto d-flex align-items-center justify-content-center" style="aspect-ratio: 1/1;">
+                                                        <div class="bg-white rounded border p-3 w-100 h-100 d-flex flex-column justify-content-center">
+                                                            <div class="d-flex flex-column gap-2 align-items-center">
+                                                                <div class="d-flex align-items-center gap-2 justify-content-center">
+                                                                    <i class="fas fa-check-circle text-success"></i>
+                                                                    <span class="small">Bot is running</span>
+                                                                </div>
+                                                                <div class="d-flex align-items-center gap-2 justify-content-center">
+                                                                    <i class="fas fa-user text-primary"></i>
+                                                                    <span class="small">Using account: {{request.user.telegram}}</span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        
+                            <!-- Шаг 3 -->
+                            <div class="col-md-4 d-flex">
+                                <div class="card border-0 shadow-lg h-100 w-100">
+                                    <div class="card-body p-4 d-flex flex-column h-100">
+                                        <div class="d-flex align-items-end mb-3" style="min-height: 3.5rem;">
+                                            <div class="step-number text-primary opacity-25 me-3">03</div>
+                                            <h5 class="h5 mb-0 lh-sm">
+                                                {% trans "Enter verification code" %}<br>
+                                                <i class="fas fa-shield-alt"></i>
+                                            </h5>
+                                        </div>
+                                        <hr class="w-100 my-3">
+
+                                        <div class="flex-grow-1 d-flex flex-column justify-content-between">
+                                            <div class="text-center mb-4">
+                                                <div class="action-text">
+                                                    {% trans "Enter the 6-digit code you received" %}
+                                                </div>
+                                            </div>
+                                            <div class="card-footer-content mt-auto">
+                                                <div class="text-center">
+                                                    <div class="content-box mx-auto d-flex align-items-center justify-content-center" style="aspect-ratio: 1/1;">
+                                                        <div class="bg-white rounded border p-3 w-100 h-100 d-flex flex-column justify-content-center">
+                                                            <form method="post" class="verification-form">
+                                                                {% csrf_token %}
+                                                                <input class="form-control form-control-lg text-center mb-3" 
+                                                                       style="letter-spacing: 0.5em;"
+                                                                       id="{{ form.verification_code.id_for_label }}"
+                                                                       name="{{ form.verification_code.html_name }}"
+                                                                       type="text"
+                                                                       placeholder="000000"
+                                                                       maxlength="6"
+                                                                       autocomplete="off">
+                                                                {% if form.verification_code.errors %}
+                                                                <div class="text-danger small mb-3">{{ form.verification_code.errors }}</div>
+                                                                {% endif %}
+                                                                <button type="submit" class="btn btn-primary w-100">
+                                                                    <i class="fas fa-check-circle me-2"></i>{% trans "Verify Account" %}
+                                                                </button>
+                                                            </form>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -73,83 +165,6 @@
                                 </div>
                             </div>
                         </div>
-
-                        <div class="card mb-4 border-0 shadow-lg">
-                            <div class="card-body p-4">
-                                <div class="d-flex w-100 justify-content-center text-center">
-                                    
-                                    
-                                    <div class="mb-0 mt-4">
-                                        <h5 class="mb-3">2. {% trans "Get the verification code" %}</h5>
-                                        <hr class="mx-5 mt-5">
-                                        <p class="mb-3 position-relative">
-                                            Send this command to the bot: 
-                                            <span class="text-primary copy-command" 
-                                                  onclick="copyCommandAndShowToast(this)" 
-                                                  data-command="/verify" 
-                                                  style="cursor: pointer"
-                                                  title="Click to copy"
-                                            >/verify</span>
-                                            
-                                            <!-- Тост размещаем прямо под командой -->
-                                            <span class="copy-toast position-absolute start-50 translate-middle-x" 
-                                                  style="display: none; top: 100%; background: rgba(25, 135, 84, 0.9); color: white; 
-                                                         padding: 4px 12px; border-radius: 4px; font-size: 0.875rem; 
-                                                         white-space: nowrap; margin-top: 8px;">
-                                                Copied!
-                                            </span>
-                                        </p>
-                                        
-                                        <div class="d-flex flex-column align-items-start text-start" >
-                                            <p class="small text-muted text-start mb-0" > Make shure that: </p>
-                                            <p class="small text-muted text-start mb-0" > 1. The bot is running</p>
-                                            <p class="small text-muted text-start" > 2. The bot is running under your account <span class=" text-primary"> {{request.user.telegram}}</span></p>
-                                            
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-
-                        <div class="card mb-4 border-0 shadow-lg">
-                            <div class="card-body p-4">
-                                <div class="d-flex w-100 justify-content-center text-center">
-                                    
-                                    
-                                    <div class="mb-0 mt-4">
-                                        <h5 class="mb-3">3. {% trans "Enter the code" %}</h5>
-                                        <hr class="mx-5 mt-5">
-                                        <div class="mb-3">{% trans "Enter the 6-digit code you received:" %}</div>
-                                        <form method="post">
-                                            {% csrf_token %}
-                                            <div class="mb-3">
-                                                <input 
-                                                    class="form-control form-control-lg text-center" 
-                                                    id="{{ form.verification_code.id_for_label }}" 
-                                                    name="{{ form.verification_code.html_name }}" 
-                                                    type="text" 
-                                                    placeholder="0a0aaa" 
-                                                    maxlength="6" 
-                                                    autocomplete="off"
-                                                    style="letter-spacing: 0.5rem; font-weight: 500;" 
-                                                />
-                                                {% if form.verification_code.errors %}
-                                                <div class="small text-danger mt-1">{{ form.verification_code.errors }}</div>
-                                                {% endif %}
-                                            </div>
-                                            <div class="d-grid">
-                                                <button class="btn btn-primary" type="submit">
-                                                    <i class="fas fa-check-circle me-1"></i> {% trans "Verify Account" %}
-                                                </button>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-
                         <div class="card mb-4 border-0 shadow-lg">
                             <div class="card-body p-4">
                                 <div class="d-flex">
@@ -174,6 +189,74 @@
 </div>
 
 
+<style>
+.row.py-4, .row.g-4.py-4 {
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+.card {
+    transition: transform 0.2s ease-in-out;
+    border-radius: 0.75rem;
+}
+.card:hover {
+    transform: translateY(-3px);
+}
+.step-number {
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1;
+}
+.card hr {
+    opacity: 0.1;
+}
+.card-content, .card-footer-content {
+    min-height: 180px;
+}
+.content-box {
+    max-width: 200px;
+    width: 100%;
+    aspect-ratio: 1/1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.action-text {
+    font-size: 1rem;
+}
+.command-text {
+    font-size: 1.1rem;
+}
+@media (max-width: 991.98px) {
+    .card-content, .card-footer-content {
+        min-height: 120px;
+    }
+    .content-box {
+        max-width: 160px;
+    }
+}
+@media (max-width: 767.98px) {
+    .card-content, .card-footer-content {
+        min-height: auto;
+    }
+    .card-body {
+        padding: 1.25rem;
+    }
+    .step-number {
+        font-size: 1.75rem;
+    }
+}
+@media (max-width: 575.98px) {
+    .content-box {
+        max-width: 120px;
+    }
+    .card {
+        border-radius: 0.5rem;
+    }
+    .row.g-4.py-4 > [class^='col-'] {
+        margin-bottom: 1.5rem;
+    }
+}
+</style>
 
 <script>
 // Функция для получения параметров из URL
@@ -219,27 +302,23 @@ document.addEventListener('DOMContentLoaded', function() {
             }, 500);
         }
     });
+
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function(tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
 });
 
-function copyCommandAndShowToast(element) {
-    const command = element.dataset.command;
-    const toast = element.parentElement.querySelector('.copy-toast');
-    
-    navigator.clipboard.writeText(command)
-        .then(() => {
-            // Визуальный фидбэк на элементе
-            element.classList.add('text-success');
-            setTimeout(() => element.classList.remove('text-success'), 1000);
-            
-            // Показываем тост
-            toast.style.display = 'block';
-            setTimeout(() => {
-                toast.style.display = 'none';
-            }, 2000);
-        })
-        .catch(err => {
-            console.error('Failed to copy:', err);
-        });
+function copyCommand(command) {
+    navigator.clipboard.writeText(command).then(() => {
+        const tooltip = bootstrap.Tooltip.getInstance('[data-bs-toggle="tooltip"]');
+        tooltip.setContent({ '.tooltip-inner': 'Copied!' });
+        setTimeout(() => {
+            tooltip.setContent({ '.tooltip-inner': 'Copy command' });
+        }, 2000);
+    });
 }
+
 </script>
 {% endblock %} 

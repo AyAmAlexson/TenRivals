@@ -9,6 +9,7 @@ from .views import (
     approve_match_result, implement_match_result_all, create_ticket, reopen_ticket, close_ticket,
     reopen_match_result, check_overdue_matches, stage_prolongation_request, 
     approve_stage_prolongation_request, reject_stage_prolongation_request, reopen_stage_prolongation_request,
+    test_cards,
     # PlayerWizardView,
     PlayerWizardStep1View,
     PlayerWizardStep2View,
@@ -70,4 +71,5 @@ urlpatterns = [
     path('player-wizard/step5/', PlayerWizardStep5View.as_view(), name='player_wizard_step5'),
     path('activate-onboarding/', activate_onboarding, name='activate_onboarding'),
     path('update-current-player-stats/', update_current_player_stats, name='update_current_player_stats'),
+    path('test-cards/', test_cards, name='test_cards'),
 ]

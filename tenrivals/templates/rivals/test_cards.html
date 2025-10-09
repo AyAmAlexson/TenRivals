@@ -1,0 +1,1243 @@
+{% extends 'basic.html' %}
+{% load static %}
+{% load custom_tags %}
+{% load custom_filters %}
+
+{% block content %}
+<div class="container-xl px-4 mt-20 mb-10">
+<div class="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4 overflow-auto">
+    <div class="text-center mb-6">
+        <h1 class="text-4xl font-bold text-gray-800 mb-2">
+            Карточки игроков Tennis Rivals
+        </h1>
+        <p class="text-lg text-gray-600 mb-2">
+            Кликните на любую карточку для переключения между сторонами
+        </p>
+        <p class="text-sm text-gray-500">
+            Масштабировано для экрана (оригинальный размер: 1720×2600px)
+        </p>
+    </div>
+    
+    <div class="row justify-content-center align-items-center">
+        <!-- Синяя карточка - Novice -->
+        <div class="col-md-4 mb-4">
+            <div class="d-inline-block" style="transform: scale(1); transform-origin: center;">
+                <div class="player-card-container" data-variant="blue">
+                    <div class="player-card">
+                        <!-- Лицевая сторона -->
+                        <div class="player-card-front d-flex flex-column align-items-center">
+                            <div class="card-header">
+                                <div class="card-title">TENNIS RIVALS</div>
+                            </div>
+                            <div class="card-main">
+                                <div class="player-card-bg"></div>
+                                <div class="player-photo">
+                                    
+                                    <img src="{% static 'assets/img/image123411.png' %}" alt="Player photo">
+                                </div>
+                                <div class="player-info">
+                                    <div class="player-name">MR.ALEXSON</div>
+                                    <div class="player-level">NOVICE</div>
+                                </div>
+                            </div>
+                            <div class="card-bottom">
+                                <div class="player-details">
+                                    <div class="full-name">ANDREY MOLODENKO</div>
+                                    <div class="location">TBILISI</div>
+                                </div>
+                                
+                            </div>
+                            <div class="score-overlay">
+                                <div class="score-bg-polygon"></div>
+                                <div class="score-text">1550</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Обратная сторона -->
+                        <div class="player-card-back">
+                            <div class="back-header">
+                                <div class="back-title">TENNIS RIVALS</div>
+                            </div>
+                            <div class="stats-header">
+                                <div class="stats-title">PLAYER STATS</div>
+                                <div class="back-player-name">MR.ALEXSON</div>
+                            </div>
+                            <div class="stats-grid">
+                                <div class="stat-item">
+                                    <div class="stat-label">Season Points</div>
+                                    <div class="stat-value">2555</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-label">Season Ranking</div>
+                                    <div class="stat-value">#34</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-label">Games</div>
+                                    <div class="stat-value">12</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-label">Wins</div>
+                                    <div class="stat-value">8</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-label">Loses</div>
+                                    <div class="stat-value">3</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-label">RTs</div>
+                                    <div class="stat-value">1</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-label">Win Rate</div>
+                                    <div class="stat-value">67%</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-label">NTRP</div>
+                                    <div class="stat-value">1550</div>
+                                </div>
+                            </div>
+                            <div class="action-buttons">
+                                <div class="btn-challenge">Challenge Them!</div>
+                                <div class="btn-info">View info</div>
+                            </div>
+                            <div class="back-location">TBILISI</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <h3 class="text-lg font-semibold text-blue-600 mt-1">Novice Level</h3>
+            <p class="text-xs text-gray-600">Рейтинг: 1550</p>
+        </div>
+
+        <!-- Бирюзовая карточка - Challenger -->
+        <div class="col-md-4 mb-4">
+            <div class="d-inline-block" style="transform: scale(1); transform-origin: center;">
+                <div class="player-card-container" data-variant="teal">
+                    <div class="player-card">
+                        <!-- Лицевая сторона -->
+                        <div class="player-card-front">
+                            <div class="card-header">
+                                <div class="card-title">TENNIS RIVALS</div>
+                            </div>
+                            <div class="card-main">
+                                <div class="player-card-bg"></div>
+                                <div class="player-photo">
+                                    <img src="{% static 'assets/img/image123124.png' %}" alt="Player photo">
+                                </div>
+                                <div class="player-info">
+                                    <div class="player-name">MR.ALEXSON</div>
+                                    <div class="player-level">CHALLENGER</div>
+                                </div>
+                            </div>
+                            <div class="card-bottom">
+                                <div class="player-details">
+                                    <div class="full-name">ANDREY MOLODENKO</div>
+                                    <div class="location">TBILISI</div>
+                                </div>
+                                <div class="score-section">
+                                    <div class="score">2250</div>
+                                </div>
+                            </div>
+                            <div class="score-overlay">
+                                <div class="score-bg-polygon"></div>
+                                <div class="score-text">2250</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Обратная сторона -->
+                        <div class="player-card-back">
+                            <div class="back-header">
+                                <div class="back-title">TENNIS RIVALS</div>
+                            </div>
+                            <div class="stats-header">
+                                <div class="stats-title">PLAYER STATS</div>
+                                <div class="back-player-name">MR.ALEXSON</div>
+                            </div>
+                            <div class="stats-grid">
+                                <div class="stat-item">
+                                    <div class="stat-label">Season Points</div>
+                                    <div class="stat-value">2555</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-label">Season Ranking</div>
+                                    <div class="stat-value">#34</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-label">Games</div>
+                                    <div class="stat-value">12</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-label">Wins</div>
+                                    <div class="stat-value">8</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-label">Loses</div>
+                                    <div class="stat-value">3</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-label">RTs</div>
+                                    <div class="stat-value">1</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-label">Win Rate</div>
+                                    <div class="stat-value">67%</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-label">NTRP</div>
+                                    <div class="stat-value">2250</div>
+                                </div>
+                            </div>
+                            <div class="action-buttons">
+                                <div class="btn-challenge">Challenge Them!</div>
+                                <div class="btn-info">View info</div>
+                            </div>
+                            <div class="back-location">TBILISI</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <h3 class="text-lg font-semibold text-teal-600 mt-1">Challenger Level</h3>
+            <p class="text-xs text-gray-600">Рейтинг: 2250</p>
+        </div>
+
+        <!-- Бежевая карточка - Tour -->
+        <div class="col-md-4 mb-4">
+            <div class="d-inline-block" style="transform: scale(1); transform-origin: center;">
+                <div class="player-card-container" data-variant="tan">
+                    <div class="player-card">
+                        <!-- Лицевая сторона -->
+                        <div class="player-card-front">
+                            <div class="card-header">
+                                <div class="card-title">TENNIS RIVALS</div>
+                            </div>
+                            <div class="card-main">
+                                <div class="player-card-bg"></div>
+                                <div class="player-photo">
+                                    <img src="{% static 'assets/img/image123124.png' %}" alt="Player photo">
+                                </div>
+                                <div class="player-info">
+                                    <div class="player-name">MR.ALEXSON</div>
+                                    <div class="player-level">TOUR</div>
+                                </div>
+                            </div>
+                            <div class="card-bottom">
+                                <div class="player-details">
+                                    <div class="full-name">ANDREY MOLODENKO</div>
+                                    <div class="location">TBILISI</div>
+                                </div>
+                                <div class="score-section">
+                                    <div class="score">3150</div>
+                                </div>
+                            </div>
+                            <div class="score-overlay">
+                                <div class="score-bg-polygon"></div>
+                                <div class="score-text">3150</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Обратная сторона -->
+                        <div class="player-card-back">
+                            <div class="back-header">
+                                <div class="back-title">TENNIS RIVALS</div>
+                            </div>
+                            <div class="stats-header">
+                                <div class="stats-title">PLAYER STATS</div>
+                                <div class="back-player-name">MR.ALEXSON</div>
+                            </div>
+                            <div class="stats-grid">
+                                <div class="stat-item">
+                                    <div class="stat-label">Season Points</div>
+                                    <div class="stat-value">2555</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-label">Season Ranking</div>
+                                    <div class="stat-value">#34</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-label">Games</div>
+                                    <div class="stat-value">12</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-label">Wins</div>
+                                    <div class="stat-value">8</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-label">Loses</div>
+                                    <div class="stat-value">3</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-label">RTs</div>
+                                    <div class="stat-value">1</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-label">Win Rate</div>
+                                    <div class="stat-value">67%</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-label">NTRP</div>
+                                    <div class="stat-value">3150</div>
+                                </div>
+                            </div>
+                            <div class="action-buttons">
+                                <div class="btn-challenge">Challenge Them!</div>
+                                <div class="btn-info">View info</div>
+                            </div>
+                            <div class="back-location">TBILISI</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <h3 class="text-lg font-semibold text-yellow-600 mt-1">Tour Level</h3>
+            <p class="text-xs text-gray-600">Рейтинг: 3150</p>
+        </div>
+
+        <!-- Красная карточка - Master -->
+            <div class="col-md-4 mb-4">
+            <div class="d-inline-block" style="transform: scale(1); transform-origin: center;">
+                <div class="player-card-container" data-variant="red">
+                    <div class="player-card">
+                        <!-- Лицевая сторона -->
+                        <div class="player-card-front">
+                            <div class="card-header">
+                                <div class="card-title">TENNIS RIVALS</div>
+                            </div>
+                            <div class="card-main">
+                                <div class="player-card-bg"></div>
+                                <div class="player-photo">
+                                    <img src="{% static 'assets/img/image123124.png' %}" alt="Player photo">
+                                </div>
+                                <div class="player-info">
+                                    <div class="player-name">MR.ALEXSON</div>
+                                    <div class="player-level">MASTER</div>
+                                </div>
+                            </div>
+                            <div class="card-bottom">
+                                <div class="player-details">
+                                    <div class="full-name">ANDREY MOLODENKO</div>
+                                    <div class="location">TBILISI</div>
+                                </div>
+                                <div class="score-section">
+                                    <div class="score">4500</div>
+                                </div>
+                            </div>
+                            <div class="score-overlay">
+                                <div class="score-bg-polygon"></div>
+                                <div class="score-text">4500</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Обратная сторона -->
+                        <div class="player-card-back">
+                            <div class="back-header">
+                                <div class="back-title">TENNIS RIVALS</div>
+                            </div>
+                            <div class="stats-header">
+                                <div class="stats-title">PLAYER STATS</div>
+                                <div class="back-player-name">MR.ALEXSON</div>
+                            </div>
+                            <div class="stats-grid">
+                                <div class="stat-item">
+                                    <div class="stat-label">Season Points</div>
+                                    <div class="stat-value">2555</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-label">Season Ranking</div>
+                                    <div class="stat-value">#34</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-label">Games</div>
+                                    <div class="stat-value">12</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-label">Wins</div>
+                                    <div class="stat-value">8</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-label">Loses</div>
+                                    <div class="stat-value">3</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-label">RTs</div>
+                                    <div class="stat-value">1</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-label">Win Rate</div>
+                                    <div class="stat-value">67%</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-label">NTRP</div>
+                                    <div class="stat-value">4500</div>
+                                </div>
+                            </div>
+                            <div class="action-buttons">
+                                <div class="btn-challenge">Challenge Them!</div>
+                                <div class="btn-info">View info</div>
+                            </div>
+                            <div class="back-location">TBILISI</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <h3 class="text-lg font-semibold text-red-600 mt-1">Master Level</h3>
+            <p class="text-xs text-gray-600">Рейтинг: 4500</p>
+        </div>
+
+        <!-- Дополнительные 8 карточек -->
+        <div class="col-md-4 mb-4">
+            <div class="d-inline-block" style="transform: scale(1); transform-origin: center;">
+                <div class="player-card-container" data-variant="blue">
+                    <div class="player-card">
+                        <div class="player-card-front">
+                            <div class="card-header"><div class="card-title">TENNIS RIVALS</div></div>
+                            <div class="card-main"><div class="player-info"><div class="player-name">A. SMITH</div><div class="player-level">NOVICE</div></div></div>
+                            <div class="card-bottom"><div class="player-details"><div class="full-name">ALEX SMITH</div><div class="location">LONDON</div></div><div class="score-section"><div class="score">1600</div></div></div>
+                            <div class="score-overlay"><div class="score-bg-polygon"></div><div class="score-text">1600</div></div>
+                        </div>
+                        <div class="player-card-back">
+                            <div class="back-header"><div class="back-title">TENNIS RIVALS</div></div>
+                            <div class="stats-header"><div class="stats-title">PLAYER STATS</div><div class="back-player-name">A. SMITH</div></div>
+                            <div class="stats-grid">
+                                <div class="stat-item"><div class="stat-label">Season Points</div><div class="stat-value">1700</div></div>
+                                <div class="stat-item"><div class="stat-label">Season Ranking</div><div class="stat-value">#12</div></div>
+                                <div class="stat-item"><div class="stat-label">Games</div><div class="stat-value">10</div></div>
+                                <div class="stat-item"><div class="stat-label">Wins</div><div class="stat-value">6</div></div>
+                                <div class="stat-item"><div class="stat-label">Loses</div><div class="stat-value">4</div></div>
+                                <div class="stat-item"><div class="stat-label">RTs</div><div class="stat-value">0</div></div>
+                                <div class="stat-item"><div class="stat-label">Win Rate</div><div class="stat-value">60%</div></div>
+                                <div class="stat-item"><div class="stat-label">NTRP</div><div class="stat-value">1600</div></div>
+                            </div>
+                            <div class="action-buttons"><div class="btn-challenge">Challenge Them!</div><div class="btn-info">View info</div></div>
+                            <div class="back-location">LONDON</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <h3 class="text-lg font-semibold text-blue-600 mt-1">Novice Level</h3>
+            <p class="text-xs text-gray-600">Рейтинг: 1600</p>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="d-inline-block" style="transform: scale(1); transform-origin: center;">
+                <div class="player-card-container" data-variant="teal">
+                    <div class="player-card">
+                        <div class="player-card-front">
+                            <div class="card-header"><div class="card-title">TENNIS RIVALS</div></div>
+                            <div class="card-main"><div class="player-info"><div class="player-name">J. DOE</div><div class="player-level">CHALLENGER</div></div></div>
+                            <div class="card-bottom"><div class="player-details"><div class="full-name">JANE DOE</div><div class="location">PARIS</div></div><div class="score-section"><div class="score">2300</div></div></div>
+                            <div class="score-overlay"><div class="score-bg-polygon"></div><div class="score-text">2300</div></div>
+                        </div>
+                        <div class="player-card-back">
+                            <div class="back-header"><div class="back-title">TENNIS RIVALS</div></div>
+                            <div class="stats-header"><div class="stats-title">PLAYER STATS</div><div class="back-player-name">J. DOE</div></div>
+                            <div class="stats-grid">
+                                <div class="stat-item"><div class="stat-label">Season Points</div><div class="stat-value">2400</div></div>
+                                <div class="stat-item"><div class="stat-label">Season Ranking</div><div class="stat-value">#8</div></div>
+                                <div class="stat-item"><div class="stat-label">Games</div><div class="stat-value">15</div></div>
+                                <div class="stat-item"><div class="stat-label">Wins</div><div class="stat-value">10</div></div>
+                                <div class="stat-item"><div class="stat-label">Loses</div><div class="stat-value">5</div></div>
+                                <div class="stat-item"><div class="stat-label">RTs</div><div class="stat-value">1</div></div>
+                                <div class="stat-item"><div class="stat-label">Win Rate</div><div class="stat-value">67%</div></div>
+                                <div class="stat-item"><div class="stat-label">NTRP</div><div class="stat-value">2300</div></div>
+                            </div>
+                            <div class="action-buttons"><div class="btn-challenge">Challenge Them!</div><div class="btn-info">View info</div></div>
+                            <div class="back-location">PARIS</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <h3 class="text-lg font-semibold text-teal-600 mt-1">Challenger Level</h3>
+            <p class="text-xs text-gray-600">Рейтинг: 2300</p>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="d-inline-block" style="transform: scale(1); transform-origin: center;">
+                <div class="player-card-container" data-variant="beige">
+                    <div class="player-card">
+                        <div class="player-card-front">
+                            <div class="card-header"><div class="card-title">TENNIS RIVALS</div></div>
+                            <div class="card-main"><div class="player-info"><div class="player-name">M. LEE</div><div class="player-level">TOUR</div></div></div>
+                            <div class="card-bottom"><div class="player-details"><div class="full-name">MICHAEL LEE</div><div class="location">SEOUL</div></div><div class="score-section"><div class="score">3200</div></div></div>
+                            <div class="score-overlay"><div class="score-bg-polygon"></div><div class="score-text">3200</div></div>
+                        </div>
+                        <div class="player-card-back">
+                            <div class="back-header"><div class="back-title">TENNIS RIVALS</div></div>
+                            <div class="stats-header"><div class="stats-title">PLAYER STATS</div><div class="back-player-name">M. LEE</div></div>
+                            <div class="stats-grid">
+                                <div class="stat-item"><div class="stat-label">Season Points</div><div class="stat-value">3300</div></div>
+                                <div class="stat-item"><div class="stat-label">Season Ranking</div><div class="stat-value">#5</div></div>
+                                <div class="stat-item"><div class="stat-label">Games</div><div class="stat-value">20</div></div>
+                                <div class="stat-item"><div class="stat-label">Wins</div><div class="stat-value">15</div></div>
+                                <div class="stat-item"><div class="stat-label">Loses</div><div class="stat-value">5</div></div>
+                                <div class="stat-item"><div class="stat-label">RTs</div><div class="stat-value">2</div></div>
+                                <div class="stat-item"><div class="stat-label">Win Rate</div><div class="stat-value">75%</div></div>
+                                <div class="stat-item"><div class="stat-label">NTRP</div><div class="stat-value">3200</div></div>
+                            </div>
+                            <div class="action-buttons"><div class="btn-challenge">Challenge Them!</div><div class="btn-info">View info</div></div>
+                            <div class="back-location">SEOUL</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <h3 class="text-lg font-semibold text-yellow-600 mt-1">Tour Level</h3>
+            <p class="text-xs text-gray-600">Рейтинг: 3200</p>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="d-inline-block" style="transform: scale(1); transform-origin: center;">
+                <div class="player-card-container" data-variant="red">
+                    <div class="player-card">
+                        <div class="player-card-front">
+                            <div class="card-header"><div class="card-title">TENNIS RIVALS</div></div>
+                            <div class="card-main"><div class="player-info"><div class="player-name">S. KIM</div><div class="player-level">MASTER</div></div></div>
+                            <div class="card-bottom"><div class="player-details"><div class="full-name">SOPHIA KIM</div><div class="location">TOKYO</div></div><div class="score-section"><div class="score">4600</div></div></div>
+                            <div class="score-overlay"><div class="score-bg-polygon"></div><div class="score-text">4600</div></div>
+                        </div>
+                        <div class="player-card-back">
+                            <div class="back-header"><div class="back-title">TENNIS RIVALS</div></div>
+                            <div class="stats-header"><div class="stats-title">PLAYER STATS</div><div class="back-player-name">S. KIM</div></div>
+                            <div class="stats-grid">
+                                <div class="stat-item"><div class="stat-label">Season Points</div><div class="stat-value">4700</div></div>
+                                <div class="stat-item"><div class="stat-label">Season Ranking</div><div class="stat-value">#2</div></div>
+                                <div class="stat-item"><div class="stat-label">Games</div><div class="stat-value">25</div></div>
+                                <div class="stat-item"><div class="stat-label">Wins</div><div class="stat-value">22</div></div>
+                                <div class="stat-item"><div class="stat-label">Loses</div><div class="stat-value">3</div></div>
+                                <div class="stat-item"><div class="stat-label">RTs</div><div class="stat-value">0</div></div>
+                                <div class="stat-item"><div class="stat-label">Win Rate</div><div class="stat-value">88%</div></div>
+                                <div class="stat-item"><div class="stat-label">NTRP</div><div class="stat-value">4600</div></div>
+                            </div>
+                            <div class="action-buttons"><div class="btn-challenge">Challenge Them!</div><div class="btn-info">View info</div></div>
+                            <div class="back-location">TOKYO</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <h3 class="text-lg font-semibold text-red-600 mt-1">Master Level</h3>
+            <p class="text-xs text-gray-600">Рейтинг: 4600</p>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="d-inline-block" style="transform: scale(1); transform-origin: center;">
+                <div class="player-card-container" data-variant="blue">
+                    <div class="player-card">
+                        <div class="player-card-front">
+                            <div class="card-header"><div class="card-title">TENNIS RIVALS</div></div>
+                            <div class="card-main"><div class="player-info"><div class="player-name">D. BROWN</div><div class="player-level">NOVICE</div></div></div>
+                            <div class="card-bottom"><div class="player-details"><div class="full-name">DAVID BROWN</div><div class="location">BERLIN</div></div><div class="score-section"><div class="score">1580</div></div></div>
+                            <div class="score-overlay"><div class="score-bg-polygon"></div><div class="score-text">1580</div></div>
+                        </div>
+                        <div class="player-card-back">
+                            <div class="back-header"><div class="back-title">TENNIS RIVALS</div></div>
+                            <div class="stats-header"><div class="stats-title">PLAYER STATS</div><div class="back-player-name">D. BROWN</div></div>
+                            <div class="stats-grid">
+                                <div class="stat-item"><div class="stat-label">Season Points</div><div class="stat-value">1650</div></div>
+                                <div class="stat-item"><div class="stat-label">Season Ranking</div><div class="stat-value">#20</div></div>
+                                <div class="stat-item"><div class="stat-label">Games</div><div class="stat-value">8</div></div>
+                                <div class="stat-item"><div class="stat-label">Wins</div><div class="stat-value">4</div></div>
+                                <div class="stat-item"><div class="stat-label">Loses</div><div class="stat-value">4</div></div>
+                                <div class="stat-item"><div class="stat-label">RTs</div><div class="stat-value">0</div></div>
+                                <div class="stat-item"><div class="stat-label">Win Rate</div><div class="stat-value">50%</div></div>
+                                <div class="stat-item"><div class="stat-label">NTRP</div><div class="stat-value">1580</div></div>
+                            </div>
+                            <div class="action-buttons"><div class="btn-challenge">Challenge Them!</div><div class="btn-info">View info</div></div>
+                            <div class="back-location">BERLIN</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <h3 class="text-lg font-semibold text-blue-600 mt-1">Novice Level</h3>
+            <p class="text-xs text-gray-600">Рейтинг: 1580</p>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="d-inline-block" style="transform: scale(1); transform-origin: center;">
+                <div class="player-card-container" data-variant="teal">
+                    <div class="player-card">
+                        <div class="player-card-front">
+                            <div class="card-header"><div class="card-title">TENNIS RIVALS</div></div>
+                            <div class="card-main"><div class="player-info"><div class="player-name">E. WILSON</div><div class="player-level">CHALLENGER</div></div></div>
+                            <div class="card-bottom"><div class="player-details"><div class="full-name">EMILY WILSON</div><div class="location">MADRID</div></div><div class="score-section"><div class="score">2280</div></div></div>
+                            <div class="score-overlay"><div class="score-bg-polygon"></div><div class="score-text">2280</div></div>
+                        </div>
+                        <div class="player-card-back">
+                            <div class="back-header"><div class="back-title">TENNIS RIVALS</div></div>
+                            <div class="stats-header"><div class="stats-title">PLAYER STATS</div><div class="back-player-name">E. WILSON</div></div>
+                            <div class="stats-grid">
+                                <div class="stat-item"><div class="stat-label">Season Points</div><div class="stat-value">2350</div></div>
+                                <div class="stat-item"><div class="stat-label">Season Ranking</div><div class="stat-value">#15</div></div>
+                                <div class="stat-item"><div class="stat-label">Games</div><div class="stat-value">13</div></div>
+                                <div class="stat-item"><div class="stat-label">Wins</div><div class="stat-value">7</div></div>
+                                <div class="stat-item"><div class="stat-label">Loses</div><div class="stat-value">6</div></div>
+                                <div class="stat-item"><div class="stat-label">RTs</div><div class="stat-value">1</div></div>
+                                <div class="stat-item"><div class="stat-label">Win Rate</div><div class="stat-value">54%</div></div>
+                                <div class="stat-item"><div class="stat-label">NTRP</div><div class="stat-value">2280</div></div>
+                            </div>
+                            <div class="action-buttons"><div class="btn-challenge">Challenge Them!</div><div class="btn-info">View info</div></div>
+                            <div class="back-location">MADRID</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <h3 class="text-lg font-semibold text-teal-600 mt-1">Challenger Level</h3>
+            <p class="text-xs text-gray-600">Рейтинг: 2280</p>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="d-inline-block" style="transform: scale(1); transform-origin: center;">
+                <div class="player-card-container" data-variant="beige">
+                    <div class="player-card">
+                        <div class="player-card-front">
+                            <div class="card-header"><div class="card-title">TENNIS RIVALS</div></div>
+                            <div class="card-main"><div class="player-info"><div class="player-name">L. MARTINEZ</div><div class="player-level">TOUR</div></div></div>
+                            <div class="card-bottom"><div class="player-details"><div class="full-name">LUIS MARTINEZ</div><div class="location">BUENOS AIRES</div></div><div class="score-section"><div class="score">3180</div></div></div>
+                            <div class="score-overlay"><div class="score-bg-polygon"></div><div class="score-text">3180</div></div>
+                        </div>
+                        <div class="player-card-back">
+                            <div class="back-header"><div class="back-title">TENNIS RIVALS</div></div>
+                            <div class="stats-header"><div class="stats-title">PLAYER STATS</div><div class="back-player-name">L. MARTINEZ</div></div>
+                            <div class="stats-grid">
+                                <div class="stat-item"><div class="stat-label">Season Points</div><div class="stat-value">3250</div></div>
+                                <div class="stat-item"><div class="stat-label">Season Ranking</div><div class="stat-value">#10</div></div>
+                                <div class="stat-item"><div class="stat-label">Games</div><div class="stat-value">18</div></div>
+                                <div class="stat-item"><div class="stat-label">Wins</div><div class="stat-value">12</div></div>
+                                <div class="stat-item"><div class="stat-label">Loses</div><div class="stat-value">6</div></div>
+                                <div class="stat-item"><div class="stat-label">RTs</div><div class="stat-value">2</div></div>
+                                <div class="stat-item"><div class="stat-label">Win Rate</div><div class="stat-value">67%</div></div>
+                                <div class="stat-item"><div class="stat-label">NTRP</div><div class="stat-value">3180</div></div>
+                            </div>
+                            <div class="action-buttons"><div class="btn-challenge">Challenge Them!</div><div class="btn-info">View info</div></div>
+                            <div class="back-location">BUENOS AIRES</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <h3 class="text-lg font-semibold text-yellow-600 mt-1">Tour Level</h3>
+            <p class="text-xs text-gray-600">Рейтинг: 3180</p>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="d-inline-block" style="transform: scale(1); transform-origin: center;">
+                <div class="player-card-container" data-variant="red">
+                    <div class="player-card">
+                        <div class="player-card-front">
+                            <div class="card-header"><div class="card-title">TENNIS RIVALS</div></div>
+                            <div class="card-main"><div class="player-info"><div class="player-name">N. PETROV</div><div class="player-level">MASTER</div></div></div>
+                            <div class="card-bottom"><div class="player-details"><div class="full-name">NIKOLAY PETROV</div><div class="location">MOSCOW</div></div><div class="score-section"><div class="score">4550</div></div></div>
+                            <div class="score-overlay"><div class="score-bg-polygon"></div><div class="score-text">4550</div></div>
+                        </div>
+                        <div class="player-card-back">
+                            <div class="back-header"><div class="back-title">TENNIS RIVALS</div></div>
+                            <div class="stats-header"><div class="stats-title">PLAYER STATS</div><div class="back-player-name">N. PETROV</div></div>
+                            <div class="stats-grid">
+                                <div class="stat-item"><div class="stat-label">Season Points</div><div class="stat-value">4600</div></div>
+                                <div class="stat-item"><div class="stat-label">Season Ranking</div><div class="stat-value">#3</div></div>
+                                <div class="stat-item"><div class="stat-label">Games</div><div class="stat-value">22</div></div>
+                                <div class="stat-item"><div class="stat-label">Wins</div><div class="stat-value">18</div></div>
+                                <div class="stat-item"><div class="stat-label">Loses</div><div class="stat-value">4</div></div>
+                                <div class="stat-item"><div class="stat-label">RTs</div><div class="stat-value">1</div></div>
+                                <div class="stat-item"><div class="stat-label">Win Rate</div><div class="stat-value">82%</div></div>
+                                <div class="stat-item"><div class="stat-label">NTRP</div><div class="stat-value">4550</div></div>
+                            </div>
+                            <div class="action-buttons"><div class="btn-challenge">Challenge Them!</div><div class="btn-info">View info</div></div>
+                            <div class="back-location">MOSCOW</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <h3 class="text-lg font-semibold text-red-600 mt-1">Master Level</h3>
+            <p class="text-xs text-gray-600">Рейтинг: 4550</p>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="d-inline-block" style="transform: scale(1); transform-origin: center;">
+                <div class="player-card-container" data-variant="black">
+                    <div class="player-card">
+                        <div class="player-card-front">
+                            <div class="card-header"><div class="card-title">TENNIS RIVALS</div></div>
+                            <div class="card-main"><div class="player-card-bg"></div><div class="player-info"><div class="player-name">R. SHADOW</div><div class="player-level">ELITE</div></div></div>
+                            <div class="card-bottom"><div class="player-details"><div class="full-name">ROBERT SHADOW</div><div class="location">LONDON</div></div><div class="score-section"><div class="score">5200</div></div></div>
+                            <div class="score-overlay"><div class="score-bg-polygon"></div><div class="score-text">5200</div></div>
+                        </div>
+                        <div class="player-card-back">
+                            <div class="back-header"><div class="back-title">TENNIS RIVALS</div></div>
+                            <div class="stats-header"><div class="stats-title">PLAYER STATS</div><div class="back-player-name">R. SHADOW</div></div>
+                            <div class="stats-grid">
+                                <div class="stat-item"><div class="stat-label">Season Points</div><div class="stat-value">5300</div></div>
+                                <div class="stat-item"><div class="stat-label">Season Ranking</div><div class="stat-value">#1</div></div>
+                                <div class="stat-item"><div class="stat-label">Games</div><div class="stat-value">30</div></div>
+                                <div class="stat-item"><div class="stat-label">Wins</div><div class="stat-value">28</div></div>
+                                <div class="stat-item"><div class="stat-label">Loses</div><div class="stat-value">2</div></div>
+                                <div class="stat-item"><div class="stat-label">RTs</div><div class="stat-value">0</div></div>
+                                <div class="stat-item"><div class="stat-label">Win Rate</div><div class="stat-value">93%</div></div>
+                                <div class="stat-item"><div class="stat-label">NTRP</div><div class="stat-value">5200</div></div>
+                            </div>
+                            <div class="action-buttons"><div class="btn-challenge">Challenge Them!</div><div class="btn-info">View info</div></div>
+                            <div class="back-location">LONDON</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-800 mt-1">Elite Level</h3>
+            <p class="text-xs text-gray-600">Рейтинг: 5200</p>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="d-inline-block" style="transform: scale(1); transform-origin: center;">
+                <div class="player-card-container" data-variant="gold">
+                    <div class="player-card">
+                        <div class="player-card-front">
+                            <div class="card-header"><div class="card-title">TENNIS RIVALS</div></div>
+                            <div class="card-main"><div class="player-card-bg"></div><div class="player-info"><div class="player-name">G. LEGEND</div><div class="player-level">LEGEND</div></div></div>
+                            <div class="card-bottom"><div class="player-details"><div class="full-name">GLORIA LEGEND</div><div class="location">MONACO</div></div><div class="score-section"><div class="score">6000</div></div></div>
+                            <div class="score-overlay"><div class="score-bg-polygon"></div><div class="score-text">6000</div></div>
+                        </div>
+                        <div class="player-card-back">
+                            <div class="back-header"><div class="back-title">TENNIS RIVALS</div></div>
+                            <div class="stats-header"><div class="stats-title">PLAYER STATS</div><div class="back-player-name">G. LEGEND</div></div>
+                            <div class="stats-grid">
+                                <div class="stat-item"><div class="stat-label">Season Points</div><div class="stat-value">6100</div></div>
+                                <div class="stat-item"><div class="stat-label">Season Ranking</div><div class="stat-value">#1</div></div>
+                                <div class="stat-item"><div class="stat-label">Games</div><div class="stat-value">35</div></div>
+                                <div class="stat-item"><div class="stat-label">Wins</div><div class="stat-value">34</div></div>
+                                <div class="stat-item"><div class="stat-label">Loses</div><div class="stat-value">1</div></div>
+                                <div class="stat-item"><div class="stat-label">RTs</div><div class="stat-value">0</div></div>
+                                <div class="stat-item"><div class="stat-label">Win Rate</div><div class="stat-value">97%</div></div>
+                                <div class="stat-item"><div class="stat-label">NTRP</div><div class="stat-value">6000</div></div>
+                            </div>
+                            <div class="action-buttons"><div class="btn-challenge">Challenge Them!</div><div class="btn-info">View info</div></div>
+                            <div class="back-location">MONACO</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <h3 class="text-lg font-semibold text-yellow-500 mt-1">Legend Level</h3>
+            <p class="text-xs text-gray-600">Рейтинг: 6000</p>
+        </div>
+
+    </div>
+
+    <div class="mt-6 max-w-4xl">
+        <h2 class="text-2xl font-semibold text-gray-800 mb-4">Особенности карточек</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 text-sm text-gray-600">
+            <div class="bg-blue-50 p-3 rounded-lg">
+                <h4 class="font-semibold text-blue-700 mb-1">Novice</h4>
+                <p class="text-xs">Синий дизайн с геометрическим фоном. Начальный уровень игрока.</p>
+            </div>
+            <div class="bg-teal-50 p-3 rounded-lg">
+                <h4 class="font-semibold text-teal-700 mb-1">Challenger</h4>
+                <p class="text-xs">Бирюзовый дизайн с топографическими линиями. Продвинутый уровень.</p>
+            </div>
+            <div class="bg-yellow-50 p-3 rounded-lg">
+                <h4 class="font-semibold text-yellow-700 mb-1">Tour</h4>
+                <p class="text-xs">Бежевый дизайн с волнистым паттерном. Профессиональный уровень.</p>
+            </div>
+            <div class="bg-red-50 p-3 rounded-lg">
+                <h4 class="font-semibold text-red-700 mb-1">Master</h4>
+                <p class="text-xs">Красный дизайн для элитных игроков. Максимальный уровень мастерства.</p>
+            </div>
+            <div class="bg-gray-50 p-3 rounded-lg">
+                <h4 class="font-semibold text-gray-700 mb-1">Elite</h4>
+                <p class="text-xs">Чёрный дизайн с квадратным паттерном. Элитный уровень для топ-игроков.</p>
+            </div>
+            <div class="bg-yellow-100 p-3 rounded-lg">
+                <h4 class="font-semibold text-yellow-600 mb-1">Legend</h4>
+                <p class="text-xs">Золотой дизайн с крестообразным паттерном. Легендарный уровень мастерства.</p>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+<style>
+/* Player Card Styles */
+
+:root {
+  --card-scale: 1.4;
+}
+
+.player-card-container {
+    perspective: 1200px;
+    --variant-color: #449af3;
+    --accent-color: #449af3;
+    --score-polygon-color: #FB000D;
+    --main-text-color: #ffffff;
+    --back-text-color: #ffffff;
+    --btn-info-bg-color: #ffffff;
+    --btn-info-text-color: var(--accent-color);
+    --btn-challenge-bg-color: transparent;
+    --btn-challenge-text-color: #ffffff;
+    --btn-challenge-border-color: #ffffff;
+}
+
+.player-card-container[data-variant="blue"] {
+    --variant-color: #449af3;
+    --accent-color: #449af3;
+    --score-polygon-color: #FB000D;
+}
+
+.player-card-container[data-variant="teal"] {
+    --variant-color: #0fb0a8;
+    --accent-color: #0fb0a8;
+    --score-polygon-color: #FB000D;
+}
+
+.player-card-container[data-variant="tan"] {
+    --variant-color: #e1dbc7;
+    --accent-color: #e1dbc7;
+    --score-polygon-color: #FB000D;
+    --main-text-color: #000000;
+    --back-text-color: #000000;
+    --btn-info-bg-color: #000000;
+    --btn-info-text-color: #ffffff;
+    --btn-challenge-bg-color: transparent;
+    --btn-challenge-text-color: #000000;
+    --btn-challenge-border-color: #000000;
+}
+
+.player-card-container[data-variant="red"] {
+    --variant-color: #FB000D;
+    --accent-color: #FB000D;
+    --score-polygon-color: #000000;
+    --main-text-color: #ffffff;
+    --back-text-color: #ffffff;
+    --btn-info-bg-color: #ffffff;
+    --btn-info-text-color: #000000;
+    --btn-challenge-bg-color: #000000;
+    --btn-challenge-text-color: #ffffff;
+    --btn-challenge-border-color: #000000;
+}
+
+.player-card-container[data-variant="black"] {
+    --variant-color: #2c2c2c;
+    --accent-color: #2c2c2c;
+    --score-polygon-color: #FB000D;
+    --main-text-color: #ffffff;
+    --back-text-color: #ffffff;
+    --btn-info-bg-color: #ffffff;
+    --btn-info-text-color: #000000;
+    --btn-challenge-bg-color: #FB000D;
+    --btn-challenge-text-color: #ffffff;
+    --btn-challenge-border-color: #FB000D;
+}
+
+.player-card-container[data-variant="gold"] {
+    --variant-color: #FFCC00;
+    --accent-color: #FFCC00;
+    --score-polygon-color: #FB000D;
+    --main-text-color: #000000;
+    --back-text-color: #000000;
+    --btn-info-bg-color: #000000;
+    --btn-info-text-color: #ffffff;
+    --btn-challenge-bg-color: #F6E301;
+    --btn-challenge-text-color: #000000;
+    --btn-challenge-border-color: #000000;
+}
+
+.player-card {
+    position: relative;
+    width: calc(172px * var(--card-scale));
+    height: calc(260px * var(--card-scale));
+    cursor: pointer;
+    transition: transform 0.7s;
+    transform-style: preserve-3d;
+}
+
+.player-card.flipped {
+    transform: rotateY(180deg);
+}
+
+.player-card-front,
+.player-card-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    border-radius: calc(9px * var(--card-scale));
+    overflow: hidden;
+    
+}
+
+.player-card-back {
+    transform: rotateY(180deg);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background-color: var(--variant-color);
+}
+
+/* Front header/footer overrides for black and gold */
+.player-card-container[data-variant="black"] .card-header,
+.player-card-container[data-variant="black"] .card-bottom,
+.player-card-container[data-variant="gold"] .card-header,
+.player-card-container[data-variant="gold"] .card-bottom {
+    background-color: #000000;
+}
+.player-card-container[data-variant="black"] .card-title,
+.player-card-container[data-variant="gold"] .card-title { color: #ffffff; }
+.player-card-container[data-variant="black"] .full-name,
+.player-card-container[data-variant="black"] .location,
+.player-card-container[data-variant="gold"] .full-name,
+.player-card-container[data-variant="gold"] .location { color: #ffffff; }
+
+/* Header */
+.card-header {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: calc(172px * var(--card-scale));
+    height: calc(16px * var(--card-scale));
+    background: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+}
+
+.card-title {
+    font-family: 'Saira', sans-serif;
+    font-weight: 900;
+    font-style: italic;
+    font-size: calc(7px * var(--card-scale));
+    color: #000000;
+    text-align: center;
+}
+
+/* Main section */
+.card-main {
+    position: absolute;
+    top: 16px;
+    left: 0;
+    width: calc(172px * var(--card-scale));
+    height: calc(200px * var(--card-scale));
+    background-color: var(--variant-color);
+    background-size: calc(120px * var(--card-scale)) calc(120px * var(--card-scale));
+    background-repeat: repeat;
+}
+
+
+/* Player info */
+.player-info {
+    position: absolute;
+    top: 20%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: var(--main-text-color);
+}
+
+.player-name {
+    font-family: 'Saira Extra Condensed', sans-serif;
+    font-weight: 800;
+    font-size: calc(22px * var(--card-scale));
+    line-height: 1;
+    margin-bottom: calc(2px * var(--card-scale));
+}
+
+.player-level {
+    font-family: 'Saira', sans-serif;
+    font-weight: 500;
+    font-size: calc(6px * var(--card-scale));
+    letter-spacing: calc(3px * var(--card-scale));
+}
+
+/* Bottom section */
+.card-bottom {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: calc(172px * var(--card-scale));
+    height: calc(52px * var(--card-scale));
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 calc(12px * var(--card-scale));
+    z-index: 10;
+    background-color: #ffffff;
+}
+
+.player-details {
+    flex: 1;
+}
+
+.full-name {
+    font-family: 'Saira Extra Condensed', sans-serif;
+    font-weight: 700;
+    font-size: calc(14px * var(--card-scale));
+    line-height: 1;
+    color: #000000;
+    margin-bottom: calc(1px * var(--card-scale));
+}
+
+.location {
+    font-family: 'Saira', sans-serif;
+    font-weight: 600;
+    font-size: calc(6px * var(--card-scale));
+    letter-spacing: calc(2px * var(--card-scale));
+    color: #000000;
+}
+
+.score-section {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.score {
+    font-family: 'Saira', sans-serif;
+    font-weight: 900;
+    font-style: italic;
+    font-size: calc(14px * var(--card-scale));
+    color: #ffffff;
+}
+
+/* Score overlay */
+.score-overlay {
+    position: absolute;
+    bottom: 0px;
+    right: 0;
+    width: calc(76px * var(--card-scale));
+    height: calc(60px * var(--card-scale));
+    z-index: 11;
+}
+
+.score-bg-polygon {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+
+    clip-path: polygon(40% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 100%);
+}
+
+.score-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-25%, -40%);
+    font-family: 'Saira', sans-serif !important; 
+    font-weight: 900;
+    font-style: italic;
+    font-size: calc(14px * var(--card-scale));
+    color: #ffffff;
+}
+
+
+/* Back side styles */
+.back-header {
+
+  
+    top: 0;
+    left: 0;
+    width: calc(172px * var(--card-scale));
+    height: calc(16px * var(--card-scale));
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+}
+
+.back-title {
+    font-family: 'Saira', sans-serif;
+    font-weight: 900;
+    font-style: italic;
+    font-size: calc(6px * var(--card-scale));
+    color: var(--back-text-color);
+    text-align: center;
+}
+
+.stats-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding: 0 calc(12px * var(--card-scale));
+    margin-bottom: calc(4px * var(--card-scale));
+}
+
+.stats-title {
+    font-family: 'Saira', sans-serif;
+    font-weight: 900;
+    font-size: calc(6px * var(--card-scale));
+    color: var(--back-text-color);
+}
+
+.back-player-name {
+    font-family: 'Saira Extra Condensed', sans-serif;
+    font-weight: 900;
+    font-size: calc(14px * var(--card-scale));
+    color: var(--back-text-color);
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: calc(6px * var(--card-scale));
+    width: calc(152px * var(--card-scale));
+    height: auto;
+    margin: 0 auto;
+}
+
+.stat-item {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 2px 6px;
+    text-align: center;
+}
+
+/* Back stat tiles by variant */
+.player-card-container[data-variant="red"] .stat-item,
+.player-card-container[data-variant="gold"] .stat-item { background: rgba(0, 0, 0, 0.2); }
+.player-card-container[data-variant="tan"] .stat-item { background: rgba(151, 136, 136, 0.2); }
+.player-card-container[data-variant="black"] .stat-item { background: #333333; }
+
+.stat-label {
+    font-family: 'Saira', sans-serif;
+    font-weight: 400;
+    font-size: calc(6px * var(--card-scale));
+    color: var(--back-text-color);
+    margin-bottom: calc(2px * var(--card-scale));
+}
+
+.stat-value {
+    font-family: 'Saira Extra Condensed', sans-serif !important;
+    font-weight: 900;
+    font-size: calc(14px * var(--card-scale));
+    color: var(--back-text-color);
+}
+
+.action-buttons {
+    display: flex;
+    justify-content: space-between;
+    align-items: bottom;
+    padding: 0 calc(10px * var(--card-scale));
+    margin: calc(4px * var(--card-scale)) 0;
+}
+
+.btn-challenge {
+    width: calc(71px * var(--card-scale));
+    height: calc(16px * var(--card-scale));
+    border: 1px solid var(--btn-challenge-border-color);
+    border-radius: calc(3px * var(--card-scale));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 400;
+    font-size: calc(6px * var(--card-scale));
+    color: var(--btn-challenge-text-color);
+    background: var(--btn-challenge-bg-color);
+}
+
+.btn-info {
+    width: calc(71px * var(--card-scale));
+    height: calc(16px * var(--card-scale));
+    background: var(--btn-info-bg-color);
+    border-radius: calc(3px * var(--card-scale));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 400;
+    font-size: calc(6px * var(--card-scale));
+    color: var(--btn-info-text-color);
+}
+.back-location {
+    height: calc(16px * var(--card-scale));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Saira', sans-serif;
+    font-weight: 700;
+    font-size: calc(6px * var(--card-scale));
+    letter-spacing: calc(3px * var(--card-scale));
+    color: var(--back-text-color);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .player-card {
+        transform: scale(0.7);
+    }
+}
+
+/* Player photo styles */
+.player-photo {
+    position: absolute;
+    left: 0%;
+    top: 30%;
+    z-index: 1;
+    width: 100%;
+    overflow: hidden;
+}
+
+.player-photo img {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+    object-position: center;
+}
+
+.player-card-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+
+.player-card-container[data-variant="blue"] .player-card-bg {
+    background-image: url("{% static 'assets/img/card_bg_blue.svg' %}");
+}
+
+.player-card-container[data-variant="teal"] .player-card-bg {
+    background-image: url("{% static 'assets/img/card_bg_teal.svg' %}");
+}
+
+.player-card-container[data-variant="tan"] .player-card-bg {
+    background-image: url("{% static 'assets/img/card_bg_tan.svg' %}");
+
+}
+
+.player-card-container[data-variant="red"] .player-card-bg {
+    background-image: url("{% static 'assets/img/card_bg_red.svg' %}");
+}
+
+.player-card-container[data-variant="black"] .player-card-bg {
+    background-image: url("{% static 'assets/img/card_bg_black_squares.svg' %}");
+}
+
+.player-card-container[data-variant="gold"] .player-card-bg {
+    background-image: url("{% static 'assets/img/card_bg_gold_crosses.svg' %}");
+}
+
+/* Back backgrounds for black and gold */
+.player-card-container[data-variant="black"] .player-card-back {
+    background-image: url("{% static 'assets/img/card_bg_black_squares_back.svg' %}");
+    background-size: cover;
+    background-repeat: no-repeat;
+}
+.player-card-container[data-variant="gold"] .player-card-back {
+    background-image: url("{% static 'assets/img/card_bg_gold_crosses_back.svg' %}");
+    background-size: cover;
+    background-repeat: no-repeat;
+}
+
+/* Score polygon color by variant */
+.player-card-container .score-bg-polygon {
+    background: var(--score-polygon-color);
+}
+
+
+
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add click handlers to all player cards
+    const playerCards = document.querySelectorAll('.player-card');
+    
+    playerCards.forEach(card => {
+        card.addEventListener('click', function() {
+            this.classList.toggle('flipped');
+        });
+    });
+});
+</script>
+{% endblock %}

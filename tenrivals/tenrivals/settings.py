@@ -47,7 +47,8 @@ INSTALLED_APPS = [
 
     'persons',
     'rivals.apps.RivalsConfig',
-    
+    'shop.apps.ShopConfig',
+
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
@@ -59,7 +60,6 @@ INSTALLED_APPS = [
 
 
 ]
-
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
