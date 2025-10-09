@@ -1,0 +1,1089 @@
+[
+{
+  "model": "shop.product",
+  "pk": 3,
+  "fields": {
+    "type": "M_SHOES",
+    "name": "Babolat Propulse Fury 3 Clay Wh/Estate Blue Men's Shoe",
+    "sku": null,
+    "brand": "Babolat",
+    "price": "386.00",
+    "in_stock": true,
+    "is_active": true,
+    "image_1": "shop/products/Babolat_Propulse_Fury_3_Clay_Shoe.webp",
+    "image_2": "shop/products/Babolat_Propulse_Fury_3_Clay_Shoe_1.webp",
+    "image_3": "shop/products/Babolat_Propulse_Fury_3_Clay_Shoe_2.webp",
+    "category": null,
+    "short_description": "Ultimate support, durability, with added comfort compared to previous versions.",
+    "description": "Taking the support, and stability that the Propulse is known for, this update to the Babolat Propulse Fury 3 Clay improves upon the cushioning, and adds even more durability. With an increase of EVA foam in the midsole, in addition to the Ortholite comfort foam insoles, our playtesters found a more comfortable and plush ride underneath the foot. A reinforcement plate has been added to the shank, while the 360 degree fit helps to secure the foot in place. The medial side of the upper has added protection and the Lace-in system keeps the laces from being exposed to dragging. The full herringbone outsole is made from Michelin's premium rubber formula, to help maximize durability and traction on clay courts.",
+    "attributes": {
+      "Arch:": "Medium",
+      "Width:": "Generous Medium",
+      "Length:": "True",
+      "Weight:": "377 grams (US size 10.5)",
+      "Break-in:": "Slight"
+    },
+    "created_at": "2025-10-09T15:59:41.583Z",
+    "updated_at": "2025-10-09T17:19:41.455Z"
+  }
+},
+{
+  "model": "shop.product",
+  "pk": 4,
+  "fields": {
+    "type": "M_SHOES",
+    "name": "Nike Zoom GP Challenge Pro Clay Black/White Men's Shoe",
+    "sku": null,
+    "brand": "Nike",
+    "price": "380.00",
+    "in_stock": true,
+    "is_active": true,
+    "image_1": "shop/products/Nike_Zoom_GP_Challenge_Pro_Clay_Shoe.webp",
+    "image_2": "shop/products/Nike_Zoom_GP_Challenge_Pro_Clay_Shoe_1.webp",
+    "image_3": "shop/products/Nike_Zoom_GP_Challenge_Pro_Clay_Shoe_2.webp",
+    "category": null,
+    "short_description": "The comfort that the GP series is known for with improved stability, and a speedy feel.",
+    "description": "The Challenge Pro has a more budget friendly price-tag compared to the Challenge 1, but does not skimp on comfort or stability. Featuring a wider base in the forefoot that not only provides a comfortable fit, but also helps during aggressive lateral cuts. The padded mesh upper supplies plenty of comfort and breathability, while TPU reinforcements help create a more secure feel, as well as drag protection around the toes. The EVA foam in the midsole provides good shock absorption as you transition heel to toe, while the midfoot is equipped with a stability plate to resist twisting and transfer energy as you move. Nike's high abrasion rubber in a full herringbone pattern enhances traction and is durable on clay courts.",
+    "attributes": {
+      "Arch:": "Low",
+      "Width:": "Medium",
+      "Length:": "Snug (toe box feels shallow)",
+      "Weight:": "450 grams (size 10.5 US)",
+      "Break-in:": "Slight"
+    },
+    "created_at": "2025-10-09T16:14:19.590Z",
+    "updated_at": "2025-10-09T16:39:58.542Z"
+  }
+},
+{
+  "model": "shop.product",
+  "pk": 5,
+  "fields": {
+    "type": "M_SHOES",
+    "name": "HEAD Sprint Team 4.0 Clay Navy/Lime Men's Shoe",
+    "sku": null,
+    "brand": "HEAD",
+    "price": "386.00",
+    "in_stock": true,
+    "is_active": true,
+    "image_1": "shop/products/HEAD_Sprint_Team_4.0_Shoe.webp",
+    "image_2": "shop/products/HEAD_Sprint_Team_4.0_Shoe_1.webp",
+    "image_3": "shop/products/HEAD_Sprint_Team_4.0_Shoe_2.webp",
+    "category": null,
+    "short_description": "Lightweight, comfortable, and breathable.",
+    "description": "A shoe that offers comfort right out of the box, the Head Sprint Team 4.0 Clay feels lightweight and speedy, while also providing a ton of ventilation. Although this shoe is not quite as stable and locked-in as the Sprint Pro, it feels super comfortable and flexible, making it a great option for a variety of levels of players. The EVA midsole delivers a comfortable and plush sensation underneath your feet, while the upper has plenty of mesh for breathability; reinforced in high wear zones for drag protection. The rubber outsole is formed into a full herringbone tread pattern and is designed to provide a high level of traction on clay courts.",
+    "attributes": {
+      "Arch:": "Medium",
+      "Width:": "Narrow, with a snug toe box",
+      "Length:": "True to size",
+      "Weight:": "334 grams (US size 10)",
+      "Break-in:": "None"
+    },
+    "created_at": "2025-10-09T16:33:00.129Z",
+    "updated_at": "2025-10-09T17:14:44.964Z"
+  }
+},
+{
+  "model": "shop.product",
+  "pk": 6,
+  "fields": {
+    "type": "M_SHOES",
+    "name": "Babolat SFX Evo Clay Dark Grey/White Men's Shoes",
+    "sku": null,
+    "brand": "Babolat",
+    "price": "305.00",
+    "in_stock": true,
+    "is_active": true,
+    "image_1": "shop/products/rs_1.webp",
+    "image_2": "shop/products/Babolat_SFX_Evo_Clay_Shoes.webp",
+    "image_3": "shop/products/Babolat_SFX_Evo_Clay_Shoes_1.webp",
+    "category": null,
+    "short_description": "A great option for players of all levels who seek absolute comfort!",
+    "description": "Players seeking plush comfort and like a roomy fit, the Babolat SFX Evo Clay Men's Shoes need to be a the top of your list. The SFX line of shoes has developed a reputation for premium comfort, and this SFX Evo delivers it in abundance at an even better price. These shoes provide a larger volume in the forefoot (6% wider last) and a cushy ride underfoot, combining Orhtolite Die Cut insoles and soft EVA in the midsole. The upper is flexible and breathable, while still offering the support and security around the ankles. Michelin's premium rubber compound is formed into a full herringbone tread pattern for maximum traction on clay courts.",
+    "attributes": {
+      "Arch:": "Slightly low",
+      "Width:": "Wide",
+      "Length:": "We recommend going half size down",
+      "Weight:": "376 grams (US size 10.5)",
+      "Break-in:": "None"
+    },
+    "created_at": "2025-10-09T16:44:08.541Z",
+    "updated_at": "2025-10-09T17:14:22.339Z"
+  }
+},
+{
+  "model": "shop.product",
+  "pk": 7,
+  "fields": {
+    "type": "M_SHOES",
+    "name": "Mizuno Wave Enforce Court Clay Blue/White Men Shoe",
+    "sku": null,
+    "brand": "Mizuno",
+    "price": "386.00",
+    "in_stock": true,
+    "is_active": true,
+    "image_1": "shop/products/Mizuno_Wave_Enforce_Shoe.webp",
+    "image_2": "shop/products/Mizuno_Wave_Enforce_Shoe_1.webp",
+    "image_3": "shop/products/rs_2.webp",
+    "category": null,
+    "short_description": "A great option for players who put a big emphasis on comfort, and also like a stable ride. Clay court version.",
+    "description": "Mizuno adds another member to their Enforce family, known for its stability and comfort, with the Mizuno Wave Enforce Court. This Wave Enforce Court is a great option for the recreational player, or one that might not need all the bells and whistles of the Tour version, but still wants a stable ride and a super plush and cushioned undercarriage. Mizuno delivers that comfort and cushioning with the combination of ENERZY and Foam Wave in the midsole. The combination of a flat sole, and lateral outrigger provides the stability and confidence in your movement; helping you to change directions quickly and smoothly.",
+    "attributes": {
+      "Arch:": "Medium",
+      "Width:": "Generous Medium",
+      "Length:": "True",
+      "Weight:": "349 grams (US size 10.5)",
+      "Break-in:": "Slight"
+    },
+    "created_at": "2025-10-09T16:53:52.189Z",
+    "updated_at": "2025-10-09T17:15:05.278Z"
+  }
+},
+{
+  "model": "shop.product",
+  "pk": 8,
+  "fields": {
+    "type": "M_SHOES",
+    "name": "Asics Gel Game FF Clay White/Midnight Men's Shoes",
+    "sku": null,
+    "brand": "Asics",
+    "price": "375.00",
+    "in_stock": true,
+    "is_active": true,
+    "image_1": "shop/products/Asics_Gel_Game_FF_Clay_Shoes.webp",
+    "image_2": "shop/products/rs_3.webp",
+    "image_3": "shop/products/Asics_Gel_Game_FF_Clay_Shoes_1.webp",
+    "category": null,
+    "short_description": "Lightweight comfort, support, and ventilation. A flexible and speedy shoe right out of the box.",
+    "description": "Providing lightweight comfort and support, the Asics Gel Game FF Clay is a great value option, that will feel speedy and flexible right out of the box. This update to the Gel Game now features FLYTEFOAM in the midsole for comfortable cushioning and a responsive energy return. The upper material has been upgraded for a softer feel on the foot, and improved ventilation. The outsole is formed with Asics' High Abrasion Rubber compound, and has a two-piece split sole design to cut down on weight. The sharp herringbone tread pattern helps to maximize grip on clay courts. The mid-foot shank located between the two pieces of the outsole, helps to add stability on lateral movements.",
+    "attributes": {
+      "Arch:": "Low",
+      "Width:": "Narrow",
+      "Length:": "True to size",
+      "Weight:": "314 grams (size 10.5 US)",
+      "Break-in:": "None"
+    },
+    "created_at": "2025-10-09T17:00:54.235Z",
+    "updated_at": "2025-10-09T17:01:50.604Z"
+  }
+},
+{
+  "model": "shop.product",
+  "pk": 9,
+  "fields": {
+    "type": "M_SHOES",
+    "name": "KSwiss Express Light 3 Clay White/Stargazer Men Shoe",
+    "sku": null,
+    "brand": "K-Swiss",
+    "price": "420.00",
+    "in_stock": true,
+    "is_active": true,
+    "image_1": "shop/products/KSwiss_Express_Light_3_Clay_Shoe.webp",
+    "image_2": "shop/products/KSwiss_Express_Light_3_Clay_Shoe_1.webp",
+    "image_3": "shop/products/KSwiss_Express_Light_3_Clay_Shoe_2.webp",
+    "category": null,
+    "short_description": "Comfortable, breathable, and flexible. Clay court version",
+    "description": ".The K-Swiss Express Light 3 Clay carries the classic comfort that K-Swiss is known for, while also helping you to feel light and speedy around the court. Built of a similar foundation to the original Hypercourt Express, this update to the Express Light makes improvements to the upper material with DuraWrap Flex, an RPU cage material to enhance drag protection. With mesh underneath that, it still has plenty of ventilation, while keeping your feet well supported. The plush and padded heel collar, combined with the foam midsole cushioning makes for a smooth ride for those long court sessions. A full herringbone tread pattern made from K-Swiss' reliable Aosta 7.0 high density rubber compound, offers excellent traction and good durability on clay courts.",
+    "attributes": {
+      "Arch:": "Slightly low",
+      "Width:": "Medium; Generous toe box",
+      "Length:": "True to size",
+      "Weight:": "367 grams (size 10.5 US)",
+      "Break-in:": "Slight"
+    },
+    "created_at": "2025-10-09T17:06:36.928Z",
+    "updated_at": "2025-10-09T17:07:15.573Z"
+  }
+},
+{
+  "model": "shop.product",
+  "pk": 10,
+  "fields": {
+    "type": "M_SHOES",
+    "name": "Nike Vapor Pro 3 Clay Racer Blue/Black Men's Shoes",
+    "sku": null,
+    "brand": "Nike",
+    "price": "475.00",
+    "in_stock": true,
+    "is_active": true,
+    "image_1": "shop/products/Nike_Vapor_Pro_3_Clay_Shoes.webp",
+    "image_2": "shop/products/Nike_Vapor_Pro_3_Clay_Shoes_1.webp",
+    "image_3": "shop/products/Nike_Vapor_Pro_3_Clay_Shoes_2.webp",
+    "category": null,
+    "short_description": "This third gen Vapor Pro has been updated with improved comfort and even more support, while remaining speedy and flexible as you move.",
+    "description": "Nike has listened to player feedback, from the pro tour to the public parks, and designs the Nike Vapor Pro 3 Clay to be more supportive and even more comfortable than previous versions. The addition of a mid-foot band increases the lock-down, while also adding support for aggressive lateral cuts. For an even cushier ride Nike injects a Zoom Air hex unit under the highest impact zone; adding a responsive pillow where you need it most. Allowing for more flexibility in the forefoot, Nike has redesigned the TPU with a deeper notch to make for a speedier feel when pushing off. Increasing the durability, Hart rubber compound has been added to the outsole, as well as the toe-tip and eyestay (think foot-drag). Claybreaker full herringbone tread supplies ideal levels of grip, and allows you to slide smoothly on clay courts.",
+    "attributes": {
+      "Arch:": "Medium",
+      "Width:": "Medium",
+      "Length:": "True to size",
+      "Weight:": "438 grams (size 10.5)",
+      "Break-in:": "None"
+    },
+    "created_at": "2025-10-09T17:11:59.461Z",
+    "updated_at": "2025-10-09T17:12:38.775Z"
+  }
+},
+{
+  "model": "shop.product",
+  "pk": 12,
+  "fields": {
+    "type": "M_SHOES",
+    "name": "Mizuno Wave Exceed Light 2 Clay White/Mint Men's Shoe",
+    "sku": null,
+    "brand": "Mizuno",
+    "price": "435.00",
+    "in_stock": true,
+    "is_active": true,
+    "image_1": "shop/products/Mizuno_Wave_Exceed_Light_2_Clay_Shoe.webp",
+    "image_2": "shop/products/Mizuno_Wave_Exceed_Light_2_Clay_Shoe_1.webp",
+    "image_3": "shop/products/Mizuno_Wave_Exceed_Light_2_Clay_Shoe_2.webp",
+    "category": null,
+    "short_description": "These shoes put a premium on comfort, and maintaining an ultra lightweight feel.",
+    "description": "One of the lightest tennis shoes on the market gets a facelift, as the Mizuno Wave Exceed Light 2 Clay maintains that ultra lightweight feel, superb comfort, and a new upper design that enhances the support. The midsole is equipped with plush cushioning underfoot, while the signature Wave plate adds energy into every step. The engineered mesh upper offers a soft feel on top of the foot, while also improving durability compared to the first version. On the outsole, Durable X10 rubber is formed into a full herringbone pattern for great traction on clay courts.",
+    "attributes": {
+      "Arch:": "Low",
+      "Width:": "Medium",
+      "Length:": "Snug",
+      "Weight:": "328 grams (US size 10.5)",
+      "Break-in:": "None"
+    },
+    "created_at": "2025-10-09T17:29:45.092Z",
+    "updated_at": "2025-10-09T17:36:55.774Z"
+  }
+},
+{
+  "model": "shop.product",
+  "pk": 13,
+  "fields": {
+    "type": "M_SHOES",
+    "name": "Mizuno Wave Exceed Light 2 Clay Bl/Wh/Bl Men's Shoe",
+    "sku": null,
+    "brand": "Mizuno",
+    "price": "485.00",
+    "in_stock": true,
+    "is_active": true,
+    "image_1": "shop/products/Mizuno_Wave_Exceed_Light_2_Clay_Shoe_3.webp",
+    "image_2": "shop/products/Mizuno_Wave_Exceed_Light_2_Clay_Shoe_4.webp",
+    "image_3": "shop/products/Mizuno_Wave_Exceed_Light_2_Clay_Shoe_5.webp",
+    "category": null,
+    "short_description": "These shoes put a premium on comfort, and maintaining an ultra lightweight feel.",
+    "description": "One of the lightest tennis shoes on the market gets a facelift, as the Mizuno Wave Exceed Light 2 Clay maintains that ultra lightweight feel, superb comfort, and a new upper design that enhances the support. The midsole is equipped with plush cushioning underfoot, while the signature Wave plate adds energy into every step. The engineered mesh upper offers a soft feel on top of the foot, while also improving durability compared to the first version. On the outsole, Durable X10 rubber is formed into a full herringbone pattern for great traction on clay courts.",
+    "attributes": {
+      "Arch:": "Low",
+      "Width:": "Medium",
+      "Length:": "Snug",
+      "Weight:": "328 grams (US size 10.5)",
+      "Break-in:": "None"
+    },
+    "created_at": "2025-10-09T17:35:50.529Z",
+    "updated_at": "2025-10-09T17:36:48.637Z"
+  }
+},
+{
+  "model": "shop.product",
+  "pk": 14,
+  "fields": {
+    "type": "M_SHOES",
+    "name": "Babolat Propulse Fury 3 Clay Grey/White Men's Shoes",
+    "sku": null,
+    "brand": "Babolat",
+    "price": "465.00",
+    "in_stock": true,
+    "is_active": true,
+    "image_1": "shop/products/Babolat_Propulse_Fury_3_Shoes.webp",
+    "image_2": "shop/products/Babolat_Propulse_Fury_3_Shoes_1.webp",
+    "image_3": "shop/products/Babolat_Propulse_Fury_3_Shoes_2.webp",
+    "category": null,
+    "short_description": "Ultimate support, durability, with added comfort compared to previous versions.",
+    "description": "Taking the support, and stability that the Propulse is known for, this update to the Babolat Propulse Fury 3 Clay improves upon the cushioning, and adds even more durability. With an increase of EVA foam in the midsole, in addition to the Ortholite comfort foam insoles, our playtesters found a more comfortable and plush ride underneath the foot. A reinforcement plate has been added to the shank, while the 360 degree fit helps to secure the foot in place. The medial side of the upper has added protection and the Lace-in system keeps the laces from being exposed to dragging. The full herringbone outsole is made from Michelin's premium rubber formula, to help maximize durability and traction on clay courts.",
+    "attributes": {
+      "Arch:": "Medium",
+      "Width:": "Generous Medium",
+      "Length:": "True",
+      "Weight:": "377 grams (US size 10.5)",
+      "Break-in:": "Slight"
+    },
+    "created_at": "2025-10-09T17:39:38.394Z",
+    "updated_at": "2025-10-09T17:40:13.873Z"
+  }
+},
+{
+  "model": "shop.product",
+  "pk": 15,
+  "fields": {
+    "type": "M_SHOES",
+    "name": "Joma Roland Clay Petroleum Men's Shoes",
+    "sku": null,
+    "brand": "Joma",
+    "price": "545.00",
+    "in_stock": true,
+    "is_active": true,
+    "image_1": "shop/products/Joma_Roland_Clay_Shoes.webp",
+    "image_2": "shop/products/Joma_Roland_Clay_Shoes_1.webp",
+    "image_3": "shop/products/Joma_Roland_Clay_Shoes_2.webp",
+    "category": null,
+    "short_description": "Joma's premium performance shoe, designed and tested by pro players. Featuring the support, comfort, and durability needed for aggressive movers who battle on clay courts.",
+    "description": "Having developed a reputation as Joma’s premium performance shoe, the Joma Roland Clay is designed and tested by professional players to deliver the highest performance standard on court. With that said, you don’t need to be a pro player to reap the benefits and comfort that these Roland shoes have to offer. The uppers are constructed with a high level of support, VTS perforations for breathability, and more durability features than the other Joma shoe models for those who slide often. The Dual Reactive midsole features two densities of phylon for maximum cushioning, comfort, and explosive responsiveness. Joma’s Durability rubber compound is molded into a full herringbone tread pattern for the ideal level of traction and durability needed on clay courts.",
+    "attributes": {
+      "Arch:": "Medium",
+      "Width:": "Medium",
+      "Length:": "True to size",
+      "Weight:": "471 grams (size 10.5 US)",
+      "Break-in:": "None"
+    },
+    "created_at": "2025-10-09T17:43:19.849Z",
+    "updated_at": "2025-10-09T19:40:59.705Z"
+  }
+},
+{
+  "model": "shop.product",
+  "pk": 16,
+  "fields": {
+    "type": "M_SHOES",
+    "name": "Babolat Jet Tere 2 Clay Blue Atoll Men's Shoes",
+    "sku": null,
+    "brand": "Babolat",
+    "price": "330.00",
+    "in_stock": true,
+    "is_active": true,
+    "image_1": "shop/products/rs_4xwcicd.php",
+    "image_2": "shop/products/rs_KoPaQcR.php",
+    "image_3": "shop/products/rs_hTyzeHz.php",
+    "category": null,
+    "short_description": "Ultra lightweight feel; this second generation of the Jet Tere improves upon comfort and durability. Clay court version.",
+    "description": "Carrying on the ultra lightweight feel that this line is known for, the Babolat Jet Tere 2 Clay Men's Shoes deliver improved comfort and durability compared to the first gen. The KPRS-X midsole cushioning has been improved and provides even more cushion, for a plush feeling as you move around the court. The upper material is lightweight and comfortable, while also providing the support needed for club and recreational players. The Michelin premium rubber outsole has been formed into a full herringbone pattern to provide the ideal performance and traction on clay courts .",
+    "attributes": {
+      "Arch:": "Medium",
+      "Width:": "Medium",
+      "Length:": "True",
+      "Weight:": "361 grams (US size 10.5)",
+      "Break-in:": "None"
+    },
+    "created_at": "2025-10-09T19:59:32.592Z",
+    "updated_at": "2025-10-09T20:04:27.201Z"
+  }
+},
+{
+  "model": "shop.product",
+  "pk": 17,
+  "fields": {
+    "type": "M_SHOES",
+    "name": "Asics Gel Dedicate 8 Clay Dark Cobalt/White Men's Shoes",
+    "sku": null,
+    "brand": "Asics",
+    "price": "320.00",
+    "in_stock": true,
+    "is_active": true,
+    "image_1": "shop/products/rs_zPbiS1V.php",
+    "image_2": "shop/products/rs_NrKGJou.php",
+    "image_3": "shop/products/rs_GOuTFew.php",
+    "category": null,
+    "short_description": "Comfort, cushion, and stability at a great price. Clay court version.",
+    "description": "Comfort and flexibility within the stability family of Asics shoes, the Gel Dedicate 8 Clay is not only a great value, but offers supportive comfort out of the box. As a more valuable option in the stability family from Asics, under the Gel Resolution and Gel Challenger, this shoe offers plenty of cushioning with the signature GEL technology in the midsole. The upper is breathable and supportive, combining mesh and synthetic leather, while the Trusstic system in the midfoot gives stability for lateral cuts. Asics high abrasion rubber on the outsole is formed into a full herringbone pattern for traction and durability on clay courts. Upper: Synthetic leather and mesh combine for flexible comfort and breathability. Midsole: EVA midsole with GEL cushioning for a plush feel, and support. Trusstic technology in the midfoot region adds stability, and resists unwanted torsional twisting of the shoe. Outsole: Asics High Abrasion Rubber compound in a full herringbone pattern, for the ideal traction on clay courts. Colour: Dark Cobalt / White",
+    "attributes": {
+      "Arch:": "Slightly Low",
+      "Width:": "Medium",
+      "Length:": "True",
+      "Weight:": "356 grams (US size 10.5)",
+      "Break-in:": "None"
+    },
+    "created_at": "2025-10-09T20:09:39.527Z",
+    "updated_at": "2025-10-09T20:09:39.527Z"
+  }
+},
+{
+  "model": "shop.product",
+  "pk": 18,
+  "fields": {
+    "type": "M_SHOES",
+    "name": "Lotto Mirage 300 Clay  Nectarine/All White Men's Shoes",
+    "sku": null,
+    "brand": "Lotto",
+    "price": "375.00",
+    "in_stock": true,
+    "is_active": true,
+    "image_1": "shop/products/rs_apjOZPP.php",
+    "image_2": "shop/products/rs_JcENQSN.php",
+    "image_3": "shop/products/rs_qjD5HvE.php",
+    "category": null,
+    "short_description": null,
+    "description": "The Lotto Mirage 300 Clay is the perfect performance shoe for recreational players looking for stability, flexibility and durability. Based of the popular Raptor line, this shoe is sure to please dedicated fans. The KPU cage upper makes the shoe stable without adding weight, and adds abrasion resistance and durability where players need it most. Underfoot, the Enerturn technology provides responsive comfort and rebound, keeping your movement comfortable and fast. The innovative, geometric outsole grips the court well and is durable enough for extensive use, and is best suited for clay courts. Upper: KPU cage upper for lightweight support and durability. Midsole: Enerturn technology provides responsive comfort and rebound, keeping your movement comfortable and fast. Outsole: Innovative, geometric outsole design for traction and durability on any clay courts. Colour: Nectarine / All White",
+    "attributes": {
+      "Arch:": "Medium",
+      "Width:": "Generous forefoot and midfoot",
+      "Length:": "True",
+      "Weight:": "418 grams (size 44)",
+      "Break-in:": "None"
+    },
+    "created_at": "2025-10-09T20:12:26.965Z",
+    "updated_at": "2025-10-09T20:12:26.965Z"
+  }
+},
+{
+  "model": "shop.product",
+  "pk": 19,
+  "fields": {
+    "type": "M_SHOES",
+    "name": "Nike Vapor Lite 3 Clay Racer Blue/Lightning Men Shoes",
+    "sku": null,
+    "brand": "Nike",
+    "price": "330.00",
+    "in_stock": true,
+    "is_active": true,
+    "image_1": "shop/products/rs_8FsCcAh.php",
+    "image_2": "shop/products/rs_AqWazxg.php",
+    "image_3": "shop/products/rs_9k0Rb9b.php",
+    "category": null,
+    "short_description": "Versatile shoes for the player seeking comfort and sporty Nike style, at a great value. This version is designed for use on clay courts.",
+    "description": "",
+    "attributes": {
+      "Arch:": "Medium",
+      "Width:": "Medium",
+      "Length:": "True to size",
+      "Weight:": "350 grams (size 10.5)",
+      "Break-in:": "None"
+    },
+    "created_at": "2025-10-09T20:16:16.324Z",
+    "updated_at": "2025-10-09T20:16:16.324Z"
+  }
+},
+{
+  "model": "shop.product",
+  "pk": 20,
+  "fields": {
+    "type": "M_SHOES",
+    "name": "Mizuno Wave Enforce Court Clay Grey/White/Blue Men Shoe",
+    "sku": null,
+    "brand": "Mizuno",
+    "price": "450.00",
+    "in_stock": true,
+    "is_active": true,
+    "image_1": "shop/products/rs_XI1LAjU.php",
+    "image_2": "shop/products/rs_CLoUCug.php",
+    "image_3": "shop/products/rs_ENx4CLK.php",
+    "category": null,
+    "short_description": "A great option for players who put a big emphasis on comfort, and also like a stable ride. Clay court version.",
+    "description": "",
+    "attributes": {
+      "Arch:": "Medium",
+      "Width:": "Generous Medium",
+      "Length:": "True",
+      "Weight:": "349 grams (US size 10.5)",
+      "Break-in:": "Slight"
+    },
+    "created_at": "2025-10-09T20:21:50.748Z",
+    "updated_at": "2025-10-09T20:21:50.748Z"
+  }
+},
+{
+  "model": "shop.product",
+  "pk": 21,
+  "fields": {
+    "type": "M_SHOES",
+    "name": "Nike Zoom GP Challenge 1 Clay Racer Blue/Black Men Shoe",
+    "sku": null,
+    "brand": "Nike",
+    "price": "585.00",
+    "in_stock": true,
+    "is_active": true,
+    "image_1": "shop/products/rs_6MIIDUB.php",
+    "image_2": "shop/products/rs_6m4r6PM.php",
+    "image_3": "shop/products/rs_5ITP6rq.php",
+    "category": null,
+    "short_description": "The GP series lives on! With Zoom Air underfoot you will find explosive energy and a smooth ride, trusted on tour by Frances Tiafoe.",
+    "description": "Whether you are an aggressive mover craving that extra spring in your step, or a comfort seeker looking for a plush ride, fear not the Nike Zoom GP Challenge 1 Shoes are here! The Nike GP Turbo was a TW playtester all-time favorite, based on the exceptional level of comfort and cushioning. This newer edition in the GP series carries on some of that comfort and bounciness, with a more stream-lined and speedy profile. Explosive movers like Frances Tiafoe can appreciate the blend of comfort, support, and traction these shoes deliver. Key design features include forefoot and heel Zoom Air units, a mid-foot stability plate, and high abrasion rubber on the outsole that is denser in strategic locations. Adding to the overall comfort, the upper material is lightweight, breathable, and protected on the medial side of the toe-box for players who drag, while the integrated lacing system and support strap on the lateral side will keep your feet secure on those lateral cuts. Upper: Synthetic and mesh material for lightweight support and easy ventilation. Rubber drag-guard on the medial side of the toe-box, and extra padding around the ankle collar for a plush feel. Intergrated lacing and lateral belt help with support and lock-down. Midsole: Zoom Air units located under the forefoot and heel for easy energy return and a smooth ride. Stability plate helps to resist torsional twisting of the shoes. Outsole: High abrasion rubber outsole in a herringbone design; rubber is more dense on the medial forefoot high wear region, and finer tread on the lateral side for sliding enhancement. Colour: Racer Blue / Black",
+    "attributes": {
+      "Arch:": "Slightly Low",
+      "Width:": "Medium",
+      "Length:": "Slightly Snug",
+      "Weight:": "439 grams (size 10.5 US)",
+      "Break-in:": "No"
+    },
+    "created_at": "2025-10-09T20:27:42.252Z",
+    "updated_at": "2025-10-09T20:27:42.252Z"
+  }
+},
+{
+  "model": "shop.product",
+  "pk": 22,
+  "fields": {
+    "type": "M_SHOES",
+    "name": "Nike Zoom GP Challenge 1 Clay Black/White Men's Shoes",
+    "sku": null,
+    "brand": "Nike",
+    "price": "545.00",
+    "in_stock": true,
+    "is_active": true,
+    "image_1": "shop/products/rs_h1uXaDL.php",
+    "image_2": "shop/products/rs_9JHFIFH.php",
+    "image_3": "shop/products/rs_ezBnntg.php",
+    "category": null,
+    "short_description": "The GP series lives on! With Zoom Air underfoot you will find explosive energy and a smooth ride. This version is designed for use on clay courts.",
+    "description": "Whether you are an aggressive mover craving that extra spring in your step, or a comfort seeker looking for a plush ride, fear not the Nike Zoom GP Challenge 1 Clay Shoes are here! The Nike GP Turbo was a TW playtester all-time favorite, based on the exceptional level of comfort and cushioning. This newer edition in the GP series carries on some of that comfort and bounciness, with a more stream-lined and speedy profile. Explosive movers can appreciate the blend of comfort, support, and traction these shoes deliver. Key design features include forefoot and heel Zoom Air units, a mid-foot stability plate, and high abrasion rubber on the outsole that is formed into a full herringbone for string grip on clay.  Adding to the overall comfort, the upper material is lightweight, breathable, and protected on the medial side of the toe-box for players who drag, while the integrated lacing system and support strap on the lateral side will keep your feet secure on those lateral cuts. Upper: Synthetic and mesh material for lightweight support and easy ventilation. Rubber drag-guard on the medial side of the toe-box, and extra padding around the ankle collar for a plush feel. Intergrated lacing and lateral belt help with support and lock-down. Midsole: Zoom Air units located under the forefoot and heel for easy energy return and a smooth ride. Stability plate helps to resist torsional twisting of the shoes. Outsole: High abrasion rubber outsole in a full herringbone design for max grip on clay courts. Colour: Black / White",
+    "attributes": {
+      "Arch:": "Slightly Low",
+      "Width:": "Medium",
+      "Length:": "Slightly Snug",
+      "Weight:": "447 grams (size 10.5 US)",
+      "Break-in:": "No"
+    },
+    "created_at": "2025-10-09T20:32:31.042Z",
+    "updated_at": "2025-10-09T20:32:31.042Z"
+  }
+},
+{
+  "model": "shop.product",
+  "pk": 23,
+  "fields": {
+    "type": "M_SHOES",
+    "name": "HEAD Sprint Pro 4.0 Clay Dark Blue/Red Men's Shoes",
+    "sku": null,
+    "brand": "HEAD",
+    "price": "540.00",
+    "in_stock": true,
+    "is_active": true,
+    "image_1": "shop/products/rs_xjvG1ua.php",
+    "image_2": "shop/products/rs_n5EAavA.php",
+    "image_3": "shop/products/rs_l8M5vd8.php",
+    "category": null,
+    "short_description": "Glove-like fit, lightweight and fast feeling, low to the court ride. One of the most breathable shoes on the market.",
+    "description": "Designed to be more comfortable and breathable than before, the Head Sprint Pro 4.0 Clay features a low to the court profile, and plenty of support where you need it most. A reconfigured upper design allows for a ton of ventilation, and is combined with the Delta Strap for increased lateral support. The Sock Support System hugs the foot and feels nice and contoured, for a locked-in fit. In the back of these shoes, the heel stabilizer cups the foot and combines with the 3D anti-torsion system in the mid-foot for added stability in a lightweight package. The outsole features Head’s Hybrasion+ rubber a defined herringbone tread pattern for a solid blend of traction and durability on clay courts . Head’s cooling system under the arch provides even more breathability, and there is no need to remove the sticker like in the past. Upper: Lightweight breathable mesh with sock support system, for a glove like support and easy ventilation. Drift defense adds durability near the toes and medial side for drag protection; specifically players who slide on hardcourts. Heel Stabilizer for added support. Delta-strap increases stability and provides an individualized fit. Midsole: Ventilated 3D anti-torsion midfoot shank, Tri-Nrg triple density foam, and Lateral Control outrigger. Outsole: Hybrasion+ special rubber compound formed in a sharp herringbone pattern, for great traction on clay courts . Colour: Dark Blue / Red",
+    "attributes": {
+      "Arch:": "Slightly Low",
+      "Width:": "Medium",
+      "Length:": "True to size",
+      "Weight:": "xxx grams (size US 10.5)",
+      "Break-in:": "Slight"
+    },
+    "created_at": "2025-10-09T20:35:21.669Z",
+    "updated_at": "2025-10-09T20:35:21.669Z"
+  }
+},
+{
+  "model": "shop.product",
+  "pk": 24,
+  "fields": {
+    "type": "M_SHOES",
+    "name": "HEAD Sprint Pro 4.0 Clay Lime/Navy Men's Shoes",
+    "sku": null,
+    "brand": "HEAD",
+    "price": "530.00",
+    "in_stock": true,
+    "is_active": true,
+    "image_1": "shop/products/rs_Tt9VF2T.php",
+    "image_2": "shop/products/rs_My8L59t.php",
+    "image_3": "shop/products/rs_YU7YhOi.php",
+    "category": null,
+    "short_description": "Glove-like fit, lightweight and fast feeling, low to the court ride. One of the most breathable shoes on the market.",
+    "description": "Designed to be more comfortable and breathable than before, the Head Sprint Pro 4.0 Clay features a low to the court profile, and plenty of support where you need it most. A reconfigured upper design allows for a ton of ventilation, and is combined with the Delta Strap for increased lateral support. The Sock Support System hugs the foot and feels nice and contoured, for a locked-in fit. In the back of these shoes, the heel stabilizer cups the foot and combines with the 3D anti-torsion system in the mid-foot for added stability in a lightweight package. The outsole features Head’s Hybrasion+ rubber a defined herringbone tread pattern for a solid blend of traction and durability on clay courts . Head’s cooling system under the arch provides even more breathability, and there is no need to remove the sticker like in the past. Upper: Lightweight breathable mesh with sock support system, for a glove like support and easy ventilation. Drift defense adds durability near the toes and medial side for drag protection; specifically players who slide on hardcourts. Heel Stabilizer for added support. Delta-strap increases stability and provides an individualized fit. Midsole: Ventilated 3D anti-torsion midfoot shank, Tri-Nrg triple density foam, and Lateral Control outrigger. Outsole: Hybrasion+ special rubber compound formed in a sharp herringbone pattern, for great traction on clay courts . Colour: Lime / Navy",
+    "attributes": {
+      "Arch:": "Slightly Low",
+      "Width:": "Medium",
+      "Length:": "True to size",
+      "Weight:": "371 grams (size US 10)",
+      "Break-in:": "Slight"
+    },
+    "created_at": "2025-10-09T20:36:29.216Z",
+    "updated_at": "2025-10-09T20:36:29.216Z"
+  }
+},
+{
+  "model": "shop.product",
+  "pk": 25,
+  "fields": {
+    "type": "M_SHOES",
+    "name": "HEAD Revolt Pro 4.5 Clay Dark Blue/Red Men's Shoes",
+    "sku": null,
+    "brand": "HEAD",
+    "price": "520.00",
+    "in_stock": true,
+    "is_active": true,
+    "image_1": "shop/products/rs_MMMC1zm.php",
+    "image_2": "shop/products/rs_HQF7luJ.php",
+    "image_3": "shop/products/rs_Zg67XPP.php",
+    "category": null,
+    "short_description": "Head's premier shoes for stability, durability, and comfort. Clay court version.",
+    "description": "Designed with stability, comfort, and durability in mind, the Head Revolt Pro 4.5 Clay takes what you loved from the previous versions and makes subtle improvements for a great all-around performer . The upper has been reconstructed for a more supportive and locked in fit. Aesthetically, the upper is more technical and clean looking, with a wave-like design that contours nicely to your feet and also allows for ventilation, with a mesh layer underneath. Within the midsole the Tri-Nrg system not only delivers comfort and shock-absorption, but helps to stabilize your feet when pushing off and accelerating. Head's signature Hybrasion+ rubber has been formed into a full herringbone tread pattern for maximum grip and durability on clay courts.",
+    "attributes": {
+      "Arch:": "Medium",
+      "Width:": "Medium",
+      "Length:": "True",
+      "Weight:": "416 grams (US size 10.5)",
+      "Break-in:": "Slight"
+    },
+    "created_at": "2025-10-09T20:37:21.055Z",
+    "updated_at": "2025-10-09T20:37:21.055Z"
+  }
+},
+{
+  "model": "shop.product",
+  "pk": 26,
+  "fields": {
+    "type": "M_SHOES",
+    "name": "Yonex Sonicage 3 Clay Black/Sky Blue Men's Shoes",
+    "sku": null,
+    "brand": "Yonex",
+    "price": "495.00",
+    "in_stock": true,
+    "is_active": true,
+    "image_1": "shop/products/rs_4vRQtEW.php",
+    "image_2": "shop/products/rs_WDkKXbe.php",
+    "image_3": "shop/products/rs_tnfpShV.php",
+    "category": null,
+    "short_description": "Ultra-light, comfortable, and supportive. Clay court version.",
+    "description": "",
+    "attributes": {
+      "Arch:": "Slightly Low",
+      "Width:": "Snug Medium/Slightly Narrow",
+      "Length:": "True to size",
+      "Weight:": "348 grams (size 10.5 US)",
+      "Break-in:": "None"
+    },
+    "created_at": "2025-10-09T20:47:29.617Z",
+    "updated_at": "2025-10-09T20:47:29.617Z"
+  }
+},
+{
+  "model": "shop.shoe",
+  "pk": 26,
+  "fields": {
+    "gender": "U",
+    "surface": "AC",
+    "sizes": [
+      "US 8.0",
+      "US 11.0",
+      "US 11.5"
+    ],
+    "color": null
+  }
+},
+{
+  "model": "shop.shoe",
+  "pk": 25,
+  "fields": {
+    "gender": "U",
+    "surface": "AC",
+    "sizes": [
+      "US 7.5",
+      "US 8.5",
+      "US 9.0",
+      "US 9.5",
+      "US 10.0",
+      "US 10.5",
+      "US 11.0",
+      "US 11.5",
+      "US 12.0"
+    ],
+    "color": null
+  }
+},
+{
+  "model": "shop.shoe",
+  "pk": 24,
+  "fields": {
+    "gender": "U",
+    "surface": "AC",
+    "sizes": [
+      "US 7.5",
+      "US 8.0",
+      "US 8.5",
+      "US 9.0",
+      "US 10.0",
+      "US 10.5",
+      "US 11.5",
+      "US 12.0",
+      "US 12.5",
+      "US 10"
+    ],
+    "color": null
+  }
+},
+{
+  "model": "shop.shoe",
+  "pk": 23,
+  "fields": {
+    "gender": "U",
+    "surface": "AC",
+    "sizes": [
+      "US 7.5",
+      "US 8.0",
+      "US 9.0",
+      "US 9.5",
+      "US 10.0",
+      "US 10.5",
+      "US 11.0",
+      "US 11.5",
+      "US 12.0",
+      "US 12.5"
+    ],
+    "color": null
+  }
+},
+{
+  "model": "shop.shoe",
+  "pk": 22,
+  "fields": {
+    "gender": "U",
+    "surface": "AC",
+    "sizes": [
+      "US 7.0",
+      "US 7.5",
+      "US 8.0",
+      "US 8.5",
+      "US 9.0",
+      "US 9.5",
+      "US 10.0",
+      "US 10.5",
+      "US 11.0",
+      "US 11.5",
+      "US 12.0",
+      "US 12.5",
+      "US 13.0"
+    ],
+    "color": null
+  }
+},
+{
+  "model": "shop.shoe",
+  "pk": 21,
+  "fields": {
+    "gender": "U",
+    "surface": "AC",
+    "sizes": [
+      "US 7.5",
+      "US 8.0",
+      "US 8.5",
+      "US 11.0",
+      "US 11.5"
+    ],
+    "color": null
+  }
+},
+{
+  "model": "shop.shoe",
+  "pk": 20,
+  "fields": {
+    "gender": "U",
+    "surface": "AC",
+    "sizes": [
+      "US 9.0",
+      "US 9.5",
+      "US 10.0",
+      "US 10.5",
+      "US 11.0",
+      "US 11.5",
+      "US 13.0"
+    ],
+    "color": null
+  }
+},
+{
+  "model": "shop.shoe",
+  "pk": 19,
+  "fields": {
+    "gender": "U",
+    "surface": "AC",
+    "sizes": [
+      "US 7.0",
+      "US 7.5",
+      "US 8.0",
+      "US 8.5",
+      "US 9.0",
+      "US 9.5",
+      "US 10.0",
+      "US 10.5",
+      "US 11.0",
+      "US 11.5",
+      "US 12.0",
+      "US 12.5"
+    ],
+    "color": null
+  }
+},
+{
+  "model": "shop.shoe",
+  "pk": 18,
+  "fields": {
+    "gender": "U",
+    "surface": "AC",
+    "sizes": [
+      "US 9.0",
+      "US 9.5",
+      "US 10.5",
+      "US 11.5",
+      "US 12.0"
+    ],
+    "color": null
+  }
+},
+{
+  "model": "shop.shoe",
+  "pk": 17,
+  "fields": {
+    "gender": "U",
+    "surface": "AC",
+    "sizes": [
+      "US 7.0",
+      "US 7.5",
+      "US 8.0",
+      "US 8.5",
+      "US 9.0",
+      "US 9.5",
+      "US 10.0",
+      "US 10.5",
+      "US 11.0",
+      "US 11.5",
+      "US 12.0",
+      "US 12.5",
+      "US 13.0",
+      "US 14.0"
+    ],
+    "color": null
+  }
+},
+{
+  "model": "shop.shoe",
+  "pk": 16,
+  "fields": {
+    "gender": "U",
+    "surface": "AC",
+    "sizes": [
+      "US 7.5",
+      "US 8.0",
+      "US 8.5",
+      "US 9.0",
+      "US 9.5",
+      "US 10.0",
+      "US 10.5",
+      "US 11.0",
+      "US 11.5",
+      "US 12.0",
+      "US 12.5"
+    ],
+    "color": null
+  }
+},
+{
+  "model": "shop.shoe",
+  "pk": 15,
+  "fields": {
+    "gender": "U",
+    "surface": "AC",
+    "sizes": [
+      "EU 40.5",
+      "EU 43.0",
+      "EU 43.5",
+      "EU 44.0",
+      "EU 45.0"
+    ],
+    "color": null
+  }
+},
+{
+  "model": "shop.shoe",
+  "pk": 14,
+  "fields": {
+    "gender": "U",
+    "surface": "AC",
+    "sizes": [
+      "US 7.5",
+      "US 8.0",
+      "US 8.5",
+      "US 9.0",
+      "US 9.5",
+      "US 10.0",
+      "US 10.5",
+      "US 11.0",
+      "US 11.5",
+      "US 12.0",
+      "US 12.5"
+    ],
+    "color": null
+  }
+},
+{
+  "model": "shop.shoe",
+  "pk": 13,
+  "fields": {
+    "gender": "U",
+    "surface": "AC",
+    "sizes": [
+      "US 8.5",
+      "US 9.0",
+      "US 9.5",
+      "US 10.0",
+      "US 10.5",
+      "US 11.0",
+      "US 11.5",
+      "US 12.0"
+    ],
+    "color": null
+  }
+},
+{
+  "model": "shop.shoe",
+  "pk": 12,
+  "fields": {
+    "gender": "U",
+    "surface": "AC",
+    "sizes": [
+      "US 8.5",
+      "US 9.0",
+      "US 9.5",
+      "US 10.0",
+      "US 11.0"
+    ],
+    "color": null
+  }
+},
+{
+  "model": "shop.shoe",
+  "pk": 10,
+  "fields": {
+    "gender": "U",
+    "surface": "AC",
+    "sizes": [
+      "US 8.0",
+      "US 8.5",
+      "US 9.0",
+      "US 9.5",
+      "US 10.0",
+      "US 10.5",
+      "US 11.0",
+      "US 11.5",
+      "US 12.0"
+    ],
+    "color": null
+  }
+},
+{
+  "model": "shop.shoe",
+  "pk": 9,
+  "fields": {
+    "gender": "U",
+    "surface": "AC",
+    "sizes": [
+      "US 8.5",
+      "US 11.0"
+    ],
+    "color": null
+  }
+},
+{
+  "model": "shop.shoe",
+  "pk": 8,
+  "fields": {
+    "gender": "U",
+    "surface": "AC",
+    "sizes": [
+      "US 7.0",
+      "US 7.5",
+      "US 8.0",
+      "US 8.5",
+      "US 9.0",
+      "US 9.5",
+      "US 10.0",
+      "US 10.5",
+      "US 11.0",
+      "US 11.5",
+      "US 12.0",
+      "US 12.5",
+      "US 13.0"
+    ],
+    "color": null
+  }
+},
+{
+  "model": "shop.shoe",
+  "pk": 7,
+  "fields": {
+    "gender": "U",
+    "surface": "AC",
+    "sizes": [
+      "US 8.5",
+      "US 11.0",
+      "US 11.5"
+    ],
+    "color": null
+  }
+},
+{
+  "model": "shop.shoe",
+  "pk": 6,
+  "fields": {
+    "gender": "U",
+    "surface": "AC",
+    "sizes": [
+      "US 8.0",
+      "US 8.5",
+      "US 10.0",
+      "US 10.5",
+      "US 11.0"
+    ],
+    "color": null
+  }
+},
+{
+  "model": "shop.shoe",
+  "pk": 5,
+  "fields": {
+    "gender": "U",
+    "surface": "AC",
+    "sizes": [
+      "US 7.5",
+      "US 8.0",
+      "US 8.5",
+      "US 9.0",
+      "US 10.5",
+      "US 11.0",
+      "US 11.5",
+      "US 12.0",
+      "US 12.5"
+    ],
+    "color": null
+  }
+},
+{
+  "model": "shop.shoe",
+  "pk": 4,
+  "fields": {
+    "gender": "U",
+    "surface": "AC",
+    "sizes": [
+      "US 8.0",
+      "US 8.5",
+      "US 9.0",
+      "US 9.5",
+      "US 10.0",
+      "US 10.5",
+      "US 11.0",
+      "US 11.5",
+      "US 12.0",
+      "US 12.5"
+    ],
+    "color": null
+  }
+},
+{
+  "model": "shop.shoe",
+  "pk": 3,
+  "fields": {
+    "gender": "U",
+    "surface": "AC",
+    "sizes": [
+      "US 7.5",
+      "US 8.0",
+      "US 8.5",
+      "US 9.0",
+      "US 9.5",
+      "US 10.0",
+      "US 10.5",
+      "US 11.0",
+      "US 11.5",
+      "US 12.0",
+      "US 12.5"
+    ],
+    "color": null
+  }
+}
+]
