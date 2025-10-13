@@ -84,7 +84,7 @@
             <a href="{% url 'shop:product_edit' p.pk %}" class="icon-edit" title="Edit">✎</a>
             {% endif %}
           </div>
-          <div class="price">{{ p.margin_price }} ₾</div>
+          <div class="price">{{ p.price }} ₾</div>
           <div class="attrs">
             {% if p.short_description %}{{ p.short_description }}{% endif %}
           </div>
