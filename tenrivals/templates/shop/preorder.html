@@ -61,6 +61,38 @@
     </div>
     {% endif %}
 
+    {% if show_racket_filters %}
+    <!-- Racket-only filters -->
+    <div class="tabs" role="tablist" aria-label="Racket brand">
+      <a class="tab {% if racket_brand_active == 'all' %}active{% endif %}" href="?type={{ active_type_code }}&brand=all&w={{ racket_weight_active }}&head={{ racket_head_active }}&pat={{ racket_pattern_active }}">All brands</a>
+      {% for b in racket_brands %}
+        <a class="tab {% if racket_brand_active == b %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ b }}&w={{ racket_weight_active }}&head={{ racket_head_active }}&pat={{ racket_pattern_active }}">{{ b }}</a>
+      {% endfor %}
+    </div>
+
+    <div class="tabs" role="tablist" aria-label="Racket weight">
+      <a class="tab {% if racket_weight_active == 'all' %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ racket_brand_active }}&w=all&head={{ racket_head_active }}&pat={{ racket_pattern_active }}">All weight</a>
+      <a class="tab {% if racket_weight_active == 'lt280' %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ racket_brand_active }}&w=lt280&head={{ racket_head_active }}&pat={{ racket_pattern_active }}"><280</a>
+      <a class="tab {% if racket_weight_active == '280_299' %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ racket_brand_active }}&w=280_299&head={{ racket_head_active }}&pat={{ racket_pattern_active }}">280-299</a>
+      <a class="tab {% if racket_weight_active == '300' %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ racket_brand_active }}&w=300&head={{ racket_head_active }}&pat={{ racket_pattern_active }}">300</a>
+      <a class="tab {% if racket_weight_active == 'ge301' %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ racket_brand_active }}&w=ge301&head={{ racket_head_active }}&pat={{ racket_pattern_active }}">301+</a>
+    </div>
+
+    <div class="tabs" role="tablist" aria-label="Head size">
+      <a class="tab {% if racket_head_active == 'all' %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ racket_brand_active }}&w={{ racket_weight_active }}&head=all&pat={{ racket_pattern_active }}">All head</a>
+      <a class="tab {% if racket_head_active == 'lt100' %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ racket_brand_active }}&w={{ racket_weight_active }}&head=lt100&pat={{ racket_pattern_active }}"><100</a>
+      <a class="tab {% if racket_head_active == '100' %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ racket_brand_active }}&w={{ racket_weight_active }}&head=100&pat={{ racket_pattern_active }}">100</a>
+      <a class="tab {% if racket_head_active == 'ge101' %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ racket_brand_active }}&w={{ racket_weight_active }}&head=ge101&pat={{ racket_pattern_active }}">101+</a>
+    </div>
+
+    <div class="tabs" role="tablist" aria-label="String pattern">
+      <a class="tab {% if racket_pattern_active == 'all' %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ racket_brand_active }}&w={{ racket_weight_active }}&head={{ racket_head_active }}&pat=all">All patterns</a>
+      {% for sp in racket_patterns %}
+        <a class="tab {% if racket_pattern_active == sp %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ racket_brand_active }}&w={{ racket_weight_active }}&head={{ racket_head_active }}&pat={{ sp }}">{{ sp }}</a>
+      {% endfor %}
+    </div>
+    {% endif %}
+
     {% if show_shoe_filters %}
     <!-- Shoes-only filters: surfaces only -->
     <div class="tabs" role="tablist" aria-label="Shoes surface">
@@ -76,7 +108,7 @@
     <div class="grid">
       {% for p in products %}
         <div class="card" data-images="{% if p.image_1 %}{{ p.image_1.url }}{% endif %}{% if p.image_2 %},{% if p.image_2 %}{{ p.image_2.url }}{% endif %}{% endif %}{% if p.image_3 %},{% if p.image_3 %}{{ p.image_3.url }}{% endif %}{% endif %}{% if p.image_4 %},{% if p.image_4 %}{{ p.image_4.url }}{% endif %}{% endif %}{% if p.image_5 %},{% if p.image_5 %}{{ p.image_5.url }}{% endif %}{% endif %}">
-          <img src="{% if p.main_image %}{{ p.main_image.url }}{% else %}/static/assets/img/card_bg_teal.svg{% endif %}" alt="{{ p.name }}" onclick="cycleImage(this)">
+          <img src="{% if p.main_image %}{{ p.main_image.url }}{% else %}/static/assets/img/card_bg_teal.svg{% endif %}" alt="{{ p.name }}" onclick="openLightbox(this)">
           <h3>{{ p.name }}</h3>
           <div class="attrs" style="margin-bottom:6px; display:flex; align-items:center; gap:6px;">
             <span>ID: {{ p.id }}</span>
@@ -156,6 +188,65 @@
       const isHidden = extra.style.display === 'none' || extra.style.display === '';
       extra.style.display = isHidden ? 'block' : 'none';
       btn.textContent = isHidden ? 'Less' : 'More';
+    }
+
+    // Lightbox state
+    let LB = { images: [], idx: 0 };
+
+    function ensureLightbox() {
+      if (document.getElementById('lightbox')) return;
+      const lb = document.createElement('div');
+      lb.id = 'lightbox';
+      lb.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.9);display:none;align-items:center;justify-content:center;z-index:9999;';
+      lb.innerHTML = `
+        <button id=\"lb-close\" aria-label=\"Close\" style=\"position:absolute;top:16px;right:16px;background:transparent;border:1px solid #fff;color:#fff;padding:8px 12px;border-radius:6px;cursor:pointer;\">✕</button>
+        <button id=\"lb-prev\" aria-label=\"Previous\" style=\"position:absolute;left:16px;top:50%;transform:translateY(-50%);background:transparent;border:1px solid #fff;color:#fff;padding:8px 12px;border-radius:6px;cursor:pointer;\">◀</button>
+        <img id=\"lb-image\" alt=\"viewer\" style=\"max-width:90vw;max-height:90vh;object-fit:contain;\" />
+        <button id=\"lb-next\" aria-label=\"Next\" style=\"position:absolute;right:16px;top:50%;transform:translateY(-50%);background:transparent;border:1px solid #fff;color:#fff;padding:8px 12px;border-radius:6px;cursor:pointer;\">▶</button>
+      `;
+      document.body.appendChild(lb);
+      document.getElementById('lb-close').onclick = closeLightbox;
+      document.getElementById('lb-prev').onclick = prevLightbox;
+      document.getElementById('lb-next').onclick = nextLightbox;
+      lb.addEventListener('click', (e)=>{ if(e.target.id==='lightbox') closeLightbox();});
+      document.addEventListener('keydown', (e)=>{
+        const visible = lb.style.display === 'flex';
+        if(!visible) return;
+        if(e.key === 'Escape') closeLightbox();
+        if(e.key === 'ArrowLeft') prevLightbox();
+        if(e.key === 'ArrowRight') nextLightbox();
+      });
+    }
+
+    function openLightbox(imgEl) {
+      ensureLightbox();
+      const card = imgEl.closest('.card');
+      const list = (card.getAttribute('data-images') || '').split(',').filter(Boolean);
+      if (list.length === 0) return;
+      LB.images = list;
+      const current = imgEl.getAttribute('src');
+      const idx = list.indexOf(current);
+      LB.idx = idx >= 0 ? idx : 0;
+      document.getElementById('lb-image').src = LB.images[LB.idx];
+      const lb = document.getElementById('lightbox');
+      lb.style.display = 'flex';
+    }
+
+    function closeLightbox() {
+      const lb = document.getElementById('lightbox');
+      if (lb) lb.style.display = 'none';
+    }
+
+    function prevLightbox() {
+      if (!LB.images.length) return;
+      LB.idx = (LB.idx - 1 + LB.images.length) % LB.images.length;
+      document.getElementById('lb-image').src = LB.images[LB.idx];
+    }
+
+    function nextLightbox() {
+      if (!LB.images.length) return;
+      LB.idx = (LB.idx + 1) % LB.images.length;
+      document.getElementById('lb-image').src = LB.images[LB.idx];
     }
   </script>
 </body>
