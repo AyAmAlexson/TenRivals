@@ -1,7 +1,7 @@
 from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
-from shop.models import Product, ProductType, Shoe
+from shop.models import Product, ProductType, Shoe, Racket
 import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse, urljoin, parse_qs
@@ -224,6 +224,123 @@ class Command(BaseCommand):
 
         return title, description, short_description, images, attributes, sizes_us
 
+    def _to_int(self, text: str) -> int | None:
+        if not text:
+            return None
+        m = re.search(r'([0-9]+)', text.replace(',', ''))
+        return int(m.group(1)) if m else None
+
+    def _to_float(self, text: str) -> float | None:
+        if not text:
+            return None
+        m = re.search(r'([0-9]+(?:\.[0-9]+)?)', text.replace(',', '.'))
+        return float(m.group(1)) if m else None
+
+    def _nearest_5(self, grams: int | None) -> int | None:
+        if grams is None:
+            return None
+        return int(round(grams / 5.0) * 5)
+
+    def parse_racket_specs(self, attributes: dict, soup: BeautifulSoup) -> dict:
+        specs = {
+            'weight_grams': None,
+            'head_size_sq_in': None,
+            'length_in': None,
+            'balance_mm': None,
+            'swingweight': None,
+            'string_pattern': None,
+            'is_strung': None,
+            'grip_sizes': [],
+        }
+
+        # Normalize keys for easier matching
+        norm_items = [(k.strip().lower(), (v or '').strip()) for k, v in (attributes or {}).items()]
+
+        # Weight handling (prefer unstrung). Common keys variants
+        unstrung_keys = ['unstrung weight', 'weight (unstrung)', 'weight unstrung']
+        strung_keys = ['strung weight', 'weight (strung)', 'weight strung']
+
+        unstrung_val = None
+        for k, v in norm_items:
+            if any(uk in k for uk in unstrung_keys):
+                grams = self._to_int(v)
+                if grams:
+                    unstrung_val = grams
+                    break
+        if not unstrung_val:
+            for k, v in norm_items:
+                if any(sk in k for sk in strung_keys) or (k == 'weight' and 'strung' in v.lower()):
+                    grams = self._to_int(v)
+                    if grams:
+                        # Estimate unstrung = strung - 17g, round to nearest 5g
+                        unstrung_val = self._nearest_5(max(0, grams - 17))
+                        specs['is_strung'] = True
+                        break
+        if unstrung_val:
+            specs['weight_grams'] = unstrung_val
+            if specs['is_strung'] is None:
+                specs['is_strung'] = False
+
+        # Head size in^2 – try explicit inch value, else convert from cm^2
+        head_in = None
+        head_cm = None
+        for k, v in norm_items:
+            if 'head' in k and ('in' in v.lower() or 'sq' in v.lower()):
+                m = re.search(r'([0-9]{2,3})\s*in', v.lower())
+                if m:
+                    head_in = int(m.group(1))
+                if head_in is None:
+                    # Try patterns like 645 cm² / 100 in²
+                    m2 = re.search(r'([0-9]{3})\s*cm', v.lower())
+                    if m2:
+                        head_cm = int(m2.group(1))
+                break
+        if head_in is None and head_cm:
+            head_in = int(round(head_cm / 6.4516))
+        specs['head_size_sq_in'] = head_in
+
+        # String pattern (e.g., 16x19)
+        for k, v in norm_items:
+            if 'string' in k and 'pattern' in k:
+                m = re.search(r'(\d+)\s*[x×]\s*(\d+)', v.lower())
+                if m:
+                    specs['string_pattern'] = f"{int(m.group(1))}x{int(m.group(2))}"
+                    break
+
+        # Length in inches
+        for k, v in norm_items:
+            if 'length' in k:
+                f = self._to_float(v)
+                if f:
+                    specs['length_in'] = round(f, 2)
+                    break
+
+        # Balance in mm
+        for k, v in norm_items:
+            if 'balance' in k and 'mm' in v.lower():
+                mm = self._to_int(v)
+                if mm:
+                    specs['balance_mm'] = mm
+                    break
+
+        # Swingweight
+        for k, v in norm_items:
+            if 'swingweight' in k:
+                sw = self._to_int(v)
+                if sw:
+                    specs['swingweight'] = sw
+                    break
+
+        # Grip sizes (collect Lx tokens)
+        for k, v in norm_items:
+            if 'grip' in k and 'size' in k:
+                sizes = re.findall(r'\bL\s*([0-9])\b', v, flags=re.IGNORECASE)
+                if sizes:
+                    specs['grip_sizes'] = [f"L{n}" for n in sizes]
+                    break
+
+        return specs
+
     def fetch_image_bytes(self, url: str, referer: str | None = None) -> bytes | None:
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123 Safari/537.36',
@@ -315,31 +432,90 @@ class Command(BaseCommand):
                     shoe_obj.surface = flag_map[surface_flag]
             target_obj = shoe_obj
         else:
-            if product:
-                product.type = type_code
-                product.price = price
-                product.brand = brand or product.brand
-                product.sku = sku or product.sku
-                if description:
-                    product.description = description
-                if attributes:
-                    merged = dict(product.attributes or {})
-                    merged.update(attributes)
-                    product.attributes = merged
-                product.image_1 = None
-                product.image_2 = None
-                product.image_3 = None
-                target_obj = product
+            if type_code == ProductType.RACKET:
+                racket_obj = None
+                if product:
+                    try:
+                        racket_obj = product.racket
+                    except Racket.DoesNotExist:
+                        # Existing base Product: replace with Racket
+                        product.delete()
+                        racket_obj = None
+                if not racket_obj:
+                    racket_obj = Racket(
+                        type=type_code,
+                        name=title[:200],
+                        price=price,
+                        brand=brand,
+                        sku=sku,
+                        short_description=short_description,
+                        description=description or "",
+                        attributes=attributes or {},
+                    )
+                else:
+                    racket_obj.type = type_code
+                    racket_obj.price = price
+                    racket_obj.brand = brand or racket_obj.brand
+                    racket_obj.sku = sku or racket_obj.sku
+                    if description:
+                        racket_obj.description = description
+                    if attributes:
+                        merged = dict(racket_obj.attributes or {})
+                        merged.update(attributes)
+                        racket_obj.attributes = merged
+
+                # Parse and set racket-specific specs
+                specs = self.parse_racket_specs(attributes, BeautifulSoup(html, 'html.parser'))
+                if specs.get('weight_grams') is not None:
+                    racket_obj.weight_grams = specs['weight_grams']
+                if specs.get('head_size_sq_in') is not None:
+                    racket_obj.head_size_sq_in = specs['head_size_sq_in']
+                if specs.get('length_in') is not None:
+                    racket_obj.length_in = specs['length_in']
+                if specs.get('balance_mm') is not None:
+                    racket_obj.balance_mm = specs['balance_mm']
+                if specs.get('swingweight') is not None:
+                    racket_obj.swingweight = specs['swingweight']
+                if specs.get('string_pattern'):
+                    racket_obj.string_pattern = specs['string_pattern']
+                if specs.get('is_strung') is not None:
+                    racket_obj.is_strung = specs['is_strung']
+                if specs.get('grip_sizes'):
+                    racket_obj.grip_sizes = specs['grip_sizes']
+
+                # clear images to reattach fresh
+                racket_obj.image_1 = None
+                racket_obj.image_2 = None
+                racket_obj.image_3 = None
+
+                target_obj = racket_obj
             else:
-                target_obj = Product(
-                    type=type_code,
-                    name=title[:200],
-                    price=price,
-                    brand=brand,
-                    sku=sku,
-                    description=description or "",
-                    attributes=attributes or {},
-                )
+                # Fallback to base product for other types
+                if product:
+                    product.type = type_code
+                    product.price = price
+                    product.brand = brand or product.brand
+                    product.sku = sku or product.sku
+                    if description:
+                        product.description = description
+                    if attributes:
+                        merged = dict(product.attributes or {})
+                        merged.update(attributes)
+                        product.attributes = merged
+                    product.image_1 = None
+                    product.image_2 = None
+                    product.image_3 = None
+                    target_obj = product
+                else:
+                    target_obj = Product(
+                        type=type_code,
+                        name=title[:200],
+                        price=price,
+                        brand=brand,
+                        sku=sku,
+                        description=description or "",
+                        attributes=attributes or {},
+                    )
 
         # Attach up to 5 images
         for idx, img_url in enumerate(images[:5], start=1):
