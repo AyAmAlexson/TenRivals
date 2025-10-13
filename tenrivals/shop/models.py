@@ -29,6 +29,7 @@ class CourtSurface(models.TextChoices):
     HARD = 'HC', 'Hard Court'
     CLAY = 'CL', 'Clay'
     GRASS = 'GR', 'Grass'
+    PADEL = 'PD', 'Padel'
 
 
 class Category(models.Model):
@@ -98,6 +99,17 @@ class Product(models.Model):
             return self.shoe.sizes
         except Exception:
             return None
+
+    @property
+    def margin_price(self):
+        # price + 5%, rounded up to nearest 10 (₾)
+        from decimal import Decimal, ROUND_CEILING
+        if self.price is None:
+            return None
+        base = (self.price * Decimal('1.05')).quantize(Decimal('0.01'))
+        # ceil to nearest 10
+        tens = (base / Decimal('10')).to_integral_value(rounding=ROUND_CEILING) * Decimal('10')
+        return tens
 
 
 class Racket(Product):

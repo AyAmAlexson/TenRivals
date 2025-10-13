@@ -18,6 +18,7 @@ class Command(BaseCommand):
         parser.add_argument('--type', type=str, choices=[c.value for c in ProductType], required=True)
         parser.add_argument('--brand', type=str, default=None)
         parser.add_argument('--sku', type=str, default=None)
+        parser.add_argument('--surface', type=str, default=None, help='For shoes: AC/HC/CL/GR/PD')
 
     def fetch_html(self, url: str) -> str:
         resp = requests.get(
@@ -244,6 +245,7 @@ class Command(BaseCommand):
         type_code = options['type']
         brand = options['brand']
         sku = options['sku']
+        surface_flag = options.get('surface')
 
         html = self.fetch_html(url)
         title, description, short_description, images, attributes, sizes_us = self.parse(html, url)
@@ -299,6 +301,18 @@ class Command(BaseCommand):
             shoe_obj.image_1 = None
             shoe_obj.image_2 = None
             shoe_obj.image_3 = None
+            # apply surface flag if provided
+            if surface_flag:
+                from shop.models import CourtSurface
+                flag_map = {
+                    'CL': CourtSurface.CLAY,
+                    'HC': CourtSurface.HARD,
+                    'AC': CourtSurface.ALL_COURT,
+                    'GR': CourtSurface.GRASS,
+                    'PD': CourtSurface.PADEL,
+                }
+                if surface_flag in flag_map:
+                    shoe_obj.surface = flag_map[surface_flag]
             target_obj = shoe_obj
         else:
             if product:

@@ -60,6 +60,25 @@
     </div>
     {% endif %}
 
+    {% if show_shoe_filters %}
+    <!-- Shoes-only filters -->
+    <div class="tabs" role="tablist" aria-label="Shoes gender">
+      {# Gender filter #}
+      <a class="tab {% if gender_active == 'all' %}active{% endif %}" href="?type={{ active_type_code }}&g=all&surf={{ surface_active }}">All</a>
+      <a class="tab {% if gender_active == 'm' %}active{% endif %}" href="?type={{ active_type_code }}&g=m&surf={{ surface_active }}">Male</a>
+      <a class="tab {% if gender_active == 'w' %}active{% endif %}" href="?type={{ active_type_code }}&g=w&surf={{ surface_active }}">Female</a>
+    </div>
+    <div class="tabs" role="tablist" aria-label="Shoes surface">
+      {# Surface filter #}
+      <a class="tab {% if surface_active == 'all' %}active{% endif %}" href="?type={{ active_type_code }}&g={{ gender_active }}&surf=all">All</a>
+      <a class="tab {% if surface_active == 'clay' %}active{% endif %}" href="?type={{ active_type_code }}&g={{ gender_active }}&surf=clay">Clay</a>
+      <a class="tab {% if surface_active == 'hard' %}active{% endif %}" href="?type={{ active_type_code }}&g={{ gender_active }}&surf=hard">Hard</a>
+      <a class="tab {% if surface_active == 'allcourt' %}active{% endif %}" href="?type={{ active_type_code }}&g={{ gender_active }}&surf=allcourt">AllCourt</a>
+      <a class="tab {% if surface_active == 'grass' %}active{% endif %}" href="?type={{ active_type_code }}&g={{ gender_active }}&surf=grass">Grass</a>
+      <a class="tab {% if surface_active == 'padel' %}active{% endif %}" href="?type={{ active_type_code }}&g={{ gender_active }}&surf=padel">Padel</a>
+    </div>
+    {% endif %}
+
     <div class="grid">
       {% for p in products %}
         <div class="card" data-images="{% if p.image_1 %}{{ p.image_1.url }}{% endif %}{% if p.image_2 %},{% if p.image_2 %}{{ p.image_2.url }}{% endif %}{% endif %}{% if p.image_3 %},{% if p.image_3 %}{{ p.image_3.url }}{% endif %}{% endif %}{% if p.image_4 %},{% if p.image_4 %}{{ p.image_4.url }}{% endif %}{% endif %}{% if p.image_5 %},{% if p.image_5 %}{{ p.image_5.url }}{% endif %}{% endif %}">
@@ -71,7 +90,7 @@
             <a href="{% url 'shop:product_edit' p.pk %}" class="icon-edit" title="Edit">✎</a>
             {% endif %}
           </div>
-          <div class="price">± {{ p.price }} ₾</div>
+          <div class="price">{{ p.margin_price }} ₾</div>
           <div class="attrs">
             {% if p.short_description %}{{ p.short_description }}{% endif %}
           </div>

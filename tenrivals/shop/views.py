@@ -1,7 +1,7 @@
 from django.contrib.admin.views.decorators import staff_member_required
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
-from .models import Product, Category, ProductType, Shoe
+from .models import Product, Category, ProductType, Shoe, Gender, CourtSurface
 from .forms import ProductForm, ShoeForm
 
 def index(request):
@@ -12,6 +12,8 @@ def items_list_for_Laen(request):
     # Tab filter: by category slug or by product type code
     category_slug = request.GET.get('category')
     type_code = request.GET.get('type')
+    gender_filter = request.GET.get('g', 'all')  # all | m | w
+    surface_filter = request.GET.get('surf', 'all')  # all | clay | hard | allcourt | grass | padel
 
     categories = Category.objects.all().order_by('name')
 
@@ -25,6 +27,28 @@ def items_list_for_Laen(request):
         products = products.filter(type=type_code)
         active_tab = f'type:{type_code}'
 
+    # Show additional filters only for shoes (explicit type tab)
+    shoe_types = {ProductType.MENS_SHOES, ProductType.WOMENS_SHOES, ProductType.JUNIOR_SHOES}
+    show_shoe_filters = type_code in shoe_types
+
+    # Apply shoes-only filters if needed
+    if show_shoe_filters:
+        if gender_filter == 'm':
+            products = products.filter(shoe__gender__in=[Gender.MEN, Gender.UNISEX])
+        elif gender_filter == 'w':
+            products = products.filter(shoe__gender__in=[Gender.WOMEN, Gender.UNISEX])
+        # else 'all' -> no gender narrowing
+
+        surf_map = {
+            'clay': CourtSurface.CLAY,
+            'hard': CourtSurface.HARD,
+            'allcourt': CourtSurface.ALL_COURT,
+            'grass': CourtSurface.GRASS,
+            'padel': CourtSurface.PADEL,
+        }
+        if surface_filter in surf_map:
+            products = products.filter(shoe__surface=surf_map[surface_filter])
+
     # Order by ascending price, then by id for stability
     products = products.order_by('price', 'id')
 
@@ -36,6 +60,10 @@ def items_list_for_Laen(request):
         'type_tabs': type_tabs,
         'products': products,
         'active_tab': active_tab,
+        'active_type_code': type_code,
+        'show_shoe_filters': show_shoe_filters,
+        'gender_active': gender_filter,
+        'surface_active': surface_filter,
     }
     return render(request, 'shop/items_list_for_Laen.html', context)
 
