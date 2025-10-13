@@ -19,6 +19,7 @@ class Command(BaseCommand):
         parser.add_argument('--brand', type=str, default=None)
         parser.add_argument('--sku', type=str, default=None)
         parser.add_argument('--surface', type=str, default=None, help='For shoes: AC/HC/CL/GR/PD')
+        parser.add_argument('--specs_url', type=str, default=None, help='Optional: URL to parse specs (e.g., racket specifications)')
 
     def fetch_html(self, url: str) -> str:
         resp = requests.get(
@@ -320,7 +321,7 @@ class Command(BaseCommand):
             head_in = int(round(head_cm / 6.4516))
         specs['head_size_sq_in'] = head_in
 
-        # String pattern (e.g., 16x19)
+        # String pattern (e.g., 16x19 or "16 Mains / 19 Crosses")
         for k, v in norm_items:
             if 'string' in k and 'pattern' in k:
                 m = re.search(r'(\d+)\s*[x×]\s*(\d+)', v.lower())
@@ -331,6 +332,10 @@ class Command(BaseCommand):
             m_pat = re.search(r'(?:String\s*Pattern|Pattern)\s*[:\-]?\s*(\d+)\s*[x×]\s*(\d+)', page_text, flags=re.IGNORECASE)
             if m_pat:
                 specs['string_pattern'] = f"{int(m_pat.group(1))}x{int(m_pat.group(2))}"
+        if not specs['string_pattern'] and page_text:
+            m_mc = re.search(r'(\d+)\s*Mains\s*/\s*(\d+)\s*Crosses', page_text, flags=re.IGNORECASE)
+            if m_mc:
+                specs['string_pattern'] = f"{int(m_mc.group(1))}x{int(m_mc.group(2))}"
 
         # Length in inches
         for k, v in norm_items:
@@ -344,17 +349,26 @@ class Command(BaseCommand):
             if m_len:
                 specs['length_in'] = round(float(m_len.group(1)), 2)
 
-        # Balance in mm
+        # Balance in mm (or convert from cm)
         for k, v in norm_items:
             if 'balance' in k and 'mm' in v.lower():
                 mm = self._to_int(v)
                 if mm:
                     specs['balance_mm'] = mm
                     break
+            if 'balance' in k and 'cm' in v.lower() and specs['balance_mm'] is None:
+                f = self._to_float(v)
+                if f:
+                    specs['balance_mm'] = int(round(f * 10))
+                    break
         if specs['balance_mm'] is None and page_text:
             m_bal = re.search(r'Balance\s*[:\-]?\s*(\d{2,3})\s*mm', page_text, flags=re.IGNORECASE)
             if m_bal:
                 specs['balance_mm'] = int(m_bal.group(1))
+            else:
+                m_bal_cm = re.search(r'Balance\s*[:\-]?\s*([0-9]+(?:[\.,][0-9]+)?)\s*cm', page_text, flags=re.IGNORECASE)
+                if m_bal_cm:
+                    specs['balance_mm'] = int(round(float(m_bal_cm.group(1).replace(',', '.')) * 10))
 
         # Swingweight
         for k, v in norm_items:
@@ -404,9 +418,16 @@ class Command(BaseCommand):
         brand = options['brand']
         sku = options['sku']
         surface_flag = options.get('surface')
+        specs_url = options.get('specs_url')
 
         html = self.fetch_html(url)
         title, description, short_description, images, attributes, sizes_us = self.parse(html, url)
+        # Optionally fetch specs from another URL (override attributes/spec parsing source only)
+        specs_attributes = None
+        specs_html = None
+        if specs_url:
+            specs_html = self.fetch_html(specs_url)
+            _, _, _, _, specs_attributes, _ = self.parse(specs_html, specs_url)
 
         # If this looks like a search page (no carousel images), try to follow first product link
         if not images and ('search-tennis' in url or 'search' in url):
@@ -505,8 +526,10 @@ class Command(BaseCommand):
                         merged.update(attributes)
                         racket_obj.attributes = merged
 
-                # Parse and set racket-specific specs
-                specs = self.parse_racket_specs(attributes, BeautifulSoup(html, 'html.parser'))
+                # Parse and set racket-specific specs (prefer specs_url attributes if provided)
+                attrs_for_specs = specs_attributes if specs_attributes else attributes
+                soup_for_specs = BeautifulSoup(specs_html or html, 'html.parser')
+                specs = self.parse_racket_specs(attrs_for_specs, soup_for_specs)
                 if specs.get('weight_grams') is not None:
                     racket_obj.weight_grams = specs['weight_grams']
                 if specs.get('head_size_sq_in') is not None:
