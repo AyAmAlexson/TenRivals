@@ -255,6 +255,7 @@ class Command(BaseCommand):
 
         # Normalize keys for easier matching
         norm_items = [(k.strip().lower(), (v or '').strip()) for k, v in (attributes or {}).items()]
+        page_text = soup.get_text(" ", strip=True).replace('\xa0', ' ')
 
         # Weight handling (prefer unstrung). Common keys variants
         unstrung_keys = ['unstrung weight', 'weight (unstrung)', 'weight unstrung']
@@ -276,6 +277,17 @@ class Command(BaseCommand):
                         unstrung_val = self._nearest_5(max(0, grams - 17))
                         specs['is_strung'] = True
                         break
+        # Fallback: scan raw text lines for weight markers
+        if not unstrung_val and page_text:
+            m_un = re.search(r'(?:Unstrung\s*Weight|Weight\s*\(Unstrung\))\s*[:\-]?\s*(\d{2,3})\s*g', page_text, flags=re.IGNORECASE)
+            if m_un:
+                unstrung_val = int(m_un.group(1))
+                specs['is_strung'] = False
+            else:
+                m_st = re.search(r'(?:Strung\s*Weight|Weight\s*\(Strung\))\s*[:\-]?\s*(\d{2,3})\s*g', page_text, flags=re.IGNORECASE)
+                if m_st:
+                    unstrung_val = self._nearest_5(max(0, int(m_st.group(1)) - 17))
+                    specs['is_strung'] = True
         if unstrung_val:
             specs['weight_grams'] = unstrung_val
             if specs['is_strung'] is None:
@@ -295,6 +307,15 @@ class Command(BaseCommand):
                     if m2:
                         head_cm = int(m2.group(1))
                 break
+        # Fallback from raw text
+        if head_in is None and page_text:
+            m_head_in = re.search(r'(?:Head\s*Size|Head)\s*[:\-]?\s*([0-9]{2,3})\s*(?:in|in²|sq\.?\s*in)', page_text, flags=re.IGNORECASE)
+            if m_head_in:
+                head_in = int(m_head_in.group(1))
+            else:
+                m_head_cm = re.search(r'(?:Head\s*Size|Head)\s*[:\-]?\s*([0-9]{3})\s*cm', page_text, flags=re.IGNORECASE)
+                if m_head_cm:
+                    head_cm = int(m_head_cm.group(1))
         if head_in is None and head_cm:
             head_in = int(round(head_cm / 6.4516))
         specs['head_size_sq_in'] = head_in
@@ -306,6 +327,10 @@ class Command(BaseCommand):
                 if m:
                     specs['string_pattern'] = f"{int(m.group(1))}x{int(m.group(2))}"
                     break
+        if not specs['string_pattern'] and page_text:
+            m_pat = re.search(r'(?:String\s*Pattern|Pattern)\s*[:\-]?\s*(\d+)\s*[x×]\s*(\d+)', page_text, flags=re.IGNORECASE)
+            if m_pat:
+                specs['string_pattern'] = f"{int(m_pat.group(1))}x{int(m_pat.group(2))}"
 
         # Length in inches
         for k, v in norm_items:
@@ -314,6 +339,10 @@ class Command(BaseCommand):
                 if f:
                     specs['length_in'] = round(f, 2)
                     break
+        if specs['length_in'] is None and page_text:
+            m_len = re.search(r'Length\s*[:\-]?\s*([0-9]+(?:\.[0-9]+)?)\s*(?:in|\")', page_text, flags=re.IGNORECASE)
+            if m_len:
+                specs['length_in'] = round(float(m_len.group(1)), 2)
 
         # Balance in mm
         for k, v in norm_items:
@@ -322,6 +351,10 @@ class Command(BaseCommand):
                 if mm:
                     specs['balance_mm'] = mm
                     break
+        if specs['balance_mm'] is None and page_text:
+            m_bal = re.search(r'Balance\s*[:\-]?\s*(\d{2,3})\s*mm', page_text, flags=re.IGNORECASE)
+            if m_bal:
+                specs['balance_mm'] = int(m_bal.group(1))
 
         # Swingweight
         for k, v in norm_items:
@@ -330,6 +363,10 @@ class Command(BaseCommand):
                 if sw:
                     specs['swingweight'] = sw
                     break
+        if specs['swingweight'] is None and page_text:
+            m_sw = re.search(r'Swingweight\s*[:\-]?\s*(\d{2,3})', page_text, flags=re.IGNORECASE)
+            if m_sw:
+                specs['swingweight'] = int(m_sw.group(1))
 
         # Grip sizes (collect Lx tokens)
         for k, v in norm_items:
@@ -338,6 +375,10 @@ class Command(BaseCommand):
                 if sizes:
                     specs['grip_sizes'] = [f"L{n}" for n in sizes]
                     break
+        if not specs['grip_sizes'] and page_text:
+            sizes = re.findall(r'\bL\s*([0-9])\b', page_text, flags=re.IGNORECASE)
+            if sizes:
+                specs['grip_sizes'] = sorted({f"L{n}" for n in sizes})
 
         return specs
 
