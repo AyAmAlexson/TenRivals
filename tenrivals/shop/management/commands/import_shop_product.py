@@ -547,6 +547,22 @@ class Command(BaseCommand):
                 if specs.get('grip_sizes'):
                     racket_obj.grip_sizes = specs['grip_sizes']
 
+                # Heuristic fallback from title when missing
+                try:
+                    title_text = title or ''
+                    if not racket_obj.weight_grams:
+                        m_w = re.search(r"\b(25\d|26\d|27\d|28\d|29\d|30\d|31\d|32\d|33\d|34\d|350)\b", title_text)
+                        if m_w:
+                            racket_obj.weight_grams = int(m_w.group(1))
+                            if racket_obj.is_strung is None:
+                                racket_obj.is_strung = False
+                    if not racket_obj.head_size_sq_in:
+                        m_h = re.search(r"\b(8[5-9]|9\d|10\d|11[0-7])\b", title_text)
+                        if m_h:
+                            racket_obj.head_size_sq_in = int(m_h.group(1))
+                except Exception:
+                    pass
+
                 # clear images to reattach fresh
                 racket_obj.image_1 = None
                 racket_obj.image_2 = None
