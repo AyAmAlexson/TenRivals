@@ -23,8 +23,9 @@ class Command(BaseCommand):
         updated_head = 0
 
         # precompile patterns
-        weight_re = re.compile(r"\b(25\d|26\d|27\d|28\d|29\d|30\d|31\d|32\d|33\d|34\d|350)\b")
-        head_re = re.compile(r"\b(8[5-9]|9\d|10\d|11[0-7])\b")
+        # числа могут быть рядом с буквами (305g, 100in), поэтому ограничиваем только по соседним цифрам
+        weight_re = re.compile(r"(?<!\d)(25\d|26\d|27\d|28\d|29\d|30\d|31\d|32\d|33\d|34\d|350)(?!\d)")
+        head_re = re.compile(r"(?<!\d)(8[5-9]|9\d|10\d|11[0-7])(?!\d)")
 
         for r in qs:
             name = (r.name or '').strip()
