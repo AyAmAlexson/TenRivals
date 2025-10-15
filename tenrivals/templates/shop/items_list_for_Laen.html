@@ -9,6 +9,9 @@
     /* UI in English per project rule; text content in Russian where requested */
     .shop-header { display:flex; align-items:center; gap:16px; padding:16px 0; }
     .shop-header img { height:150px; }
+    @media (max-width: 576px) {
+      .shop-header img { height:80px; }
+    }
     .tabs { display:flex; flex-wrap:wrap; gap:8px; margin:16px 0; }
     .tab { padding:8px 12px; border-radius:20px; border:1px solid #0e8b84; color:#0e8b84; text-decoration:none; }
     .tab.active { background:#0e8b84; color:#fff; }
