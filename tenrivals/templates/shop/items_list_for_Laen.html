@@ -183,10 +183,9 @@
   </div>
 
   <script>
-    // Build Telegram deep-link with prefilled text
+    // Build Telegram deep-link to channel direct messages
     function buildOrderLink(title){
-      const text = 'Меня заинтересовал товар ' + title + ', расскажите подробнее о предзаказе';
-      return 'https://t.me/share/url?url=' + encodeURIComponent(window.location.href) + '&text=' + encodeURIComponent(text);
+      return 'https://t.me/tennis_rivals_shop_tbilisi?direct';
     }
 
     document.addEventListener('DOMContentLoaded', () => {

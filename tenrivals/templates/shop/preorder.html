@@ -186,13 +186,10 @@
   </div>
 
   <script>
-    // Build Telegram deep-link with prefilled text
+    // Build Telegram deep-link to channel direct messages (no prefill supported for channels)
     function buildOrderLink(title){
       const base = 'https://t.me/tennis_rivals_shop_tbilisi';
-      const text = 'Меня заинтересовал товар ' + title + ', расскажите подробнее о предзаказе';
-      const encoded = encodeURIComponent(text);
-      // For channels/bots, use /?start message fallback via tg.me/share/url
-      return 'https://t.me/share/url?url=' + encodeURIComponent(window.location.href) + '&text=' + encoded;
+      return base + '?direct';
     }
 
     // Hydrate all order buttons
