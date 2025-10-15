@@ -8,7 +8,7 @@
   <style>
     /* UI in English per project rule; text content in Russian where requested */
     .shop-header { display:flex; align-items:center; gap:16px; padding:16px 0; }
-    .shop-header img { height:80px; }
+    .shop-header img { height:150px; }
     .tabs { display:flex; flex-wrap:wrap; gap:8px; margin:16px 0; }
     .tab { padding:8px 12px; border-radius:20px; border:1px solid #0e8b84; color:#0e8b84; text-decoration:none; }
     .tab.active { background:#0e8b84; color:#fff; }
@@ -36,7 +36,7 @@
         <h1 style="margin:0;">Clay shoes for Laen // Preorder </h1><BR>
         
       </div>
-      <div class="mt-3">Updated: 10.10.2025</div>
+      <div class="mt-3">Updated: 14.10.2025</div>
       {% if request.user.is_staff %}
       <a href="{% url 'shop:product_create' %}" style="margin-left:auto; padding:8px 12px; border:1px solid #0e8b84; color:#0e8b84; border-radius:6px; text-decoration:none;">Add Product</a>
       {% endif %}
@@ -103,6 +103,15 @@
       <a class="tab {% if surface_active == 'grass' %}active{% endif %}" href="?type={{ active_type_code }}&surf=grass">Grass</a>
       <a class="tab {% if surface_active == 'padel' %}active{% endif %}" href="?type={{ active_type_code }}&surf=padel">Padel</a>
     </div>
+    <!-- Shoes brand filter -->
+    {% if shoe_brands %}
+    <div class="tabs" role="tablist" aria-label="Shoes brand">
+      <a class="tab {% if shoe_brand_active == 'all' %}active{% endif %}" href="?type={{ active_type_code }}&surf={{ surface_active }}&sbrand=all">All brands</a>
+      {% for b in shoe_brands %}
+        <a class="tab {% if shoe_brand_active == b %}active{% endif %}" href="?type={{ active_type_code }}&surf={{ surface_active }}&sbrand={{ b }}">{{ b }}</a>
+      {% endfor %}
+    </div>
+    {% endif %}
     {% endif %}
 
     <div class="grid">
@@ -162,7 +171,10 @@
               <div style="margin-top:6px; white-space:pre-wrap;">{{ p.description }}</div>
             {% endif %}
           </div>
-          <button class="more-btn" type="button" onclick="toggleExtra(this)" style="margin-top:8px; align-self:flex-start; padding:6px 10px; border:1px solid #0e8b84; background:#fff; color:#0e8b84; border-radius:6px; cursor:pointer;">More</button>
+          <div style="display:flex;gap:8px;margin-top:8px;">
+            <button class="more-btn" type="button" onclick="toggleExtra(this)" style="align-self:flex-start; padding:6px 10px; border:1px solid #0e8b84; background:#fff; color:#0e8b84; border-radius:6px; cursor:pointer;">More</button>
+            <a class="order-btn" href="https://t.me/tennis_rivals_shop_tbilisi?start=order" target="_blank" style="padding:6px 10px; background:#0e8b84; color:#fff; border-radius:6px; text-decoration:none;" data-title="{{ p.name }}">Order</a>
+          </div>
         </div>
       {% empty %}
         <p>Нет товаров для отображения.</p>
@@ -171,6 +183,18 @@
   </div>
 
   <script>
+    // Build Telegram deep-link with prefilled text
+    function buildOrderLink(title){
+      const text = 'Меня заинтересовал товар ' + title + ', расскажите подробнее о предзаказе';
+      return 'https://t.me/share/url?url=' + encodeURIComponent(window.location.href) + '&text=' + encodeURIComponent(text);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('.order-btn').forEach(a => {
+        const t = a.getAttribute('data-title') || '';
+        a.href = buildOrderLink(t);
+      });
+    });
     function cycleImage(imgEl) {
       const card = imgEl.closest('.card');
       const list = (card.getAttribute('data-images') || '').split(',').filter(Boolean);

@@ -8,7 +8,7 @@
   <style>
     /* UI in English per project rule; text content in Russian where requested */
     .shop-header { display:flex; align-items:center; gap:16px; padding:16px 0; }
-    .shop-header img { height:80px; }
+    .shop-header img { height:150px; }
     .tabs { display:flex; flex-wrap:wrap; gap:8px; margin:16px 0; }
     .tab { padding:8px 12px; border-radius:20px; border:1px solid #0e8b84; color:#0e8b84; text-decoration:none; }
     .tab.active { background:#0e8b84; color:#fff; }
@@ -36,7 +36,7 @@
         <h1 style="margin:0;">Preorder</h1><BR>
         
       </div>
-      <div class="mt-3">Updated: 10.10.2025</div>
+      <div class="mt-3">Updated: 14.10.2025</div>
       {% if request.user.is_staff %}
       <a href="{% url 'shop:product_create' %}" style="margin-left:auto; padding:8px 12px; border:1px solid #0e8b84; color:#0e8b84; border-radius:6px; text-decoration:none;">Add Product</a>
       {% endif %}
@@ -96,15 +96,27 @@
     {% if show_shoe_filters %}
     <!-- Shoes-only filters: surfaces only -->
     <div class="tabs" role="tablist" aria-label="Shoes surface">
-      <a class="tab {% if surface_active == 'all' %}active{% endif %}" href="?type={{ active_type_code }}&surf=all">All</a>
-      <a class="tab {% if surface_active == 'clay' %}active{% endif %}" href="?type={{ active_type_code }}&surf=clay">Clay</a>
-      <a class="tab {% if surface_active == 'hard' %}active{% endif %}" href="?type={{ active_type_code }}&surf=hard">Hard</a>
-      <a class="tab {% if surface_active == 'allcourt' %}active{% endif %}" href="?type={{ active_type_code }}&surf=allcourt">AllCourt</a>
-      <a class="tab {% if surface_active == 'grass' %}active{% endif %}" href="?type={{ active_type_code }}&surf=grass">Grass</a>
-      <a class="tab {% if surface_active == 'padel' %}active{% endif %}" href="?type={{ active_type_code }}&surf=padel">Padel</a>
+      <a class="tab {% if surface_active == 'all' %}active{% endif %}" href="?type={{ active_type_code }}&surf=all&sbrand={{ shoe_brand_active|default:'all' }}">All</a>
+      <a class="tab {% if surface_active == 'clay' %}active{% endif %}" href="?type={{ active_type_code }}&surf=clay&sbrand={{ shoe_brand_active|default:'all' }}">Clay</a>
+      <a class="tab {% if surface_active == 'hard' %}active{% endif %}" href="?type={{ active_type_code }}&surf=hard&sbrand={{ shoe_brand_active|default:'all' }}">Hard</a>
+      <a class="tab {% if surface_active == 'allcourt' %}active{% endif %}" href="?type={{ active_type_code }}&surf=allcourt&sbrand={{ shoe_brand_active|default:'all' }}">AllCourt</a>
+      <a class="tab {% if surface_active == 'grass' %}active{% endif %}" href="?type={{ active_type_code }}&surf=grass&sbrand={{ shoe_brand_active|default:'all' }}">Grass</a>
+      <a class="tab {% if surface_active == 'padel' %}active{% endif %}" href="?type={{ active_type_code }}&surf=padel&sbrand={{ shoe_brand_active|default:'all' }}">Padel</a>
+    </div>
+    <!-- Shoes brand filter -->
+    {% if shoe_brands %}
+    <div class="tabs" role="tablist" aria-label="Shoes brand">
+      <a class="tab {% if shoe_brand_active == 'all' %}active{% endif %}" href="?type={{ active_type_code }}&surf={{ surface_active }}&sbrand=all">All brands</a>
+      {% for b in shoe_brands %}
+        <a class="tab {% if shoe_brand_active == b %}active{% endif %}" href="?type={{ active_type_code }}&surf={{ surface_active }}&sbrand={{ b }}">{{ b }}</a>
+      {% endfor %}
     </div>
     {% endif %}
-
+    {% endif %}
+    <div class="mt-3" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:#f0fdfa;border:1px solid #99f6e4;border-radius:8px;padding:10px 12px;">
+      <span style="color:#0f766e;font-size:13px;">The price is indicative (±30 ₾). Fixed upon order confirmation.</span>
+      <a href="https://t.me/tenrivals_shop" class="btn" style="margin-left:auto;background:#0e8b84;color:#fff;padding:8px 12px;border-radius:6px;text-decoration:none;">Contact us</a>
+    </div>
     <div class="grid">
       {% for p in products %}
         <div class="card" data-images="{% if p.image_1 %}{{ p.image_1.url }}{% endif %}{% if p.image_2 %},{% if p.image_2 %}{{ p.image_2.url }}{% endif %}{% endif %}{% if p.image_3 %},{% if p.image_3 %}{{ p.image_3.url }}{% endif %}{% endif %}{% if p.image_4 %},{% if p.image_4 %}{{ p.image_4.url }}{% endif %}{% endif %}{% if p.image_5 %},{% if p.image_5 %}{{ p.image_5.url }}{% endif %}{% endif %}">
@@ -116,7 +128,7 @@
             <a href="{% url 'shop:product_edit' p.pk %}" class="icon-edit" title="Edit">✎</a>
             {% endif %}
           </div>
-          <div class="price">{{ p.price }} ₾</div>
+          <div class="price">˜{{ p.price }} ₾</div>
           <div class="attrs">
             {% if p.short_description %}{{ p.short_description }}{% endif %}
             {% if p.type == 'RACKET' %}
@@ -162,7 +174,10 @@
               <div style="margin-top:6px; white-space:pre-wrap;">{{ p.description }}</div>
             {% endif %}
           </div>
-          <button class="more-btn" type="button" onclick="toggleExtra(this)" style="margin-top:8px; align-self:flex-start; padding:6px 10px; border:1px solid #0e8b84; background:#fff; color:#0e8b84; border-radius:6px; cursor:pointer;">More</button>
+          <div style="display:flex;gap:8px;margin-top:8px;">
+            <button class="more-btn" type="button" onclick="toggleExtra(this)" style="align-self:flex-start; padding:6px 10px; border:1px solid #0e8b84; background:#fff; color:#0e8b84; border-radius:6px; cursor:pointer;">More</button>
+            <a class="order-btn" href="https://t.me/tennis_rivals_shop_tbilisi?direct" target="_blank" style="padding:6px 10px; background:#0e8b84; color:#fff; border-radius:6px; text-decoration:none;" data-title="{{ p.name }}">Order</a>
+          </div>
         </div>
       {% empty %}
         <p>Нет товаров для отображения.</p>
@@ -171,6 +186,22 @@
   </div>
 
   <script>
+    // Build Telegram deep-link with prefilled text
+    function buildOrderLink(title){
+      const base = 'https://t.me/tenrivals_shop';
+      const text = 'Меня заинтересовал товар ' + title + ', расскажите подробнее о предзаказе';
+      const encoded = encodeURIComponent(text);
+      // For channels/bots, use /?start message fallback via tg.me/share/url
+      return 'https://t.me/share/url?url=' + encodeURIComponent(window.location.href) + '&text=' + encoded;
+    }
+
+    // Hydrate all order buttons
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('.order-btn').forEach(a => {
+        const t = a.getAttribute('data-title') || '';
+        a.href = buildOrderLink(t);
+      });
+    });
     function cycleImage(imgEl) {
       const card = imgEl.closest('.card');
       const list = (card.getAttribute('data-images') || '').split(',').filter(Boolean);

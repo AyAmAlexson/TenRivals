@@ -14,6 +14,7 @@ def items_list_for_Laen(request):
     type_code = request.GET.get('type')
     gender_filter = request.GET.get('g', 'all')  # all | m | w
     surface_filter = request.GET.get('surf', 'all')  # all | clay | hard | allcourt | grass | padel
+    shoe_brand = request.GET.get('sbrand', 'all')  # shoes brand filter
     # Racket-specific filters
     racket_brand = request.GET.get('brand', 'all')
     racket_weight = request.GET.get('w', 'all')     # lt280 | 280_299 | 300 | ge301
@@ -55,6 +56,19 @@ def items_list_for_Laen(request):
         }
         if surface_filter in surf_map:
             products = products.filter(shoe__surface=surf_map[surface_filter])
+
+        # Shoes brand options and filter
+        shoe_brands_qs = (
+            Product.objects.filter(is_active=True, type=type_code)
+            .exclude(brand__isnull=True)
+            .exclude(brand__exact='')
+            .values_list('brand', flat=True)
+            .distinct()
+            .order_by('brand')
+        )
+        shoe_brands = list(shoe_brands_qs)
+        if shoe_brand != 'all':
+            products = products.filter(brand=shoe_brand)
 
     # Apply racket filters if needed
     racket_brands = []
@@ -113,6 +127,8 @@ def items_list_for_Laen(request):
         'show_shoe_filters': show_shoe_filters,
         'gender_active': gender_filter,
         'surface_active': surface_filter,
+        'shoe_brands': shoe_brands if show_shoe_filters else [],
+        'shoe_brand_active': shoe_brand,
         'show_racket_filters': show_racket_filters,
         'racket_brands': racket_brands,
         'racket_brand_active': racket_brand,
@@ -131,6 +147,7 @@ def preorder(request):
     type_code = request.GET.get('type')
     gender_filter = request.GET.get('g', 'all')
     surface_filter = request.GET.get('surf', 'all')
+    shoe_brand = request.GET.get('sbrand', 'all')  # shoes brand filter
     # Racket-specific filters
     racket_brand = request.GET.get('brand', 'all')
     racket_weight = request.GET.get('w', 'all')     # lt280 | 280_299 | 300 | ge301
@@ -166,6 +183,19 @@ def preorder(request):
         }
         if surface_filter in surf_map:
             products = products.filter(shoe__surface=surf_map[surface_filter])
+
+        # Shoes brand options and filter
+        shoe_brands_qs = (
+            Product.objects.filter(is_active=True, type=type_code)
+            .exclude(brand__isnull=True)
+            .exclude(brand__exact='')
+            .values_list('brand', flat=True)
+            .distinct()
+            .order_by('brand')
+        )
+        shoe_brands = list(shoe_brands_qs)
+        if shoe_brand != 'all':
+            products = products.filter(brand=shoe_brand)
 
     racket_brands = []
     racket_patterns = []
@@ -215,6 +245,8 @@ def preorder(request):
         'show_shoe_filters': show_shoe_filters,
         'gender_active': gender_filter,
         'surface_active': surface_filter,
+        'shoe_brands': shoe_brands if show_shoe_filters else [],
+        'shoe_brand_active': shoe_brand,
         'show_racket_filters': show_racket_filters,
         'racket_brands': racket_brands,
         'racket_brand_active': racket_brand,
