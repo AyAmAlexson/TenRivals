@@ -25,6 +25,9 @@
     .card h3 { font-size:16px; margin:8px 0 4px; }
     .price { font-weight:700; color:#0e8b84; margin-bottom:6px; }
     .attrs { font-size:12px; color:#4b5563; }
+    .card-footer { margin-top:auto; display:flex; align-items:center; justify-content:space-between; gap:8px; }
+    .btn-outline { padding:6px 10px; border:1px solid #0e8b84; background:#fff; color:#0e8b84; border-radius:6px; cursor:pointer; }
+    .btn-primary { padding:6px 10px; background:#0e8b84; color:#fff; border-radius:6px; text-decoration:none; }
     .pills { display:flex; flex-wrap:wrap; gap:6px; margin: 4px 0 8px; }
     .pill { padding:4px 8px; border:1px solid #0e8b84; color:#0e8b84; border-radius:9999px; font-size:12px; line-height:1; }
     .icon-edit { display:inline-flex; align-items:center; justify-content:center; width:18px; height:18px; margin-left:6px; border:1px solid #d1d5db; border-radius:4px; color:#6b7280; text-decoration:none; font-size:12px; }
@@ -140,6 +143,11 @@
             {% endif %}
             {% endwith %}
             {% endif %}
+            {% if p.type == 'M_SHOES' or p.type == 'W_SHOES' or p.type == 'J_SHOES' %}
+              {% with s=p.shoe %}
+                {% if s %}Surface: {{ s.get_surface_display }}<br>{% endif %}
+              {% endwith %}
+            {% endif %}
           </div>
           {% if p.sizes_list %}
           <div class="pills">
@@ -174,9 +182,9 @@
               <div style="margin-top:6px; white-space:pre-wrap;">{{ p.description }}</div>
             {% endif %}
           </div>
-          <div style="display:flex;gap:8px;margin-top:8px;">
-            <button class="more-btn" type="button" onclick="toggleExtra(this)" style="align-self:flex-start; padding:6px 10px; border:1px solid #0e8b84; background:#fff; color:#0e8b84; border-radius:6px; cursor:pointer;">More</button>
-            <a class="order-btn" href="https://t.me/tennis_rivals_shop_tbilisi?start=order" target="_blank" style="padding:6px 10px; background:#0e8b84; color:#fff; border-radius:6px; text-decoration:none;" data-title="{{ p.name }}">Order</a>
+          <div class="card-footer">
+            <button class="more-btn btn-outline" type="button" onclick="toggleExtra(this)">More</button>
+            <a class="order-btn btn-primary" href="https://t.me/tennis_rivals_shop_tbilisi?direct" target="_blank" data-title="{{ p.name }}">Order</a>
           </div>
         </div>
       {% empty %}
