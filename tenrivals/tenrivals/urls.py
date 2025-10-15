@@ -5,14 +5,11 @@ from django.conf.urls.static import static
 from django.conf import settings
 from django.contrib.auth import views as auth_views
 from persons import views as person_views
+from django.views.generic import RedirectView
 
+# Temporary lockdown: expose only Shop and redirect root to Preorder
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('pages/', include('django.contrib.flatpages.urls')),
-    path('persons/', include('persons.urls')),
-    path('', include('rivals.urls')),
-    path('accounts/', include('allauth.urls')),
-    # path('dashboard/', include('dashboard.urls')),
+    path('', RedirectView.as_view(pattern_name='shop:preorder', permanent=False)),
     path('shop/', include('shop.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
