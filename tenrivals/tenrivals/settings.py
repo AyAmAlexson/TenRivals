@@ -21,18 +21,22 @@ USE_S3 = env.bool('USE_S3', default=('DYNO' in os.environ))
 ALLOWED_HOSTS = [
     '127.0.0.1',
     '.herokuapp.com',
-    'distinct-shrimp-slightly.ngrok-free.app'
+    'distinct-shrimp-slightly.ngrok-free.app',
+    'tenrivals.com',
+    '.tenrivals.com',
 ]
 
+
 CSRF_TRUSTED_ORIGINS = [
-    'https://ten-rivals-ee84d08ca066.herokuapp.com/',
+    'https://ten-rivals-ee84d08ca066.herokuapp.com',
     'http://localhost:8000',
     'http://127.0.0.1:8000',
     'http://localhost:80',
     'http://127.0.0.1:80',
-    'https://distinct-shrimp-slightly.ngrok-free.app'
+    'https://distinct-shrimp-slightly.ngrok-free.app',
+    'https://tenrivals.com',
+    'https://www.tenrivals.com',
 ]
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -426,7 +430,11 @@ TELEGRAM_BOT_USERNAME = env.str('TELEGRAM_BOT_USERNAME', default=None)
 TELEGRAM_BOT_ID = env.str('TELEGRAM_BOT_ID', default=None)
 
 # Добавляем URL сайта для формирования ссылок
-WEBSITE_URL = 'https://distinct-shrimp-slightly.ngrok-free.app'  # Замените на реальный URL вашего сайта
-
+WEBSITE_URL = 'https://tenrivals.com'  
 
 PASSWORD_RESET_TELEGRAM_CODE_EXPIRY_MINUTES = 15
+
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SECURE_SSL_REDIRECT = True
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
