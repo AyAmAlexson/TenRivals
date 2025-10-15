@@ -136,19 +136,19 @@
           </div>
           <div class="price">˜{{ p.price }} ₾</div>
           <div class="attrs">
-            {% if p.short_description %}{{ p.short_description }}{% endif %}
+            {% if p.short_description %}<p>{{ p.short_description }}</p>{% endif %}
             {% if p.type == 'RACKET' %}
             {% with r=p.racket %}
             {% if r %}
-            {% if r.weight_grams %}Weight: {{ r.weight_grams }} g{% if r.is_strung %} (strung){% else %} (unstrung){% endif %}<br>{% endif %}
-            {% if r.head_size_sq_in %}Head: {{ r.head_size_sq_in }} in²<br>{% endif %}
-            {% if r.string_pattern %}Pattern: {{ r.string_pattern }}<br>{% endif %}
+            {% if r.weight_grams %}<p>Weight: {{ r.weight_grams }} g{% if r.is_strung %} (strung){% else %} (unstrung){% endif %}</p>{% endif %}
+            {% if r.head_size_sq_in %}<p>Head: {{ r.head_size_sq_in }} in²</p>{% endif %}
+            {% if r.string_pattern %}<p>Pattern: {{ r.string_pattern }}</p>{% endif %}
             {% endif %}
             {% endwith %}
             {% endif %}
             {% if p.type == 'M_SHOES' or p.type == 'W_SHOES' or p.type == 'J_SHOES' %}
               {% with s=p.shoe %}
-                {% if s %}Surface: {{ s.get_surface_display }}<br>{% endif %}
+                {% if s %}<p>Surface: {{ s.get_surface_display }}</p>{% endif %}
               {% endwith %}
             {% endif %}
           </div>
@@ -160,25 +160,25 @@
           </div>
           {% endif %}
           <div class="attrs extra" style="display:none; margin-top:6px;">
-            {% if p.brand %}Brand: {{ p.brand }}<br>{% endif %}
-            {% if p.sku %}SKU: {{ p.sku }}<br>{% endif %}
-            Type: {{ p.get_type_display }}<br>
+            {% if p.brand %}<p>Brand: {{ p.brand }}</p>{% endif %}
+            {% if p.sku %}<p>SKU: {{ p.sku }}</p>{% endif %}
+            <p>Type: {{ p.get_type_display }}</p>
             {% if p.type == 'RACKET' %}
             {% with r=p.racket %}
             {% if r %}
-            {% if r.weight_grams %}Weight: {{ r.weight_grams }} g{% if r.is_strung %} (strung){% else %} (unstrung){% endif %}<br>{% endif %}
-            {% if r.head_size_sq_in %}Head: {{ r.head_size_sq_in }} in²<br>{% endif %}
-            {% if r.length_in %}Length: {{ r.length_in }} in<br>{% endif %}
-            {% if r.balance_mm %}Balance: {{ r.balance_mm }} mm<br>{% endif %}
-            {% if r.swingweight %}Swingweight: {{ r.swingweight }}<br>{% endif %}
-            {% if r.string_pattern %}Pattern: {{ r.string_pattern }}<br>{% endif %}
-            {% if r.grip_sizes %}Grips: {{ r.grip_sizes|join:', ' }}<br>{% endif %}
+            {% if r.weight_grams %}<p>Weight: {{ r.weight_grams }} g{% if r.is_strung %} (strung){% else %} (unstrung){% endif %}</p>{% endif %}
+            {% if r.head_size_sq_in %}<p>Head: {{ r.head_size_sq_in }} in²</p>{% endif %}
+            {% if r.length_in %}<p>Length: {{ r.length_in }} in</p>{% endif %}
+            {% if r.balance_mm %}<p>Balance: {{ r.balance_mm }} mm</p>{% endif %}
+            {% if r.swingweight %}<p>Swingweight: {{ r.swingweight }}</p>{% endif %}
+            {% if r.string_pattern %}<p>Pattern: {{ r.string_pattern }}</p>{% endif %}
+            {% if r.grip_sizes %}<p>Grips: {{ r.grip_sizes|join:', ' }}</p>{% endif %}
             {% endif %}
             {% endwith %}
             {% endif %}
             {% if p.attributes %}
               {% for key, val in p.attributes.items %}
-                {{ key }}: {{ val }}<br>
+                <p>{{ key }}: {{ val }}</p>
               {% endfor %}
             {% endif %}
             {% if p.description %}
@@ -191,7 +191,7 @@
           </div>
         </div>
       {% empty %}
-        <p>Нет товаров для отображения.</p>
+        <p>No products to display.</p>
       {% endfor %}
     </div>
   </div>
