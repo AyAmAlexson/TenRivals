@@ -9,7 +9,7 @@ from django.views.generic import RedirectView
 
 # Temporary lockdown: expose only Shop and redirect root to Preorder
 urlpatterns = [
-    path('', RedirectView.as_view(pattern_name='shop:preorder', permanent=False)),
+    path('', RedirectView.as_view(pattern_name='shop:index', permanent=False)),
     path('shop/', include('shop.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
