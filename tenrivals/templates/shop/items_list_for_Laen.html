@@ -1,10 +1,11 @@
 <!doctype html>
+{% load static %}
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Tennis Rivals Shop — Items</title>
-  <link rel="icon" type="image/png" href="/static/assets/img/favicon.png">
+  <link rel="icon" type="image/png" href="{% static 'assets/img/favicon.png' %}">
   <link href="/static/css/styles.css" rel="stylesheet">
   <style>
     /* UI in English per project rule; text content in Russian where requested */
@@ -51,7 +52,7 @@
 <body>
   <div class="container" style="padding: 16px; max-width: 1280px; margin: 0 auto;">
     <div class="shop-header" style="justify-content: space-between;">
-      <img src="/static/assets/img/TR Logo 25/TRLogo_rect_white_on_teal_shop.png" alt="Tennis Rivals Shop Logo">
+      <img src="{% static 'assets/img/TR Logo 25/TRLogo_rect_white_on_teal_shop.png' %}" alt="Tennis Rivals Shop Logo">
       <div class="mt-3">
         <h1 style="margin:0;">Clay shoes for Laen // Preorder </h1><BR>
         
@@ -137,7 +138,7 @@
     <div class="grid">
       {% for p in products %}
         <div class="card" data-images="{% if p.image_1 %}{{ p.image_1.url }}{% endif %}{% if p.image_2 %},{% if p.image_2 %}{{ p.image_2.url }}{% endif %}{% endif %}{% if p.image_3 %},{% if p.image_3 %}{{ p.image_3.url }}{% endif %}{% endif %}{% if p.image_4 %},{% if p.image_4 %}{{ p.image_4.url }}{% endif %}{% endif %}{% if p.image_5 %},{% if p.image_5 %}{{ p.image_5.url }}{% endif %}{% endif %}">
-          <img src="{% if p.main_image %}{{ p.main_image.url }}{% else %}/static/assets/img/card_bg_teal.svg{% endif %}" alt="{{ p.name }}" onclick="openLightbox(this)">
+          <img src="{% if p.main_image %}{{ p.main_image.url }}{% else %}{% static 'assets/img/card_bg_teal.svg' %}{% endif %}" alt="{{ p.name }}" onclick="openLightbox(this)">
           <h3>{{ p.name }}</h3>
           <div class="attrs" style="margin-bottom:6px; display:flex; align-items:center; gap:6px;">
             <span>ID: {{ p.id }}</span>
