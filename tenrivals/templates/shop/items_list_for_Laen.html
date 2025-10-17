@@ -140,7 +140,7 @@
     <div class="grid">
       {% for p in products %}
         <div class="card" data-images="{% if p.image_1 %}{{ p.image_1.url }}{% endif %}{% if p.image_2 %},{% if p.image_2 %}{{ p.image_2.url }}{% endif %}{% endif %}{% if p.image_3 %},{% if p.image_3 %}{{ p.image_3.url }}{% endif %}{% endif %}{% if p.image_4 %},{% if p.image_4 %}{{ p.image_4.url }}{% endif %}{% endif %}{% if p.image_5 %},{% if p.image_5 %}{{ p.image_5.url }}{% endif %}{% endif %}">
-          <img src="{% if p.main_image %}{{ p.main_image.url }}{% else %}{% static 'assets/img/card_bg_teal.svg' %}{% endif %}" alt="{{ p.name }}" onclick="openLightbox(this)">
+          <img src="{% if p.main_image %}{{ p.main_image.url }}{% else %}{% static 'assets/img/card_bg_teal.svg' %}{% endif %}" alt="{{ p.name }}" loading="lazy" onclick="openLightbox(this)">
           <h3>{{ p.name }}</h3>
           <div class="attrs" style="margin-bottom:6px; display:flex; align-items:center; gap:6px;">
             <span>ID: {{ p.id }}</span>

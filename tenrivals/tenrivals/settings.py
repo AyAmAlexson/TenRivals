@@ -206,6 +206,12 @@ if IS_PRODUCTION:
     AWS_S3_FILE_OVERWRITE = False # Не перезаписывать файлы при загрузке с тем же именем
     AWS_DEFAULT_ACL = None        # Используем Bucket Policy для публичного чтения
     AWS_S3_VERIFY = True          # Проверять SSL сертификат при подключении к S3
+    # Публичные URL без подписи для лучшего кэширования CDN/браузером
+    AWS_QUERYSTRING_AUTH = False
+    # Агрессивное кэширование для медиа (можно переопределить на уровне CDN)
+    AWS_S3_OBJECT_PARAMETERS = {
+        'CacheControl': 'public, max-age=31536000, s-maxage=31536000, immutable'
+    }
 
     # Указываем Django использовать S3 для хранения медиафайлов по умолчанию
     DEFAULT_FILE_STORAGE = 'storages.backends.s3.S3Storage'
