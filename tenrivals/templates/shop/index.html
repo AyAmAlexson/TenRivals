@@ -2,29 +2,222 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Shop</title>
+  <title>TR Shop</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link href="/static/css/styles.css" rel="stylesheet">
-  <style>
-    body{margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Helvetica,Arial,sans-serif; color:#0f172a;}
-    .wrap{min-height:100dvh; display:grid; place-items:center; background:linear-gradient(135deg,#0e8b84 0%, #52b6ad 60%, #e8f7f6 100%);}    
-    .card{background:#ffffff; padding:32px 28px; border-radius:14px; box-shadow:0 20px 60px rgba(0,0,0,.12); text-align:center; width:min(520px,92vw)}
-    .logo{height:56px; width:auto; display:block; margin:0 auto 14px auto}
-    h1{margin:8px 0 10px 0; font-size:28px}
-    p{margin:0 0 18px 0; color:#475569}
-    .btn{display:inline-flex; align-items:center; gap:10px; padding:12px 18px; border-radius:10px; text-decoration:none; color:#0e8b84; border:2px solid #0e8b84; background:#fff; font-weight:600}
-    .btn:hover{background:#0e8b84; color:#fff}
-  </style>
   {% load static %}
+  <link rel="icon" href="{% static 'assets/img/favicon.png' %}">
+  <link href="{% static 'css/styles.css' %}" rel="stylesheet">
+  <style>
+    :root{
+      --teal:#0e8b84;
+      --teal-600:#0d7b75;
+      --ink:#0f172a;
+      --muted:#475569;
+      --line:#e2e8f0;
+      --bg:#f8fafc;
+      --white:#fff;
+    }
+    *{box-sizing:border-box}
+    body{margin:0; font-family:Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; color:var(--ink); background:var(--bg)}
+    a{color:inherit; text-decoration:none}
+    .container{max-width:1200px; margin:0 auto; padding:0 16px}
+    /* Topbar */
+    .topbar{background:var(--ink); color:#cbd5e1; font-size:12px}
+    .topbar .row{display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:36px}
+    .topbar .links{display:flex; gap:16px; flex-wrap:wrap}
+    .topbar a{opacity:.9}
+    .topbar a:hover{opacity:1}
+    /* Header */
+    header{background:var(--white); border-bottom:1px solid var(--line)}
+    .header-row{display:grid; grid-template-columns:180px 1fr auto auto; align-items:center; gap:16px; padding:16px 0}
+    .logo{height:40px}
+    .search{display:flex; align-items:center; gap:8px; border:1px solid var(--line); border-radius:10px; padding:8px 12px; background:#fff}
+    .search input{border:0; outline:0; width:100%; font-size:14px}
+    .phone{color:var(--teal); font-weight:600; white-space:nowrap}
+    .auth a{font-weight:600; color:var(--ink)}
+    /* Nav */
+    nav{background:#ffffff; border-bottom:1px solid var(--line)}
+    .nav-row{display:flex; gap:18px; align-items:center; min-height:48px; overflow:auto}
+    .nav-link{padding:10px 6px; color:#0b1220; white-space:nowrap; border-bottom:2px solid transparent}
+    .nav-link:hover{border-bottom-color:var(--teal)}
+    .nav-link--primary{color:var(--teal); font-weight:700}
+    /* Hero */
+    .hero{background:linear-gradient(135deg, #e6fffb 0%, #f7faff 100%); border-bottom:1px solid var(--line)}
+    .hero-wrap{display:grid; grid-template-columns:1.3fr 1fr; gap:24px; padding:32px 0}
+    .hero-card{background:#fff; border:1px solid var(--line); border-radius:16px; min-height:220px; display:flex; align-items:center; justify-content:center; color:var(--muted)}
+    .hero-card.small{min-height:100px}
+    /* Sections */
+    .section{padding:28px 0}
+    .section h2{margin:0 0 16px 0; font-size:20px}
+    .grid{display:grid; grid-template-columns:repeat(5,1fr); gap:16px}
+    .card{background:#fff; border:1px solid var(--line); border-radius:14px; min-height:220px; display:flex; align-items:center; justify-content:center; color:#94a3b8}
+    .placeholder-badge{position:absolute; top:12px; left:12px; background:#0ea5e9; color:white; border-radius:999px; padding:4px 8px; font-size:11px}
+    /* Footer */
+    footer{background:#0b1220; color:#94a3b8; margin-top:32px; border-top:1px solid #0f1a33}
+    .footer-top{padding:28px 0; display:grid; grid-template-columns:2fr 1fr 1fr 1fr; gap:24px}
+    .footer h4{color:#e2e8f0; margin:0 0 10px 0; font-size:14px}
+    .footer a{display:block; padding:6px 0}
+    .footer-bottom{border-top:1px solid #1e293b; padding:16px 0; font-size:12px; color:#64748b}
+    /* Responsive */
+    @media (max-width: 1024px){
+      .grid{grid-template-columns:repeat(3,1fr)}
+      .hero-wrap{grid-template-columns:1fr}
+      .header-row{grid-template-columns:140px 1fr auto; grid-auto-flow:row}
+      .phone{display:none}
+    }
+    @media (max-width: 640px){
+      .grid{grid-template-columns:repeat(2,1fr)}
+      .footer-top{grid-template-columns:1fr 1fr}
+      .auth{display:none}
+    }
+    /* Buttons */
+    .btn{display:inline-flex; align-items:center; gap:10px; padding:10px 14px; border-radius:10px; text-decoration:none; color:#fff; background:var(--teal); font-weight:600; border:1px solid var(--teal-600)}
+    .btn:hover{filter:brightness(.98)}
+    .btn--outline{background:#fff; color:var(--teal); border:1px solid var(--teal)}
+  </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="card">
-      <img class="logo" src="{% static 'assets/img/TR Logo 25/TRLogo_rect_white_on_teal_shop.png' %}" alt="TR Shop">
-      <h1>Shop</h1>
-      <p>All products are temporarily available via Preorder page.</p>
-      <a class="btn" href="{% url 'shop:preorder' %}">Go to Preorder →</a>
+  <!-- Top information bar -->
+  <div class="topbar">
+    <div class="container">
+      <div class="row">
+        <div class="links">
+          <!-- Non-working informational links -->
+          <a href="#">Delivery</a>
+          <a href="#">Payment</a>
+          <a href="#">Returns & exchanges</a>
+          <a href="#">Size guide</a>
+          <a href="#">Contacts</a>
+        </div>
+        <div class="links">
+          <span>+7 (961) 765-43-57</span>
+        </div>
+      </div>
     </div>
   </div>
+
+  <!-- Header with logo, search and auth -->
+  <header>
+    <div class="container">
+      <div class="header-row">
+        <a href="#" class="brand">
+          <img class="logo" src="{% static 'assets/img/TR_Logo_Line.svg' %}" alt="TR Shop">
+        </a>
+        <label class="search" aria-label="Search">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M21 21l-4.2-4.2" stroke="#64748b" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="10" cy="10" r="7" stroke="#64748b" stroke-width="2"/>
+          </svg>
+          <input type="search" placeholder="Search the catalog" disabled>
+        </label>
+        <div class="phone">+7 (961) 765-43-57</div>
+        <div class="auth"><a href="#">Sign in</a></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main navigation -->
+  <nav>
+    <div class="container">
+      <div class="nav-row">
+        <a class="nav-link" href="#">Rackets</a>
+        <a class="nav-link" href="#">Bags & Covers</a>
+        <a class="nav-link" href="#">Clothing</a>
+        <a class="nav-link" href="#">Shoes</a>
+        <a class="nav-link" href="#">Balls</a>
+        <a class="nav-link" href="#">Accessories</a>
+        <a class="nav-link" href="#">Equipment</a>
+        <!-- Only working link as requested -->
+        <a class="nav-link nav-link--primary" href="{% url 'shop:preorder' %}">Preorder</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero banners placeholders -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-wrap">
+        <div class="hero-card">Hero banner placeholder</div>
+        <div class="hero-card small">Promo banner</div>
+      </div>
+      <a class="btn" href="{% url 'shop:preorder' %}">Go to Preorder</a>
+    </div>
+  </section>
+
+  <main class="container">
+    <!-- Category tiles / featured sections -->
+    <section class="section">
+      <h2>Featured products</h2>
+      <div class="grid">
+        <div class="card">Product card</div>
+        <div class="card">Product card</div>
+        <div class="card">Product card</div>
+        <div class="card">Product card</div>
+        <div class="card">Product card</div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>New arrivals</h2>
+      <div class="grid">
+        <div class="card">Product card</div>
+        <div class="card">Product card</div>
+        <div class="card">Product card</div>
+        <div class="card">Product card</div>
+        <div class="card">Product card</div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Brands</h2>
+      <div class="grid">
+        <div class="card">Brand tile</div>
+        <div class="card">Brand tile</div>
+        <div class="card">Brand tile</div>
+        <div class="card">Brand tile</div>
+        <div class="card">Brand tile</div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-top">
+        <div>
+          <h4>SalePadel-style storefront</h4>
+          <p>Catalog UI scaffold. Content will be added later.</p>
+          <div style="margin-top:10px">
+            <a class="btn btn--outline" href="{% url 'shop:preorder' %}">Preorder</a>
+          </div>
+        </div>
+        <div>
+          <h4>Catalog</h4>
+          <a href="#">Rackets</a>
+          <a href="#">Bags & Covers</a>
+          <a href="#">Clothing</a>
+          <a href="#">Shoes</a>
+          <a href="#">Balls</a>
+          <a href="#">Accessories</a>
+          <a href="#">Equipment</a>
+        </div>
+        <div>
+          <h4>Help</h4>
+          <a href="#">Delivery</a>
+          <a href="#">Payment</a>
+          <a href="#">Returns & exchanges</a>
+          <a href="#">Size guide</a>
+          <a href="#">Contacts</a>
+        </div>
+        <div>
+          <h4>Contacts</h4>
+          <a href="#">+7 (961) 765-43-57</a>
+          <a href="#">support@example.com</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <div>© {{ now|default:"2026" }} TenRivals Shop. All rights reserved.</div>
+      </div>
+    </div>
+  </footer>
 </body>
 </html>
