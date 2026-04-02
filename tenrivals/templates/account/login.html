@@ -89,7 +89,7 @@
         {% endif %}
 
         <div class="actions">
-          <a class="forgot" href="{% url 'persons:account_password_request_tg' %}">{% trans "Forgot Password?" %}</a>
+          <a class="forgot" href="{% url 'account_reset_password' %}">{% trans "Forgot Password?" %}</a>
           <button class="btn-submit" type="submit">{% trans "Sign In" %}</button>
         </div>
 
@@ -105,49 +105,5 @@
   </div>
 
   <div class="page-footer">&copy; 2026 TenRivals Shop</div>
-
-<script type="text/javascript">
-    function getHashParams() {
-        const hash = window.location.hash.substring(1);
-        if (!hash) return null;
-        if (hash.indexOf('tgAuthResult=') !== 0) return null;
-        try {
-            const jsonStr = decodeURIComponent(hash.substring('tgAuthResult='.length));
-            return JSON.parse(jsonStr);
-        } catch (e) {
-            console.error('Error parsing Telegram auth data:', e);
-            return null;
-        }
-    }
-
-    document.addEventListener('DOMContentLoaded', function() {
-        const authData = getHashParams();
-        if (authData) {
-            window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
-            const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-            fetch('/persons/telegram/callback/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrftoken,
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: JSON.stringify(authData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    window.location.href = data.redirect_url || '/';
-                } else {
-                    alert('Authentication error: ' + (data.error || 'Unknown error'));
-                }
-            })
-            .catch(error => {
-                console.error('Auth error:', error);
-                alert('Authentication error. Please try again.');
-            });
-        }
-    });
-</script>
 </body>
 </html>
