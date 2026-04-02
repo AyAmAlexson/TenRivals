@@ -27,16 +27,16 @@
     a{color:inherit; text-decoration:none}
     .container{max-width:1200px; margin:0 auto; padding:0 16px}
     /* Topbar */
-    .topbar{background:var(--ink); color:#cbd5e1; font-size:12px}
+    .topbar{background:#111; color:#cbd5e1; font-size:12px}
     .topbar .row{display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:36px}
     .topbar .links{display:flex; gap:16px; flex-wrap:wrap}
     .topbar a{opacity:.9}
     .topbar a:hover{opacity:1}
     /* Header */
-    header{background:#2c2c2c; border-bottom:1px solid #3a3a3a}
+    header{background:#1a1a1a; border-bottom:1px solid #252525}
     .header-row{display:grid; grid-template-columns:180px 1fr auto auto; align-items:center; gap:16px; padding:16px 0}
     .logo{height:40px}
-    .search{display:flex; align-items:center; gap:8px; border:1px solid #555; border-radius:0; padding:8px 12px; background:#3a3a3a}
+    .search{display:flex; align-items:center; gap:8px; border:1px solid #3a3a3a; border-radius:0; padding:8px 12px; background:#252525}
     .search input{border:0; outline:0; width:100%; font-size:14px; background:transparent; color:#fff}
     .search input::placeholder{color:#aaa}
     .phone{color:var(--teal); font-weight:600; white-space:nowrap}
@@ -45,7 +45,7 @@
     .social-link{display:inline-flex; width:28px; height:28px; align-items:center; justify-content:center; color:#fff; text-decoration:none}
     .social-link:hover{color:var(--teal)}
     /* Nav */
-    nav{background:#2c2c2c; border-bottom:1px solid #3a3a3a; position:relative; z-index:9999}
+    nav{background:#1a1a1a; border-bottom:1px solid #252525; position:relative; z-index:9999}
     .nav-row{display:flex; gap:18px; align-items:center; min-height:48px; overflow:visible; position:relative}
     .nav-link{padding:10px 6px; color:#fff; white-space:nowrap; border-bottom:2px solid transparent}
     .nav-link:hover{border-bottom-color:var(--teal)}
@@ -55,34 +55,43 @@
     .dropdown-toggle{display:inline-block}
     .dropdown-toggle::after{content:none !important}
     .dropdown-menu{
-      position:absolute; top:100%; left:0; min-width:240px; background:#353535; border:1px solid #444;
-      box-shadow:0 4px 12px rgba(0,0,0,.3); padding:8px; display:none; z-index:10000; border-radius:0; margin-top:0;
+      position:absolute; top:100%; left:0; min-width:240px; background:#222; border:1px solid #333;
+      box-shadow:0 4px 12px rgba(0,0,0,.5); padding:8px; display:none; z-index:10000; border-radius:0; margin-top:0;
     }
     .dropdown:hover .dropdown-menu{display:block}
     .dropdown-grid{display:grid; grid-template-columns:1fr; gap:8px}
     .dropdown-title{font-size:12px; color:#aaa; margin:0 0 4px 0}
     .dropdown-item{display:block; padding:6px 6px; color:#e0e0e0; text-decoration:none}
-    .dropdown-item:hover{background:#444; color:var(--teal)}
+    .dropdown-item:hover{background:#333; color:var(--teal)}
     /* Hero */
-    .hero{background:#2c2c2c; border-bottom:1px solid #3a3a3a}
+    .hero{background:#1a1a1a; border-bottom:1px solid #252525}
     .hero-wrap{display:grid; grid-template-columns:1.3fr 1fr; gap:24px; padding:32px 0}
-    .hero-card{background:#3a3a3a; border:1px solid #444; border-radius:0; min-height:220px; display:flex; align-items:center; justify-content:center; color:#ccc}
+    .hero-card{background:#252525; border:1px solid #333; border-radius:0; min-height:220px; display:flex; align-items:center; justify-content:center; color:#ccc}
     .hero-card.small{min-height:100px}
     /* Sections */
     .section{padding:28px 0}
     .section h2{margin:0 0 16px 0; font-size:20px}
     .grid{display:grid; grid-template-columns:repeat(5,1fr); gap:16px}
-    .card{background:#fff; border:1px solid var(--line); border-radius:0; min-height:220px; display:flex; align-items:center; justify-content:center; color:#94a3b8}
+    .card{background:#fff; border:1px solid var(--line); border-radius:0; display:flex; flex-direction:column; text-decoration:none; color:var(--ink); transition:box-shadow .15s}
+    .card:hover{box-shadow:0 4px 16px rgba(0,0,0,.08)}
+    .card__img{aspect-ratio:1/1; background:#f1f5f9; display:flex; align-items:center; justify-content:center; color:#c0c8d4; font-size:13px; border-bottom:1px solid var(--line)}
+    .card__info{padding:10px 12px 14px}
+    .card__brand{font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:.5px; margin-bottom:2px}
+    .card__name{font-size:14px; font-weight:600; color:var(--ink); line-height:1.3; margin-bottom:2px}
+    .card__color{font-size:12px; color:#94a3b8; margin-bottom:6px}
+    .card__prices{display:flex; align-items:baseline; gap:8px}
+    .card__price{font-size:15px; font-weight:700; color:var(--teal)}
+    .card__price-old{font-size:13px; color:#94a3b8; text-decoration:line-through}
     .placeholder-badge{position:absolute; top:12px; left:12px; background:#0ea5e9; color:white; border-radius:0; padding:4px 8px; font-size:11px}
     /* Headings: Saira Extra Bold */
-    h1, h2, h3, h4, h5 { font-family: 'Saira', Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; font-weight:800; letter-spacing:0.2px }
+    h1, h2, h3, h4, h5 { font-family: 'Saira', Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; font-weight:800; letter-spacing:0.2px; text-transform:uppercase }
     /* Footer */
-    footer{background:#2c2c2c; color:#aaa; margin-top:32px; border-top:1px solid #3a3a3a}
+    footer{background:#1a1a1a; color:#aaa; margin-top:32px; border-top:1px solid #252525}
     .footer-top{padding:28px 0; display:grid; grid-template-columns:2fr 1fr 1fr 1fr; gap:24px}
     .footer h4{color:#fff; margin:0 0 10px 0; font-size:14px}
     .footer a{display:block; padding:6px 0; color:#ccc}
     .footer a:hover{color:#fff}
-    .footer-bottom{border-top:1px solid #444; padding:16px 0; font-size:12px; color:#888}
+    .footer-bottom{border-top:1px solid #333; padding:16px 0; font-size:12px; color:#888}
     /* Responsive */
     @media (max-width: 1024px){
       .grid{grid-template-columns:repeat(3,1fr)}
@@ -353,33 +362,113 @@
     <section class="section">
       <h2>FEATURED PRODUCTS</h2>
       <div class="grid">
-        <div class="card">Product card</div>
-        <div class="card">Product card</div>
-        <div class="card">Product card</div>
-        <div class="card">Product card</div>
-        <div class="card">Product card</div>
+        <a class="card" href="#">
+          <div class="card__img">Photo</div>
+          <div class="card__info">
+            <div class="card__brand">Wilson</div>
+            <div class="card__name">Rush Pro Ace Men's</div>
+            <div class="card__color">White/White/Black</div>
+            <div class="card__prices"><span class="card__price">$73.00</span><span class="card__price-old">$99.00</span></div>
+          </div>
+        </a>
+        <a class="card" href="#">
+          <div class="card__img">Photo</div>
+          <div class="card__info">
+            <div class="card__brand">ASICS</div>
+            <div class="card__name">GEL-Resolution X Men's</div>
+            <div class="card__color">White/Black</div>
+            <div class="card__prices"><span class="card__price">$159.95</span><span class="card__price-old">$165.00</span></div>
+          </div>
+        </a>
+        <a class="card" href="#">
+          <div class="card__img">Photo</div>
+          <div class="card__info">
+            <div class="card__brand">Babolat</div>
+            <div class="card__name">Pure Aero 2024</div>
+            <div class="card__color">Yellow/Black</div>
+            <div class="card__prices"><span class="card__price">$249.00</span></div>
+          </div>
+        </a>
+        <a class="card" href="#">
+          <div class="card__img">Photo</div>
+          <div class="card__info">
+            <div class="card__brand">HEAD</div>
+            <div class="card__name">Speed Pro 2024</div>
+            <div class="card__color">Black/White</div>
+            <div class="card__prices"><span class="card__price">$229.95</span></div>
+          </div>
+        </a>
+        <a class="card" href="#">
+          <div class="card__img">Photo</div>
+          <div class="card__info">
+            <div class="card__brand">K-Swiss</div>
+            <div class="card__name">Hypercourt Express 2 Women's</div>
+            <div class="card__color">White/Black</div>
+            <div class="card__prices"><span class="card__price">$130.00</span></div>
+          </div>
+        </a>
       </div>
     </section>
 
     <section class="section">
       <h2>NEW ARRIVALS</h2>
       <div class="grid">
-        <div class="card">Product card</div>
-        <div class="card">Product card</div>
-        <div class="card">Product card</div>
-        <div class="card">Product card</div>
-        <div class="card">Product card</div>
+        <a class="card" href="#">
+          <div class="card__img">Photo</div>
+          <div class="card__info">
+            <div class="card__brand">New Balance</div>
+            <div class="card__name">Fresh Foam X 1007 Men's</div>
+            <div class="card__color">White/Navy</div>
+            <div class="card__prices"><span class="card__price">$95.95</span><span class="card__price-old">$119.99</span></div>
+          </div>
+        </a>
+        <a class="card" href="#">
+          <div class="card__img">Photo</div>
+          <div class="card__info">
+            <div class="card__brand">Yonex</div>
+            <div class="card__name">Power Cushion Eclipsion 5 Men's</div>
+            <div class="card__color">White</div>
+            <div class="card__prices"><span class="card__price">$145.00</span></div>
+          </div>
+        </a>
+        <a class="card" href="#">
+          <div class="card__img">Photo</div>
+          <div class="card__info">
+            <div class="card__brand">Wilson</div>
+            <div class="card__name">Blade 98 v9 16×19</div>
+            <div class="card__color">Green/Black</div>
+            <div class="card__prices"><span class="card__price">$259.00</span></div>
+          </div>
+        </a>
+        <a class="card" href="#">
+          <div class="card__img">Photo</div>
+          <div class="card__info">
+            <div class="card__brand">Mizuno</div>
+            <div class="card__name">Wave Enforce Tour 2 AC Women's</div>
+            <div class="card__color">White/Silver</div>
+            <div class="card__prices"><span class="card__price">$154.95</span><span class="card__price-old">$160.00</span></div>
+          </div>
+        </a>
+        <a class="card" href="#">
+          <div class="card__img">Photo</div>
+          <div class="card__info">
+            <div class="card__brand">adidas</div>
+            <div class="card__name">Barricade 13 Men's</div>
+            <div class="card__color">Cloud White/Core Black</div>
+            <div class="card__prices"><span class="card__price">$160.00</span></div>
+          </div>
+        </a>
       </div>
     </section>
 
     <section class="section">
       <h2>BRANDS</h2>
       <div class="grid">
-        <div class="card">Brand tile</div>
-        <div class="card">Brand tile</div>
-        <div class="card">Brand tile</div>
-        <div class="card">Brand tile</div>
-        <div class="card">Brand tile</div>
+        <a class="card" href="#"><div class="card__img">Logo</div><div class="card__info"><div class="card__brand">Wilson</div></div></a>
+        <a class="card" href="#"><div class="card__img">Logo</div><div class="card__info"><div class="card__brand">Babolat</div></div></a>
+        <a class="card" href="#"><div class="card__img">Logo</div><div class="card__info"><div class="card__brand">HEAD</div></div></a>
+        <a class="card" href="#"><div class="card__img">Logo</div><div class="card__info"><div class="card__brand">Yonex</div></div></a>
+        <a class="card" href="#"><div class="card__img">Logo</div><div class="card__info"><div class="card__brand">ASICS</div></div></a>
       </div>
     </section>
   </main>
