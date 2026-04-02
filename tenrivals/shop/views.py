@@ -8,6 +8,10 @@ def index(request):
     return render(request, 'shop/index.html')
 
 
+def product_detail(request):
+    return render(request, 'shop/product_detail.html')
+
+
 def items_list_for_Laen(request):
     # Tab filter: by category slug or by product type code
     category_slug = request.GET.get('category')

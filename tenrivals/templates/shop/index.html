@@ -56,7 +56,7 @@
     .dropdown-toggle::after{content:none !important}
     .dropdown-menu{
       position:absolute; top:100%; left:0; min-width:240px; background:#222; border:1px solid #333;
-      box-shadow:0 4px 12px rgba(0,0,0,.5); padding:8px; display:none; z-index:10000; border-radius:0; margin-top:0;
+      box-shadow:none; padding:8px; display:none; z-index:10000; border-radius:0; margin-top:0;
     }
     .dropdown:hover .dropdown-menu{display:block}
     .dropdown-grid{display:grid; grid-template-columns:1fr; gap:8px}
@@ -72,17 +72,15 @@
     .section{padding:28px 0}
     .section h2{margin:0 0 16px 0; font-size:20px}
     .grid{display:grid; grid-template-columns:repeat(5,1fr); gap:16px}
-    .card{background:#fff; border:1px solid var(--line); border-radius:0; display:flex; flex-direction:column; text-decoration:none; color:var(--ink); transition:box-shadow .15s}
-    .card:hover{box-shadow:0 4px 16px rgba(0,0,0,.08)}
-    .card__img{aspect-ratio:1/1; background:#f1f5f9; display:flex; align-items:center; justify-content:center; color:#c0c8d4; font-size:13px; border-bottom:1px solid var(--line)}
-    .card__info{padding:10px 12px 14px}
+    .card{background:none; border:none; display:flex; flex-direction:column; text-decoration:none; color:var(--ink)}
+    .card__img{aspect-ratio:1/1; background:#e9ecef; display:flex; align-items:center; justify-content:center; color:#b0b8c4; font-size:13px; overflow:hidden}
+    .card__info{padding:8px 0 0}
     .card__brand{font-family:'Saira Condensed', 'Saira', sans-serif; font-size:12px; font-weight:400; color:#64748b; text-transform:uppercase; letter-spacing:.5px; margin-bottom:2px}
     .card__name{font-size:14px; font-weight:600; color:var(--ink); line-height:1.3; margin-bottom:2px}
-    .card__color{font-size:12px; color:#94a3b8; margin-bottom:6px}
+    .card__color{font-size:12px; color:#94a3b8; margin-bottom:4px}
     .card__prices{display:flex; align-items:baseline; gap:8px}
-    .card__price{font-size:15px; font-weight:700; color:var(--teal)}
+    .card__price{font-size:14px; font-weight:700; color:var(--teal)}
     .card__price-old{font-size:13px; color:#94a3b8; text-decoration:line-through}
-    .placeholder-badge{position:absolute; top:12px; left:12px; background:#0ea5e9; color:white; border-radius:0; padding:4px 8px; font-size:11px}
     /* Headings: Saira Extra Bold */
     h1, h2, h3, h4, h5 { font-family: 'Saira', Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; font-weight:800; letter-spacing:0.2px; text-transform:uppercase }
     /* Footer */
@@ -362,7 +360,7 @@
     <section class="section">
       <h2>FEATURED PRODUCTS</h2>
       <div class="grid">
-        <a class="card" href="#">
+        <a class="card" href="{% url 'shop:product_detail' %}">
           <div class="card__img">Photo</div>
           <div class="card__info">
             <div class="card__brand">Wilson</div>
@@ -371,7 +369,7 @@
             <div class="card__prices"><span class="card__price">$73.00</span><span class="card__price-old">$99.00</span></div>
           </div>
         </a>
-        <a class="card" href="#">
+        <a class="card" href="{% url 'shop:product_detail' %}">
           <div class="card__img">Photo</div>
           <div class="card__info">
             <div class="card__brand">ASICS</div>
@@ -380,7 +378,7 @@
             <div class="card__prices"><span class="card__price">$159.95</span><span class="card__price-old">$165.00</span></div>
           </div>
         </a>
-        <a class="card" href="#">
+        <a class="card" href="{% url 'shop:product_detail' %}">
           <div class="card__img">Photo</div>
           <div class="card__info">
             <div class="card__brand">Babolat</div>
@@ -389,7 +387,7 @@
             <div class="card__prices"><span class="card__price">$249.00</span></div>
           </div>
         </a>
-        <a class="card" href="#">
+        <a class="card" href="{% url 'shop:product_detail' %}">
           <div class="card__img">Photo</div>
           <div class="card__info">
             <div class="card__brand">HEAD</div>
@@ -398,7 +396,7 @@
             <div class="card__prices"><span class="card__price">$229.95</span></div>
           </div>
         </a>
-        <a class="card" href="#">
+        <a class="card" href="{% url 'shop:product_detail' %}">
           <div class="card__img">Photo</div>
           <div class="card__info">
             <div class="card__brand">K-Swiss</div>
@@ -413,7 +411,7 @@
     <section class="section">
       <h2>NEW ARRIVALS</h2>
       <div class="grid">
-        <a class="card" href="#">
+        <a class="card" href="{% url 'shop:product_detail' %}">
           <div class="card__img">Photo</div>
           <div class="card__info">
             <div class="card__brand">New Balance</div>
@@ -422,7 +420,7 @@
             <div class="card__prices"><span class="card__price">$95.95</span><span class="card__price-old">$119.99</span></div>
           </div>
         </a>
-        <a class="card" href="#">
+        <a class="card" href="{% url 'shop:product_detail' %}">
           <div class="card__img">Photo</div>
           <div class="card__info">
             <div class="card__brand">Yonex</div>
@@ -431,7 +429,7 @@
             <div class="card__prices"><span class="card__price">$145.00</span></div>
           </div>
         </a>
-        <a class="card" href="#">
+        <a class="card" href="{% url 'shop:product_detail' %}">
           <div class="card__img">Photo</div>
           <div class="card__info">
             <div class="card__brand">Wilson</div>
@@ -440,7 +438,7 @@
             <div class="card__prices"><span class="card__price">$259.00</span></div>
           </div>
         </a>
-        <a class="card" href="#">
+        <a class="card" href="{% url 'shop:product_detail' %}">
           <div class="card__img">Photo</div>
           <div class="card__info">
             <div class="card__brand">Mizuno</div>
@@ -449,7 +447,7 @@
             <div class="card__prices"><span class="card__price">$154.95</span><span class="card__price-old">$160.00</span></div>
           </div>
         </a>
-        <a class="card" href="#">
+        <a class="card" href="{% url 'shop:product_detail' %}">
           <div class="card__img">Photo</div>
           <div class="card__info">
             <div class="card__brand">adidas</div>
