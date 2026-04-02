@@ -1,114 +1,117 @@
-{% extends "default.html" %}
-{% load i18n %}
-{% load account %}
+{% load i18n static account %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{% trans "Sign In" %} — TR Shop</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Saira:wght@400;800&family=Saira+Condensed:wght@400&display=swap" rel="stylesheet">
+  <link rel="icon" href="{% static 'assets/img/favicon.png' %}">
+  <style>
+    *{box-sizing:border-box; margin:0; padding:0}
+    body{font-family:'Saira', system-ui, sans-serif; font-weight:400; background:#fff; color:#1a1a1a; min-height:100vh; display:flex; flex-direction:column}
+    a{color:inherit; text-decoration:none}
 
-{% block head_title %}{% trans "Sign In" %}{% endblock %}
+    .auth-header{background:#1a1a1a; padding:16px 0; display:flex; justify-content:center}
+    .auth-header img{height:36px; display:block}
 
-{% block content %}
-<div id="layoutAuthentication" class="bg-dual-color-primary-secondary">
-    <div id="layoutAuthentication_content">
-    
-            <div class="container-xl px-4">
-                <div class="row justify-content-center">
-                    <div class="col-lg-5">
-                        <!-- Basic login form-->
-                        <div class="card shadow-lg border-0 rounded-lg mt-15">
-                            <div class="card-header justify-content-center">
-                                <h3 class="fw-light text-secondary my-4">{% trans "Sign In" %}</h3>
-                            </div>
-                            <div class="card-body">
-                                {% if form.errors %}
-                                <div class="alert alert-danger small mb-3">
-                                    {% if form.non_field_errors %}
-                                        {{ form.non_field_errors }}
-                                    {% else %}
-                                        {% trans "Please correct the errors below." %}
-                                    {% endif %}
-                                </div>
-                                {% endif %}
+    .auth-wrap{flex:1; display:flex; align-items:center; justify-content:center; padding:40px 20px}
+    .auth-card{width:100%; max-width:400px}
+    .auth-card h1{font-family:'Saira', sans-serif; font-weight:800; font-size:22px; text-transform:uppercase; letter-spacing:.3px; margin-bottom:8px}
+    .auth-card .subtitle{font-size:14px; color:#64748b; margin-bottom:28px}
 
-                                <!-- Login form-->
-                                <form class="login" method="POST" action="{% url 'account_login' %}">
-                                    {% csrf_token %}
+    .auth-error{background:#fef2f2; border:1px solid #fecaca; color:#b91c1c; font-size:13px; padding:10px 14px; margin-bottom:20px}
 
-                                    <!-- Form Group (email)-->
-                                    <div class="mb-3">
-                                        <label class="small mb-1" for="{{ form.login.id_for_label }}">{% trans "Email" %}</label>
-                                        {{ form.login }}
-                                        {% if form.login.errors %}
-                                        <div class="small text-danger mt-1">
-                                            {{ form.login.errors }}
-                                        </div>
-                                        {% endif %}
-                                    </div>
+    .field{margin-bottom:18px}
+    .field label{display:block; font-size:13px; color:#64748b; margin-bottom:6px}
+    .field input[type="email"],
+    .field input[type="text"],
+    .field input[type="password"]{width:100%; padding:10px 14px; border:1px solid #e5e7eb; font-family:inherit; font-size:14px; color:#1a1a1a; outline:none; transition:border-color .15s}
+    .field input:focus{border-color:#1a1a1a}
+    .field .field-error{font-size:12px; color:#b91c1c; margin-top:4px}
 
-                                    <!-- Form Group (password)-->
-                                    <div class="mb-3">
-                                        <label class="small mb-1" for="{{ form.password.id_for_label }}">{% trans "Password" %}</label>
-                                        {{ form.password }}
-                                        {% if form.password.errors %}
-                                        <div class="small text-danger mt-1">
-                                            {{ form.password.errors }}
-                                        </div>
-                                        {% endif %}
-                                    </div>
+    .check-row{display:flex; align-items:center; gap:8px; margin-bottom:20px; font-size:13px; color:#64748b}
+    .check-row input[type="checkbox"]{width:16px; height:16px; accent-color:#B20009}
 
-                                    <!-- Form Group (remember me checkbox)-->
-                                    {% if form.remember %}
-                                    <div class="mb-3">
-                                        <div class="form-check">
-                                            {{ form.remember }}
-                                            <label class="form-check-label" for="{{ form.remember.id_for_label }}">
-                                                {% trans "Remember me" %}
-                                            </label>
-                                        </div>
-                                    </div>
-                                    {% endif %}
+    .actions{display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:24px}
+    .btn-submit{padding:11px 28px; background:#B20009; color:#fff; border:none; font-family:inherit; font-size:14px; font-weight:600; cursor:pointer; transition:background .15s}
+    .btn-submit:hover{background:#8E0007}
+    .forgot{font-size:13px; color:#64748b; transition:color .15s}
+    .forgot:hover{color:#B20009}
 
-                                    <!-- Form Group (login box)-->
-                                    <div class="d-flex align-items-center justify-content-between mt-4 mb-0">
-                                        <a class="small" href="{% url 'persons:account_password_request_tg' %}">
-                                            {% trans "Forgot Password?" %}
-                                        </a>
-                                        <button class="btn btn-primary" type="submit">
-                                            {% trans "Sign In" %}
-                                        </button>
-                                    </div>
-                                      
+    .auth-footer-text{text-align:center; font-size:13px; color:#64748b; padding-top:20px; border-top:1px solid #e5e7eb}
+    .auth-footer-text a{color:#B20009; font-weight:600}
+    .auth-footer-text a:hover{text-decoration:underline}
 
-                                    {% if redirect_field_value %}
-                                    <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
-                                    {% endif %}
-                                </form>
-                            </div>
-                            <div class="card-footer text-center">
-                                <div class="small">
-                                    <a href="{% url 'account_signup' %}">
-                                        {% trans "Need an account? Sign up!" %}
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    .page-footer{background:#1a1a1a; padding:14px 20px; text-align:center; font-size:11px; color:rgba(255,255,255,.3)}
+  </style>
+</head>
+<body>
+  <div class="auth-header">
+    <a href="{% url 'shop:index' %}">
+      <img src="{% static 'assets/img/TR Logo 25/TR 25 LOGO HOR RED.svg' %}" alt="TR Shop">
+    </a>
+  </div>
 
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <h1>{% trans "Sign In" %}</h1>
+      <div class="subtitle">Welcome back to Tennis Rivals Shop</div>
+
+      {% if form.errors %}
+      <div class="auth-error">
+        {% if form.non_field_errors %}{{ form.non_field_errors }}{% else %}{% trans "Please correct the errors below." %}{% endif %}
+      </div>
+      {% endif %}
+
+      <form method="POST" action="{% url 'account_login' %}">
+        {% csrf_token %}
+
+        <div class="field">
+          <label for="{{ form.login.id_for_label }}">{% trans "Email" %}</label>
+          {{ form.login }}
+          {% if form.login.errors %}<div class="field-error">{{ form.login.errors }}</div>{% endif %}
+        </div>
+
+        <div class="field">
+          <label for="{{ form.password.id_for_label }}">{% trans "Password" %}</label>
+          {{ form.password }}
+          {% if form.password.errors %}<div class="field-error">{{ form.password.errors }}</div>{% endif %}
+        </div>
+
+        {% if form.remember %}
+        <div class="check-row">
+          {{ form.remember }}
+          <label for="{{ form.remember.id_for_label }}">{% trans "Remember me" %}</label>
+        </div>
+        {% endif %}
+
+        <div class="actions">
+          <a class="forgot" href="{% url 'persons:account_password_request_tg' %}">{% trans "Forgot Password?" %}</a>
+          <button class="btn-submit" type="submit">{% trans "Sign In" %}</button>
+        </div>
+
+        {% if redirect_field_value %}
+        <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+        {% endif %}
+      </form>
+
+      <div class="auth-footer-text">
+        <a href="{% url 'account_signup' %}">{% trans "Need an account? Sign up!" %}</a>
+      </div>
     </div>
-</div>
-{% endblock %}
+  </div>
 
-{% block extra_js %}
+  <div class="page-footer">&copy; 2026 TenRivals Shop</div>
+
 <script type="text/javascript">
-    // Функция для получения параметров из URL фрагмента
     function getHashParams() {
         const hash = window.location.hash.substring(1);
         if (!hash) return null;
-        
-        // Проверяем наличие tgAuthResult
         if (hash.indexOf('tgAuthResult=') !== 0) return null;
-        
         try {
-            // Декодируем JSON из фрагмента
             const jsonStr = decodeURIComponent(hash.substring('tgAuthResult='.length));
             return JSON.parse(jsonStr);
         } catch (e) {
@@ -117,19 +120,11 @@
         }
     }
 
-    // Проверяем хеш при загрузке страницы
     document.addEventListener('DOMContentLoaded', function() {
-        console.log('Checking for Telegram auth data...');
         const authData = getHashParams();
-        
         if (authData) {
-            console.log('Found Telegram auth data', authData);
-            // Очищаем хеш
             window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
-            
             const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-            
-            // Отправляем данные на сервер
             fetch('/persons/telegram/callback/', {
                 method: 'POST',
                 headers: {
@@ -144,14 +139,15 @@
                 if (data.success) {
                     window.location.href = data.redirect_url || '/';
                 } else {
-                    alert('Ошибка авторизации: ' + (data.error || 'Неизвестная ошибка'));
+                    alert('Authentication error: ' + (data.error || 'Unknown error'));
                 }
             })
             .catch(error => {
                 console.error('Auth error:', error);
-                alert('Ошибка авторизации. Пожалуйста, попробуйте снова.');
+                alert('Authentication error. Please try again.');
             });
         }
     });
 </script>
-{% endblock %} 
+</body>
+</html>

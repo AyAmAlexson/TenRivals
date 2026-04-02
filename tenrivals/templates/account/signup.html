@@ -1,157 +1,136 @@
-{% extends "default.html" %}
-{% load i18n %}
-{% load account socialaccount %}
+{% load i18n static account socialaccount %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{% trans "Sign Up" %} — TR Shop</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Saira:wght@400;800&family=Saira+Condensed:wght@400&display=swap" rel="stylesheet">
+  <link rel="icon" href="{% static 'assets/img/favicon.png' %}">
+  <style>
+    *{box-sizing:border-box; margin:0; padding:0}
+    body{font-family:'Saira', system-ui, sans-serif; font-weight:400; background:#fff; color:#1a1a1a; min-height:100vh; display:flex; flex-direction:column}
+    a{color:inherit; text-decoration:none}
 
-{% block head_title %}{% trans "Sign Up" %}{% endblock %}
+    .auth-header{background:#1a1a1a; padding:16px 0; display:flex; justify-content:center}
+    .auth-header img{height:36px; display:block}
 
-{% block content %}
+    .auth-wrap{flex:1; display:flex; align-items:center; justify-content:center; padding:40px 20px}
+    .auth-card{width:100%; max-width:400px}
+    .auth-card h1{font-family:'Saira', sans-serif; font-weight:800; font-size:22px; text-transform:uppercase; letter-spacing:.3px; margin-bottom:8px}
+    .auth-card .subtitle{font-size:14px; color:#64748b; margin-bottom:28px}
 
-<div id="layoutAuthentication" class="bg-dual-color-primary-accent">
-    <div id="layoutAuthentication_content">
-       
-            <div class="container-xl px-4 mt-15">
-                <div class="row justify-content-center">
-                    <div class="col-lg-5">
-                        <!-- Basic registration form-->
-                        <div class="card shadow-lg border-0 rounded-lg">
-                        <div class="card-header justify-content-center">
-                            <h3 class="fw-light text-secondary my-4">{% trans "Create Account" %}</h3>
-                        </div>
-                            <div class="card-body">
-                                
-                                
-                               
-                                <!-- Registration form -->
-                                <form class="signup" id="signup_form" method="post" action="{% url 'account_signup' %}">
-                                    {% csrf_token %}
-                                    
-                                    {% if form.errors %}
-                                    <div class="alert alert-danger mb-3">
-                                         {% if form.non_field_errors %}
-                                            {{ form.non_field_errors }}
-                                        {% else %}
-                                            {% trans "Please correct the errors below." %}
-                                        {% endif %}
-                                    </div>
-                                    {% endif %}
+    .auth-error{background:#fef2f2; border:1px solid #fecaca; color:#b91c1c; font-size:13px; padding:10px 14px; margin-bottom:20px}
 
-                                    <!-- Form Group (email) -->
-                                    <div class="mb-3">
-                                         <label class="small mb-1" for="{{ form.email.id_for_label }}">{% trans "Email" %}</label>
-                                         {{ form.email }}
-                                         {% if form.email.errors %}
-                                         <div class="small text-danger mt-1">{{ form.email.errors }}</div>
-                                         {% endif %}
-                                    </div>
+    .field{margin-bottom:18px}
+    .field label{display:block; font-size:13px; color:#64748b; margin-bottom:6px}
+    .field input[type="email"],
+    .field input[type="text"],
+    .field input[type="password"]{width:100%; padding:10px 14px; border:1px solid #e5e7eb; font-family:inherit; font-size:14px; color:#1a1a1a; outline:none; transition:border-color .15s}
+    .field input:focus{border-color:#1a1a1a}
+    .field .field-error{font-size:12px; color:#b91c1c; margin-top:4px}
 
-                                    
-                                    
-                                    
-                                    <!-- Form Group (password)-->
-                                    <div class="mb-3">
-                                        <label class="small mb-1" for="{{ form.password1.id_for_label }}">{% trans "Password" %}</label>
-                                        {{ form.password1 }}
-                                            {% if form.password1.errors %}
-                                            <div class="small text-danger mt-1">{{ form.password1.errors }}</div>
-                                            {% endif %}
-                                    </div>
-                                
-                                    <!-- Form Group (confirm password)-->
-                                    <div class="mb-3">
-                                        <label class="small mb-1" for="{{ form.password2.id_for_label }}">{% trans "Confirm Password" %}</label>
-                                        {{ form.password2 }}
-                                            {% if form.password2.errors %}
-                                            <div class="small text-danger mt-1">{{ form.password2.errors }}</div>
-                                            {% endif %}
-                                    </div>
-                                    
-                                    
+    .check-row{display:flex; align-items:flex-start; gap:8px; margin-bottom:12px; font-size:13px; color:#64748b; line-height:1.4}
+    .check-row input[type="checkbox"]{width:16px; height:16px; accent-color:#B20009; margin-top:1px; flex-shrink:0}
+    .check-row a{color:#B20009}
+    .check-row a:hover{text-decoration:underline}
 
-                               
+    .actions{display:flex; align-items:center; justify-content:flex-end; margin-top:24px; margin-bottom:24px}
+    .btn-submit{padding:11px 28px; background:#B20009; color:#fff; border:none; font-family:inherit; font-size:14px; font-weight:600; cursor:pointer; transition:background .15s}
+    .btn-submit:hover{background:#8E0007}
 
-                                    <!-- Скрытое поле username -->
-                                    <input type="hidden" name="username" id="id_username" value="" />
+    .auth-footer-text{text-align:center; font-size:13px; color:#64748b; padding-top:20px; border-top:1px solid #e5e7eb}
+    .auth-footer-text a{color:#B20009; font-weight:600}
+    .auth-footer-text a:hover{text-decoration:underline}
 
-                                    {% if redirect_field_value %}
-                                    <input type="hidden" name="{{ redirect_field_name }}" 
-                                           value="{{ redirect_field_value }}" />
-                                    {% endif %}
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <!-- Checkboxes -->
-                                        <div class="flex-column align-items-center"> 
-                                            <div class="my-2">
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" value="true" id="id_terms" name="terms_accepted" required>
-                                                    <label class="form-check-label small" for="id_terms">
-                                                        {% trans "I accept the" %} <a href="#">{% trans "Terms and Conditions" %}</a>
-                                                    </label>
-                                                    <!-- Placeholder for potential server-side validation error for this checkbox -->
-                                                    <!-- <div class="small text-danger mt-1">{{ form.terms_accepted.errors }}</div> -->
-                                                </div>
-                                            </div>
-                                            <div class="mb-2"> {# Немного больше отступ снизу #}
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" value="true" checked="True" id="id_newsletter" name="newsletter_opt_in">
-                                                    <label class="form-check-label small" for="id_newsletter">
-                                                        {% trans "I agree to receive news and offers" %}
-                                                    </label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <!-- End Checkboxes -->
+    .page-footer{background:#1a1a1a; padding:14px 20px; text-align:center; font-size:11px; color:rgba(255,255,255,.3)}
+  </style>
+</head>
+<body>
+  <div class="auth-header">
+    <a href="{% url 'shop:index' %}">
+      <img src="{% static 'assets/img/TR Logo 25/TR 25 LOGO HOR RED.svg' %}" alt="TR Shop">
+    </a>
+  </div>
 
-                                        <!-- Form Group (create account submit)-->
-                                        
-                                        <button class="btn btn-primary btn-lg" id="submit" type="submit">
-                                            {% trans "Create Account" %}
-                                        </button>
-                                    
-                                    </div>
-                                </form>
-                            </div>
-                            <hr class="my-0" />
-                            <div class="card-body px-5 py-4">
-                                <div class="small text-center">
-                                    {% trans "Already have an account?" %}
-                                    <a href="{% url 'account_login' %}">{% trans "Sign in!" %}</a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <h1>{% trans "Create Account" %}</h1>
+      <div class="subtitle">Join Tennis Rivals Shop</div>
 
+      {% if form.errors %}
+      <div class="auth-error">
+        {% if form.non_field_errors %}{{ form.non_field_errors }}{% else %}{% trans "Please correct the errors below." %}{% endif %}
+      </div>
+      {% endif %}
+
+      <form id="signup_form" method="POST" action="{% url 'account_signup' %}">
+        {% csrf_token %}
+
+        <div class="field">
+          <label for="{{ form.email.id_for_label }}">{% trans "Email" %}</label>
+          {{ form.email }}
+          {% if form.email.errors %}<div class="field-error">{{ form.email.errors }}</div>{% endif %}
         </div>
-    </div>
-</div>
 
-<!-- Telegram Auth Handler -->
+        <div class="field">
+          <label for="{{ form.password1.id_for_label }}">{% trans "Password" %}</label>
+          {{ form.password1 }}
+          {% if form.password1.errors %}<div class="field-error">{{ form.password1.errors }}</div>{% endif %}
+        </div>
+
+        <div class="field">
+          <label for="{{ form.password2.id_for_label }}">{% trans "Confirm Password" %}</label>
+          {{ form.password2 }}
+          {% if form.password2.errors %}<div class="field-error">{{ form.password2.errors }}</div>{% endif %}
+        </div>
+
+        <input type="hidden" name="username" id="id_username" value="" />
+
+        {% if redirect_field_value %}
+        <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+        {% endif %}
+
+        <div class="check-row">
+          <input type="checkbox" value="true" id="id_terms" name="terms_accepted" required>
+          <label for="id_terms">{% trans "I accept the" %} <a href="#">{% trans "Terms and Conditions" %}</a></label>
+        </div>
+
+        <div class="check-row">
+          <input type="checkbox" value="true" checked id="id_newsletter" name="newsletter_opt_in">
+          <label for="id_newsletter">{% trans "I agree to receive news and offers" %}</label>
+        </div>
+
+        <div class="actions">
+          <button class="btn-submit" id="submit" type="submit">{% trans "Create Account" %}</button>
+        </div>
+      </form>
+
+      <div class="auth-footer-text">
+        {% trans "Already have an account?" %} <a href="{% url 'account_login' %}">{% trans "Sign in!" %}</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-footer">&copy; 2026 TenRivals Shop</div>
+
 <script>
-// Функция для получения параметров из URL фрагмента
 function getHashParams() {
     const hash = window.location.hash.substring(1);
     if (!hash) return null;
-    
-    // Проверяем наличие tgAuthResult
     if (hash.indexOf('tgAuthResult=') !== 0) return null;
-    
     try {
-        // Декодируем JSON из фрагмента
         const jsonStr = decodeURIComponent(hash.substring('tgAuthResult='.length));
-        const result = JSON.parse(jsonStr);
-        console.log('Decoded Telegram auth data:', result);
-        return result;
+        return JSON.parse(jsonStr);
     } catch (e) {
         console.error('Error parsing Telegram auth data:', e);
         return null;
     }
 }
 
-// Функция отправки данных авторизации на сервер
 function sendTelegramAuthData(authData) {
-    console.log('Sending Telegram auth data to server:', authData);
-    
-    // Получаем CSRF токен из куки или из мета-тега
     function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {
@@ -166,12 +145,9 @@ function sendTelegramAuthData(authData) {
         }
         return cookieValue;
     }
-    
-    const csrftoken = getCookie('csrftoken') || 
-                     document.querySelector('[name="csrfmiddlewaretoken"]')?.value || 
+    const csrftoken = getCookie('csrftoken') ||
+                     document.querySelector('[name="csrfmiddlewaretoken"]')?.value ||
                      document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-    
-    // Делаем запрос
     fetch('/persons/telegram/callback/', {
         method: 'POST',
         headers: {
@@ -182,67 +158,31 @@ function sendTelegramAuthData(authData) {
         body: JSON.stringify(authData),
         credentials: 'same-origin'
     })
-    .then(response => {
-        console.log('Server response status:', response.status);
-        return response.json();
-    })
+    .then(response => response.json())
     .then(data => {
-        console.log('Server processed data:', data);
         if (data.success) {
-            // Очищаем URL и перенаправляем
             window.location.href = data.redirect_url || '/';
         } else {
-            alert('Ошибка авторизации: ' + (data.error || 'Неизвестная ошибка'));
+            alert('Authentication error: ' + (data.error || 'Unknown error'));
         }
     })
     .catch(error => {
         console.error('Auth error:', error);
-        alert('Ошибка авторизации. Пожалуйста, попробуйте снова.');
+        alert('Authentication error. Please try again.');
     });
 }
 
-// Проверяем хеш при загрузке страницы
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Page loaded, checking for Telegram auth data...');
-    console.log('Current URL hash:', window.location.hash);
-    
     const authData = getHashParams();
-    
     if (authData) {
-        console.log('Found Telegram auth data:', authData);
-        // Очищаем хеш
         window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
-        // Отправляем данные на сервер
         sendTelegramAuthData(authData);
-    } else {
-        console.log('No Telegram auth data found in URL');
     }
 });
 
-// Обратная совместимость с виджетом
 function onTelegramAuth(user) {
-    console.log('Telegram widget callback received:', user);
     sendTelegramAuthData(user);
 }
 </script>
-
-<!-- Для отладки -->
-<!-- Bot name: {{ telegram_bot_name }} -->
-
-<!-- Telegram Login Widget 
-{% if telegram_bot_name %}
-<script async src="https://telegram.org/js/telegram-widget.js?22" 
-        data-telegram-login="{{ telegram_bot_name }}" 
-        data-size="large" 
-        data-radius="8"
-        data-onauth="onTelegramAuth(user)"
-        data-request-access="write">
-</script>
-{% else %}
-<div class="alert alert-warning">
-    Telegram authentication temporarily unavailable
-</div>
-{% endif %}
-
--->
-{% endblock %} 
+</body>
+</html>
