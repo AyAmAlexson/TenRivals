@@ -7,12 +7,13 @@ from django.contrib.auth import views as auth_views
 from persons import views as person_views
 from django.views.generic import RedirectView
 
-# Temporary lockdown: expose only Shop and redirect root to Preorder
+# Shop-first: root redirects to shop, but all portal routes available for auth/nav
 urlpatterns = [
     path('', RedirectView.as_view(pattern_name='shop:index', permanent=False)),
     path('shop/', include('shop.urls')),
     path('accounts/', include('allauth.urls')),
     path('persons/', include('persons.urls')),
+    path('portal/', include('rivals.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.DEBUG:
