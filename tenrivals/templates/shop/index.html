@@ -67,16 +67,41 @@
     .dropdown-item:hover{color:var(--accent)}
 
     /* Hero */
-    .hero{background:#1a1a1a; padding:32px 0}
-    .hero-wrap{display:grid; grid-template-columns:1.3fr 1fr; gap:20px}
-    .hero-card{background:#252525; min-height:220px; display:flex; align-items:center; justify-content:center; color:#555; font-size:14px}
-    .hero-card.small{min-height:100px}
-    .hero .btn{margin-top:20px}
+    .hero{
+      background:#1a1a1a;
+      background-image:repeating-linear-gradient(135deg, transparent, transparent 40px, rgba(255,255,255,.015) 40px, rgba(255,255,255,.015) 80px);
+      padding:64px 0 56px;
+    }
+    .hero-content{max-width:700px}
+    .hero-tagline{font-size:48px; line-height:1.05; color:#fff; margin:0 0 16px; letter-spacing:1px}
+    .hero-sub{font-size:16px; color:rgba(255,255,255,.5); margin:0 0 28px; line-height:1.5; max-width:480px}
+    .hero .btn{padding:14px 28px; font-size:15px}
+
+    /* Announcement bar */
+    .announce-bar{background:var(--accent); color:#fff; text-align:center; padding:10px 20px; font-size:13px; font-weight:600; letter-spacing:.3px}
+
+    /* Category strip */
+    .cat-strip{padding:32px 0}
+    .cat-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:12px}
+    .cat-tile{display:flex; flex-direction:column; align-items:center; gap:10px; padding:20px 8px; background:#f3f4f6; text-align:center; transition:border-color .15s; border-bottom:2px solid transparent}
+    .cat-tile:hover{border-bottom-color:var(--accent)}
+    .cat-tile svg{color:#94a3b8}
+    .cat-tile-label{font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.5px; color:var(--ink)}
 
     /* Sections */
     .section{padding:36px 0}
-    .section h2{margin:0 0 20px; font-size:18px; letter-spacing:1px}
+    .section-head{display:flex; align-items:baseline; justify-content:space-between; margin:0 0 20px}
+    .section-head h2{margin:0; font-size:18px; letter-spacing:1px}
+    .section-head a{font-size:13px; color:var(--muted); font-weight:600; transition:color .15s}
+    .section-head a:hover{color:var(--accent)}
     .grid{display:grid; grid-template-columns:repeat(5,1fr); gap:20px}
+
+    /* Brands strip */
+    .brands-strip{background:#f3f4f6; padding:36px 0}
+    .brands-strip .section-head{margin-bottom:24px}
+    .brands-row{display:flex; align-items:center; justify-content:space-between; gap:16px}
+    .brand-name{font-family:'Saira Condensed','Saira',sans-serif; font-size:24px; font-weight:400; text-transform:uppercase; letter-spacing:1px; color:#94a3b8; transition:color .15s; text-decoration:none}
+    .brand-name:hover{color:var(--accent)}
 
     /* Product cards — override Bootstrap .card completely */
     .card, .card.card{
@@ -109,13 +134,19 @@
     /* Responsive */
     @media(max-width:1024px){
       .grid{grid-template-columns:repeat(3,1fr)}
-      .hero-wrap{grid-template-columns:1fr}
+      .cat-grid{grid-template-columns:repeat(4,1fr)}
       .header-row{grid-template-columns:140px 1fr auto; grid-auto-flow:row}
+      .hero-tagline{font-size:36px}
+      .brands-row{flex-wrap:wrap; justify-content:center; gap:24px}
     }
     @media(max-width:640px){
       .grid{grid-template-columns:repeat(2,1fr)}
+      .cat-grid{grid-template-columns:repeat(3,1fr)}
       .footer-top{grid-template-columns:1fr 1fr}
       .auth{display:none}
+      .hero-tagline{font-size:28px}
+      .hero{padding:40px 0 36px}
+      .brand-name{font-size:18px}
     }
 
     /* Buttons */
@@ -127,7 +158,7 @@
   </style>
 </head>
 <body>
-  <div class="build-version">2.41</div>
+  <div class="build-version">2.42</div>
   <!-- Top information bar -->
   <div class="topbar">
     <div class="container">
@@ -362,24 +393,62 @@
     </div>
   </nav>
 
-  <!-- Hero banners placeholders -->
+  <!-- Hero -->
   <section class="hero">
     <div class="container">
-      <div class="hero-wrap">
-        <div class="hero-card">Hero banner placeholder</div>
-        <div class="hero-card small">Promo banner</div>
+      <div class="hero-content">
+        <h1 class="hero-tagline">The Line for<br>Your Growth</h1>
+        <p class="hero-sub">Tennis equipment from the world's top brands. Delivered in Tbilisi, shipped worldwide.</p>
+        <a class="btn" href="{% url 'shop:preorder' %}">Shop Preorder</a>
       </div>
-      <a class="btn" href="{% url 'shop:preorder' %}">Go to Preorder</a>
     </div>
   </section>
 
+  <!-- Announcement banner -->
+  <div class="announce-bar">Free delivery in Tbilisi &nbsp;|&nbsp; Preorder with worldwide shipping</div>
+
+  <!-- Category navigation -->
+  <div class="cat-strip">
+    <div class="container">
+      <div class="cat-grid">
+        <a class="cat-tile" href="#">
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><ellipse cx="16" cy="16" rx="6" ry="12" stroke="currentColor" stroke-width="1.6"/><line x1="10" y1="16" x2="22" y2="16" stroke="currentColor" stroke-width="1.2"/><line x1="16" y1="4" x2="16" y2="28" stroke="currentColor" stroke-width="1.2"/><circle cx="16" cy="16" r="12" stroke="currentColor" stroke-width="1.6"/></svg>
+          <span class="cat-tile-label">Rackets</span>
+        </a>
+        <a class="cat-tile" href="#">
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><path d="M8 28V8a4 4 0 014-4h8a4 4 0 014 4v20" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M6 28h20" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><line x1="13" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="1.2"/></svg>
+          <span class="cat-tile-label">Shoes</span>
+        </a>
+        <a class="cat-tile" href="#">
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><rect x="6" y="8" width="20" height="18" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M11 8V6a5 5 0 0110 0v2" stroke="currentColor" stroke-width="1.6"/></svg>
+          <span class="cat-tile-label">Bags</span>
+        </a>
+        <a class="cat-tile" href="#">
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><path d="M10 4h12l2 8H8l2-8z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><rect x="8" y="12" width="16" height="16" rx="1" stroke="currentColor" stroke-width="1.6"/></svg>
+          <span class="cat-tile-label">Clothing</span>
+        </a>
+        <a class="cat-tile" href="#">
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="10" stroke="currentColor" stroke-width="1.6"/><path d="M10.5 9C13 14 19 14 21.5 9" stroke="currentColor" stroke-width="1.2" fill="none"/><path d="M10.5 23C13 18 19 18 21.5 23" stroke="currentColor" stroke-width="1.2" fill="none"/></svg>
+          <span class="cat-tile-label">Balls</span>
+        </a>
+        <a class="cat-tile" href="#">
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="13" r="4" stroke="currentColor" stroke-width="1.6"/><path d="M16 17v9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M12 22h8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <span class="cat-tile-label">Accessories</span>
+        </a>
+        <a class="cat-tile" href="#">
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="10" stroke="currentColor" stroke-width="1.6"/><path d="M16 10v4l3 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M24.5 21l2.5 1.5M7.5 21L5 22.5M24.5 11l2.5-1.5M7.5 11L5 9.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+          <span class="cat-tile-label">Equipment</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
   <main class="container">
-    <!-- Category tiles / featured sections -->
     <section class="section">
-      <h2>FEATURED PRODUCTS</h2>
+      <div class="section-head"><h2>Featured Products</h2><a href="#">View all &rarr;</a></div>
       <div class="grid">
         <a class="card" href="{% url 'shop:product_detail' %}">
-          <div class="card__img">Photo</div>
+          <div class="card__img"><svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="8" y="12" width="32" height="28" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M8 32l8-8 6 6 8-10 10 12" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="18" cy="20" r="3" stroke="currentColor" stroke-width="1.5"/></svg></div>
           <div class="card__info">
             <div class="card__brand">Wilson</div>
             <div class="card__name">Rush Pro Ace Men's</div>
@@ -388,7 +457,7 @@
           </div>
         </a>
         <a class="card" href="{% url 'shop:product_detail' %}">
-          <div class="card__img">Photo</div>
+          <div class="card__img"><svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="8" y="12" width="32" height="28" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M8 32l8-8 6 6 8-10 10 12" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="18" cy="20" r="3" stroke="currentColor" stroke-width="1.5"/></svg></div>
           <div class="card__info">
             <div class="card__brand">ASICS</div>
             <div class="card__name">GEL-Resolution X Men's</div>
@@ -397,7 +466,7 @@
           </div>
         </a>
         <a class="card" href="{% url 'shop:product_detail' %}">
-          <div class="card__img">Photo</div>
+          <div class="card__img"><svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="8" y="12" width="32" height="28" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M8 32l8-8 6 6 8-10 10 12" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="18" cy="20" r="3" stroke="currentColor" stroke-width="1.5"/></svg></div>
           <div class="card__info">
             <div class="card__brand">Babolat</div>
             <div class="card__name">Pure Aero 2024</div>
@@ -406,7 +475,7 @@
           </div>
         </a>
         <a class="card" href="{% url 'shop:product_detail' %}">
-          <div class="card__img">Photo</div>
+          <div class="card__img"><svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="8" y="12" width="32" height="28" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M8 32l8-8 6 6 8-10 10 12" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="18" cy="20" r="3" stroke="currentColor" stroke-width="1.5"/></svg></div>
           <div class="card__info">
             <div class="card__brand">HEAD</div>
             <div class="card__name">Speed Pro 2024</div>
@@ -415,7 +484,7 @@
           </div>
         </a>
         <a class="card" href="{% url 'shop:product_detail' %}">
-          <div class="card__img">Photo</div>
+          <div class="card__img"><svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="8" y="12" width="32" height="28" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M8 32l8-8 6 6 8-10 10 12" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="18" cy="20" r="3" stroke="currentColor" stroke-width="1.5"/></svg></div>
           <div class="card__info">
             <div class="card__brand">K-Swiss</div>
             <div class="card__name">Hypercourt Express 2 Women's</div>
@@ -427,10 +496,10 @@
     </section>
 
     <section class="section">
-      <h2>NEW ARRIVALS</h2>
+      <div class="section-head"><h2>New Arrivals</h2><a href="#">View all &rarr;</a></div>
       <div class="grid">
         <a class="card" href="{% url 'shop:product_detail' %}">
-          <div class="card__img">Photo</div>
+          <div class="card__img"><svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="8" y="12" width="32" height="28" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M8 32l8-8 6 6 8-10 10 12" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="18" cy="20" r="3" stroke="currentColor" stroke-width="1.5"/></svg></div>
           <div class="card__info">
             <div class="card__brand">New Balance</div>
             <div class="card__name">Fresh Foam X 1007 Men's</div>
@@ -439,7 +508,7 @@
           </div>
         </a>
         <a class="card" href="{% url 'shop:product_detail' %}">
-          <div class="card__img">Photo</div>
+          <div class="card__img"><svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="8" y="12" width="32" height="28" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M8 32l8-8 6 6 8-10 10 12" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="18" cy="20" r="3" stroke="currentColor" stroke-width="1.5"/></svg></div>
           <div class="card__info">
             <div class="card__brand">Yonex</div>
             <div class="card__name">Power Cushion Eclipsion 5 Men's</div>
@@ -448,7 +517,7 @@
           </div>
         </a>
         <a class="card" href="{% url 'shop:product_detail' %}">
-          <div class="card__img">Photo</div>
+          <div class="card__img"><svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="8" y="12" width="32" height="28" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M8 32l8-8 6 6 8-10 10 12" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="18" cy="20" r="3" stroke="currentColor" stroke-width="1.5"/></svg></div>
           <div class="card__info">
             <div class="card__brand">Wilson</div>
             <div class="card__name">Blade 98 v9 16×19</div>
@@ -457,7 +526,7 @@
           </div>
         </a>
         <a class="card" href="{% url 'shop:product_detail' %}">
-          <div class="card__img">Photo</div>
+          <div class="card__img"><svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="8" y="12" width="32" height="28" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M8 32l8-8 6 6 8-10 10 12" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="18" cy="20" r="3" stroke="currentColor" stroke-width="1.5"/></svg></div>
           <div class="card__info">
             <div class="card__brand">Mizuno</div>
             <div class="card__name">Wave Enforce Tour 2 AC Women's</div>
@@ -466,7 +535,7 @@
           </div>
         </a>
         <a class="card" href="{% url 'shop:product_detail' %}">
-          <div class="card__img">Photo</div>
+          <div class="card__img"><svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="8" y="12" width="32" height="28" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M8 32l8-8 6 6 8-10 10 12" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="18" cy="20" r="3" stroke="currentColor" stroke-width="1.5"/></svg></div>
           <div class="card__info">
             <div class="card__brand">adidas</div>
             <div class="card__name">Barricade 13 Men's</div>
@@ -477,17 +546,23 @@
       </div>
     </section>
 
-    <section class="section">
-      <h2>BRANDS</h2>
-      <div class="grid">
-        <a class="card" href="#"><div class="card__img">Logo</div><div class="card__info"><div class="card__brand">Wilson</div></div></a>
-        <a class="card" href="#"><div class="card__img">Logo</div><div class="card__info"><div class="card__brand">Babolat</div></div></a>
-        <a class="card" href="#"><div class="card__img">Logo</div><div class="card__info"><div class="card__brand">HEAD</div></div></a>
-        <a class="card" href="#"><div class="card__img">Logo</div><div class="card__info"><div class="card__brand">Yonex</div></div></a>
-        <a class="card" href="#"><div class="card__img">Logo</div><div class="card__info"><div class="card__brand">ASICS</div></div></a>
-      </div>
-    </section>
   </main>
+
+  <section class="brands-strip">
+    <div class="container">
+      <div class="section-head"><h2>Our Brands</h2><a href="#">View all &rarr;</a></div>
+      <div class="brands-row">
+        <a class="brand-name" href="#">Wilson</a>
+        <a class="brand-name" href="#">Babolat</a>
+        <a class="brand-name" href="#">HEAD</a>
+        <a class="brand-name" href="#">Yonex</a>
+        <a class="brand-name" href="#">ASICS</a>
+        <a class="brand-name" href="#">Nike</a>
+        <a class="brand-name" href="#">adidas</a>
+        <a class="brand-name" href="#">New Balance</a>
+      </div>
+    </div>
+  </section>
 
   <footer class="footer">
     <div class="container">
