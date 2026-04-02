@@ -32,6 +32,7 @@
     .topbar .links{display:flex; gap:20px; flex-wrap:wrap}
     .topbar a{opacity:.8; transition:opacity .15s}
     .topbar a:hover{opacity:1}
+    .city-select{display:inline-flex; align-items:center; opacity:1 !important; font-weight:600; cursor:default}
 
     /* Header */
     header{background:#1a1a1a}
@@ -165,7 +166,7 @@
   </style>
 </head>
 <body>
-  <div class="build-version">2.45</div>
+  <div class="build-version">2.47</div>
   <!-- Top information bar -->
   <div class="topbar">
     <div class="container">
@@ -178,7 +179,9 @@
           <a href="#">Size guide</a>
           <a href="#">Contacts</a>
         </div>
-        <!-- phone removed -->
+        <a href="#" class="city-select" onclick="return false">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style="vertical-align:-1px; margin-right:4px"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" stroke="currentColor" stroke-width="2" fill="none"/><circle cx="12" cy="9" r="2.5" stroke="currentColor" stroke-width="1.5"/></svg>Tbilisi
+        </a>
       </div>
     </div>
   </div>
