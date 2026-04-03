@@ -13,6 +13,7 @@ from django.utils.translation import gettext_lazy as _
 from django.urls import reverse
 from django.contrib.sites.shortcuts import get_current_site
 import logging
+from allauth.account import app_settings as allauth_account_settings
 from allauth.account.models import EmailAddress
 from allauth.account.utils import send_email_confirmation
 from django.db import transaction
@@ -141,17 +142,30 @@ class ChangeEmailForm(forms.Form):
         request = self.request
 
         try:
-            
+            # With ACCOUNT_CHANGE_EMAIL, allauth expects add_new_email() so the pending
+            # address is created/updated and send_confirmation() always runs. Using
+            # send_email_confirmation() goes through add_email(), which skips sending if
+            # the row already exists and also applies the confirmation cooldown.
+            if allauth_account_settings.CHANGE_EMAIL:
+                EmailAddress.objects.add_new_email(request, user, new_email)
+            else:
+                send_email_confirmation(request, user, signup=False, email=new_email)
 
-            send_email_confirmation(request, user, signup=False, email=new_email)
-
-            logger.info(f"Confirmation email sent to {new_email} for user {user.username} via allauth.")
+            logger.info(
+                "Confirmation email sent to %s for user %s via allauth (change_email=%s).",
+                new_email,
+                user.username,
+                allauth_account_settings.CHANGE_EMAIL,
+            )
 
             return user
 
         except Exception as e:
-             logger.error(f"Error during allauth email change process for {user.username}: {e}", exc_info=True)
-             raise e
+            logger.error(
+                f"Error during allauth email change process for {user.username}: {e}",
+                exc_info=True,
+            )
+            raise e
 
 
 class PasswordResetRequestTelegramForm(forms.Form):
