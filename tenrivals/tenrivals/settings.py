@@ -5,8 +5,6 @@ import dj_database_url
 import os
 import logging
 from django.contrib.messages import constants as messages
-import ssl
-import certifi
 from celery.schedules import crontab
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -262,8 +260,6 @@ ACCOUNT_ADAPTER = 'persons.adapters.CustomAccountAdapter'
 ACCOUNT_CHANGE_EMAIL = True
 
 
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-
 EMAIL_HOST = env('EMAIL_HOST', default='smtpout.secureserver.net')
 EMAIL_PORT = env.int('EMAIL_PORT', default=465)
 EMAIL_USE_TLS = False
@@ -358,8 +354,13 @@ MESSAGE_TAGS = {
     messages.ERROR: 'danger',
 }
 
-# Настройка SSL контекста с использованием certifi
-EMAIL_SSL_CONTEXT = ssl.create_default_context(cafile=certifi.where())
+# SMTP over SSL: use certifi CA bundle (see tenrivals.smtp_backend.FlexibleSSLEmailBackend).
+# If the server still fails TLS verification (e.g. self-signed chain), set
+# EMAIL_SMTP_ALLOW_UNVERIFIED_SSL=true — only as a last resort (weakens security).
+EMAIL_SMTP_ALLOW_UNVERIFIED_SSL = env.bool(
+    "EMAIL_SMTP_ALLOW_UNVERIFIED_SSL", default=False
+)
+EMAIL_BACKEND = "tenrivals.smtp_backend.FlexibleSSLEmailBackend"
 
 # Celery Configuration
 CELERY_BROKER_URL = env.str('CELERY_BROKER_URL', default='redis://localhost:6379/0')

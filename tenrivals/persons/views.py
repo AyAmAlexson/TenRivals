@@ -424,7 +424,19 @@ def change_email(request):
     if request.method == 'POST':
         form = ChangeEmailForm(request.user, request, request.POST)
         if form.is_valid():
-            form.save()
+            try:
+                form.save()
+            except Exception:
+                logger.exception(
+                    "change_email: failed to send confirmation for user_id=%s",
+                    request.user.pk,
+                )
+                messages.error(
+                    request,
+                    "We could not send the confirmation email. Please try again in a few "
+                    "minutes. If the problem continues, contact support.",
+                )
+                return render(request, 'persons/change_email.html', {'form': form})
             messages.success(
                 request,
                 'We sent a confirmation link to your new email address. Please check your inbox.',

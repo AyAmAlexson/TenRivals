@@ -58,9 +58,9 @@
 
       {% if messages %}
         {% for message in messages %}
-          {% if message.tags == 'success' %}
+          {% if message.level_tag == 'success' %}
           <div class="auth-msg-success">{{ message }}</div>
-          {% elif message.tags == 'error' %}
+          {% elif message.level_tag == 'error' %}
           <div class="auth-msg-error">{{ message }}</div>
           {% else %}
           <div class="auth-msg-error">{{ message }}</div>

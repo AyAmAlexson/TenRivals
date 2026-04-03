@@ -141,31 +141,23 @@ class ChangeEmailForm(forms.Form):
         user = self.user
         request = self.request
 
-        try:
-            # With ACCOUNT_CHANGE_EMAIL, allauth expects add_new_email() so the pending
-            # address is created/updated and send_confirmation() always runs. Using
-            # send_email_confirmation() goes through add_email(), which skips sending if
-            # the row already exists and also applies the confirmation cooldown.
-            if allauth_account_settings.CHANGE_EMAIL:
-                EmailAddress.objects.add_new_email(request, user, new_email)
-            else:
-                send_email_confirmation(request, user, signup=False, email=new_email)
+        # With ACCOUNT_CHANGE_EMAIL, allauth expects add_new_email() so the pending
+        # address is created/updated and send_confirmation() always runs. Using
+        # send_email_confirmation() goes through add_email(), which skips sending if
+        # the row already exists and also applies the confirmation cooldown.
+        if allauth_account_settings.CHANGE_EMAIL:
+            EmailAddress.objects.add_new_email(request, user, new_email)
+        else:
+            send_email_confirmation(request, user, signup=False, email=new_email)
 
-            logger.info(
-                "Confirmation email sent to %s for user %s via allauth (change_email=%s).",
-                new_email,
-                user.username,
-                allauth_account_settings.CHANGE_EMAIL,
-            )
+        logger.info(
+            "Confirmation email sent to %s for user %s via allauth (change_email=%s).",
+            new_email,
+            user.username,
+            allauth_account_settings.CHANGE_EMAIL,
+        )
 
-            return user
-
-        except Exception as e:
-            logger.error(
-                f"Error during allauth email change process for {user.username}: {e}",
-                exc_info=True,
-            )
-            raise e
+        return user
 
 
 class PasswordResetRequestTelegramForm(forms.Form):
