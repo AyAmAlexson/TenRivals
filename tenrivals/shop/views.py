@@ -8,8 +8,18 @@ def index(request):
     return render(request, 'shop/index.html')
 
 
-def product_detail(request):
-    return render(request, 'shop/product_detail.html')
+def product_detail(request, pk):
+    product = get_object_or_404(Product, pk=pk, is_active=True)
+    gallery = []
+    for name in ("image_1", "image_2", "image_3", "image_4", "image_5"):
+        f = getattr(product, name)
+        if f:
+            gallery.append(f.url)
+    return render(
+        request,
+        "shop/product_detail.html",
+        {"product": product, "pdp_gallery": gallery},
+    )
 
 
 def items_list_for_Laen(request):

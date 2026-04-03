@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Product — TR Shop</title>
+  <title>{{ product.name }} — TR Shop</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   {% load static %}
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -88,9 +88,11 @@
 
     /* Gallery */
     .pdp-gallery{display:flex; flex-direction:column; gap:10px}
-    .pdp-main-img{aspect-ratio:1/1; background:#f3f4f6; display:flex; align-items:center; justify-content:center; color:#c4c9d2; font-size:14px}
+    .pdp-main-img{aspect-ratio:1/1; background:#f3f4f6; display:flex; align-items:center; justify-content:center; color:#c4c9d2; font-size:14px; overflow:hidden}
+    .pdp-main-img img{width:100%; height:100%; object-fit:contain}
     .pdp-thumbs{display:flex; gap:8px}
-    .pdp-thumb{width:68px; height:68px; background:#f3f4f6; display:flex; align-items:center; justify-content:center; color:#c4c9d2; font-size:10px; cursor:pointer; border:2px solid transparent; transition:border-color .15s}
+    .pdp-thumb{width:68px; height:68px; flex-shrink:0; background:#f3f4f6; display:flex; align-items:center; justify-content:center; color:#c4c9d2; font-size:10px; cursor:pointer; border:2px solid transparent; transition:border-color .15s; overflow:hidden; padding:0}
+    .pdp-thumb img{width:100%; height:100%; object-fit:contain}
     .pdp-thumb.active{border-color:var(--accent)}
     .pdp-thumb:hover{border-color:var(--ink)}
 
@@ -232,86 +234,127 @@
   </nav>
 
   <main class="container">
-    <!-- Breadcrumb -->
     <div class="breadcrumb">
       <a href="{% url 'shop:index' %}">Home</a><span>/</span>
-      <a href="#">Rackets</a><span>/</span>
-      Product Name
+      <a href="{% url 'shop:preorder' %}">Preorder</a><span>/</span>
+      <span style="color:var(--ink)">{{ product.name }}</span>
     </div>
 
-    <!-- Product detail page -->
     <div class="pdp">
-      <!-- Left: Gallery -->
       <div class="pdp-gallery">
-        <div class="pdp-main-img">Product photo</div>
-        <div class="pdp-thumbs">
-          <div class="pdp-thumb active">1</div>
-          <div class="pdp-thumb">2</div>
-          <div class="pdp-thumb">3</div>
-          <div class="pdp-thumb">4</div>
+        <div class="pdp-main-img" id="pdp-main-wrap">
+          {% if pdp_gallery %}
+          <img id="pdp-main-img" src="{{ pdp_gallery.0 }}" alt="{{ product.name }}">
+          {% else %}
+          <span>No image</span>
+          {% endif %}
         </div>
+        {% if pdp_gallery|length > 1 %}
+        <div class="pdp-thumbs" role="tablist" aria-label="Product images">
+          {% for url in pdp_gallery %}
+          <button type="button" class="pdp-thumb{% if forloop.first %} active{% endif %}" data-src="{{ url }}" aria-label="Image {{ forloop.counter }}">
+            <img src="{{ url }}" alt="">
+          </button>
+          {% endfor %}
+        </div>
+        {% endif %}
       </div>
 
-      <!-- Right: Info -->
       <div class="pdp-info">
-        <div class="pdp-brand">Brand Name</div>
-        <h1 class="pdp-title">Product Name Placeholder</h1>
-        <div class="pdp-color">Color / Variant</div>
+        {% if user.is_staff %}
+        <p style="margin-bottom:10px"><a href="{% url 'shop:product_edit' product.pk %}" class="btn btn--outline" style="padding:8px 16px;font-size:13px">Edit product</a></p>
+        {% endif %}
+        <div class="pdp-brand">{{ product.brand|default:"—" }}</div>
+        <h1 class="pdp-title">{{ product.name }}</h1>
+        <div class="pdp-color">
+          {% if product.type == 'M_SHOES' or product.type == 'W_SHOES' or product.type == 'J_SHOES' %}
+            {% with s=product.shoe %}{% if s %}{{ s.color|default:"—" }}{% else %}—{% endif %}{% endwith %}
+          {% else %}
+            {{ product.short_description|default:"—" }}
+          {% endif %}
+        </div>
 
         <hr class="pdp-divider">
 
         <div class="pdp-prices">
-          <span class="pdp-price">$0.00</span>
-          <span class="pdp-price-old">$0.00</span>
+          <span class="pdp-price">˜{{ product.price }} ₾</span>
         </div>
+        <p style="font-size:12px;color:var(--muted);margin:-12px 0 16px">Indicative price (±30 ₾). Final price when you confirm your order.</p>
 
-        <!-- Variant selector -->
+        {% if product.sizes_list %}
         <div class="pdp-variants">
-          <div class="pdp-variants-label">Size</div>
+          <div class="pdp-variants-label">Available sizes</div>
           <div class="pdp-variant-options">
-            <button class="pdp-variant-btn active">Size 1</button>
-            <button class="pdp-variant-btn">Size 2</button>
-            <button class="pdp-variant-btn">Size 3</button>
+            {% for sz in product.sizes_list %}
+            <span class="pdp-variant-btn active" style="cursor:default">{{ sz }}</span>
+            {% endfor %}
           </div>
         </div>
+        {% elif product.type == 'RACKET' %}
+          {% with r=product.racket %}
+          {% if r and r.grip_sizes %}
+        <div class="pdp-variants">
+          <div class="pdp-variants-label">Grip sizes</div>
+          <div class="pdp-variant-options">
+            {% for g in r.grip_sizes %}
+            <span class="pdp-variant-btn active" style="cursor:default">{{ g }}</span>
+            {% endfor %}
+          </div>
+        </div>
+          {% endif %}
+          {% endwith %}
+        {% endif %}
 
-        <!-- Add to cart -->
         <div class="pdp-cart-row">
-          <button class="btn btn--lg">Add to cart</button>
+          <a class="btn btn--lg" href="https://t.me/tennis_rivals_shop_tbilisi?direct" target="_blank" rel="noopener">Order via Telegram</a>
         </div>
 
-        <!-- Shipping -->
         <div class="pdp-shipping">
           Free delivery in Tbilisi<br>
-          Shipping across Georgia — 2–4 business days
+          Pre-order from US &amp; EU with official customs clearance — contact us for details.
         </div>
 
-        <!-- Tabs: Description / Specs -->
         <div class="pdp-tabs">
           <div class="pdp-tab-nav">
-            <button class="pdp-tab-btn active" onclick="showTab('desc',this)">Description</button>
-            <button class="pdp-tab-btn" onclick="showTab('specs',this)">Specifications</button>
+            <button type="button" class="pdp-tab-btn active" data-tab="desc">Description</button>
+            <button type="button" class="pdp-tab-btn" data-tab="specs">Specifications</button>
           </div>
 
           <div class="pdp-tab-panel" id="tab-desc">
-            <p>Product description will appear here. This is a placeholder template — real product data will be loaded dynamically.</p>
-            <h4>Key Features</h4>
-            <ul>
-              <li>Feature one placeholder</li>
-              <li>Feature two placeholder</li>
-              <li>Feature three placeholder</li>
-            </ul>
+            {% if product.description %}
+            <div style="white-space:pre-wrap">{{ product.description }}</div>
+            {% else %}
+            <p>No detailed description yet. Message us on Telegram for more info.</p>
+            {% endif %}
           </div>
 
           <div class="pdp-tab-panel" id="tab-specs" style="display:none">
             <table class="specs-table">
-              <tr><td>Brand</td><td>—</td></tr>
-              <tr><td>Model</td><td>—</td></tr>
-              <tr><td>Weight</td><td>—</td></tr>
-              <tr><td>Head Size</td><td>—</td></tr>
-              <tr><td>String Pattern</td><td>—</td></tr>
-              <tr><td>Composition</td><td>—</td></tr>
-              <tr><td>Length</td><td>—</td></tr>
+              <tr><td>SKU</td><td>{{ product.sku|default:"—" }}</td></tr>
+              <tr><td>Type</td><td>{{ product.get_type_display }}</td></tr>
+              {% if product.category %}<tr><td>Category</td><td>{{ product.category.name }}</td></tr>{% endif %}
+              {% if product.type == 'RACKET' %}
+                {% with r=product.racket %}
+                {% if r %}
+              <tr><td>Weight</td><td>{% if r.weight_grams %}{{ r.weight_grams }} g{% if r.is_strung %} (strung){% else %} (unstrung){% endif %}{% else %}—{% endif %}</td></tr>
+              <tr><td>Head size</td><td>{% if r.head_size_sq_in %}{{ r.head_size_sq_in }} in²{% else %}—{% endif %}</td></tr>
+              <tr><td>String pattern</td><td>{{ r.string_pattern|default:"—" }}</td></tr>
+              <tr><td>Length</td><td>{% if r.length_in %}{{ r.length_in }} in{% else %}—{% endif %}</td></tr>
+              <tr><td>Balance</td><td>{% if r.balance_mm %}{{ r.balance_mm }} mm{% else %}—{% endif %}</td></tr>
+              <tr><td>Swingweight</td><td>{% if r.swingweight %}{{ r.swingweight }}{% else %}—{% endif %}</td></tr>
+                {% endif %}
+                {% endwith %}
+              {% elif product.type == 'M_SHOES' or product.type == 'W_SHOES' or product.type == 'J_SHOES' %}
+                {% with s=product.shoe %}
+                {% if s %}
+              <tr><td>Surface</td><td>{{ s.get_surface_display }}</td></tr>
+              <tr><td>Gender</td><td>{{ s.get_gender_display }}</td></tr>
+                {% endif %}
+                {% endwith %}
+              {% endif %}
+              {% for key, val in product.attributes.items %}
+              <tr><td>{{ key }}</td><td>{{ val }}</td></tr>
+              {% endfor %}
             </table>
           </div>
         </div>
@@ -357,18 +400,30 @@
         </div>
       </div>
       <div class="footer-bottom">
-        <div>&copy; {{ now|default:"2026" }} TenRivals Shop. All rights reserved.</div>
+        <div>© {% now "Y" %} TenRivals Shop. All rights reserved.</div>
       </div>
     </div>
   </footer>
 
   <script>
-    function showTab(id, btn) {
-      document.querySelectorAll('.pdp-tab-panel').forEach(p => p.style.display = 'none');
-      document.querySelectorAll('.pdp-tab-btn').forEach(b => b.classList.remove('active'));
-      document.getElementById('tab-' + id).style.display = 'block';
-      btn.classList.add('active');
-    }
+    document.querySelectorAll('.pdp-tab-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const id = this.getAttribute('data-tab');
+        document.querySelectorAll('.pdp-tab-panel').forEach(p => p.style.display = 'none');
+        document.querySelectorAll('.pdp-tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('tab-' + id).style.display = 'block';
+        this.classList.add('active');
+      });
+    });
+    document.querySelectorAll('.pdp-thumb').forEach(th => {
+      th.addEventListener('click', function() {
+        const src = this.getAttribute('data-src');
+        const main = document.getElementById('pdp-main-img');
+        if (main && src) main.src = src;
+        document.querySelectorAll('.pdp-thumb').forEach(t => t.classList.remove('active'));
+        this.classList.add('active');
+      });
+    });
   </script>
 </body>
 </html>
