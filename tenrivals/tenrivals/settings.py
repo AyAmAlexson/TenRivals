@@ -72,6 +72,7 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'shop.middleware.MaintenanceModeMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'allauth.account.middleware.AccountMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -261,18 +262,17 @@ ACCOUNT_ADAPTER = 'persons.adapters.CustomAccountAdapter'
 ACCOUNT_CHANGE_EMAIL = True
 
 
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 
-EMAIL_HOST = 'smtp.office365.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_USE_SSL = False
+EMAIL_HOST = env('EMAIL_HOST', default='smtpout.secureserver.net')
+EMAIL_PORT = env.int('EMAIL_PORT', default=465)
+EMAIL_USE_TLS = False
+EMAIL_USE_SSL = True
 EMAIL_HOST_USER = env('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
 SERVER_EMAIL = env('EMAIL_HOST_USER')
-DEFAULT_FROM_EMAIL = env('EMAIL_HOST_USER')
-ACCOUNT_EMAIL_SUBJECT_PREFIX = '[TenRivals] '
+DEFAULT_FROM_EMAIL = f'Tennis Rivals Shop <{env("EMAIL_HOST_USER")}>'
+ACCOUNT_EMAIL_SUBJECT_PREFIX = ''
 
 
 ACCOUNT_FORMS = {

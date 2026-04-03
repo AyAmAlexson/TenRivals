@@ -1,0 +1,66 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Tennis Rivals — Coming Soon</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Saira:wght@400;800&display=swap" rel="stylesheet">
+  <link rel="icon" href="{% static 'assets/img/favicon.png' %}">
+  <style>
+    *{box-sizing:border-box; margin:0; padding:0}
+    body{font-family:'Saira', system-ui, sans-serif; background:#111; color:#fff; min-height:100vh; display:flex; flex-direction:column}
+
+    .page{flex:1; display:flex; align-items:center; justify-content:center; padding:40px 20px; text-align:center}
+    .content{max-width:520px}
+
+    .logo{height:40px; margin:0 auto 48px; display:block}
+
+    h1{font-weight:800; font-size:36px; text-transform:uppercase; letter-spacing:1px; line-height:1.1; margin-bottom:16px}
+    .accent{color:#B20009}
+
+    .sub{font-size:15px; color:rgba(255,255,255,.5); line-height:1.6; margin-bottom:40px}
+
+    .socials{display:flex; justify-content:center; gap:20px; margin-bottom:48px}
+    .socials a{display:inline-flex; align-items:center; gap:8px; padding:10px 20px; border:1px solid rgba(255,255,255,.2); color:rgba(255,255,255,.7); font-size:13px; font-weight:600; transition:border-color .15s, color .15s}
+    .socials a:hover{border-color:#fff; color:#fff}
+    .socials svg{flex-shrink:0}
+
+    .contact{font-size:13px; color:rgba(255,255,255,.3)}
+    .contact a{color:rgba(255,255,255,.5); text-decoration:none}
+    .contact a:hover{color:#fff}
+
+    @media(max-width:480px){
+      h1{font-size:26px}
+      .logo{height:32px; margin-bottom:36px}
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="content">
+      <img class="logo" src="{% static 'assets/img/TR Logo 25/TR 25 LOGO HOR RED.svg' %}" alt="Tennis Rivals">
+
+      <h1>We're Building<br>Something <span class="accent">New</span></h1>
+      <p class="sub">Curated tennis equipment from the world's top brands. Free delivery in Tbilisi. Pre-order from US&nbsp;&&nbsp;EU with official customs clearance.<br><br>Our new shop is launching soon.</p>
+
+      <div class="socials">
+        <a href="https://www.instagram.com/tennis_rivals_shop/" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none"><rect x="3" y="3" width="18" height="18" rx="0" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="12" r="4.2" stroke="currentColor" stroke-width="1.6"/><circle cx="17.5" cy="6.5" r="1.2" fill="currentColor"/></svg>
+          Instagram
+        </a>
+        <a href="https://t.me/tennis_rivals_shop_tbilisi" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none"><path d="M21 4L3 11l6 2 2 6 3-4 4.5 3L21 4Z" stroke="currentColor" stroke-width="1.6" fill="none"/></svg>
+          Telegram
+        </a>
+      </div>
+
+      <div class="contact">
+        <a href="mailto:andy.rivals@tenrivals.com">andy.rivals@tenrivals.com</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
