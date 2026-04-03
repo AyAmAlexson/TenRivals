@@ -434,7 +434,7 @@ def change_email(request):
                 messages.error(
                     request,
                     "We could not send the confirmation email. Please try again in a few "
-                    "minutes. If the problem continues, contact support.",
+                    "minutes and check your SMTP settings. If the problem continues, contact support.",
                 )
                 return render(request, 'persons/change_email.html', {'form': form})
             messages.success(

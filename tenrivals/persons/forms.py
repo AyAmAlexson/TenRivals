@@ -121,10 +121,21 @@ class ChangeEmailForm(forms.Form):
 
     def clean_email(self):
         email = self.cleaned_data['email']
+        normalized = email.lower()
+        User = get_user_model()
         if EmailAddress.objects.filter(email__iexact=email).exclude(user=self.user).exists():
-             messages.error(self.request, 'This email is already in use. Please check the email address you enter and try again.')
-             raise forms.ValidationError('This email is already in use.')
-        if self.user.email.lower() == email.lower():
+            messages.error(
+                self.request,
+                'This email is already in use. Please check the email address you enter and try again.',
+            )
+            raise forms.ValidationError('This email is already in use.')
+        if User.objects.filter(email__iexact=email).exclude(pk=self.user.pk).exists():
+            messages.error(
+                self.request,
+                'This email is already registered to another account.',
+            )
+            raise forms.ValidationError('This email is already in use.')
+        if self.user.email.lower() == normalized:
             messages.error(self.request, 'This is already your current email address.')
             raise forms.ValidationError('This is already your current email address.')
         return email

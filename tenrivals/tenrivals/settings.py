@@ -260,15 +260,46 @@ ACCOUNT_ADAPTER = 'persons.adapters.CustomAccountAdapter'
 ACCOUNT_CHANGE_EMAIL = True
 
 
-EMAIL_HOST = env('EMAIL_HOST', default='smtpout.secureserver.net')
-EMAIL_PORT = env.int('EMAIL_PORT', default=465)
-EMAIL_USE_TLS = False
-EMAIL_USE_SSL = True
-EMAIL_HOST_USER = env('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
-SERVER_EMAIL = env('EMAIL_HOST_USER')
-DEFAULT_FROM_EMAIL = f'Tennis Rivals Shop <{env("EMAIL_HOST_USER")}>'
-ACCOUNT_EMAIL_SUBJECT_PREFIX = ''
+# Optional SendGrid SMTP (off unless EMAIL_USE_SENDGRID=true). Requires SENDGRID_API_KEY
+# (username "apikey") or SENDGRID_USERNAME / SENDGRID_PASSWORD. Set DEFAULT_FROM_EMAIL to a
+# verified sender when using API key login.
+if env.bool("EMAIL_USE_SENDGRID", default=False):
+    EMAIL_HOST = env("SENDGRID_SMTP_HOST", default="smtp.sendgrid.net")
+    EMAIL_PORT = env.int("SENDGRID_SMTP_PORT", default=587)
+    EMAIL_USE_TLS = True
+    EMAIL_USE_SSL = False
+    _sendgrid_key = env("SENDGRID_API_KEY", default=None)
+    if _sendgrid_key:
+        EMAIL_HOST_USER = "apikey"
+        EMAIL_HOST_PASSWORD = _sendgrid_key
+    else:
+        EMAIL_HOST_USER = env("SENDGRID_USERNAME")
+        EMAIL_HOST_PASSWORD = env("SENDGRID_PASSWORD")
+else:
+    EMAIL_HOST = env("EMAIL_HOST", default="smtpout.secureserver.net")
+    EMAIL_PORT = env.int("EMAIL_PORT", default=465)
+    EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=False)
+    EMAIL_USE_SSL = env.bool("EMAIL_USE_SSL", default=True)
+    EMAIL_HOST_USER = env("EMAIL_HOST_USER")
+    EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD")
+
+EMAIL_TIMEOUT = env.int("EMAIL_TIMEOUT", default=30)
+
+_explicit_default_from = env("DEFAULT_FROM_EMAIL", default=None)
+if _explicit_default_from:
+    DEFAULT_FROM_EMAIL = _explicit_default_from
+elif EMAIL_HOST_USER == "apikey":
+    DEFAULT_FROM_EMAIL = env(
+        "DEFAULT_FROM_EMAIL",
+        default="Tennis Rivals Shop <noreply@tenrivals.com>",
+    )
+else:
+    DEFAULT_FROM_EMAIL = f"Tennis Rivals Shop <{EMAIL_HOST_USER}>"
+
+SERVER_EMAIL = env("SERVER_EMAIL", default=None) or (
+    EMAIL_HOST_USER if EMAIL_HOST_USER != "apikey" else DEFAULT_FROM_EMAIL
+)
+ACCOUNT_EMAIL_SUBJECT_PREFIX = ""
 
 
 ACCOUNT_FORMS = {
