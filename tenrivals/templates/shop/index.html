@@ -227,7 +227,7 @@
           <div class="user-menu">
             <button class="user-avatar">{{ user.first_name|make_list|first|default:"?" }}{{ user.last_name|make_list|first|default:"?" }}</button>
             <div class="user-dropdown">
-              <a href="{% url 'account_login' %}">Account</a>
+              <a href="{% url 'persons:account_details' %}">Account</a>
               <a href="{% url 'account_logout' %}">Log out</a>
             </div>
           </div>
