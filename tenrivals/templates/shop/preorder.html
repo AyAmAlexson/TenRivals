@@ -4,167 +4,471 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Tennis Rivals Shop — Preorder</title>
-  <link rel="icon" type="image/png" sizes="32x32" href="{% static 'assets/img/favicon.png' %}?v=2">
-  <link rel="icon" type="image/png" sizes="16x16" href="{% static 'assets/img/favicon.png' %}?v=2">
-  <link rel="shortcut icon" href="{% static 'assets/img/favicon.png' %}?v=2">
-  <link href="/static/css/styles.css" rel="stylesheet">
-  <!-- Fonts: add Saira for headings -->
+  <title>TR Shop — Preorder</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Saira:wght@800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Saira:wght@400;800&family=Saira+Condensed:wght@400&display=swap" rel="stylesheet">
+  <link rel="icon" href="{% static 'assets/img/favicon.png' %}">
+  <link href="{% static 'css/styles.css' %}" rel="stylesheet">
   <style>
-    /* UI in English per project rule; text content in Russian where requested */
-    .shop-header { display:flex; align-items:center; gap:16px; padding:16px 0; }
-    .shop-header img { height:150px; }
-    @media (max-width: 576px) {
-      .shop-header img { height:80px; }
+    :root{
+      --accent:#B20009;
+      --accent-dark:#8E0007;
+      --ink:#1a1a1a;
+      --muted:#64748b;
+      --line:#e5e7eb;
+      --bg:#fff;
     }
-    /* Headings: Saira Extra Bold across this page, uppercase */
-    h1, h2, h3, h4, h5 {
-      font-family: 'Saira', Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
-      font-weight:800;
-      letter-spacing:0.2px;
-      text-transform:uppercase;
+    *{box-sizing:border-box; margin:0; padding:0}
+    body{font-family:'Saira', system-ui, -apple-system, sans-serif; font-weight:400; color:var(--ink); background:var(--bg)}
+    a{color:inherit; text-decoration:none}
+    img{display:block; max-width:100%}
+    .container{max-width:1200px; margin:0 auto; padding:0 20px}
+
+    .topbar{background:#111; color:rgba(255,255,255,.7); font-size:12px}
+    .topbar .topbar-row{display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:34px}
+    .topbar .links{display:flex; gap:20px; flex-wrap:wrap}
+    .topbar a{opacity:.8; transition:opacity .15s}
+    .topbar a:hover{opacity:1}
+    .city-select{display:inline-flex; align-items:center; opacity:1 !important; font-weight:600; cursor:default}
+
+    header{background:#1a1a1a}
+    .header-row{display:grid; grid-template-columns:180px 1fr auto auto; align-items:center; gap:20px; padding:14px 0}
+    .logo{height:36px}
+    .search{display:flex; align-items:center; gap:8px; border:1px solid #333; padding:9px 14px; background:#252525}
+    .search input{border:0; outline:0; width:100%; font-size:14px; background:transparent; color:#fff; font-family:inherit}
+    .search input::placeholder{color:#666}
+    .auth a{font-weight:600; color:#fff; font-size:14px}
+    .user-menu{position:relative; display:flex; align-items:center}
+    .user-avatar{width:36px; height:36px; border-radius:50%; background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:800; cursor:pointer; border:none; font-family:inherit; letter-spacing:.5px}
+    .user-avatar:hover{background:var(--accent-dark)}
+    .user-dropdown{position:absolute; top:100%; right:0; min-width:180px; background:#222; border:1px solid #333; padding:6px 0; display:none; z-index:10000; padding-top:14px; margin-top:0}
+    .user-dropdown::before{content:''; position:absolute; top:-8px; left:0; right:0; height:8px}
+    .user-menu:hover .user-dropdown{display:block}
+    .user-dropdown a{display:block; padding:8px 16px; color:rgba(255,255,255,.8); font-size:13px; font-weight:600; transition:color .15s}
+    .user-dropdown a:hover{color:#fff; background:rgba(255,255,255,.05)}
+    .socials{display:flex; gap:14px; align-items:center}
+    .social-link{display:inline-flex; width:24px; height:24px; align-items:center; justify-content:center; color:rgba(255,255,255,.7); text-decoration:none; transition:color .15s}
+    .social-link:hover{color:#fff}
+
+    nav{background:#1a1a1a; position:relative; z-index:9999}
+    .nav-row{display:flex; gap:0; align-items:stretch; min-height:44px; overflow:visible; position:relative}
+    .nav-link{padding:0 14px; color:rgba(255,255,255,.8); display:flex; align-items:center; font-size:14px; border-bottom:2px solid transparent; transition:color .15s}
+    .nav-link:hover{color:#fff; border-bottom-color:var(--accent)}
+    .nav-link--primary{color:var(--accent); font-weight:700}
+    .dropdown{position:relative; display:flex}
+    .dropdown-toggle{display:flex; align-items:center}
+    .dropdown-toggle::after{content:none !important}
+    .dropdown-menu{
+      position:absolute; top:100%; left:0; min-width:220px; background:#222; border:1px solid #333;
+      box-shadow:none; padding:10px; display:none; z-index:10000; margin-top:0;
     }
-    .tabs { display:flex; flex-wrap:wrap; gap:8px; margin:16px 0; }
-    .tab { padding:8px 12px; border-radius:20px; border:1px solid #0e8b84; color:#0e8b84; text-decoration:none; }
-    .tab.active { background:#0e8b84; color:#fff; }
-    .grid { display:grid; grid-template-columns: repeat(5, 1fr); gap:16px; }
-    @media (max-width: 1200px) { .grid { grid-template-columns: repeat(4, 1fr); } }
-    @media (max-width: 992px) { .grid { grid-template-columns: repeat(3, 1fr); } }
-    @media (max-width: 768px) { .grid { grid-template-columns: repeat(2, 1fr); } }
-    @media (max-width: 576px) {
-      .grid { grid-template-columns: repeat(2, 1fr); }
-      .tabs { gap:6px; margin:12px 0; }
-      .tab { padding:6px 10px; border-radius:16px; font-size:12px; }
-    }
-    .card { border:1px solid #e5e7eb; border-radius:12px; padding:12px; background:#fff; display:flex; flex-direction:column; }
-    .card img { width:100%; aspect-ratio: 1 / 1; object-fit:contain; cursor:pointer; }
-    .card h3 { font-size:16px; margin:8px 0 4px; }
-    .price { font-weight:700; color:#0e8b84; margin-bottom:6px; }
-    .attrs { font-size:12px; color:#4b5563; }
-    .card-footer {
-      margin-top:auto;
-      /* full-bleed footer: negate card inner padding (12px) */
-      margin-left:-12px;
-      margin-right:-12px;
-      margin-bottom:-12px;
-      padding:8px 12px;
+    .dropdown:hover .dropdown-menu{display:block}
+    .dropdown-grid{display:grid; grid-template-columns:1fr; gap:6px}
+    .dropdown-title{font-size:11px; color:#777; margin:0 0 4px; text-transform:uppercase; letter-spacing:.5px}
+    .dropdown-item{display:block; padding:5px 8px; color:rgba(255,255,255,.75); font-size:13px}
+    .dropdown-item:hover{color:var(--accent)}
+
+    .btn{display:inline-flex; align-items:center; gap:10px; padding:11px 20px; text-decoration:none; color:#fff; background:var(--accent); font-weight:600; font-family:inherit; font-size:14px; border:none; cursor:pointer; transition:background .15s}
+    .btn:hover{background:var(--accent-dark)}
+    .btn--outline{background:transparent; color:var(--accent); border:1px solid var(--accent)}
+    .btn--outline:hover{background:var(--accent); color:#fff}
+
+    footer{background:#1a1a1a; color:rgba(255,255,255,.5); margin-top:48px}
+    .footer-top{padding:32px 0; display:grid; grid-template-columns:2fr 1fr 1fr 1fr; gap:24px}
+    .footer h4{color:#fff; margin:0 0 12px; font-size:13px}
+    .footer a{display:block; padding:4px 0; color:rgba(255,255,255,.5); font-size:13px; transition:color .15s}
+    .footer a:hover{color:#fff}
+    .footer p{font-size:13px; line-height:1.5}
+    .footer-bottom{border-top:1px solid rgba(255,255,255,.08); padding:16px 0; font-size:12px; color:rgba(255,255,255,.3)}
+
+    /* Preorder page (scoped; does not use main shop .card grid) */
+    .preorder-main{padding:32px 0 48px}
+    h1.preorder-page-title, .preorder-main h2{font-family:'Saira', system-ui, sans-serif; font-weight:800; letter-spacing:.3px; text-transform:uppercase}
+    .preorder-page-head{display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:space-between; gap:16px; margin-bottom:20px}
+    .preorder-page-title{font-size:24px; margin:0; letter-spacing:1px}
+    .preorder-meta{font-size:13px; color:var(--muted); font-weight:600}
+    .preorder-tabs{display:flex; flex-wrap:wrap; gap:8px; margin:12px 0}
+    .preorder-tab{padding:8px 14px; border-radius:9999px; border:1px solid var(--accent); color:var(--accent); text-decoration:none; font-size:13px; font-weight:600; transition:background .15s, color .15s}
+    .preorder-tab:hover{background:rgba(178,0,9,.08)}
+    .preorder-tab.active{background:var(--accent); color:#fff; border-color:var(--accent)}
+    .preorder-grid{display:grid; grid-template-columns:repeat(5, 1fr); gap:20px}
+    .preorder-card{border:1px solid var(--line); padding:12px; background:#fff; display:flex; flex-direction:column}
+    .preorder-card img{width:100%; aspect-ratio:1/1; object-fit:contain; cursor:pointer; background:#f3f4f6}
+    .preorder-card h3{font-size:15px; margin:10px 0 6px; font-weight:800; text-transform:uppercase; letter-spacing:.2px}
+    .preorder-price{font-weight:700; color:var(--accent); margin-bottom:6px; font-size:15px}
+    .preorder-attrs{font-size:13px; color:#4b5563; line-height:1.45}
+    .preorder-card-footer{
+      margin-top:auto; margin-left:-12px; margin-right:-12px; margin-bottom:-12px; padding:10px 12px;
       display:flex; align-items:center; justify-content:space-between; gap:8px;
-      border-top:1px solid #e5e7eb; background:#fff;
-      border-bottom-left-radius:12px; border-bottom-right-radius:12px;
+      border-top:1px solid var(--line); background:#fff;
     }
-    .btn-outline { padding:6px 10px; border:1px solid #0e8b84; background:#fff; color:#0e8b84; border-radius:6px; cursor:pointer; }
-    .btn-primary { padding:6px 10px; background:#0e8b84; color:#fff; border-radius:6px; text-decoration:none; }
-    .pills { display:flex; flex-wrap:wrap; gap:6px; margin: 4px 0 8px; }
-    .pill { padding:4px 8px; border:1px solid #0e8b84; color:#0e8b84; border-radius:9999px; font-size:12px; line-height:1; }
-    .icon-edit { display:inline-flex; align-items:center; justify-content:center; width:18px; height:18px; margin-left:6px; border:1px solid #d1d5db; border-radius:4px; color:#6b7280; text-decoration:none; font-size:12px; }
-    .icon-edit:hover { color:#374151; border-color:#9ca3af; }
+    .preorder-btn-outline{padding:8px 14px; border:1px solid var(--accent); background:#fff; color:var(--accent); border-radius:0; cursor:pointer; font-family:inherit; font-size:13px; font-weight:600; transition:background .15s, color .15s}
+    .preorder-btn-outline:hover{background:var(--accent); color:#fff}
+    .preorder-order-btn{padding:8px 14px; background:var(--accent); color:#fff!important; border-radius:0; text-decoration:none; font-size:13px; font-weight:600}
+    .preorder-order-btn:hover{background:var(--accent-dark)}
+    .preorder-pills{display:flex; flex-wrap:wrap; gap:6px; margin:6px 0 8px}
+    .preorder-pill{padding:4px 10px; border:1px solid var(--line); color:var(--muted); border-radius:9999px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.04em}
+    .preorder-notice{display:flex; align-items:center; gap:12px; flex-wrap:wrap; background:rgba(178,0,9,.06); border:1px solid rgba(178,0,9,.2); padding:12px 16px; margin:16px 0 24px}
+    .preorder-notice span{color:var(--ink); font-size:13px; flex:1; min-width:200px}
+    .icon-edit{display:inline-flex; align-items:center; justify-content:center; width:20px; height:20px; margin-left:6px; border:1px solid var(--line); color:var(--muted); text-decoration:none; font-size:12px}
+    .icon-edit:hover{color:var(--ink); border-color:#cbd5e1}
+
+    @media(max-width:1024px){
+      .header-row{grid-template-columns:140px 1fr auto}
+      .preorder-grid{grid-template-columns:repeat(3, 1fr)}
+      .footer-top{grid-template-columns:1fr 1fr}
+    }
+    @media(max-width:768px){ .preorder-grid{grid-template-columns:repeat(2, 1fr)} }
+    @media(max-width:640px){
+      .auth{display:none}
+      .preorder-grid{grid-template-columns:repeat(2, 1fr); gap:14px}
+      .preorder-tabs{gap:6px}
+      .preorder-tab{padding:6px 10px; font-size:12px}
+      .footer-top{grid-template-columns:1fr}
+    }
   </style>
 </head>
 <body>
-  <div class="container" style="padding: 16px; max-width: 1280px; margin: 0 auto;">
-    <div class="shop-header" style="justify-content: space-between;">
-      <img src="{% static 'assets/img/TR Logo 25/TRLogo_rect_white_on_teal_shop.png' %}" alt="Tennis Rivals Shop Logo">
-      <div class="mt-3">
-        <h1 style="margin:0;">Preorder</h1><BR>
-        
+  <div class="topbar">
+    <div class="container">
+      <div class="topbar-row">
+        <div class="links">
+          <a href="#">Delivery</a>
+          <a href="#">Payment</a>
+          <a href="#">Returns & exchanges</a>
+          <a href="#">Size guide</a>
+          <a href="#">Contacts</a>
+        </div>
+        <a href="#" class="city-select" onclick="return false">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style="vertical-align:-1px; margin-right:4px"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" stroke="currentColor" stroke-width="2" fill="none"/><circle cx="12" cy="9" r="2.5" stroke="currentColor" stroke-width="1.5"/></svg>Tbilisi
+        </a>
       </div>
-      <div class="mt-3">Updated: 14.10.2025</div>
-      {% if request.user.is_staff %}
-      <a href="{% url 'shop:product_create' %}" style="margin-left:auto; padding:8px 12px; border:1px solid #0e8b84; color:#0e8b84; border-radius:6px; text-decoration:none;">Add Product</a>
-      {% endif %}
     </div>
-  
+  </div>
 
-    <!-- Tabs: by product type (only Rackets, Men's Shoes, Women's Shoes) -->
-    <div class="tabs" role="tablist" aria-label="Product types">
+  <header>
+    <div class="container">
+      <div class="header-row">
+        <a href="{% url 'shop:index' %}" class="brand" aria-label="Home">
+          <img class="logo" src="{% static 'assets/img/TR Logo 25/TR 25 LOGO HOR RED.svg' %}" alt="TR Shop">
+        </a>
+        <label class="search" aria-label="Search">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M21 21l-4.2-4.2" stroke="#aaa" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="10" cy="10" r="7" stroke="#aaa" stroke-width="2"/>
+          </svg>
+          <input type="search" placeholder="Search the catalog" disabled>
+        </label>
+        <nav class="socials" aria-label="Social links">
+          <a class="social-link" href="https://www.instagram.com/tennis_rivals_shop/" target="_blank" rel="noopener" aria-label="Instagram" title="Instagram">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" aria-hidden="true">
+              <rect x="3" y="3" width="18" height="18" rx="0" stroke="currentColor" stroke-width="1.6"/>
+              <circle cx="12" cy="12" r="4.2" stroke="currentColor" stroke-width="1.6"/>
+              <circle cx="17.5" cy="6.5" r="1.2" fill="currentColor"/>
+            </svg>
+          </a>
+          <a class="social-link" href="https://t.me/tennis_rivals_shop_tbilisi" target="_blank" rel="noopener" aria-label="Telegram" title="Telegram">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" aria-hidden="true">
+              <path d="M21 4L3 11l6 2 2 6 3-4 4.5 3L21 4Z" stroke="currentColor" stroke-width="1.6" fill="none" />
+            </svg>
+          </a>
+        </nav>
+        <div class="auth">
+          {% if user.is_authenticated %}
+          <div class="user-menu">
+            <button type="button" class="user-avatar">{{ user.first_name|make_list|first|default:"?" }}{{ user.last_name|make_list|first|default:"?" }}</button>
+            <div class="user-dropdown">
+              <a href="{% url 'persons:account_details' %}">Account</a>
+              <a href="{% url 'account_logout' %}">Log out</a>
+            </div>
+          </div>
+          {% else %}
+          <a href="{% url 'account_login' %}">Sign in</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <nav>
+    <div class="container">
+      <div class="nav-row">
+        <div class="dropdown">
+          <a class="nav-link dropdown-toggle" href="#">Rackets</a>
+          <div class="dropdown-menu">
+            <div class="dropdown-grid">
+              <div>
+                <div class="dropdown-title">All</div>
+                <a class="dropdown-item" href="#">All rackets</a>
+              </div>
+              <div>
+                <div class="dropdown-title">Brands</div>
+                <a class="dropdown-item" href="#">Nike</a>
+                <a class="dropdown-item" href="#">adidas</a>
+                <a class="dropdown-item" href="#">ASICS</a>
+                <a class="dropdown-item" href="#">Babolat</a>
+                <a class="dropdown-item" href="#">Wilson</a>
+                <a class="dropdown-item" href="#">HEAD</a>
+                <a class="dropdown-item" href="#">Yonex</a>
+                <a class="dropdown-item" href="#">Prince</a>
+                <a class="dropdown-item" href="#">Lacoste</a>
+                <a class="dropdown-item" href="#">K-Swiss</a>
+                <a class="dropdown-item" href="#">Mizuno</a>
+                <a class="dropdown-item" href="#">Lotto</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="dropdown">
+          <a class="nav-link dropdown-toggle" href="#">Bags & Covers</a>
+          <div class="dropdown-menu">
+            <div class="dropdown-grid">
+              <div>
+                <div class="dropdown-title">All</div>
+                <a class="dropdown-item" href="#">All bags & covers</a>
+              </div>
+              <div>
+                <div class="dropdown-title">Brands</div>
+                <a class="dropdown-item" href="#">Nike</a>
+                <a class="dropdown-item" href="#">adidas</a>
+                <a class="dropdown-item" href="#">ASICS</a>
+                <a class="dropdown-item" href="#">Babolat</a>
+                <a class="dropdown-item" href="#">Wilson</a>
+                <a class="dropdown-item" href="#">HEAD</a>
+                <a class="dropdown-item" href="#">Yonex</a>
+                <a class="dropdown-item" href="#">Prince</a>
+                <a class="dropdown-item" href="#">Lacoste</a>
+                <a class="dropdown-item" href="#">K-Swiss</a>
+                <a class="dropdown-item" href="#">Mizuno</a>
+                <a class="dropdown-item" href="#">Lotto</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="dropdown">
+          <a class="nav-link dropdown-toggle" href="#">Clothing</a>
+          <div class="dropdown-menu">
+            <div class="dropdown-grid">
+              <div>
+                <div class="dropdown-title">All</div>
+                <a class="dropdown-item" href="#">All clothing</a>
+              </div>
+              <div>
+                <div class="dropdown-title">By gender</div>
+                <a class="dropdown-item" href="#">Men's</a>
+                <a class="dropdown-item" href="#">Women's</a>
+                <a class="dropdown-item" href="#">Kids</a>
+              </div>
+              <div>
+                <div class="dropdown-title">Brands</div>
+                <a class="dropdown-item" href="#">Nike</a>
+                <a class="dropdown-item" href="#">adidas</a>
+                <a class="dropdown-item" href="#">ASICS</a>
+                <a class="dropdown-item" href="#">Babolat</a>
+                <a class="dropdown-item" href="#">Wilson</a>
+                <a class="dropdown-item" href="#">HEAD</a>
+                <a class="dropdown-item" href="#">Yonex</a>
+                <a class="dropdown-item" href="#">Lacoste</a>
+                <a class="dropdown-item" href="#">New Balance</a>
+                <a class="dropdown-item" href="#">K-Swiss</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="dropdown">
+          <a class="nav-link dropdown-toggle" href="#">Shoes</a>
+          <div class="dropdown-menu">
+            <div class="dropdown-grid">
+              <div>
+                <div class="dropdown-title">All</div>
+                <a class="dropdown-item" href="#">All shoes</a>
+              </div>
+              <div>
+                <div class="dropdown-title">By gender</div>
+                <a class="dropdown-item" href="#">Men's</a>
+                <a class="dropdown-item" href="#">Women's</a>
+                <a class="dropdown-item" href="#">Kids</a>
+              </div>
+              <div>
+                <div class="dropdown-title">Brands</div>
+                <a class="dropdown-item" href="#">Nike</a>
+                <a class="dropdown-item" href="#">adidas</a>
+                <a class="dropdown-item" href="#">ASICS</a>
+                <a class="dropdown-item" href="#">Babolat</a>
+                <a class="dropdown-item" href="#">Wilson</a>
+                <a class="dropdown-item" href="#">HEAD</a>
+                <a class="dropdown-item" href="#">Yonex</a>
+                <a class="dropdown-item" href="#">Mizuno</a>
+                <a class="dropdown-item" href="#">K-Swiss</a>
+                <a class="dropdown-item" href="#">Lotto</a>
+                <a class="dropdown-item" href="#">New Balance</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="dropdown">
+          <a class="nav-link dropdown-toggle" href="#">Balls</a>
+          <div class="dropdown-menu">
+            <div class="dropdown-grid">
+              <div>
+                <div class="dropdown-title">All</div>
+                <a class="dropdown-item" href="#">All balls</a>
+              </div>
+              <div>
+                <div class="dropdown-title">Brands</div>
+                <a class="dropdown-item" href="#">Wilson</a>
+                <a class="dropdown-item" href="#">HEAD</a>
+                <a class="dropdown-item" href="#">Babolat</a>
+                <a class="dropdown-item" href="#">Dunlop</a>
+                <a class="dropdown-item" href="#">Penn</a>
+                <a class="dropdown-item" href="#">Tecnifibre</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="dropdown">
+          <a class="nav-link dropdown-toggle" href="#">Accessories</a>
+          <div class="dropdown-menu">
+            <div class="dropdown-grid">
+              <div>
+                <div class="dropdown-title">All</div>
+                <a class="dropdown-item" href="#">All accessories</a>
+              </div>
+              <div>
+                <div class="dropdown-title">Brands</div>
+                <a class="dropdown-item" href="#">Wilson</a>
+                <a class="dropdown-item" href="#">HEAD</a>
+                <a class="dropdown-item" href="#">Babolat</a>
+                <a class="dropdown-item" href="#">Yonex</a>
+                <a class="dropdown-item" href="#">Prince</a>
+                <a class="dropdown-item" href="#">Tecnifibre</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="dropdown">
+          <a class="nav-link dropdown-toggle" href="#">Equipment</a>
+          <div class="dropdown-menu">
+            <div class="dropdown-grid">
+              <div>
+                <div class="dropdown-title">All</div>
+                <a class="dropdown-item" href="#">All equipment</a>
+              </div>
+              <div>
+                <div class="dropdown-title">Brands</div>
+                <a class="dropdown-item" href="#">Wilson</a>
+                <a class="dropdown-item" href="#">HEAD</a>
+                <a class="dropdown-item" href="#">Babolat</a>
+                <a class="dropdown-item" href="#">Yonex</a>
+                <a class="dropdown-item" href="#">Gamma</a>
+                <a class="dropdown-item" href="#">Tourna</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <a class="nav-link nav-link--primary" href="{% url 'shop:preorder' %}">Preorder</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container preorder-main">
+    <div class="preorder-page-head">
+      <div>
+        <h1 class="preorder-page-title">Preorder</h1>
+        <p class="preorder-meta" style="margin-top:6px">Updated: 14.10.2025</p>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        {% if user.is_staff %}
+        <a href="{% url 'shop:product_create' %}" class="btn btn--outline">Add Product</a>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="preorder-tabs" role="tablist" aria-label="Product types">
       {% for code, label in type_tabs %}
         {% if code == 'RACKET' or code == 'M_SHOES' or code == 'W_SHOES' %}
-          <a class="tab {% if active_tab == 'type:'|add:code %}active{% endif %}" href="?type={{ code }}">{{ label }}</a>
+          <a class="preorder-tab {% if active_tab == 'type:'|add:code %}active{% endif %}" href="?type={{ code }}">{{ label }}</a>
         {% endif %}
       {% endfor %}
     </div>
 
-    <!-- Optional category tabs if you use categories -->
     {% if categories %}
-    <div class="tabs" role="tablist" aria-label="Categories">
+    <div class="preorder-tabs" role="tablist" aria-label="Categories">
       {% for c in categories %}
-        <a class="tab {% if active_tab == 'cat:'|add:c.slug %}active{% endif %}" href="?category={{ c.slug }}">{{ c.name }}</a>
+        <a class="preorder-tab {% if active_tab == 'cat:'|add:c.slug %}active{% endif %}" href="?category={{ c.slug }}">{{ c.name }}</a>
       {% endfor %}
     </div>
     {% endif %}
 
     {% if show_racket_filters %}
-    <!-- Racket-only filters -->
-    <div class="tabs" role="tablist" aria-label="Racket brand">
-      <a class="tab {% if racket_brand_active == 'all' %}active{% endif %}" href="?type={{ active_type_code }}&brand=all&w={{ racket_weight_active }}&head={{ racket_head_active }}&pat={{ racket_pattern_active }}">All brands</a>
+    <div class="preorder-tabs" role="tablist" aria-label="Racket brand">
+      <a class="preorder-tab {% if racket_brand_active == 'all' %}active{% endif %}" href="?type={{ active_type_code }}&brand=all&w={{ racket_weight_active }}&head={{ racket_head_active }}&pat={{ racket_pattern_active }}">All brands</a>
       {% for b in racket_brands %}
-        <a class="tab {% if racket_brand_active == b %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ b }}&w={{ racket_weight_active }}&head={{ racket_head_active }}&pat={{ racket_pattern_active }}">{{ b }}</a>
+        <a class="preorder-tab {% if racket_brand_active == b %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ b }}&w={{ racket_weight_active }}&head={{ racket_head_active }}&pat={{ racket_pattern_active }}">{{ b }}</a>
       {% endfor %}
     </div>
 
-    <div class="tabs" role="tablist" aria-label="Racket weight">
-      <a class="tab {% if racket_weight_active == 'all' %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ racket_brand_active }}&w=all&head={{ racket_head_active }}&pat={{ racket_pattern_active }}">All weight</a>
-      <a class="tab {% if racket_weight_active == 'lt280' %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ racket_brand_active }}&w=lt280&head={{ racket_head_active }}&pat={{ racket_pattern_active }}"><280</a>
-      <a class="tab {% if racket_weight_active == '280_299' %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ racket_brand_active }}&w=280_299&head={{ racket_head_active }}&pat={{ racket_pattern_active }}">280-299</a>
-      <a class="tab {% if racket_weight_active == '300' %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ racket_brand_active }}&w=300&head={{ racket_head_active }}&pat={{ racket_pattern_active }}">300</a>
-      <a class="tab {% if racket_weight_active == 'ge301' %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ racket_brand_active }}&w=ge301&head={{ racket_head_active }}&pat={{ racket_pattern_active }}">301+</a>
+    <div class="preorder-tabs" role="tablist" aria-label="Racket weight">
+      <a class="preorder-tab {% if racket_weight_active == 'all' %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ racket_brand_active }}&w=all&head={{ racket_head_active }}&pat={{ racket_pattern_active }}">All weight</a>
+      <a class="preorder-tab {% if racket_weight_active == 'lt280' %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ racket_brand_active }}&w=lt280&head={{ racket_head_active }}&pat={{ racket_pattern_active }}"><280</a>
+      <a class="preorder-tab {% if racket_weight_active == '280_299' %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ racket_brand_active }}&w=280_299&head={{ racket_head_active }}&pat={{ racket_pattern_active }}">280-299</a>
+      <a class="preorder-tab {% if racket_weight_active == '300' %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ racket_brand_active }}&w=300&head={{ racket_head_active }}&pat={{ racket_pattern_active }}">300</a>
+      <a class="preorder-tab {% if racket_weight_active == 'ge301' %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ racket_brand_active }}&w=ge301&head={{ racket_head_active }}&pat={{ racket_pattern_active }}">301+</a>
     </div>
 
-    <div class="tabs" role="tablist" aria-label="Head size">
-      <a class="tab {% if racket_head_active == 'all' %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ racket_brand_active }}&w={{ racket_weight_active }}&head=all&pat={{ racket_pattern_active }}">All head</a>
-      <a class="tab {% if racket_head_active == 'lt100' %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ racket_brand_active }}&w={{ racket_weight_active }}&head=lt100&pat={{ racket_pattern_active }}"><100</a>
-      <a class="tab {% if racket_head_active == '100' %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ racket_brand_active }}&w={{ racket_weight_active }}&head=100&pat={{ racket_pattern_active }}">100</a>
-      <a class="tab {% if racket_head_active == 'ge101' %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ racket_brand_active }}&w={{ racket_weight_active }}&head=ge101&pat={{ racket_pattern_active }}">101+</a>
+    <div class="preorder-tabs" role="tablist" aria-label="Head size">
+      <a class="preorder-tab {% if racket_head_active == 'all' %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ racket_brand_active }}&w={{ racket_weight_active }}&head=all&pat={{ racket_pattern_active }}">All head</a>
+      <a class="preorder-tab {% if racket_head_active == 'lt100' %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ racket_brand_active }}&w={{ racket_weight_active }}&head=lt100&pat={{ racket_pattern_active }}"><100</a>
+      <a class="preorder-tab {% if racket_head_active == '100' %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ racket_brand_active }}&w={{ racket_weight_active }}&head=100&pat={{ racket_pattern_active }}">100</a>
+      <a class="preorder-tab {% if racket_head_active == 'ge101' %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ racket_brand_active }}&w={{ racket_weight_active }}&head=ge101&pat={{ racket_pattern_active }}">101+</a>
     </div>
 
-    <div class="tabs" role="tablist" aria-label="String pattern">
-      <a class="tab {% if racket_pattern_active == 'all' %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ racket_brand_active }}&w={{ racket_weight_active }}&head={{ racket_head_active }}&pat=all">All patterns</a>
+    <div class="preorder-tabs" role="tablist" aria-label="String pattern">
+      <a class="preorder-tab {% if racket_pattern_active == 'all' %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ racket_brand_active }}&w={{ racket_weight_active }}&head={{ racket_head_active }}&pat=all">All patterns</a>
       {% for sp in racket_patterns %}
-        <a class="tab {% if racket_pattern_active == sp %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ racket_brand_active }}&w={{ racket_weight_active }}&head={{ racket_head_active }}&pat={{ sp }}">{{ sp }}</a>
+        <a class="preorder-tab {% if racket_pattern_active == sp %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ racket_brand_active }}&w={{ racket_weight_active }}&head={{ racket_head_active }}&pat={{ sp }}">{{ sp }}</a>
       {% endfor %}
     </div>
     {% endif %}
 
     {% if show_shoe_filters %}
-    <!-- Shoes-only filters: surfaces only -->
-    <div class="tabs" role="tablist" aria-label="Shoes surface">
-      <a class="tab {% if surface_active == 'all' %}active{% endif %}" href="?type={{ active_type_code }}&surf=all&sbrand={{ shoe_brand_active|default:'all' }}">All</a>
-      <a class="tab {% if surface_active == 'clay' %}active{% endif %}" href="?type={{ active_type_code }}&surf=clay&sbrand={{ shoe_brand_active|default:'all' }}">Clay</a>
-      <a class="tab {% if surface_active == 'hard' %}active{% endif %}" href="?type={{ active_type_code }}&surf=hard&sbrand={{ shoe_brand_active|default:'all' }}">Hard</a>
-      <a class="tab {% if surface_active == 'allcourt' %}active{% endif %}" href="?type={{ active_type_code }}&surf=allcourt&sbrand={{ shoe_brand_active|default:'all' }}">AllCourt</a>
-      <a class="tab {% if surface_active == 'grass' %}active{% endif %}" href="?type={{ active_type_code }}&surf=grass&sbrand={{ shoe_brand_active|default:'all' }}">Grass</a>
-      <a class="tab {% if surface_active == 'padel' %}active{% endif %}" href="?type={{ active_type_code }}&surf=padel&sbrand={{ shoe_brand_active|default:'all' }}">Padel</a>
+    <div class="preorder-tabs" role="tablist" aria-label="Shoes surface">
+      <a class="preorder-tab {% if surface_active == 'all' %}active{% endif %}" href="?type={{ active_type_code }}&surf=all&sbrand={{ shoe_brand_active|default:'all' }}">All</a>
+      <a class="preorder-tab {% if surface_active == 'clay' %}active{% endif %}" href="?type={{ active_type_code }}&surf=clay&sbrand={{ shoe_brand_active|default:'all' }}">Clay</a>
+      <a class="preorder-tab {% if surface_active == 'hard' %}active{% endif %}" href="?type={{ active_type_code }}&surf=hard&sbrand={{ shoe_brand_active|default:'all' }}">Hard</a>
+      <a class="preorder-tab {% if surface_active == 'allcourt' %}active{% endif %}" href="?type={{ active_type_code }}&surf=allcourt&sbrand={{ shoe_brand_active|default:'all' }}">AllCourt</a>
+      <a class="preorder-tab {% if surface_active == 'grass' %}active{% endif %}" href="?type={{ active_type_code }}&surf=grass&sbrand={{ shoe_brand_active|default:'all' }}">Grass</a>
+      <a class="preorder-tab {% if surface_active == 'padel' %}active{% endif %}" href="?type={{ active_type_code }}&surf=padel&sbrand={{ shoe_brand_active|default:'all' }}">Padel</a>
     </div>
-    <!-- Shoes brand filter -->
     {% if shoe_brands %}
-    <div class="tabs" role="tablist" aria-label="Shoes brand">
-      <a class="tab {% if shoe_brand_active == 'all' %}active{% endif %}" href="?type={{ active_type_code }}&surf={{ surface_active }}&sbrand=all">All brands</a>
+    <div class="preorder-tabs" role="tablist" aria-label="Shoes brand">
+      <a class="preorder-tab {% if shoe_brand_active == 'all' %}active{% endif %}" href="?type={{ active_type_code }}&surf={{ surface_active }}&sbrand=all">All brands</a>
       {% for b in shoe_brands %}
-        <a class="tab {% if shoe_brand_active == b %}active{% endif %}" href="?type={{ active_type_code }}&surf={{ surface_active }}&sbrand={{ b }}">{{ b }}</a>
+        <a class="preorder-tab {% if shoe_brand_active == b %}active{% endif %}" href="?type={{ active_type_code }}&surf={{ surface_active }}&sbrand={{ b }}">{{ b }}</a>
       {% endfor %}
     </div>
     {% endif %}
     {% endif %}
-    <div class="mt-3 mb-3" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:#f0fdfa;border:1px solid #99f6e4;border-radius:8px;padding:10px 12px;">
-      <span style="color:#0f766e;font-size:13px;">The price is indicative (±30 ₾). Fixed upon order confirmation.</span>
-      <a href="https://t.me/tennis_rivals_shop_tbilisi" class="btn" style="margin-left:auto;background:#0e8b84;color:#fff;padding:8px 12px;border-radius:6px;text-decoration:none;">Contact us</a>
+
+    <div class="preorder-notice">
+      <span>The price is indicative (±30 ₾). Fixed upon order confirmation.</span>
+      <a href="https://t.me/tennis_rivals_shop_tbilisi" class="btn" style="margin-left:auto">Contact us</a>
     </div>
-    <div class="grid">
+
+    <div class="preorder-grid">
       {% for p in products %}
-        <div class="card" data-images="{% if p.image_1 %}{{ p.image_1.url }}{% endif %}{% if p.image_2 %},{% if p.image_2 %}{{ p.image_2.url }}{% endif %}{% endif %}{% if p.image_3 %},{% if p.image_3 %}{{ p.image_3.url }}{% endif %}{% endif %}{% if p.image_4 %},{% if p.image_4 %}{{ p.image_4.url }}{% endif %}{% endif %}{% if p.image_5 %},{% if p.image_5 %}{{ p.image_5.url }}{% endif %}{% endif %}">
+        <div class="preorder-card" data-images="{% if p.image_1 %}{{ p.image_1.url }}{% endif %}{% if p.image_2 %},{% if p.image_2 %}{{ p.image_2.url }}{% endif %}{% endif %}{% if p.image_3 %},{% if p.image_3 %}{{ p.image_3.url }}{% endif %}{% endif %}{% if p.image_4 %},{% if p.image_4 %}{{ p.image_4.url }}{% endif %}{% endif %}{% if p.image_5 %},{% if p.image_5 %}{{ p.image_5.url }}{% endif %}{% endif %}">
           <img src="{% if p.main_image %}{{ p.main_image.url }}{% else %}{% static 'assets/img/card_bg_teal.svg' %}{% endif %}" alt="{{ p.name }}" loading="lazy" onclick="openLightbox(this)">
           <h3>{{ p.name }}</h3>
-          <div class="attrs" style="margin-bottom:6px; display:flex; align-items:center; gap:6px;">
+          <div class="preorder-attrs" style="margin-bottom:6px; display:flex; align-items:center; gap:6px;">
             <span>ID: {{ p.id }}</span>
-            {% if request.user.is_staff %}
+            {% if user.is_staff %}
             <a href="{% url 'shop:product_edit' p.pk %}" class="icon-edit" title="Edit">✎</a>
             {% endif %}
           </div>
-          <div class="price">˜{{ p.price }} ₾</div>
-          <div class="attrs">
+          <div class="preorder-price">˜{{ p.price }} ₾</div>
+          <div class="preorder-attrs">
             {% if p.short_description %}<p>{{ p.short_description }}</p>{% endif %}
             {% if p.type == 'RACKET' %}
             {% with r=p.racket %}
@@ -182,13 +486,13 @@
             {% endif %}
           </div>
           {% if p.sizes_list %}
-          <div class="pills">
+          <div class="preorder-pills">
             {% for s in p.sizes_list %}
-              <span class="pill">{{ s }}</span>
+              <span class="preorder-pill">{{ s }}</span>
             {% endfor %}
           </div>
           {% endif %}
-          <div class="attrs extra" style="display:none; margin-top:6px;">
+          <div class="preorder-attrs preorder-extra" style="display:none; margin-top:6px;">
             {% if p.brand %}<p>Brand: {{ p.brand }}</p>{% endif %}
             {% if p.sku %}<p>SKU: {{ p.sku }}</p>{% endif %}
             <p>Type: {{ p.get_type_display }}</p>
@@ -214,42 +518,65 @@
               <div style="margin-top:6px; white-space:pre-wrap;">{{ p.description }}</div>
             {% endif %}
           </div>
-          <div class="card-footer">
-            <button class="more-btn btn-outline" type="button" onclick="toggleExtra(this)">More</button>
-            <a class="order-btn btn-primary" href="https://t.me/tennis_rivals_shop_tbilisi?direct" target="_blank" data-title="{{ p.name }}">Order</a>
+          <div class="preorder-card-footer">
+            <button class="more-btn preorder-btn-outline" type="button" onclick="toggleExtra(this)">More</button>
+            <a class="order-btn preorder-order-btn" href="https://t.me/tennis_rivals_shop_tbilisi?direct" target="_blank" data-title="{{ p.name }}">Order</a>
           </div>
         </div>
       {% empty %}
-        <p>No products to display.</p>
+        <p style="grid-column:1/-1">No products to display.</p>
       {% endfor %}
     </div>
-  </div>
-  <!-- footer -->
-  <footer class="site-footer" style="margin-top:24px;background:#1A2229;color:#e2e8f0;">
-    <div style="max-width:1280px;margin:0 auto;padding:16px 16px;display:flex;flex-wrap:wrap;align-items:center;gap:12px;justify-content:space-between;">
-      <div style="display:flex;align-items:center;gap:12px;">
-        <img src="/static/assets/img/TR Logo 25/TRLogo_rect_white_on_transp_shop.png" alt="TenRivals Logo" style="height:28px;filter:brightness(0) invert(1);">
-        <span style="font-size:13px;opacity:.9;">IE Andrey Molodenko</span>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-top">
+        <div>
+          <h4>Tennis Rivals: The Line for Your Growth.</h4>
+          <p>Catalog UI scaffold. Content will be added later.</p>
+          <div style="margin-top:10px">
+            <a class="btn btn--outline" href="{% url 'shop:preorder' %}">Preorder</a>
+          </div>
+        </div>
+        <div>
+          <h4>Catalog</h4>
+          <a href="#">Rackets</a>
+          <a href="#">Bags & Covers</a>
+          <a href="#">Clothing</a>
+          <a href="#">Shoes</a>
+          <a href="#">Balls</a>
+          <a href="#">Accessories</a>
+          <a href="#">Equipment</a>
+        </div>
+        <div>
+          <h4>Help</h4>
+          <a href="#">Delivery</a>
+          <a href="#">Payment</a>
+          <a href="#">Returns & exchanges</a>
+          <a href="#">Size guide</a>
+          <a href="#">Contacts</a>
+        </div>
+        <div>
+          <h4>Contacts</h4>
+          <a href="tel:+995591288967">+995 591 288 967</a>
+          <a href="https://t.me/tennis_rivals_shop_tbilisi" target="_blank" rel="noopener">Telegram</a>
+          <a href="https://www.instagram.com/tennis_rivals_shop/" target="_blank" rel="noopener">Instagram</a>
+          <a href="mailto:andy.rivals@tenrivals.com">andy.rivals@tenrivals.com</a>
+        </div>
       </div>
-      <div style="display:flex;align-items:center;gap:16px;">
-        <a href="https://www.instagram.com/tennis_rivals_shop/" target="_blank" style="color:#cbd5e1;text-decoration:none;font-size:13px;">Instagram</a>
-        <a href="https://t.me/tennis_rivals_shop_tbilisi" target="_blank" style="color:#cbd5e1;text-decoration:none;font-size:13px;">Telegram</a>
-      </div>
-      <div style="width:100%;display:flex;justify-content:space-between;font-size:12px;opacity:.7;margin-top:6px;">
-        <span>© 2025 Tennis Rivals</span>
-        <span>All rights reserved</span>
+      <div class="footer-bottom">
+        <div>© {% now "Y" %} TenRivals Shop. All rights reserved.</div>
       </div>
     </div>
   </footer>
 
   <script>
-    // Build Telegram deep-link to channel direct messages (no prefill supported for channels)
     function buildOrderLink(title){
       const base = 'https://t.me/tennis_rivals_shop_tbilisi';
       return base + '?direct';
     }
 
-    // Hydrate all order buttons
     document.addEventListener('DOMContentLoaded', () => {
       document.querySelectorAll('.order-btn').forEach(a => {
         const t = a.getAttribute('data-title') || '';
@@ -257,7 +584,7 @@
       });
     });
     function cycleImage(imgEl) {
-      const card = imgEl.closest('.card');
+      const card = imgEl.closest('.preorder-card');
       const list = (card.getAttribute('data-images') || '').split(',').filter(Boolean);
       if (list.length === 0) return;
       const current = imgEl.getAttribute('src');
@@ -267,15 +594,14 @@
     }
 
     function toggleExtra(btn) {
-      const card = btn.closest('.card');
-      const extra = card.querySelector('.extra');
+      const card = btn.closest('.preorder-card');
+      const extra = card.querySelector('.preorder-extra');
       if (!extra) return;
       const isHidden = extra.style.display === 'none' || extra.style.display === '';
       extra.style.display = isHidden ? 'block' : 'none';
       btn.textContent = isHidden ? 'Less' : 'More';
     }
 
-    // Lightbox state
     let LB = { images: [], idx: 0 };
 
     function ensureLightbox() {
@@ -305,7 +631,7 @@
 
     function openLightbox(imgEl) {
       ensureLightbox();
-      const card = imgEl.closest('.card');
+      const card = imgEl.closest('.preorder-card');
       const list = (card.getAttribute('data-images') || '').split(',').filter(Boolean);
       if (list.length === 0) return;
       LB.images = list;
@@ -336,6 +662,3 @@
   </script>
 </body>
 </html>
-
-
-
