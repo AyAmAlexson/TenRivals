@@ -1,4 +1,6 @@
 from allauth.account.adapter import DefaultAccountAdapter
+from allauth.account.models import EmailAddress
+from allauth.account.utils import user_email
 from django.forms import ValidationError
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth import get_user_model
@@ -28,6 +30,31 @@ class CustomAccountAdapter(DefaultAccountAdapter):
         # если нам нужна только эта проверка. Но можно оставить для будущей совместимости.
         # super().validate_unique_email(email)
         return email # Важно вернуть email, если он прошел проверку
+
+    def confirm_email(self, request, email_address):
+        """
+        After allauth confirmation, ensure the verified row for the user's email is primary.
+
+        With ACCOUNT_CHANGE_EMAIL=True, allauth can leave the new address verified but not
+        primary after removing the old address, so is_primary_email_verified stays false.
+        """
+        result = super().confirm_email(request, email_address)
+        if not result:
+            return False
+        try:
+            email_address.refresh_from_db()
+        except EmailAddress.DoesNotExist:
+            return True
+        user = email_address.user
+        desired = (user_email(user) or email_address.email or "").strip().lower()
+        if not desired:
+            return True
+        verified_row = EmailAddress.objects.filter(
+            user=user, email__iexact=desired, verified=True
+        ).first()
+        if verified_row and not verified_row.primary:
+            verified_row.set_as_primary(conditional=False)
+        return True
 
     def save_user(self, request, user, form, commit=True):
         """

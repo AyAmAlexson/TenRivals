@@ -54,7 +54,9 @@ def on_email_confirmed(sender, request, email_address, **kwargs):
     Действие при подтверждении email-адреса.
     """
     user = email_address.user
-    player = Player.objects.get(user=user)
+    player = Player.objects.filter(user=user).first()
+    if not player:
+        return
     try:
         player_onboarding = PlayerOnboarding.objects.get(player=player)
         player_onboarding.ob_verify_email = True
