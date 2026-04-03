@@ -2,7 +2,6 @@ from allauth.account.forms import SignupForm, LoginForm
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from .models import CustomUser
-from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.utils.http import urlsafe_base64_encode
@@ -15,7 +14,7 @@ from django.contrib.sites.shortcuts import get_current_site
 import logging
 from allauth.account import app_settings as allauth_account_settings
 from allauth.account.models import EmailAddress
-from allauth.account.utils import send_email_confirmation
+from allauth.account.utils import filter_users_by_email, send_email_confirmation
 from django.db import transaction
 from django.contrib import messages
 logger = logging.getLogger(__name__)
@@ -122,22 +121,22 @@ class ChangeEmailForm(forms.Form):
     def clean_email(self):
         email = self.cleaned_data['email']
         normalized = email.lower()
-        User = get_user_model()
-        if EmailAddress.objects.filter(email__iexact=email).exclude(user=self.user).exists():
-            messages.error(
-                self.request,
-                'This email is already in use. Please check the email address you enter and try again.',
-            )
-            raise forms.ValidationError('This email is already in use.')
-        if User.objects.filter(email__iexact=email).exclude(pk=self.user.pk).exists():
-            messages.error(
-                self.request,
-                'This email is already registered to another account.',
-            )
-            raise forms.ValidationError('This email is already in use.')
         if self.user.email.lower() == normalized:
             messages.error(self.request, 'This is already your current email address.')
             raise forms.ValidationError('This is already your current email address.')
+
+        # Same lookup allauth uses for login (EmailAddress + user.email). Avoid blocking
+        # when only this account is tied to the new address (e.g. pending email change row)
+        # while user.email still shows the old address.
+        linked_users = filter_users_by_email(email)
+        others = [u for u in linked_users if u.pk != self.user.pk]
+        if others:
+            messages.error(
+                self.request,
+                'This email is already linked to another account.',
+            )
+            raise forms.ValidationError('This email is already in use.')
+
         return email
 
     def clean_password(self):
