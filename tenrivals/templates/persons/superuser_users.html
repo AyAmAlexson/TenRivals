@@ -182,7 +182,6 @@
                 <th>ID</th>
                 <th>Email</th>
                 <th>Telegram</th>
-                <th>Username</th>
                 <th>Name</th>
                 <th>Staff</th>
                 <th>Super</th>
@@ -216,7 +215,6 @@
                     {% endif %}
                   </div>
                 </td>
-                <td class="mono">{{ u.username }}</td>
                 <td>{{ u.first_name }} {{ u.last_name }}</td>
                 <td>{% if u.is_staff %}<span class="badge badge--yes">Yes</span>{% else %}<span class="badge badge--no">No</span>{% endif %}</td>
                 <td>{% if u.is_superuser %}<span class="badge badge--yes">Yes</span>{% else %}<span class="badge badge--no">No</span>{% endif %}</td>
@@ -269,7 +267,7 @@
                 </td>
               </tr>
               {% empty %}
-              <tr><td colspan="11">No users.</td></tr>
+              <tr><td colspan="10">No users.</td></tr>
               {% endfor %}
             </tbody>
           </table>
