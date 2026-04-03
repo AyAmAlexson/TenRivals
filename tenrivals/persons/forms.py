@@ -90,25 +90,24 @@ class ChangeEmailForm(forms.Form):
     old_email = forms.EmailField(
         label='Your Current Email Address',
         widget=forms.EmailInput(attrs={
-            'class': 'form-control form-control-solid',
             'placeholder': 'Your Current Email Address',
             'readonly': True,
-            'disabled': True
+            'autocomplete': 'email',
         }),
         required=False
     )
     email = forms.EmailField(
         label='New Email Address',
         widget=forms.EmailInput(attrs={
-            'class': 'form-control form-control-solid',
             'placeholder': 'New Email Address',
+            'autocomplete': 'email',
         })
     )
     password = forms.CharField(
         label='Password',
         widget=forms.PasswordInput(attrs={
-            'class': 'form-control form-control-solid',
-            'placeholder': 'Current Password'
+            'placeholder': 'Current Password',
+            'autocomplete': 'current-password',
         })
     )
 

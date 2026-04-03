@@ -422,18 +422,17 @@ def delete_profile(request):
 @login_required
 def change_email(request):
     if request.method == 'POST':
-        form = ChangeEmailForm(request.POST)
+        form = ChangeEmailForm(request.user, request, request.POST)
         if form.is_valid():
-            if request.user.check_password(form.cleaned_data['password']):
-                request.user.email = form.cleaned_data['email']
-                request.user.save()
-                messages.success(request, 'Email address updated successfully.')
-                return redirect('rivals:player_update')
-            else:
-                messages.error(request, 'Invalid password.')
+            form.save()
+            messages.success(
+                request,
+                'We sent a confirmation link to your new email address. Please check your inbox.',
+            )
+            return redirect('persons:account_details')
     else:
-        form = ChangeEmailForm()
-    
+        form = ChangeEmailForm(request.user, request)
+
     return render(request, 'persons/change_email.html', {'form': form})
 
 class ConfirmEmailChangeView(View):
