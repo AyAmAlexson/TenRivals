@@ -1,62 +1,203 @@
-{% extends 'default.html' %}
 {% load static %}
-{% load custom_tags %}
-{% load custom_filters %}
-{% block content %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>My Account — TR Shop</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Saira:wght@400;800&display=swap" rel="stylesheet">
+  <link rel="icon" href="{% static 'assets/img/favicon.png' %}">
+  <style>
+    :root{--accent:#B20009; --accent-dark:#8E0007; --ink:#1a1a1a; --muted:#64748b; --line:#e5e7eb; --bg:#fff}
+    *{box-sizing:border-box; margin:0; padding:0}
+    body{font-family:'Saira', system-ui, sans-serif; color:var(--ink); background:#f8f8f8; min-height:100vh; display:flex; flex-direction:column}
+    a{color:inherit; text-decoration:none}
 
-<div class="container-xl px-4 mt-4">
-    <h1 class="page-header-title">
-        <div class="page-header-icon"><i data-feather="user"></i></div>
-        Account Details
-    </h1>
+    .topbar{background:#111; color:rgba(255,255,255,.7); font-size:12px}
+    .topbar-row{display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:34px}
+    .topbar .links{display:flex; gap:20px; flex-wrap:wrap}
+    .topbar a{opacity:.8; transition:opacity .15s}
+    .topbar a:hover{opacity:1}
+    .city-select{display:inline-flex; align-items:center; opacity:1 !important; font-weight:600; cursor:default}
 
-    <div class="row">
-        <div class="col-lg-8">
-            <!-- User Information Card -->
-            <div class="card mb-4">
-                <div class="card-header">User Information</div>
-                <div class="card-body">
-                    <ul class="list-group list-group-flush">
-                        <li class="list-group-item">Username: {{ account_details.username }}</li>
-                        <li class="list-group-item">Email: {{ account_details.email }}</li>
-                        <li class="list-group-item">Mobile: {{ account_details.mobile }}</li>
-                        <li class="list-group-item">Preferred City: {{ account_details.preferred_city|const_replace }}</li>
-                        <li class="list-group-item">Preferred Geo: {{ account_details.preferred_geo|const_replace }}</li>
-                        <li class="list-group-item">Is Player: {{ account_details.is_player }}</li>
-                        <li class="list-group-item">Is Author: {{ account_details.is_author }}</li>
-                    </ul>
-                </div>
-            </div>
+    header{background:#1a1a1a}
+    .header-row{display:flex; align-items:center; justify-content:space-between; gap:20px; padding:14px 0}
+    .logo{height:36px}
+    .header-right{display:flex; align-items:center; gap:20px}
+    .auth a{font-weight:600; color:#fff; font-size:14px}
 
-            <!-- Player Information Card -->
-            {% if player %}
-            <div class="card mb-4">
-                <div class="card-header">Player Information</div>
-                <div class="card-body">
-                    <ul class="list-group list-group-flush">
-                        <li class="list-group-item">Birthdate: {{ player.birthdate }}</li>
-                        <li class="list-group-item">Gender: {{ player.gender|const_replace }}</li>
-                        <li class="list-group-item">Geo: {{ player.geo|const_replace }}</li>
-                        <li class="list-group-item">City: {{ player.city|const_replace }}</li>
-                        <li class="list-group-item">Height: {{ player.height }}</li>
-                        <li class="list-group-item">Weight: {{ player.weight }}</li>
-                        <li class="list-group-item">Tennis Experience Year: {{ player.tennis_exp_year }}</li>
-                        <li class="list-group-item">Availability: {{ player.availability }}</li>
-                        <li class="list-group-item">Avatar: <img src="{{ player.avatar.url }}" alt="Avatar" class="img-fluid rounded-circle" /></li>
-                        <li class="list-group-item">Current Level: {{ player.level_current }}</li>
-                        <li class="list-group-item">Rating Points: {{ player.rating_pts }}</li>
-                        <li class="list-group-item">Attributes: {{ player.attributes }}</li>
-                        <li class="list-group-item">Is New: {{ player.is_new }}</li>
-                    </ul>
-                </div>
+    .user-menu{position:relative; display:flex; align-items:center}
+    .user-avatar{width:36px; height:36px; border-radius:50%; background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:800; cursor:pointer; border:none; font-family:inherit; letter-spacing:.5px}
+    .user-avatar:hover{background:var(--accent-dark)}
+    .user-dropdown{position:absolute; top:100%; right:0; min-width:180px; background:#222; border:1px solid #333; padding:6px 0; display:none; z-index:10000; padding-top:14px}
+    .user-dropdown::before{content:''; position:absolute; top:-8px; left:0; right:0; height:8px}
+    .user-menu:hover .user-dropdown{display:block}
+    .user-dropdown a{display:block; padding:8px 16px; color:rgba(255,255,255,.8); font-size:13px; font-weight:600; transition:color .15s}
+    .user-dropdown a:hover{color:#fff; background:rgba(255,255,255,.05)}
+
+    .container{max-width:1200px; margin:0 auto; padding:0 20px}
+
+    .page-main{flex:1; padding:40px 0}
+    .page-title{font-size:24px; font-weight:800; text-transform:uppercase; letter-spacing:1px; margin:0 0 32px}
+
+    .account-grid{display:grid; grid-template-columns:280px 1fr; gap:32px; align-items:start}
+    @media(max-width:768px){.account-grid{grid-template-columns:1fr}}
+
+    .sidebar{background:#fff; border:1px solid var(--line); padding:24px}
+    .sidebar-avatar{width:80px; height:80px; border-radius:50%; background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center; font-size:28px; font-weight:800; margin:0 auto 16px; letter-spacing:1px}
+    .sidebar-name{text-align:center; font-size:16px; font-weight:800; margin-bottom:4px}
+    .sidebar-email{text-align:center; font-size:13px; color:var(--muted); margin-bottom:20px; word-break:break-all}
+    .sidebar-nav a{display:block; padding:10px 12px; font-size:14px; font-weight:600; color:var(--muted); border-left:3px solid transparent; transition:all .15s}
+    .sidebar-nav a:hover{color:var(--ink); background:#f8f8f8}
+    .sidebar-nav a.active{color:var(--accent); border-left-color:var(--accent); background:rgba(178,0,9,.04)}
+
+    .card{background:#fff; border:1px solid var(--line); padding:28px; margin-bottom:24px}
+    .card-title{font-size:16px; font-weight:800; text-transform:uppercase; letter-spacing:.5px; margin:0 0 24px; padding-bottom:12px; border-bottom:1px solid var(--line)}
+
+    .form-group{margin-bottom:20px}
+    .form-group label{display:block; font-size:13px; font-weight:600; color:var(--muted); margin-bottom:6px; text-transform:uppercase; letter-spacing:.5px}
+    .form-group input{width:100%; padding:10px 14px; border:1px solid var(--line); font-size:14px; font-family:inherit; color:var(--ink); background:#fff; transition:border-color .15s}
+    .form-group input:focus{outline:none; border-color:var(--accent)}
+    .form-group input[readonly]{background:#f3f4f6; color:var(--muted); cursor:not-allowed}
+    .form-row{display:grid; grid-template-columns:1fr 1fr; gap:16px}
+    @media(max-width:480px){.form-row{grid-template-columns:1fr}}
+
+    .btn{display:inline-flex; align-items:center; gap:8px; padding:12px 28px; color:#fff; background:var(--accent); font-weight:600; font-family:inherit; font-size:14px; border:none; cursor:pointer; transition:background .15s; text-transform:uppercase; letter-spacing:.5px}
+    .btn:hover{background:var(--accent-dark)}
+    .btn--outline{background:transparent; color:var(--accent); border:1px solid var(--accent)}
+    .btn--outline:hover{background:var(--accent); color:#fff}
+
+    .alert{padding:12px 16px; margin-bottom:20px; font-size:14px; font-weight:600}
+    .alert-success{background:#ecfdf5; color:#065f46; border:1px solid #a7f3d0}
+
+    .info-row{display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid #f3f4f6; font-size:14px}
+    .info-label{color:var(--muted); font-weight:600; font-size:13px; text-transform:uppercase; letter-spacing:.3px}
+    .info-value{font-weight:600}
+
+    footer{background:#1a1a1a; color:rgba(255,255,255,.5); margin-top:auto}
+    .footer-bottom{padding:16px 0; font-size:12px; color:rgba(255,255,255,.3); text-align:center}
+  </style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="container">
+      <div class="topbar-row">
+        <div class="links">
+          <a href="{% url 'shop:index' %}">Shop</a>
+          <a href="{% url 'shop:preorder' %}">Preorder</a>
+        </div>
+        <a href="#" class="city-select" onclick="return false">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style="vertical-align:-1px; margin-right:4px"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" stroke="currentColor" stroke-width="2" fill="none"/><circle cx="12" cy="9" r="2.5" stroke="currentColor" stroke-width="1.5"/></svg>Tbilisi
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <header>
+    <div class="container">
+      <div class="header-row">
+        <a href="{% url 'shop:index' %}" aria-label="Home">
+          <img class="logo" src="{% static 'assets/img/TR Logo 25/TR 25 LOGO HOR RED.svg' %}" alt="TR Shop">
+        </a>
+        <div class="header-right">
+          <div class="auth">
+            {% if user.is_authenticated %}
+            <div class="user-menu">
+              <button class="user-avatar">{{ user.first_name|make_list|first|default:"?" }}{{ user.last_name|make_list|first|default:"?" }}</button>
+              <div class="user-dropdown">
+                <a href="{% url 'persons:account_details' %}">Account</a>
+                <a href="{% url 'account_logout' %}">Log out</a>
+              </div>
             </div>
             {% else %}
-            <p>No player information available.</p>
+            <a href="{% url 'account_login' %}">Sign in</a>
             {% endif %}
+          </div>
         </div>
+      </div>
     </div>
+  </header>
 
-    <a href="{% url 'rivals:player_update' %}" class="btn btn-secondary">Update Player Information</a>
-</div>
+  <div class="page-main">
+    <div class="container">
+      <h1 class="page-title">My Account</h1>
 
-{% endblock content %}
+      <div class="account-grid">
+        <aside class="sidebar">
+          <div class="sidebar-avatar">{{ user.first_name|make_list|first|default:"?" }}{{ user.last_name|make_list|first|default:"?" }}</div>
+          <div class="sidebar-name">{{ user.first_name }} {{ user.last_name }}</div>
+          <div class="sidebar-email">{{ user.email }}</div>
+          <nav class="sidebar-nav">
+            <a href="{% url 'persons:account_details' %}" class="active">Personal Info</a>
+            <a href="{% url 'account_change_password' %}">Change Password</a>
+            <a href="{% url 'shop:index' %}">Back to Shop</a>
+          </nav>
+        </aside>
+
+        <div>
+          {% if messages %}
+          {% for message in messages %}
+          <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+          {% endfor %}
+          {% endif %}
+
+          <div class="card">
+            <h2 class="card-title">Personal Information</h2>
+            <form method="post">
+              {% csrf_token %}
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="id_first_name">First Name</label>
+                  <input type="text" name="first_name" id="id_first_name" value="{{ form.first_name.value|default_if_none:'' }}" placeholder="First name">
+                </div>
+                <div class="form-group">
+                  <label for="id_last_name">Last Name</label>
+                  <input type="text" name="last_name" id="id_last_name" value="{{ form.last_name.value|default_if_none:'' }}" placeholder="Last name">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="id_mobile">Mobile</label>
+                  <input type="text" name="mobile" id="id_mobile" value="{{ form.mobile.value|default_if_none:'' }}" placeholder="+995 ...">
+                </div>
+                <div class="form-group">
+                  <label for="id_telegram">Telegram</label>
+                  <input type="text" name="telegram" id="id_telegram" value="{{ form.telegram.value|default_if_none:'' }}" placeholder="@username">
+                </div>
+              </div>
+              <button type="submit" class="btn">Save Changes</button>
+            </form>
+          </div>
+
+          <div class="card">
+            <h2 class="card-title">Account Info</h2>
+            <div class="info-row">
+              <span class="info-label">Email</span>
+              <span class="info-value">{{ user.email }}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Username</span>
+              <span class="info-value">{{ user.username }}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Member since</span>
+              <span class="info-value">{{ user.date_joined|date:"M d, Y" }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <footer>
+    <div class="container">
+      <div class="footer-bottom">© 2026 TenRivals Shop. All rights reserved.</div>
+    </div>
+  </footer>
+
+</body>
+</html>

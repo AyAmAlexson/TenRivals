@@ -6,7 +6,7 @@ from django.urls import reverse, reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin,PermissionRequiredMixin, UserPassesTestMixin
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, View, FormView
 from .models import CustomUser, TelegramVerification
-from .forms import TelegramVerificationForm, ChangeEmailForm
+from .forms import TelegramVerificationForm, ChangeEmailForm, AccountUpdateForm
 from rivals.models import Player
 from django.shortcuts import render, redirect
 import telebot
@@ -66,35 +66,18 @@ class CustomSignupView(SignupView):
         context['login_url'] = reverse_lazy('account_login')
         return context
 
-class AccountDetailView(UserPassesTestMixin, DetailView):
+class AccountDetailView(LoginRequiredMixin, UpdateView):
     model = CustomUser
+    form_class = AccountUpdateForm
     template_name = 'account_details.html'
-    context_object_name = 'account_details'
-
-    @method_decorator(login_required)
-    def dispatch(self, *args, **kwargs):
-        return super().dispatch(*args, **kwargs)
-
-    def test_func(self):
-        return self.request.user == self.get_object()
+    success_url = reverse_lazy('persons:account_details')
 
     def get_object(self):
         return self.request.user
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        account_instance = self.object
-        groups = account_instance.groups.all()
-        context['groups'] = groups
-
-        # Получаем объект Player, связанный с CustomUser
-        try:
-            player_instance = Player.objects.get(user=account_instance)
-            context['player'] = player_instance
-        except Player.DoesNotExist:
-            context['player'] = None
-
-        return context
+    def form_valid(self, form):
+        messages.success(self.request, 'Account updated successfully.')
+        return super().form_valid(form)
 
 def generate_verification_code():
     # Генерация случайного кода верификации

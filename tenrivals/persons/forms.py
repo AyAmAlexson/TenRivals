@@ -213,3 +213,13 @@ class PasswordResetCodeEntryForm(forms.Form):
         return code
 
 
+class AccountUpdateForm(forms.ModelForm):
+    class Meta:
+        model = CustomUser
+        fields = ['first_name', 'last_name', 'mobile', 'telegram']
+        widgets = {
+            'first_name': forms.TextInput(attrs={'placeholder': 'First name'}),
+            'last_name': forms.TextInput(attrs={'placeholder': 'Last name'}),
+            'mobile': forms.TextInput(attrs={'placeholder': '+995 ...'}),
+            'telegram': forms.TextInput(attrs={'placeholder': '@username'}),
+        }
