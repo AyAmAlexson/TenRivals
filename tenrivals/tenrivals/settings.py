@@ -76,7 +76,6 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'allauth.account.middleware.AccountMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'django.contrib.flatpages.middleware.FlatpageFallbackMiddleware',
     'persons.middleware.PlayerWizardMiddleware',
     
 ]
@@ -95,6 +94,7 @@ if DEBUG:
        'RESULTS_CACHE_SIZE': 100,
    }
 
+APPEND_SLASH = True
 ROOT_URLCONF = 'tenrivals.urls'
 
 TEMPLATES = [
