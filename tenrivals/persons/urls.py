@@ -32,5 +32,15 @@ urlpatterns = [
     ),
 
     path('superuser/users/', views.superuser_users, name='superuser_users'),
+    path(
+        'superuser/users/<int:user_id>/send-email-verification/',
+        views.superuser_send_email_verification,
+        name='superuser_send_email_verification',
+    ),
+    path(
+        'superuser/users/<int:user_id>/edit/',
+        views.superuser_user_edit,
+        name='superuser_user_edit',
+    ),
 
 ]

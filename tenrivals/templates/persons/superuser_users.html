@@ -38,7 +38,12 @@
     .btn--danger:hover{background:#7f1d1d}
     .btn--sm{padding:6px 12px; font-size:12px}
     .table-wrap{overflow-x:auto; border:1px solid var(--line)}
-    table{width:100%; border-collapse:collapse; font-size:13px; min-width:720px}
+    table{width:100%; border-collapse:collapse; font-size:13px; min-width:1040px}
+    .cell-stack{display:flex; flex-direction:column; gap:4px}
+    .cell-stack .badge{align-self:flex-start}
+    .verify-stack{display:flex; flex-direction:column; gap:6px; min-width:118px}
+    .btn-slate{background:#475569;font-size:11px;padding:6px 10px}
+    .btn-slate:hover{background:#334155}
     th,td{padding:10px 12px; text-align:left; border-bottom:1px solid var(--line)}
     th{background:#f9fafb; font-weight:700; font-size:11px; text-transform:uppercase; letter-spacing:.4px; color:var(--muted)}
     tr:last-child td{border-bottom:none}
@@ -58,6 +63,7 @@
       <div class="header-row">
         <a href="{% url 'shop:index' %}"><img class="logo" src="{% static 'assets/img/TR Logo 25/TR 25 LOGO HOR RED.svg' %}" alt="TR Shop"></a>
         <nav class="header-links">
+          <a href="{% url 'persons:superuser_users' %}">User list</a>
           <a href="{% url 'persons:account_details' %}">My account</a>
           <a href="{% url 'shop:index' %}">Shop</a>
         </nav>
@@ -123,20 +129,41 @@
               <tr>
                 <th>ID</th>
                 <th>Email</th>
+                <th>Telegram</th>
                 <th>Username</th>
                 <th>Name</th>
                 <th>Staff</th>
                 <th>Super</th>
                 <th>Active</th>
                 <th>Joined</th>
-                <th></th>
+                <th>Verification</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               {% for u in users %}
               <tr>
                 <td class="mono">{{ u.pk }}</td>
-                <td>{{ u.email }}</td>
+                <td>
+                  <div class="cell-stack">
+                    <span>{{ u.email }}</span>
+                    {% if u.is_primary_email_verified %}
+                    <span class="badge badge--yes">Email verified</span>
+                    {% else %}
+                    <span class="badge badge--no">Email not verified</span>
+                    {% endif %}
+                  </div>
+                </td>
+                <td>
+                  <div class="cell-stack">
+                    <span>{% if u.telegram_username_display %}{{ u.telegram_username_display }}{% else %}—{% endif %}</span>
+                    {% if u.is_telegram_verified %}
+                    <span class="badge badge--yes">TG verified</span>
+                    {% else %}
+                    <span class="badge badge--no">TG not verified</span>
+                    {% endif %}
+                  </div>
+                </td>
                 <td class="mono">{{ u.username }}</td>
                 <td>{{ u.first_name }} {{ u.last_name }}</td>
                 <td>{% if u.is_staff %}<span class="badge badge--yes">Yes</span>{% else %}<span class="badge badge--no">No</span>{% endif %}</td>
@@ -144,10 +171,33 @@
                 <td>{% if u.is_active %}<span class="badge badge--yes">Yes</span>{% else %}<span class="badge badge--no">No</span>{% endif %}</td>
                 <td>{{ u.date_joined|date:"Y-m-d H:i" }}</td>
                 <td>
+                  <div class="verify-stack">
+                    {% if not u.is_primary_email_verified %}
+                    <form method="post" action="{% url 'persons:superuser_send_email_verification' u.pk %}">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn--sm btn-slate">Send email verification</button>
+                    </form>
+                    {% endif %}
+                    {% if not u.is_telegram_verified %}
+                      {% if u.pk == request.user.pk %}
+                      <a href="{% url 'persons:verify_telegram' %}" class="btn btn--sm btn-slate" style="text-align:center;text-decoration:none;display:block">Verify Telegram</a>
+                      {% elif u.telegram_username_display or u.telegram %}
+                      <span style="font-size:10px;line-height:1.3;color:var(--muted)">Telegram: user must log in and open Verify Telegram.</span>
+                      {% else %}
+                      <span style="font-size:10px;color:var(--muted)">No Telegram handle</span>
+                      {% endif %}
+                    {% endif %}
+                    {% if u.is_primary_email_verified and u.is_telegram_verified %}
+                    <span style="font-size:11px;color:var(--muted)">—</span>
+                    {% endif %}
+                  </div>
+                </td>
+                <td>
+                  <a class="btn btn--sm" href="{% url 'persons:superuser_user_edit' u.pk %}" style="text-decoration:none;margin-right:6px;display:inline-block;margin-bottom:6px">Edit</a>
                   {% if u.pk == request.user.pk %}
-                    <span class="muted" style="color:var(--muted);font-size:12px">—</span>
+                    <span class="muted" style="color:var(--muted);font-size:12px;display:block">—</span>
                   {% elif u.is_superuser %}
-                    <span class="muted" style="color:var(--muted);font-size:12px">—</span>
+                    <span class="muted" style="color:var(--muted);font-size:12px;display:block">—</span>
                   {% else %}
                     <form method="post" action="{% url 'persons:superuser_users' %}" style="display:inline" onsubmit="return confirm('Delete user {{ u.email|escapejs }}? This cannot be undone.');">
                       {% csrf_token %}
@@ -159,7 +209,7 @@
                 </td>
               </tr>
               {% empty %}
-              <tr><td colspan="9">No users.</td></tr>
+              <tr><td colspan="11">No users.</td></tr>
               {% endfor %}
             </tbody>
           </table>

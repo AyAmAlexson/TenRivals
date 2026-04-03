@@ -73,8 +73,17 @@
     .alert-success{background:#ecfdf5; color:#065f46; border:1px solid #a7f3d0}
 
     .info-row{display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid #f3f4f6; font-size:14px}
+    .info-row--stack{align-items:flex-start}
     .info-label{color:var(--muted); font-weight:600; font-size:13px; text-transform:uppercase; letter-spacing:.3px}
     .info-value{font-weight:600}
+    .info-value-block{text-align:right;font-weight:600;max-width:65%}
+    .info-value-actions{margin-top:8px;display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;align-items:center}
+    .verify-pill{display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:4px 9px;border-radius:4px}
+    .verify-pill--ok{background:#ecfdf5;color:#065f46}
+    .verify-pill--bad{background:#fff7ed;color:#c2410c}
+    .btn-tiny{display:inline-block;padding:5px 12px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;background:var(--accent);color:#fff;border-radius:4px}
+    .btn-tiny:hover{background:var(--accent-dark);color:#fff}
+    .sidebar-verify{margin-top:10px;text-align:center;line-height:1.6;font-size:11px;font-weight:700}
 
     footer{background:#1a1a1a; color:rgba(255,255,255,.5); margin-top:auto}
     .footer-bottom{padding:16px 0; font-size:12px; color:rgba(255,255,255,.3); text-align:center}
@@ -130,6 +139,21 @@
           <div class="sidebar-avatar">{{ user.first_name|make_list|first|default:"?" }}{{ user.last_name|make_list|first|default:"?" }}</div>
           <div class="sidebar-name">{{ user.first_name }} {{ user.last_name }}</div>
           <div class="sidebar-email">{{ user.email }}</div>
+          <div class="sidebar-verify">
+            {% if user.is_primary_email_verified %}
+            <span class="verify-pill verify-pill--ok">Email verified</span>
+            {% else %}
+            <span class="verify-pill verify-pill--bad">Email not verified</span>
+            <a href="{% url 'account_email' %}" class="btn-tiny" style="margin-top:6px;display:inline-block">Verify email</a>
+            {% endif %}
+            <br>
+            {% if user.is_telegram_verified %}
+            <span class="verify-pill verify-pill--ok" style="margin-top:6px">Telegram verified</span>
+            {% else %}
+            <span class="verify-pill verify-pill--bad" style="margin-top:6px">Telegram not verified</span>
+            <a href="{% url 'persons:verify_telegram' %}" class="btn-tiny" style="margin-top:6px;display:inline-block">Verify Telegram</a>
+            {% endif %}
+          </div>
           <nav class="sidebar-nav">
             <a href="{% url 'persons:account_details' %}" class="active">Personal Info</a>
             <a href="{% url 'account_change_password' %}">Change Password</a>
@@ -168,7 +192,14 @@
                   <input type="text" name="mobile" id="id_mobile" value="{{ form.mobile.value|default_if_none:'' }}" placeholder="+995 ...">
                 </div>
                 <div class="form-group">
-                  <label for="id_telegram">Telegram</label>
+                  <label for="id_telegram">Telegram
+                    {% if user.is_telegram_verified %}
+                    <span class="verify-pill verify-pill--ok" style="margin-left:8px">Verified</span>
+                    {% else %}
+                    <span class="verify-pill verify-pill--bad" style="margin-left:8px">Not verified</span>
+                    <a href="{% url 'persons:verify_telegram' %}" class="btn-tiny" style="margin-left:8px">Start verification</a>
+                    {% endif %}
+                  </label>
                   <input type="text" name="telegram" id="id_telegram" value="{{ form.telegram.value|default_if_none:'' }}" placeholder="@username">
                 </div>
               </div>
@@ -178,9 +209,33 @@
 
           <div class="card">
             <h2 class="card-title">Account Info</h2>
-            <div class="info-row">
+            <div class="info-row info-row--stack">
               <span class="info-label">Email</span>
-              <span class="info-value">{{ user.email }}</span>
+              <div class="info-value-block">
+                <div>{{ user.email }}</div>
+                <div class="info-value-actions">
+                  {% if user.is_primary_email_verified %}
+                  <span class="verify-pill verify-pill--ok">Verified</span>
+                  {% else %}
+                  <span class="verify-pill verify-pill--bad">Not verified</span>
+                  <a href="{% url 'account_email' %}" class="btn-tiny">Start verification</a>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            <div class="info-row info-row--stack">
+              <span class="info-label">Telegram</span>
+              <div class="info-value-block">
+                <div>{% if user.telegram %}{{ user.telegram }}{% else %}—{% endif %}</div>
+                <div class="info-value-actions">
+                  {% if user.is_telegram_verified %}
+                  <span class="verify-pill verify-pill--ok">Verified</span>
+                  {% else %}
+                  <span class="verify-pill verify-pill--bad">Not verified</span>
+                  <a href="{% url 'persons:verify_telegram' %}" class="btn-tiny">Start verification</a>
+                  {% endif %}
+                </div>
+              </div>
             </div>
             <div class="info-row">
               <span class="info-label">Username</span>

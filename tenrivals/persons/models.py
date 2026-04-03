@@ -42,6 +42,22 @@ class CustomUser(AbstractUser):
     def __str__(self):
         return self.username
 
+    @property
+    def is_primary_email_verified(self):
+        """Primary EmailAddress (allauth) verified flag."""
+        from allauth.account.models import EmailAddress
+
+        ea = EmailAddress.objects.filter(user=self, primary=True).first()
+        return bool(ea and ea.verified)
+
+    @property
+    def telegram_username_display(self):
+        """Telegram @handle from verification record or profile field."""
+        tv = TelegramVerification.objects.filter(user=self).first()
+        if tv and tv.telegram_username:
+            return tv.telegram_username
+        return (self.telegram or "").strip()
+
 
 class Author(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='author')

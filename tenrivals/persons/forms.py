@@ -220,6 +220,129 @@ class SuperuserCreateUserForm(forms.Form):
         return data
 
 
+class SuperuserUserEditForm(forms.ModelForm):
+    """Superuser-only edit: profile fields and boolean flags."""
+
+    class Meta:
+        model = CustomUser
+        fields = [
+            "email",
+            "username",
+            "first_name",
+            "last_name",
+            "mobile",
+            "telegram",
+            "is_staff",
+            "is_superuser",
+            "is_active",
+            "is_player",
+            "is_author",
+            "is_test_user",
+            "is_telegram_verified",
+            "newsletter_opt_in",
+            "preferred_city",
+            "preferred_geo",
+        ]
+        widgets = {
+            "email": forms.EmailInput(
+                attrs={
+                    "autocomplete": "off",
+                    "style": "width:100%;padding:9px 12px;border:1px solid #e5e7eb;font-size:14px;font-family:inherit",
+                }
+            ),
+            "username": forms.TextInput(
+                attrs={
+                    "autocomplete": "off",
+                    "style": "width:100%;padding:9px 12px;border:1px solid #e5e7eb;font-size:14px;font-family:inherit",
+                }
+            ),
+            "first_name": forms.TextInput(
+                attrs={
+                    "style": "width:100%;padding:9px 12px;border:1px solid #e5e7eb;font-size:14px;font-family:inherit",
+                }
+            ),
+            "last_name": forms.TextInput(
+                attrs={
+                    "style": "width:100%;padding:9px 12px;border:1px solid #e5e7eb;font-size:14px;font-family:inherit",
+                }
+            ),
+            "mobile": forms.TextInput(
+                attrs={
+                    "style": "width:100%;padding:9px 12px;border:1px solid #e5e7eb;font-size:14px;font-family:inherit",
+                }
+            ),
+            "telegram": forms.TextInput(
+                attrs={
+                    "style": "width:100%;padding:9px 12px;border:1px solid #e5e7eb;font-size:14px;font-family:inherit",
+                }
+            ),
+            "preferred_city": forms.Select(
+                attrs={
+                    "style": "width:100%;padding:9px 12px;border:1px solid #e5e7eb;font-size:14px;font-family:inherit",
+                }
+            ),
+            "preferred_geo": forms.Select(
+                attrs={
+                    "style": "width:100%;padding:9px 12px;border:1px solid #e5e7eb;font-size:14px;font-family:inherit",
+                }
+            ),
+        }
+
+    def __init__(self, *args, editor=None, **kwargs):
+        self.editor = editor
+        super().__init__(*args, **kwargs)
+        _cb = {"style": "width:18px;height:18px;accent-color:#B20009"}
+        for name in (
+            "is_staff",
+            "is_superuser",
+            "is_active",
+            "is_player",
+            "is_author",
+            "is_test_user",
+            "is_telegram_verified",
+            "newsletter_opt_in",
+        ):
+            if name in self.fields:
+                self.fields[name].widget = forms.CheckboxInput(attrs=_cb)
+
+    def clean_email(self):
+        email = self.cleaned_data["email"].strip().lower()
+        qs = CustomUser.objects.filter(email__iexact=email)
+        if self.instance.pk:
+            qs = qs.exclude(pk=self.instance.pk)
+        if qs.exists():
+            raise forms.ValidationError("This email is already in use.")
+        return email
+
+    def clean_username(self):
+        username = self.cleaned_data["username"].strip()
+        qs = CustomUser.objects.filter(username=username)
+        if self.instance.pk:
+            qs = qs.exclude(pk=self.instance.pk)
+        if qs.exists():
+            raise forms.ValidationError("This username is already in use.")
+        return username
+
+    def clean(self):
+        data = super().clean()
+        if not self.instance.pk:
+            return data
+        if self.editor and self.instance.pk == self.editor.pk:
+            if self.instance.is_superuser and not data.get("is_superuser"):
+                raise forms.ValidationError(
+                    "You cannot remove your own superuser status on this page."
+                )
+        if self.instance.is_superuser and data.get("is_superuser") is False:
+            others = CustomUser.objects.filter(is_superuser=True).exclude(
+                pk=self.instance.pk
+            )
+            if not others.exists():
+                raise forms.ValidationError(
+                    "Cannot clear superuser: this is the only superuser account."
+                )
+        return data
+
+
 class PasswordResetRequestTelegramForm(forms.Form):
     """
     Форма для запроса сброса пароля через Telegram.

@@ -10,9 +10,11 @@ from .forms import (
     AccountUpdateForm,
     ChangeEmailForm,
     SuperuserCreateUserForm,
+    SuperuserUserEditForm,
     TelegramVerificationForm,
 )
 from allauth.account.models import EmailAddress
+from allauth.account.utils import send_email_confirmation
 from django.db import transaction
 from rivals.models import Player
 from django.shortcuts import render, redirect
@@ -27,7 +29,7 @@ from django.utils.encoding import force_str
 import logging
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_http_methods
+from django.views.decorators.http import require_http_methods, require_POST
 import json
 from django.shortcuts import get_object_or_404
 import time
@@ -573,6 +575,99 @@ def _superuser_required(user):
     return user.is_authenticated and user.is_superuser
 
 
+def _sync_primary_email_address(user):
+    """Keep allauth primary EmailAddress in sync with CustomUser.email."""
+    email_lower = user.email.strip().lower()
+    primary = EmailAddress.objects.filter(user=user, primary=True).first()
+    if primary:
+        if primary.email.lower() != email_lower:
+            primary.email = email_lower
+            primary.save(update_fields=["email"])
+    else:
+        EmailAddress.objects.update_or_create(
+            user=user,
+            email=email_lower,
+            defaults={"primary": True, "verified": True},
+        )
+
+
+@login_required
+@user_passes_test(_superuser_required)
+@require_POST
+def superuser_send_email_verification(request, user_id):
+    target = get_object_or_404(CustomUser, pk=user_id)
+    if target.is_primary_email_verified:
+        messages.info(request, f"{target.email} is already verified.")
+        return redirect("persons:superuser_users")
+    try:
+        send_email_confirmation(request, target, signup=False)
+        messages.success(
+            request,
+            f"Verification email sent to {target.email}.",
+        )
+    except Exception as e:
+        logger.exception("superuser_send_email_verification: %s", e)
+        messages.error(
+            request,
+            "Could not send verification email. Check SMTP or logs.",
+        )
+    return redirect("persons:superuser_users")
+
+
+@login_required
+@user_passes_test(_superuser_required)
+def superuser_user_edit(request, user_id):
+    target = get_object_or_404(CustomUser, pk=user_id)
+    if request.method == "POST":
+        old_email = target.email.strip().lower()
+        old_telegram = target.telegram or ""
+        form = SuperuserUserEditForm(
+            request.POST,
+            instance=target,
+            editor=request.user,
+        )
+        if form.is_valid():
+            try:
+                with transaction.atomic():
+                    user = form.save()
+                    _sync_primary_email_address(user)
+                    if user.email.strip().lower() != old_email:
+                        EmailAddress.objects.filter(
+                            user=user, primary=True
+                        ).update(verified=False)
+                    new_tg = user.telegram or ""
+                    if new_tg != old_telegram:
+                        user.is_telegram_verified = False
+                        user.save(update_fields=["is_telegram_verified"])
+                        TelegramVerification.objects.update_or_create(
+                            user=user,
+                            defaults={
+                                "is_verified": False,
+                                "telegram_id": "",
+                                "verification_code": generate_verification_code(),
+                                "telegram_username": new_tg,
+                                "verified_at": None,
+                            },
+                        )
+            except Exception as e:
+                logger.exception("superuser_user_edit failed: %s", e)
+                messages.error(
+                    request,
+                    "Could not save user. Check for duplicate email/username or see logs.",
+                )
+            else:
+                messages.success(request, f"User {user.email} (ID {user.pk}) updated.")
+                return redirect("persons:superuser_users")
+    else:
+        form = SuperuserUserEditForm(instance=target, editor=request.user)
+
+    return render(
+        request,
+        "persons/superuser_user_edit.html",
+        {"form": form, "edit_user": target},
+    )
+
+
 @login_required
 @user_passes_test(_superuser_required)
 def superuser_users(request):
@@ -631,7 +726,9 @@ def superuser_users(request):
                         request,
                         "Could not create user. Check logs or try a different email.",
                     )
-                    users = CustomUser.objects.order_by("-date_joined")
+                    users = CustomUser.objects.select_related(
+                        "telegram_verification"
+                    ).order_by("-date_joined")
                     return render(
                         request,
                         "persons/superuser_users.html",
@@ -647,7 +744,9 @@ def superuser_users(request):
     else:
         form = SuperuserCreateUserForm()
 
-    users = CustomUser.objects.order_by("-date_joined")
+    users = CustomUser.objects.select_related("telegram_verification").order_by(
+        "-date_joined"
+    )
     return render(
         request,
         "persons/superuser_users.html",

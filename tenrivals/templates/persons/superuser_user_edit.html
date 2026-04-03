@@ -1,0 +1,169 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Edit user {{ edit_user.email }} — TR Shop</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Saira:wght@400;800&display=swap" rel="stylesheet">
+  <link rel="icon" href="{% static 'assets/img/favicon.png' %}">
+  <style>
+    :root{--accent:#B20009; --accent-dark:#8E0007; --ink:#1a1a1a; --muted:#64748b; --line:#e5e7eb}
+    *{box-sizing:border-box; margin:0; padding:0}
+    body{font-family:'Saira', system-ui, sans-serif; color:var(--ink); background:#f8f8f8; min-height:100vh; display:flex; flex-direction:column}
+    a{color:inherit; text-decoration:none}
+    header{background:#1a1a1a}
+    .header-row{display:flex; align-items:center; justify-content:space-between; gap:20px; padding:14px 0}
+    .logo{height:36px}
+    .header-links a{color:#fff; font-size:14px; font-weight:600; margin-left:20px}
+    .header-links a:hover{color:#ccc}
+    .container{max-width:720px; margin:0 auto; padding:0 20px}
+    .page-main{flex:1; padding:32px 0}
+    .page-title{font-size:22px; font-weight:800; text-transform:uppercase; letter-spacing:.5px; margin:0 0 8px}
+    .page-meta{font-size:13px; color:var(--muted); margin-bottom:24px}
+    .card{background:#fff; border:1px solid var(--line); padding:24px; margin-bottom:24px}
+    .card-title{font-size:15px; font-weight:800; text-transform:uppercase; letter-spacing:.5px; margin:0 0 20px; padding-bottom:10px; border-bottom:1px solid var(--line)}
+    .form-row{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+    @media(max-width:640px){.form-row{grid-template-columns:1fr}}
+    .form-group{margin-bottom:14px}
+    .form-group label{display:block; font-size:12px; font-weight:600; color:var(--muted); margin-bottom:5px; text-transform:uppercase; letter-spacing:.3px}
+    .form-group input[type="text"], .form-group input[type="email"]{width:100%; padding:9px 12px; border:1px solid var(--line); font-size:14px; font-family:inherit}
+    .form-group select{width:100%; padding:9px 12px; border:1px solid var(--line); font-size:14px; font-family:inherit}
+    .check-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px 20px}
+    @media(max-width:640px){.check-grid{grid-template-columns:1fr}}
+    .check-row{display:flex; align-items:center; gap:10px; font-size:14px; font-weight:600}
+    .field-errors{font-size:12px; color:#b91c1c; margin-top:4px}
+    .btn{display:inline-flex; align-items:center; padding:10px 22px; color:#fff; background:var(--accent); font-weight:600; font-family:inherit; font-size:13px; border:none; cursor:pointer; text-transform:uppercase; letter-spacing:.5px}
+    .btn:hover{background:var(--accent-dark)}
+    .btn--outline{background:transparent; color:var(--accent); border:1px solid var(--accent); margin-right:12px}
+    .btn--outline:hover{background:var(--accent); color:#fff}
+    .actions{margin-top:8px}
+    .alert{padding:12px 14px; margin-bottom:16px; font-size:14px; font-weight:600}
+    .alert-success{background:#ecfdf5; color:#065f46; border:1px solid #a7f3d0}
+    .alert-danger, .alert-error{background:#fef2f2; color:#b91c1c; border:1px solid #fecaca}
+    footer{background:#1a1a1a; color:rgba(255,255,255,.3); margin-top:auto; padding:14px; text-align:center; font-size:11px}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container" style="max-width:1200px">
+      <div class="header-row">
+        <a href="{% url 'shop:index' %}"><img class="logo" src="{% static 'assets/img/TR Logo 25/TR 25 LOGO HOR RED.svg' %}" alt="TR Shop"></a>
+        <nav class="header-links">
+          <a href="{% url 'persons:superuser_users' %}">User list</a>
+          <a href="{% url 'persons:account_details' %}">My account</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <div class="page-main">
+    <div class="container">
+      <h1 class="page-title">Edit user</h1>
+      <p class="page-meta">ID {{ edit_user.pk }} · joined {{ edit_user.date_joined|date:"Y-m-d H:i" }}</p>
+
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert alert-{{ message.level_tag }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+
+      <form method="post" action="{% url 'persons:superuser_user_edit' edit_user.pk %}">
+        {% csrf_token %}
+
+        <div class="card">
+          <h2 class="card-title">Profile</h2>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="id_email">Email</label>
+              {{ form.email }}
+              {% if form.email.errors %}<div class="field-errors">{{ form.email.errors }}</div>{% endif %}
+            </div>
+            <div class="form-group">
+              <label for="id_username">Username</label>
+              {{ form.username }}
+              {% if form.username.errors %}<div class="field-errors">{{ form.username.errors }}</div>{% endif %}
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="id_first_name">First name</label>
+              {{ form.first_name }}
+            </div>
+            <div class="form-group">
+              <label for="id_last_name">Last name</label>
+              {{ form.last_name }}
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="id_mobile">Mobile</label>
+              {{ form.mobile }}
+            </div>
+            <div class="form-group">
+              <label for="id_telegram">Telegram</label>
+              {{ form.telegram }}
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="id_preferred_city">Preferred city</label>
+              {{ form.preferred_city }}
+            </div>
+            <div class="form-group">
+              <label for="id_preferred_geo">Preferred geo</label>
+              {{ form.preferred_geo }}
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2 class="card-title">Flags</h2>
+          <div class="check-grid">
+            <div class="check-row">
+              {{ form.is_active }} <label for="id_is_active">Active</label>
+            </div>
+            <div class="check-row">
+              {{ form.is_staff }} <label for="id_is_staff">Staff</label>
+            </div>
+            <div class="check-row">
+              {{ form.is_superuser }} <label for="id_is_superuser">Superuser</label>
+            </div>
+            <div class="check-row">
+              {{ form.is_player }} <label for="id_is_player">Player</label>
+            </div>
+            <div class="check-row">
+              {{ form.is_author }} <label for="id_is_author">Author</label>
+            </div>
+            <div class="check-row">
+              {{ form.is_test_user }} <label for="id_is_test_user">Test user</label>
+            </div>
+            <div class="check-row">
+              {{ form.is_telegram_verified }} <label for="id_is_telegram_verified">Telegram verified</label>
+            </div>
+            <div class="check-row">
+              {{ form.newsletter_opt_in }} <label for="id_newsletter_opt_in">Newsletter opt-in</label>
+            </div>
+          </div>
+          {% if form.is_staff.errors or form.is_superuser.errors %}
+            <div class="field-errors">{{ form.is_staff.errors }}{{ form.is_superuser.errors }}</div>
+          {% endif %}
+        </div>
+
+        {% if form.non_field_errors %}
+          <div class="field-errors" style="margin-bottom:16px">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        <div class="actions">
+          <a class="btn btn--outline" href="{% url 'persons:superuser_users' %}">Cancel</a>
+          <button type="submit" class="btn">Save changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <footer>© 2026 TenRivals — superuser tools</footer>
+</body>
+</html>
