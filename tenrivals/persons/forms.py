@@ -15,8 +15,9 @@ import logging
 from allauth.account import app_settings as allauth_account_settings
 from allauth.account.models import EmailAddress
 from allauth.account.utils import filter_users_by_email, send_email_confirmation
-from django.db import transaction
 from django.contrib import messages
+from django.contrib.auth.password_validation import validate_password
+
 logger = logging.getLogger(__name__)
 
 class CustomLoginForm(LoginForm):
@@ -168,6 +169,55 @@ class ChangeEmailForm(forms.Form):
         )
 
         return user
+
+
+class SuperuserCreateUserForm(forms.Form):
+    email = forms.EmailField(
+        label="Email",
+        widget=forms.EmailInput(attrs={"autocomplete": "off"}),
+    )
+    password1 = forms.CharField(
+        label="Password",
+        strip=False,
+        widget=forms.PasswordInput(attrs={"autocomplete": "new-password"}),
+    )
+    password2 = forms.CharField(
+        label="Password (again)",
+        strip=False,
+        widget=forms.PasswordInput(attrs={"autocomplete": "new-password"}),
+    )
+    first_name = forms.CharField(
+        label="First name",
+        required=False,
+        max_length=150,
+        widget=forms.TextInput(attrs={"autocomplete": "off"}),
+    )
+    last_name = forms.CharField(
+        label="Last name",
+        required=False,
+        max_length=150,
+        widget=forms.TextInput(attrs={"autocomplete": "off"}),
+    )
+
+    def clean_email(self):
+        email = self.cleaned_data["email"].strip().lower()
+        if CustomUser.objects.filter(email__iexact=email).exists():
+            raise forms.ValidationError("A user with this email already exists.")
+        return email
+
+    def clean_password1(self):
+        password = self.cleaned_data.get("password1")
+        if password:
+            validate_password(password, user=None)
+        return password
+
+    def clean(self):
+        data = super().clean()
+        p1 = data.get("password1")
+        p2 = data.get("password2")
+        if p1 and p2 and p1 != p2:
+            raise forms.ValidationError("The two password fields do not match.")
+        return data
 
 
 class PasswordResetRequestTelegramForm(forms.Form):

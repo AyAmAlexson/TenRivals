@@ -1,12 +1,19 @@
 from allauth.account.views import LoginView, SignupView
 from .forms import CustomLoginForm, CustomSignupForm
 from django.utils.decorators import method_decorator
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.urls import reverse, reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin,PermissionRequiredMixin, UserPassesTestMixin
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, View, FormView
 from .models import CustomUser, TelegramVerification
-from .forms import TelegramVerificationForm, ChangeEmailForm, AccountUpdateForm
+from .forms import (
+    AccountUpdateForm,
+    ChangeEmailForm,
+    SuperuserCreateUserForm,
+    TelegramVerificationForm,
+)
+from allauth.account.models import EmailAddress
+from django.db import transaction
 from rivals.models import Player
 from django.shortcuts import render, redirect
 import telebot
@@ -560,3 +567,89 @@ def resend_verification_code(request):
         messages.error(request, 'Verification record not found. Please contact support.')
     
     return redirect('persons:verify_telegram')
+
+
+def _superuser_required(user):
+    return user.is_authenticated and user.is_superuser
+
+
+@login_required
+@user_passes_test(_superuser_required)
+def superuser_users(request):
+    """
+    Superuser-only: list users, create user, delete user (not self, not other superusers).
+    """
+    if request.method == "POST":
+        action = request.POST.get("action")
+        if action == "delete":
+            try:
+                target_id = int(request.POST.get("user_id", "0"))
+            except (TypeError, ValueError):
+                messages.error(request, "Invalid user.")
+                return redirect("persons:superuser_users")
+            if target_id == request.user.pk:
+                messages.error(request, "You cannot delete your own account here.")
+                return redirect("persons:superuser_users")
+            target = get_object_or_404(CustomUser, pk=target_id)
+            if target.is_superuser:
+                messages.error(
+                    request,
+                    "Superuser accounts cannot be removed from this page. Use Django admin if needed.",
+                )
+                return redirect("persons:superuser_users")
+            email = target.email
+            target.delete()
+            messages.success(request, f"User {email} has been deleted.")
+            return redirect("persons:superuser_users")
+
+        if action == "create":
+            form = SuperuserCreateUserForm(request.POST)
+            if form.is_valid():
+                try:
+                    with transaction.atomic():
+                        user = CustomUser.objects.create_user(
+                            email=form.cleaned_data["email"],
+                            password=form.cleaned_data["password1"],
+                        )
+                        user.first_name = form.cleaned_data.get("first_name") or ""
+                        user.last_name = form.cleaned_data.get("last_name") or ""
+                        user.save(
+                            update_fields=["first_name", "last_name"],
+                        )
+                        EmailAddress.objects.update_or_create(
+                            user=user,
+                            email=user.email.lower(),
+                            defaults={
+                                "primary": True,
+                                "verified": True,
+                            },
+                        )
+                        Player.objects.get_or_create(user=user)
+                except Exception as e:
+                    logger.exception("superuser_users create failed: %s", e)
+                    messages.error(
+                        request,
+                        "Could not create user. Check logs or try a different email.",
+                    )
+                    users = CustomUser.objects.order_by("-date_joined")
+                    return render(
+                        request,
+                        "persons/superuser_users.html",
+                        {"users": users, "create_form": form},
+                    )
+                messages.success(
+                    request,
+                    f"User {user.email} created.",
+                )
+                return redirect("persons:superuser_users")
+        else:
+            form = SuperuserCreateUserForm()
+    else:
+        form = SuperuserCreateUserForm()
+
+    users = CustomUser.objects.order_by("-date_joined")
+    return render(
+        request,
+        "persons/superuser_users.html",
+        {"users": users, "create_form": form},
+    )

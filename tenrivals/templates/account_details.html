@@ -134,6 +134,9 @@
             <a href="{% url 'persons:account_details' %}" class="active">Personal Info</a>
             <a href="{% url 'account_change_password' %}">Change Password</a>
             <a href="{% url 'persons:change_email' %}">Change Email</a>
+            {% if user.is_superuser %}
+            <a href="{% url 'persons:superuser_users' %}">User administration</a>
+            {% endif %}
             <a href="{% url 'shop:index' %}">Back to Shop</a>
           </nav>
         </aside>

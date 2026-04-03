@@ -31,4 +31,6 @@ urlpatterns = [
         name='account_password_request_tg'
     ),
 
+    path('superuser/users/', views.superuser_users, name='superuser_users'),
+
 ]
