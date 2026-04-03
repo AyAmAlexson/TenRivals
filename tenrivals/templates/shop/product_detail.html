@@ -41,6 +41,13 @@
     .search input{border:0; outline:0; width:100%; font-size:14px; background:transparent; color:#fff; font-family:inherit}
     .search input::placeholder{color:#666}
     .auth a{font-weight:600; color:#fff; font-size:14px}
+    .user-menu{position:relative; display:flex; align-items:center}
+    .user-avatar{width:36px; height:36px; border-radius:50%; background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:800; cursor:pointer; border:none; font-family:inherit; letter-spacing:.5px}
+    .user-avatar:hover{background:var(--accent-dark)}
+    .user-dropdown{position:absolute; top:calc(100% + 8px); right:0; min-width:180px; background:#222; border:1px solid #333; padding:6px 0; display:none; z-index:10000}
+    .user-menu:hover .user-dropdown{display:block}
+    .user-dropdown a{display:block; padding:8px 16px; color:rgba(255,255,255,.8); font-size:13px; font-weight:600; transition:color .15s}
+    .user-dropdown a:hover{color:#fff; background:rgba(255,255,255,.05)}
     .socials{display:flex; gap:14px; align-items:center}
     .social-link{display:inline-flex; width:24px; height:24px; align-items:center; justify-content:center; color:rgba(255,255,255,.7); text-decoration:none; transition:color .15s}
     .social-link:hover{color:#fff}
@@ -185,7 +192,19 @@
             </svg>
           </a>
         </nav>
-        <div class="auth"><a href="{% url 'account_login' %}">Sign in</a></div>
+        <div class="auth">
+          {% if user.is_authenticated %}
+          <div class="user-menu">
+            <button class="user-avatar">{{ user.first_name|make_list|first|default:"?" }}{{ user.last_name|make_list|first|default:"?" }}</button>
+            <div class="user-dropdown">
+              <a href="{% url 'account_login' %}">Account</a>
+              <a href="{% url 'account_logout' %}">Log out</a>
+            </div>
+          </div>
+          {% else %}
+          <a href="{% url 'account_login' %}">Sign in</a>
+          {% endif %}
+        </div>
       </div>
     </div>
   </header>
