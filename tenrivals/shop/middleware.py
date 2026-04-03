@@ -23,15 +23,19 @@ class MaintenanceModeMiddleware:
 
     def __call__(self, request):
         if os.environ.get('MAINTENANCE_MODE', '').lower() == 'true':
-            if not self._is_allowed(request):
-                logger.info(
-                    'Maintenance block: path=%s user=%s is_authenticated=%s is_staff=%s is_superuser=%s',
-                    request.path,
-                    getattr(request, 'user', None),
-                    getattr(request.user, 'is_authenticated', None) if hasattr(request, 'user') else None,
-                    getattr(request.user, 'is_staff', None) if hasattr(request, 'user') else None,
-                    getattr(request.user, 'is_superuser', None) if hasattr(request, 'user') else None,
-                )
+            allowed = self._is_allowed(request)
+            has_user = hasattr(request, 'user')
+            logger.warning(
+                'MAINT path=%s has_user=%s user=%s auth=%s staff=%s super=%s allowed=%s',
+                request.path,
+                has_user,
+                getattr(request, 'user', '?'),
+                getattr(request.user, 'is_authenticated', '?') if has_user else '?',
+                getattr(request.user, 'is_staff', '?') if has_user else '?',
+                getattr(request.user, 'is_superuser', '?') if has_user else '?',
+                allowed,
+            )
+            if not allowed:
                 html = render_to_string('maintenance.html', request=request)
                 return HttpResponse(html, status=503, headers={'Retry-After': '86400'})
         return self.get_response(request)

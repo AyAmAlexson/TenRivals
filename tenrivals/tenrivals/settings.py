@@ -342,6 +342,11 @@ LOGGING = {
              'level': 'WARNING',
              'propagate': False,
         },
+        'shop': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
     },
 }
 
