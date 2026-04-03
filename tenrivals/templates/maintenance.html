@@ -16,7 +16,7 @@
     .page{flex:1; display:flex; align-items:center; justify-content:center; padding:40px 20px; text-align:center}
     .content{max-width:520px}
 
-    .logo{height:100px; margin:0 auto 48px; display:block; transform:rotate(-30deg)}
+    .logo{height:140px; margin:0 auto 48px; display:block; transform:rotate(-30deg)}
 
     h1{font-weight:800; font-size:36px; text-transform:uppercase; letter-spacing:1px; line-height:1.1; margin-bottom:16px}
     .accent{color:#B20009}
@@ -28,13 +28,16 @@
     .socials a:hover{border-color:#fff; color:#fff}
     .socials svg{flex-shrink:0}
 
+    .location{display:inline-flex; align-items:center; gap:6px; font-size:13px; font-weight:600; color:rgba(255,255,255,.45); letter-spacing:.5px; text-transform:uppercase; margin-bottom:40px}
+    .location svg{color:#B20009}
+
     .contact{font-size:13px; color:rgba(255,255,255,.3)}
     .contact a{color:rgba(255,255,255,.5); text-decoration:none}
     .contact a:hover{color:#fff}
 
     @media(max-width:480px){
       h1{font-size:26px}
-      .logo{height:80px; margin-bottom:36px}
+      .logo{height:112px; margin-bottom:36px}
     }
   </style>
 </head>
@@ -42,6 +45,11 @@
   <div class="page">
     <div class="content">
       <img class="logo" src="{% static 'assets/img/TR Logo 25/TR Sticker 3.svg' %}" alt="Tennis Rivals">
+
+      <div class="location">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" stroke="currentColor" stroke-width="2" fill="currentColor"/><circle cx="12" cy="9" r="2.5" fill="#111"/></svg>
+        Tbilisi, Georgia
+      </div>
 
       <h1>We're Building<br>Something <span class="accent">New</span></h1>
       <p class="sub">Curated tennis equipment from the world's top brands. Free delivery in Tbilisi. Pre-order from US&nbsp;&&nbsp;EU with official customs clearance.<br><br>Our new shop is launching soon.</p>
