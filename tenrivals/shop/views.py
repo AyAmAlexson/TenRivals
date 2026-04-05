@@ -406,7 +406,7 @@ def product_edit(request, pk):
 
     if request.method == 'POST':
         if request.POST.get('_delete') == '1':
-            for field in ('image_1', 'image_2', 'image_3'):
+            for field in ('image_1', 'image_2', 'image_3', 'image_4', 'image_5'):
                 f = getattr(base, field, None)
                 if f and getattr(f, 'name', None):
                     try:
