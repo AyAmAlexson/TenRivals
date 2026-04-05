@@ -552,53 +552,38 @@
 
   <main class="container">
     <section class="section">
-      <div class="section-head"><h2>Featured Products</h2><a href="#">View all &rarr;</a></div>
+      <div class="section-head"><h2>Featured Products</h2><a href="{% url 'shop:preorder' %}">View all &rarr;</a></div>
       <div class="grid">
-        <a class="card" href="#">
-          <div class="card__img"><svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="8" y="12" width="32" height="28" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M8 32l8-8 6 6 8-10 10 12" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="18" cy="20" r="3" stroke="currentColor" stroke-width="1.5"/></svg></div>
+        {% for p in featured_products %}
+        <a class="card" href="{% url 'shop:product_detail' p.pk %}">
+          <div class="card__img">
+            {% if p.main_image %}
+            <img src="{{ p.main_image.url }}" alt="{{ p.name }}" loading="lazy">
+            {% else %}
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none" aria-hidden="true"><rect x="8" y="12" width="32" height="28" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M8 32l8-8 6 6 8-10 10 12" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="18" cy="20" r="3" stroke="currentColor" stroke-width="1.5"/></svg>
+            {% endif %}
+          </div>
           <div class="card__info">
-            <div class="card__brand">Wilson</div>
-            <div class="card__name">Rush Pro Ace Men's</div>
-            <div class="card__color">White/White/Black</div>
-            <div class="card__prices"><span class="card__price">$73.00</span><span class="card__price-old">$99.00</span></div>
+            <div class="card__brand">{{ p.brand|default:"—" }}</div>
+            <div class="card__name">{{ p.name }}</div>
+            <div class="card__color">
+              {% if p.type == 'M_SHOES' or p.type == 'W_SHOES' or p.type == 'J_SHOES' %}
+                {% with s=p.shoe %}{% if s %}{{ s.color|default:"" }}{% endif %}{% endwith %}
+              {% else %}
+                {{ p.short_description|default:"" }}
+              {% endif %}
+            </div>
+            <div class="card__prices">
+              {% if p.actual_price %}
+              <span class="card__price-old">{{ p.initial_price }} ₾</span>
+              <span class="card__price">˜{{ p.margin_price }} ₾</span>
+              {% else %}
+              <span class="card__price">˜{{ p.margin_price }} ₾</span>
+              {% endif %}
+            </div>
           </div>
         </a>
-        <a class="card" href="#">
-          <div class="card__img"><svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="8" y="12" width="32" height="28" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M8 32l8-8 6 6 8-10 10 12" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="18" cy="20" r="3" stroke="currentColor" stroke-width="1.5"/></svg></div>
-          <div class="card__info">
-            <div class="card__brand">ASICS</div>
-            <div class="card__name">GEL-Resolution X Men's</div>
-            <div class="card__color">White/Black</div>
-            <div class="card__prices"><span class="card__price">$159.95</span><span class="card__price-old">$165.00</span></div>
-          </div>
-        </a>
-        <a class="card" href="#">
-          <div class="card__img"><svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="8" y="12" width="32" height="28" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M8 32l8-8 6 6 8-10 10 12" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="18" cy="20" r="3" stroke="currentColor" stroke-width="1.5"/></svg></div>
-          <div class="card__info">
-            <div class="card__brand">Babolat</div>
-            <div class="card__name">Pure Aero 2024</div>
-            <div class="card__color">Yellow/Black</div>
-            <div class="card__prices"><span class="card__price">$249.00</span></div>
-          </div>
-        </a>
-        <a class="card" href="#">
-          <div class="card__img"><svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="8" y="12" width="32" height="28" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M8 32l8-8 6 6 8-10 10 12" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="18" cy="20" r="3" stroke="currentColor" stroke-width="1.5"/></svg></div>
-          <div class="card__info">
-            <div class="card__brand">HEAD</div>
-            <div class="card__name">Speed Pro 2024</div>
-            <div class="card__color">Black/White</div>
-            <div class="card__prices"><span class="card__price">$229.95</span></div>
-          </div>
-        </a>
-        <a class="card" href="#">
-          <div class="card__img"><svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="8" y="12" width="32" height="28" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M8 32l8-8 6 6 8-10 10 12" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="18" cy="20" r="3" stroke="currentColor" stroke-width="1.5"/></svg></div>
-          <div class="card__info">
-            <div class="card__brand">K-Swiss</div>
-            <div class="card__name">Hypercourt Express 2 Women's</div>
-            <div class="card__color">White/Black</div>
-            <div class="card__prices"><span class="card__price">$130.00</span></div>
-          </div>
-        </a>
+        {% endfor %}
       </div>
     </section>
 

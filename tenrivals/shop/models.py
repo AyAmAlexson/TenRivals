@@ -63,6 +63,11 @@ class Product(models.Model):
     actual_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     in_stock = models.BooleanField(default=True)
     is_active = models.BooleanField(default=True)
+    featured_product = models.BooleanField(
+        default=False,
+        db_index=True,
+        help_text=_('Show in Featured block on the shop home (up to 5, newest first).'),
+    )
 
     # Images (up to 3)
     image_1 = models.ImageField(upload_to='shop/products/', null=True, blank=True)
@@ -88,6 +93,7 @@ class Product(models.Model):
         indexes = [
             models.Index(fields=['type', 'is_active']),
             models.Index(fields=['in_stock']),
+            models.Index(fields=['is_active', 'featured_product', '-created_at']),
         ]
         ordering = ['-created_at']
 

@@ -25,8 +25,17 @@ class CategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ("name", "type", "brand", "initial_price", "actual_price", "in_stock", "is_active")
-    list_filter = ("type", "brand", "in_stock", "is_active")
+    list_display = (
+        "name",
+        "type",
+        "brand",
+        "initial_price",
+        "actual_price",
+        "in_stock",
+        "is_active",
+        "featured_product",
+    )
+    list_filter = ("type", "brand", "in_stock", "is_active", "featured_product")
     search_fields = ("name", "sku", "brand")
 
 

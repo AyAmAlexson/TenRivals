@@ -81,6 +81,19 @@ def index(request):
             .first()
         )
     promo = HomePromoStripSettings.load()
+    featured_products = (
+        Product.objects.filter(is_active=True, featured_product=True)
+        .select_related(
+            'shoe',
+            'racket',
+            'apparel',
+            'string',
+            'bag',
+            'balls',
+            'accessory',
+        )
+        .order_by('-created_at')[:5]
+    )
     return render(
         request,
         'shop/index.html',
@@ -88,6 +101,7 @@ def index(request):
             'home_banners': home_banners,
             'promo_strip_left_visible': promo.left_visible,
             'promo_strip_right_visible': promo.right_visible,
+            'featured_products': featured_products,
         },
     )
 

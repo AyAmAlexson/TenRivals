@@ -27,6 +27,7 @@ class ProductForm(forms.ModelForm):
             'actual_price',
             'in_stock',
             'is_active',
+            'featured_product',
             'image_1',
             'image_2',
             'image_3',
