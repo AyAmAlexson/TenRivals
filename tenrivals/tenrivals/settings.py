@@ -356,6 +356,12 @@ LOGGING = {
             'level': 'INFO',
             'propagate': False,
         },
+        # Server errors (500): full traceback on stderr → visible in `heroku logs --tail`.
+        'django.request': {
+            'handlers': ['console', 'file'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
         'botocore': {
             'handlers': ['console', 'file'],
             'level': 'WARNING',
