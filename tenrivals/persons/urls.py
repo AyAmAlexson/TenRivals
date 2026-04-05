@@ -45,6 +45,7 @@ urlpatterns = [
     ),
     path('staff/stock/', views.staff_stock_list, name='staff_stock'),
     path('staff/preorder/', views.staff_preorder_list, name='staff_preorder'),
+    path('staff/banners/', views.staff_home_banners, name='staff_home_banners'),
 
     path('superuser/users/', views.redirect_legacy_superuser_users, name='superuser_users'),
     path(

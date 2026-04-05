@@ -10,6 +10,8 @@ from .models import (
     Category,
     CourtSurface,
     Gender,
+    HomeBanner,
+    HomeBannerSlot,
     Product,
     ProductListing,
     ProductListingChannel,
@@ -70,7 +72,14 @@ def _safe_internal_redirect(request, url: str | None):
     return None
 
 def index(request):
-    return render(request, 'shop/index.html')
+    home_banners = {}
+    for slot_value, _label in HomeBannerSlot.choices:
+        home_banners[slot_value] = (
+            HomeBanner.objects.filter(slot=slot_value, archived_at__isnull=True)
+            .order_by('-created_at')
+            .first()
+        )
+    return render(request, 'shop/index.html', {'home_banners': home_banners})
 
 
 def product_detail(request, pk):

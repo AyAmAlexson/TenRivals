@@ -199,6 +199,30 @@ class Accessory(Product):
         verbose_name_plural = 'Accessories'
 
 
+class HomeBannerSlot(models.TextChoices):
+    HERO_MAIN = 'HERO_MAIN', _('Main hero (16:9)')
+    PROMO_LEFT = 'PROMO_LEFT', _('Promo left (2:1)')
+    PROMO_RIGHT = 'PROMO_RIGHT', _('Promo right (2:1)')
+
+
+class HomeBanner(models.Model):
+    """Homepage hero/promo image. Current = archived_at is null (one per slot)."""
+
+    slot = models.CharField(max_length=16, choices=HomeBannerSlot.choices, db_index=True)
+    image = models.ImageField(upload_to='shop/home_banners/')
+    link_url = models.URLField(blank=True, max_length=500)
+    internal_note = models.CharField(max_length=200, blank=True)
+    archived_at = models.DateTimeField(null=True, blank=True, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        status = 'live' if self.archived_at is None else 'archived'
+        return f'{self.slot} ({status}) #{self.pk}'
+
+
 class ProductListingChannel(models.TextChoices):
     STOCK = 'STOCK', _('In stock')
     PREORDER = 'PREORDER', _('Preorder')

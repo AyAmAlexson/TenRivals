@@ -23,7 +23,13 @@ from django.conf import settings
 from django.contrib import messages
 from django.utils import timezone
 from django.contrib.auth import logout, login
-from shop.models import ProductListing, ProductListingChannel, ShopOrder
+from shop.models import (
+    HomeBanner,
+    HomeBannerSlot,
+    ProductListing,
+    ProductListingChannel,
+    ShopOrder,
+)
 import hashlib
 import hmac
 from django.utils.encoding import force_str
@@ -750,6 +756,86 @@ def staff_stock_list(request):
 @user_passes_test(_superuser_required)
 def staff_preorder_list(request):
     return _staff_listings_page(request, ProductListingChannel.PREORDER, "preorder")
+
+
+_VALID_BANNER_SLOTS = {c[0] for c in HomeBannerSlot.choices}
+
+
+@login_required
+@user_passes_test(_superuser_required)
+def staff_home_banners(request):
+    if request.method == "POST":
+        action = request.POST.get("action")
+        if action == "replace_banner":
+            slot = request.POST.get("slot", "")
+            if slot not in _VALID_BANNER_SLOTS:
+                messages.error(request, "Invalid banner slot.")
+                return redirect("persons:staff_home_banners")
+            image = request.FILES.get("image")
+            if not image:
+                messages.error(request, "Choose an image file.")
+                return redirect("persons:staff_home_banners")
+            link_url = (request.POST.get("link_url") or "").strip()
+            note = (request.POST.get("internal_note") or "").strip()[:200]
+            with transaction.atomic():
+                now = timezone.now()
+                HomeBanner.objects.filter(slot=slot, archived_at__isnull=True).update(
+                    archived_at=now
+                )
+                HomeBanner.objects.create(
+                    slot=slot,
+                    image=image,
+                    link_url=link_url,
+                    internal_note=note,
+                )
+            messages.success(request, "Homepage banner updated. Previous image moved to archive.")
+            return redirect("persons:staff_home_banners")
+        if action == "restore_banner":
+            try:
+                bid = int(request.POST.get("banner_id", "0"))
+            except (TypeError, ValueError):
+                messages.error(request, "Invalid banner.")
+                return redirect("persons:staff_home_banners")
+            banner = get_object_or_404(HomeBanner, pk=bid)
+            if banner.archived_at is None:
+                messages.warning(request, "That banner is already live.")
+                return redirect("persons:staff_home_banners")
+            slot = banner.slot
+            with transaction.atomic():
+                now = timezone.now()
+                HomeBanner.objects.filter(slot=slot, archived_at__isnull=True).update(
+                    archived_at=now
+                )
+                banner.archived_at = None
+                banner.save(update_fields=["archived_at"])
+            messages.success(request, "Banner restored as current for its slot.")
+            return redirect("persons:staff_home_banners")
+
+    current_banners = {}
+    for slot_value, _label in HomeBannerSlot.choices:
+        current_banners[slot_value] = (
+            HomeBanner.objects.filter(slot=slot_value, archived_at__isnull=True)
+            .order_by("-created_at")
+            .first()
+        )
+    archived_banners = HomeBanner.objects.filter(archived_at__isnull=False).order_by(
+        "-archived_at", "-id"
+    )[:200]
+    banner_slots = [
+        {"value": v, "label": lbl, "current": current_banners[v]}
+        for v, lbl in HomeBannerSlot.choices
+    ]
+    return render(
+        request,
+        "persons/staff_home_banners.html",
+        {
+            "staff_nav_active": "banners",
+            "banner_slots": banner_slots,
+            "archived_banners": archived_banners,
+            "page_heading": "Homepage banners",
+            "page_note": "Replace images for the shop home hero (3 slots). Uploading archives the previous image for that slot. Restore any archived row to make it live again.",
+        },
+    )
 
 
 @login_required
