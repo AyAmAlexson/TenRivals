@@ -3,8 +3,19 @@
 {% block page_heading %}{{ page_heading }}{% endblock %}
 {% block page_note %}<p class="page-note">{{ page_note }}</p>{% endblock %}
 {% block content %}
+  {% if catalog_is_implicit %}
+  <div class="alert alert-info">
+    Implicit catalog: the shop still lists all active products for this channel. This table only shows explicit <code class="mono">ProductListing</code> rows.
+    Use the button below to create one listing per active product (quantity 0) so this page matches what you can curate.
+  </div>
+  {% endif %}
   <div class="staff-toolbar">
     <a class="btn btn--sm" href="{% url 'shop:product_create' %}?channel={{ listing_channel }}&next={{ request.get_full_path|urlencode }}">Add product</a>
+    <form method="post" action="" style="display:inline" onsubmit="return confirm('Create a catalog row (qty 0) for every active product that does not have one in this channel?');">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="backfill_listings">
+      <button type="submit" class="btn btn--sm btn--outline">Add all active products</button>
+    </form>
   </div>
 
   <div class="card">

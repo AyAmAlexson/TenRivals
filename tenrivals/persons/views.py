@@ -26,6 +26,7 @@ from django.contrib.auth import logout, login
 from shop.models import (
     HomeBanner,
     HomeBannerSlot,
+    Product,
     ProductListing,
     ProductListingChannel,
     ShopOrder,
@@ -709,7 +710,8 @@ def superuser_user_edit(request, user_id):
 def _staff_listings_page(request, channel: str, nav_key: str):
     redirect_name = "persons:staff_stock" if nav_key == "stock" else "persons:staff_preorder"
     if request.method == "POST":
-        if request.POST.get("action") == "remove_listing":
+        action = request.POST.get("action")
+        if action == "remove_listing":
             try:
                 lid = int(request.POST.get("listing_id", "0"))
             except (TypeError, ValueError):
@@ -720,6 +722,25 @@ def _staff_listings_page(request, channel: str, nav_key: str):
                 messages.success(request, "Removed from this catalog channel.")
             else:
                 messages.warning(request, "Listing not found.")
+        elif action == "backfill_listings":
+            created = 0
+            existing = 0
+            with transaction.atomic():
+                for p in Product.objects.filter(is_active=True).only("pk").iterator():
+                    _, was_created = ProductListing.objects.get_or_create(
+                        product_id=p.pk,
+                        channel=channel,
+                        defaults={"quantity": 0},
+                    )
+                    if was_created:
+                        created += 1
+                    else:
+                        existing += 1
+            messages.success(
+                request,
+                f"Listings synced: {created} created, {existing} already in this channel.",
+            )
+            return redirect(redirect_name)
         return redirect(redirect_name)
 
     listings = (
@@ -732,7 +753,17 @@ def _staff_listings_page(request, channel: str, nav_key: str):
         if channel == ProductListingChannel.STOCK
         else "Preorder"
     )
-    note = "Products in this catalog channel. Edit opens the product form with catalog and quantity. Remove only deletes this listing row."
+    catalog_is_implicit = not ProductListing.objects.filter(channel=channel).exists()
+    note = (
+        "Each row is a catalog entry. Edit a product to set channel and quantity. "
+        "Removing a row only drops it from this channel (product stays)."
+    )
+    if catalog_is_implicit:
+        note += (
+            " While this table is empty, the storefront still shows every active product "
+            "for this channel. Use 'Add all active products' below to create one row per "
+            "product (quantity 0) so the public list matches explicit listings."
+        )
     return render(
         request,
         "persons/staff_listings.html",
@@ -742,6 +773,7 @@ def _staff_listings_page(request, channel: str, nav_key: str):
             "staff_nav_active": nav_key,
             "page_heading": heading,
             "page_note": note,
+            "catalog_is_implicit": catalog_is_implicit,
         },
     )
 
