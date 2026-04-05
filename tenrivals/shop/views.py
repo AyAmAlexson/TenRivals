@@ -12,6 +12,7 @@ from .models import (
     Gender,
     HomeBanner,
     HomeBannerSlot,
+    HomePromoStripSettings,
     Product,
     ProductListing,
     ProductListingChannel,
@@ -79,7 +80,16 @@ def index(request):
             .order_by('-created_at')
             .first()
         )
-    return render(request, 'shop/index.html', {'home_banners': home_banners})
+    promo = HomePromoStripSettings.load()
+    return render(
+        request,
+        'shop/index.html',
+        {
+            'home_banners': home_banners,
+            'promo_strip_left_visible': promo.left_visible,
+            'promo_strip_right_visible': promo.right_visible,
+        },
+    )
 
 
 def product_detail(request, pk):

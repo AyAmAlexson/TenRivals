@@ -13,6 +13,26 @@
 {% endblock %}
 {% block content %}
 
+<div class="card" style="margin-bottom:24px">
+  <h2 class="card-title">Small promo row (under main hero)</h2>
+  <p class="page-note" style="margin-top:-8px">Turn slots off to hide them on the storefront (main hero is not affected).</p>
+  <form method="post" action="{% url 'persons:staff_home_banners' %}">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="promo_strip_visibility">
+    <div class="check-grid" style="max-width:440px">
+      <div class="check-row">
+        <input type="checkbox" name="promo_left_visible" id="id_promo_left_visible" value="1" {% if promo_strip_settings.left_visible %}checked{% endif %}>
+        <label for="id_promo_left_visible">Show left promo</label>
+      </div>
+      <div class="check-row">
+        <input type="checkbox" name="promo_right_visible" id="id_promo_right_visible" value="1" {% if promo_strip_settings.right_visible %}checked{% endif %}>
+        <label for="id_promo_right_visible">Show right promo</label>
+      </div>
+    </div>
+    <button type="submit" class="btn" style="margin-top:16px">Save visibility</button>
+  </form>
+</div>
+
 <div class="banner-slot-grid">
   {% for slot in banner_slots %}
   <div class="card">

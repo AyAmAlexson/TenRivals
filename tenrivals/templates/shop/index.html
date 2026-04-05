@@ -89,6 +89,7 @@
     .hero .btn{padding:14px 28px; font-size:15px}
     .hero-banner{aspect-ratio:16/9; background:#252525; display:flex; align-items:center; justify-content:center; color:#555; font-size:13px; overflow:hidden}
     .hero-banners{display:grid; grid-template-columns:1fr 1fr; gap:16px}
+    .hero-banners--one{grid-template-columns:1fr}
     .hero-banner--sm{aspect-ratio:2/1; background:#252525; display:flex; align-items:center; justify-content:center; color:#555; font-size:12px; overflow:hidden}
     .hero-banner a, .hero-banner--sm a{display:block;width:100%;height:100%}
     .hero-banner img, .hero-banner--sm img{width:100%;height:100%;object-fit:cover}
@@ -446,7 +447,9 @@
           {% endwith %}
         </div>
       </div>
-      <div class="hero-banners">
+      {% if promo_strip_left_visible or promo_strip_right_visible %}
+      <div class="hero-banners{% if promo_strip_left_visible != promo_strip_right_visible %} hero-banners--one{% endif %}">
+        {% if promo_strip_left_visible %}
         <div class="hero-banner--sm">
           {% with b=home_banners.PROMO_LEFT %}
           {% if b %}
@@ -458,6 +461,8 @@
           {% endif %}
           {% endwith %}
         </div>
+        {% endif %}
+        {% if promo_strip_right_visible %}
         <div class="hero-banner--sm">
           {% with b=home_banners.PROMO_RIGHT %}
           {% if b %}
@@ -469,7 +474,9 @@
           {% endif %}
           {% endwith %}
         </div>
+        {% endif %}
       </div>
+      {% endif %}
     </div>
   </section>
 

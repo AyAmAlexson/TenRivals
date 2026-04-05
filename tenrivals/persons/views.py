@@ -26,6 +26,7 @@ from django.contrib.auth import logout, login
 from shop.models import (
     HomeBanner,
     HomeBannerSlot,
+    HomePromoStripSettings,
     Product,
     ProductListing,
     ProductListingChannel,
@@ -842,6 +843,13 @@ def staff_home_banners(request):
                 banner.save(update_fields=["archived_at"])
             messages.success(request, "Banner restored as current for its slot.")
             return redirect("persons:staff_home_banners")
+        if action == "promo_strip_visibility":
+            s = HomePromoStripSettings.load()
+            s.left_visible = request.POST.get("promo_left_visible") == "1"
+            s.right_visible = request.POST.get("promo_right_visible") == "1"
+            s.save(update_fields=["left_visible", "right_visible", "updated_at"])
+            messages.success(request, "Promo strip visibility updated.")
+            return redirect("persons:staff_home_banners")
 
     current_banners = {}
     for slot_value, _label in HomeBannerSlot.choices:
@@ -864,6 +872,7 @@ def staff_home_banners(request):
             "staff_nav_active": "banners",
             "banner_slots": banner_slots,
             "archived_banners": archived_banners,
+            "promo_strip_settings": HomePromoStripSettings.load(),
             "page_heading": "Homepage banners",
             "page_note": "Replace images for the shop home hero (3 slots). Uploading archives the previous image for that slot. Restore any archived row to make it live again.",
         },

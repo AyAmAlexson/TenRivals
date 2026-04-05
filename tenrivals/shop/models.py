@@ -223,6 +223,27 @@ class HomeBanner(models.Model):
         return f'{self.slot} ({status}) #{self.pk}'
 
 
+class HomePromoStripSettings(models.Model):
+    """Singleton row (pk=1): show/hide the two small promo tiles under the main hero."""
+
+    left_visible = models.BooleanField(default=True)
+    right_visible = models.BooleanField(default=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Home promo strip visibility'
+        verbose_name_plural = 'Home promo strip visibility'
+
+    def save(self, *args, **kwargs):
+        self.pk = 1
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def load(cls):
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj
+
+
 class ProductListingChannel(models.TextChoices):
     STOCK = 'STOCK', _('In stock')
     PREORDER = 'PREORDER', _('Preorder')

@@ -1,6 +1,7 @@
 from django.contrib import admin
 from .models import (
     HomeBanner,
+    HomePromoStripSettings,
     Product,
     Category,
     Racket,
@@ -76,6 +77,17 @@ class HomeBannerAdmin(admin.ModelAdmin):
     list_display = ("id", "slot", "archived_at", "link_url", "internal_note", "created_at")
     list_filter = ("slot", "archived_at")
     readonly_fields = ("created_at",)
+
+
+@admin.register(HomePromoStripSettings)
+class HomePromoStripSettingsAdmin(admin.ModelAdmin):
+    list_display = ("id", "left_visible", "right_visible", "updated_at")
+
+    def has_add_permission(self, request):
+        return not HomePromoStripSettings.objects.exists()
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
 class ShopOrderItemInline(admin.TabularInline):
