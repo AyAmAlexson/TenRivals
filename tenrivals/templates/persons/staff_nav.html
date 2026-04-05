@@ -1,0 +1,5 @@
+<nav class="staff-tabs" aria-label="Staff navigation">
+  <a href="{% url 'persons:staff_users' %}" class="staff-tab {% if staff_nav_active == 'users' %}is-active{% endif %}">Users</a>
+  <a href="{% url 'persons:staff_stock' %}" class="staff-tab {% if staff_nav_active == 'stock' %}is-active{% endif %}">In stock</a>
+  <a href="{% url 'persons:staff_preorder' %}" class="staff-tab {% if staff_nav_active == 'preorder' %}is-active{% endif %}">Preorder</a>
+</nav>

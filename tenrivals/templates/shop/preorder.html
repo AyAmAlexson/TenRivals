@@ -130,6 +130,7 @@
     .preorder-results .card__color{font-size:12px; color:#94a3b8; margin-bottom:5px; min-height:1.2em}
     .preorder-results .card__prices{display:flex; align-items:baseline; gap:8px}
     .preorder-results .card__price{font-size:14px; font-weight:700; color:var(--accent)}
+    .preorder-results .card__price-old{font-size:13px; color:#94a3b8; text-decoration:line-through; margin-right:8px}
     .preorder-card-wrap{position:relative; min-width:0}
     .preorder-card-wrap .card-staff-edit{
       position:absolute; top:8px; right:8px; z-index:2; padding:4px 8px; font-size:11px; font-weight:700;
@@ -540,7 +541,14 @@
                   {{ p.short_description|default:"" }}
                 {% endif %}
               </div>
-              <div class="card__prices"><span class="card__price">˜{{ p.price }} ₾</span></div>
+              <div class="card__prices">
+                {% if p.actual_price %}
+                <span class="card__price-old">{{ p.initial_price }} ₾</span>
+                <span class="card__price">˜{{ p.margin_price }} ₾</span>
+                {% else %}
+                <span class="card__price">˜{{ p.margin_price }} ₾</span>
+                {% endif %}
+              </div>
             </div>
           </a>
         </div>

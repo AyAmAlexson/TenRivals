@@ -1,0 +1,59 @@
+{% extends 'persons/staff_base.html' %}
+{% block title %}{{ page_heading }} — Staff — TR Shop{% endblock %}
+{% block page_heading %}{{ page_heading }}{% endblock %}
+{% block page_note %}<p class="page-note">{{ page_note }}</p>{% endblock %}
+{% block content %}
+  <div class="staff-toolbar">
+    <a class="btn btn--sm" href="{% url 'shop:product_create' %}?channel={{ listing_channel }}&next={{ request.get_full_path|urlencode }}">Add product</a>
+  </div>
+
+  <div class="card">
+    <h2 class="card-title">Listings ({{ listings|length }})</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Product</th>
+            <th>SKU</th>
+            <th>Type</th>
+            <th>Qty</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in listings %}
+          <tr>
+            <td class="mono">{{ row.pk }}</td>
+            <td>
+              <div class="cell-inline">
+                <span class="cell-text">{{ row.product.name }}</span>
+              </div>
+            </td>
+            <td class="mono">{{ row.product.sku|default:"—" }}</td>
+            <td class="mono">{{ row.product.type }}</td>
+            <td>{{ row.quantity }}</td>
+            <td>
+              <div class="action-icons">
+                <a class="icon-btn icon-btn--accent" href="{% url 'shop:product_edit' row.product.pk %}?channel={{ listing_channel }}&next={{ request.get_full_path|urlencode }}" title="Edit product" aria-label="Edit product">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+                </a>
+                <form method="post" action="" style="display:inline" onsubmit="return confirm('Remove this product from this catalog channel? Listing only; product itself is not deleted.');">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="remove_listing">
+                  <input type="hidden" name="listing_id" value="{{ row.pk }}">
+                  <button type="submit" class="icon-btn icon-btn--danger" title="Remove listing" aria-label="Remove listing">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  </button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="6">No listings yet. Add a product with this channel, or import from shop admin.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endblock %}

@@ -1,0 +1,163 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  {% include 'includes/google_tag_gtag.html' %}
+  <meta charset="utf-8">
+  <title>{% block title %}Staff — TR Shop{% endblock %}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Saira:wght@400;800&display=swap" rel="stylesheet">
+  <link rel="icon" href="{% static 'assets/img/favicon.png' %}">
+  <style>
+    :root{--accent:#B20009; --accent-dark:#8E0007; --ink:#1a1a1a; --muted:#64748b; --line:#e5e7eb}
+    *{box-sizing:border-box; margin:0; padding:0}
+    body{font-family:'Saira', system-ui, sans-serif; color:var(--ink); background:#f8f8f8; min-height:100vh; display:flex; flex-direction:column}
+    a{color:inherit; text-decoration:none}
+    .topbar{background:#111; color:rgba(255,255,255,.7); font-size:12px}
+    .topbar-row{display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:34px}
+    .topbar .links{display:flex; gap:20px; flex-wrap:wrap}
+    .topbar a{opacity:.8; transition:opacity .15s}
+    .topbar a:hover{opacity:1}
+    .city-select{display:inline-flex; align-items:center; opacity:1 !important; font-weight:600; cursor:default}
+    header{background:#1a1a1a}
+    .header-row{display:flex; align-items:center; justify-content:space-between; gap:20px; padding:14px 0}
+    .logo{height:36px}
+    .header-right{display:flex; align-items:center; gap:20px}
+    .auth a{font-weight:600; color:#fff; font-size:14px}
+    .user-menu{position:relative; display:flex; align-items:center}
+    .user-avatar{width:36px; height:36px; border-radius:50%; background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:800; cursor:pointer; border:none; font-family:inherit; letter-spacing:.5px}
+    .user-avatar:hover{background:var(--accent-dark)}
+    .user-dropdown{position:absolute; top:100%; right:0; min-width:180px; background:#222; border:1px solid #333; padding:6px 0; display:none; z-index:10000; padding-top:14px}
+    .user-dropdown::before{content:''; position:absolute; top:-8px; left:0; right:0; height:8px}
+    .user-menu:hover .user-dropdown{display:block}
+    .user-dropdown a{display:block; padding:8px 16px; color:rgba(255,255,255,.8); font-size:13px; font-weight:600; transition:color .15s}
+    .user-dropdown a:hover{color:#fff; background:rgba(255,255,255,.05)}
+    .container{max-width:1200px; margin:0 auto; padding:0 20px}
+    .page-main{flex:1; padding:32px 0}
+    .page-title{font-size:22px; font-weight:800; text-transform:uppercase; letter-spacing:.5px; margin:0 0 8px}
+    .page-note,.page-meta{font-size:13px; color:var(--muted); margin-bottom:24px}
+    .staff-tabs{display:flex; gap:8px; flex-wrap:wrap; margin:0 0 24px}
+    .staff-tab{display:inline-flex; padding:8px 16px; font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:.4px; border:1px solid var(--line); background:#fff; color:var(--ink); border-radius:6px}
+    .staff-tab:hover{border-color:#cbd5e1}
+    .staff-tab.is-active{background:var(--accent); border-color:var(--accent); color:#fff}
+    .staff-narrow{max-width:720px; margin:0 auto}
+    .card{background:#fff; border:1px solid var(--line); padding:24px; margin-bottom:24px}
+    .card-title{font-size:15px; font-weight:800; text-transform:uppercase; letter-spacing:.5px; margin:0 0 20px; padding-bottom:10px; border-bottom:1px solid var(--line)}
+    .form-row{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+    @media(max-width:640px){.form-row{grid-template-columns:1fr}}
+    .form-group{margin-bottom:14px}
+    .form-group label{display:block; font-size:12px; font-weight:600; color:var(--muted); margin-bottom:5px; text-transform:uppercase; letter-spacing:.3px}
+    .form-group input{width:100%; padding:9px 12px; border:1px solid var(--line); font-size:14px; font-family:inherit}
+    .form-group input:focus{outline:none; border-color:var(--accent)}
+    .form-group input[type="text"], .form-group input[type="email"]{width:100%; padding:9px 12px; border:1px solid var(--line); font-size:14px; font-family:inherit}
+    .form-group select{width:100%; padding:9px 12px; border:1px solid var(--line); font-size:14px; font-family:inherit}
+    .check-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px 20px}
+    @media(max-width:640px){.check-grid{grid-template-columns:1fr}}
+    .check-row{display:flex; align-items:center; gap:10px; font-size:14px; font-weight:600}
+    .field-errors{font-size:12px; color:#b91c1c; margin-top:4px}
+    .btn{display:inline-flex; align-items:center; padding:10px 22px; color:#fff; background:var(--accent); font-weight:600; font-family:inherit; font-size:13px; border:none; cursor:pointer; text-transform:uppercase; letter-spacing:.5px}
+    .btn:hover{background:var(--accent-dark)}
+    .btn--danger{background:#991b1b}
+    .btn--danger:hover{background:#7f1d1d}
+    .btn--sm{padding:6px 12px; font-size:12px}
+    .btn--outline{background:transparent; color:var(--accent); border:1px solid var(--accent); margin-right:12px}
+    .btn--outline:hover{background:var(--accent); color:#fff}
+    .actions{margin-top:8px}
+    .table-wrap{overflow-x:auto; border:1px solid var(--line)}
+    table{width:100%; border-collapse:collapse; font-size:13px; min-width:860px}
+    .cell-inline{display:flex;align-items:center;gap:8px;flex-wrap:nowrap;min-width:0;max-width:320px}
+    .cell-inline .cell-text{min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .feather-ic{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+    .feather-ic svg{width:16px;height:16px;display:block}
+    .feather-ic--ok{color:#059669}
+    .feather-ic--no{color:#9ca3af}
+    .action-icons{display:flex;flex-wrap:wrap;gap:6px;align-items:center;min-width:0}
+    .icon-btn{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;padding:0;border:1px solid var(--line);background:#fff;border-radius:6px;cursor:pointer;color:var(--ink);font:inherit}
+    .icon-btn:hover{background:#f9fafb;border-color:#cbd5e1}
+    .icon-btn--accent{background:var(--accent);border-color:var(--accent);color:#fff}
+    .icon-btn--accent:hover{background:var(--accent-dark);border-color:var(--accent-dark)}
+    .icon-btn--danger{border-color:#fecaca;color:#b91c1c}
+    .icon-btn--danger:hover{background:#fef2f2}
+    .icon-btn--ghost{cursor:default;opacity:.45;pointer-events:none}
+    a.icon-btn{text-decoration:none}
+    th,td{padding:10px 12px; text-align:left; border-bottom:1px solid var(--line)}
+    th{background:#f9fafb; font-weight:700; font-size:11px; text-transform:uppercase; letter-spacing:.4px; color:var(--muted)}
+    tr:last-child td{border-bottom:none}
+    .mono{font-family:ui-monospace,monospace; font-size:12px}
+    .badge{display:inline-block; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:700}
+    .badge--yes{background:#ecfdf5; color:#065f46}
+    .badge--no{background:#f3f4f6; color:#6b7280}
+    .alert{padding:12px 14px; margin-bottom:16px; font-size:14px; font-weight:600}
+    .alert-success{background:#ecfdf5; color:#065f46; border:1px solid #a7f3d0}
+    .alert-danger, .alert-error{background:#fef2f2; color:#b91c1c; border:1px solid #fecaca}
+    .staff-toolbar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:20px}
+    footer{background:#1a1a1a; color:rgba(255,255,255,.5); margin-top:auto}
+    .footer-bottom{padding:16px 0; font-size:12px; color:rgba(255,255,255,.3); text-align:center}
+  </style>
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+  <div class="topbar">
+    <div class="container">
+      <div class="topbar-row">
+        <div class="links">
+          <a href="{% url 'shop:index' %}">Shop</a>
+          <a href="{% url 'shop:preorder' %}">Preorder</a>
+        </div>
+        <a href="#" class="city-select" onclick="return false">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style="vertical-align:-1px; margin-right:4px"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" stroke="currentColor" stroke-width="2" fill="none"/><circle cx="12" cy="9" r="2.5" stroke="currentColor" stroke-width="1.5"/></svg>Tbilisi
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <header>
+    <div class="container">
+      <div class="header-row">
+        <a href="{% url 'shop:index' %}" aria-label="Home">
+          <img class="logo" src="{% static 'assets/img/TR Logo 25/TR 25 LOGO HOR RED.svg' %}" alt="TR Shop">
+        </a>
+        <div class="header-right">
+          <div class="auth">
+            {% if user.is_authenticated %}
+            <div class="user-menu">
+              <button type="button" class="user-avatar">{{ user.first_name|make_list|first|default:"?" }}{{ user.last_name|make_list|first|default:"?" }}</button>
+              <div class="user-dropdown">
+                <a href="{% url 'persons:account_details' %}">Account</a>
+                <a href="{% url 'account_logout' %}">Log out</a>
+              </div>
+            </div>
+            {% else %}
+            <a href="{% url 'account_login' %}">Sign in</a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="page-main">
+    <div class="container">
+      <h1 class="page-title">{% block page_heading %}Staff{% endblock %}</h1>
+      {% block page_note %}{% endblock %}
+      {% include 'persons/staff_nav.html' %}
+
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert alert-{{ message.level_tag }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+
+      {% block content %}{% endblock %}
+    </div>
+  </div>
+
+  <footer>
+    <div class="container">
+      <div class="footer-bottom">© 2026 TenRivals Shop. All rights reserved.</div>
+    </div>
+  </footer>
+</body>
+</html>

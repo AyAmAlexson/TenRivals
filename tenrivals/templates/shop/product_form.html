@@ -21,6 +21,9 @@
     <h2 style="margin-top:0;">{% if is_edit %}Edit{% else %}Add{% endif %} Product</h2>
     <form method="post" enctype="multipart/form-data">
       {% csrf_token %}
+      {% if return_next %}
+      <input type="hidden" name="next" value="{{ return_next }}">
+      {% endif %}
       <div class="field">{{ form.type.label_tag }}{{ form.type }}</div>
       <div class="row">
         <div class="col"><div class="field">{{ form.name.label_tag }}{{ form.name }}</div></div>
@@ -28,9 +31,16 @@
         <div class="col"><div class="field">{{ form.sku.label_tag }}{{ form.sku }}</div></div>
       </div>
       <div class="row">
-        <div class="col"><div class="field">{{ form.price.label_tag }}{{ form.price }}</div></div>
+        <div class="col"><div class="field">{{ form.initial_price.label_tag }}{{ form.initial_price }} <span style="font-size:11px;color:#64748b">(shown struck through if sale price set)</span></div></div>
+        <div class="col"><div class="field">{{ form.actual_price.label_tag }}{{ form.actual_price }} <span style="font-size:11px;color:#64748b">(optional; main price if set)</span></div></div>
         <div class="col"><div class="field">{{ form.in_stock.label_tag }}{{ form.in_stock }}</div></div>
+      </div>
+      <div class="row">
         <div class="col"><div class="field">{{ form.is_active.label_tag }}{{ form.is_active }}</div></div>
+      </div>
+      <div class="row">
+        <div class="col"><div class="field">{{ form.listing_channel.label_tag }}{{ form.listing_channel }}{% if form.listing_channel.help_text %}<p style="font-size:12px;color:#64748b;margin-top:6px">{{ form.listing_channel.help_text }}</p>{% endif %}</div></div>
+        <div class="col"><div class="field">{{ form.listing_quantity.label_tag }}{{ form.listing_quantity }}</div></div>
       </div>
 
       {% if form.surface %}

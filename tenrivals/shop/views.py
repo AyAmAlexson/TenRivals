@@ -1,8 +1,73 @@
+from django.conf import settings
 from django.contrib.admin.views.decorators import staff_member_required
+from django.db.models.functions import Coalesce
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
-from .models import Product, Category, ProductType, Shoe, Gender, CourtSurface, Racket
+from django.utils.http import url_has_allowed_host_and_scheme
+
 from .forms import ProductForm, ShoeForm
+from .models import (
+    Category,
+    CourtSurface,
+    Gender,
+    Product,
+    ProductListing,
+    ProductListingChannel,
+    ProductType,
+    Racket,
+    Shoe,
+)
+
+
+def _filter_by_listing_channel(qs, channel: str):
+    """Once any listing rows exist for a channel, public lists only show those products."""
+    if ProductListing.objects.filter(channel=channel).exists():
+        return qs.filter(listings__channel=channel).distinct()
+    return qs
+
+
+def _order_by_effective_price(qs):
+    return qs.annotate(sort_price=Coalesce('actual_price', 'initial_price')).order_by(
+        'sort_price', 'id'
+    )
+
+
+def _parse_listing_channel_param(raw):
+    if raw in (ProductListingChannel.STOCK, 'stock', 'STOCK'):
+        return ProductListingChannel.STOCK
+    if raw in (ProductListingChannel.PREORDER, 'preorder', 'PREORDER'):
+        return ProductListingChannel.PREORDER
+    return None
+
+
+def _save_listing_from_form(product, form):
+    ch = form.cleaned_data.get('listing_channel')
+    if not ch:
+        return
+    qty = form.cleaned_data.get('listing_quantity')
+    ProductListing.objects.update_or_create(
+        product=product,
+        channel=ch,
+        defaults={'quantity': max(0, int(qty if qty is not None else 0))},
+    )
+
+
+def _safe_internal_redirect(request, url: str | None):
+    if not url:
+        return None
+    u = url.strip()
+    if u.startswith('/') and not u.startswith('//'):
+        return u
+    allowed = {h for h in settings.ALLOWED_HOSTS if h and h != '*'}
+    if not allowed:
+        allowed = {request.get_host()}
+    if url_has_allowed_host_and_scheme(
+        url,
+        allowed_hosts=allowed,
+        require_https=request.is_secure(),
+    ):
+        return url
+    return None
 
 def index(request):
     return render(request, 'shop/index.html')
@@ -126,8 +191,8 @@ def items_list_for_Laen(request):
         if racket_pattern != 'all':
             products = products.filter(racket__string_pattern=racket_pattern)
 
-    # Order by ascending price, then by id for stability
-    products = products.order_by('price', 'id')
+    products = _filter_by_listing_channel(products, ProductListingChannel.STOCK)
+    products = _order_by_effective_price(products)
 
     # For tabs, we provide both: category list and fixed type list
     type_tabs = [(choice.value, choice.label) for choice in ProductType]
@@ -246,7 +311,8 @@ def preorder(request):
         if racket_pattern != 'all':
             products = products.filter(racket__string_pattern=racket_pattern)
 
-    products = products.order_by('price', 'id')
+    products = _filter_by_listing_channel(products, ProductListingChannel.PREORDER)
+    products = _order_by_effective_price(products)
 
     type_tabs = [(choice.value, choice.label) for choice in ProductType]
 
@@ -275,6 +341,8 @@ def preorder(request):
 @staff_member_required
 def product_create(request):
     type_code = request.GET.get('type')
+    return_next = request.GET.get('next', '')
+    edit_channel = _parse_listing_channel_param(request.GET.get('channel'))
     is_shoe = type_code in {ProductType.MENS_SHOES, ProductType.WOMENS_SHOES, ProductType.JUNIOR_SHOES}
     FormClass = ShoeForm if is_shoe else ProductForm
 
@@ -286,11 +354,29 @@ def product_create(request):
         form = FormClass(request.POST, request.FILES)
         if form.is_valid():
             obj = form.save()
+            _save_listing_from_form(obj, form)
+            next_url = _safe_internal_redirect(request, request.POST.get('next'))
+            if next_url:
+                return redirect(next_url)
             return redirect(reverse('shop:product_edit', args=[obj.pk]))
     else:
-        form = FormClass(initial={'type': type_code} if type_code else None)
+        initial_kw = {}
+        if type_code:
+            initial_kw['type'] = type_code
+        form = FormClass(
+            initial=initial_kw,
+            default_listing_channel=edit_channel,
+        )
 
-    return render(request, 'shop/product_form.html', {'form': form, 'is_edit': False})
+    return render(
+        request,
+        'shop/product_form.html',
+        {
+            'form': form,
+            'is_edit': False,
+            'return_next': return_next,
+        },
+    )
 
 
 @staff_member_required
@@ -303,10 +389,14 @@ def product_edit(request, pk):
     except Shoe.DoesNotExist:
         FormClass = ProductForm
 
+    edit_channel = _parse_listing_channel_param(request.GET.get('channel'))
+    listing_row = None
+    if edit_channel:
+        listing_row = base.listings.filter(channel=edit_channel).first()
+    return_next = request.GET.get('next', '')
+
     if request.method == 'POST':
-        # Handle delete
         if request.POST.get('_delete') == '1':
-            # delete images first
             for field in ('image_1', 'image_2', 'image_3'):
                 f = getattr(base, field, None)
                 if f and getattr(f, 'name', None):
@@ -319,8 +409,26 @@ def product_edit(request, pk):
         form = FormClass(request.POST, request.FILES, instance=instance)
         if form.is_valid():
             obj = form.save()
+            _save_listing_from_form(obj, form)
+            next_url = _safe_internal_redirect(request, request.POST.get('next'))
+            if next_url:
+                return redirect(next_url)
             return redirect(reverse('shop:product_edit', args=[obj.pk]))
     else:
-        form = FormClass(instance=instance)
+        form = FormClass(
+            instance=instance,
+            default_listing_channel=edit_channel,
+            listing_quantity=(listing_row.quantity if listing_row else None),
+        )
 
-    return render(request, 'shop/product_form.html', {'form': form, 'is_edit': True, 'object': instance})
+    return render(
+        request,
+        'shop/product_form.html',
+        {
+            'form': form,
+            'is_edit': True,
+            'object': instance,
+            'return_next': return_next,
+            'edit_channel': request.GET.get('channel', ''),
+        },
+    )

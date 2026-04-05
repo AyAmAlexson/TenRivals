@@ -1,0 +1,200 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  {% include 'includes/google_tag_gtag.html' %}
+  <meta charset="utf-8">
+  <title>Order history — TR Shop</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Saira:wght@400;800&display=swap" rel="stylesheet">
+  <link rel="icon" href="{% static 'assets/img/favicon.png' %}">
+  <style>
+    :root{--accent:#B20009; --accent-dark:#8E0007; --ink:#1a1a1a; --muted:#64748b; --line:#e5e7eb; --bg:#fff}
+    *{box-sizing:border-box; margin:0; padding:0}
+    body{font-family:'Saira', system-ui, sans-serif; color:var(--ink); background:#f8f8f8; min-height:100vh; display:flex; flex-direction:column}
+    a{color:inherit; text-decoration:none}
+
+    .topbar{background:#111; color:rgba(255,255,255,.7); font-size:12px}
+    .topbar-row{display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:34px}
+    .topbar .links{display:flex; gap:20px; flex-wrap:wrap}
+    .topbar a{opacity:.8; transition:opacity .15s}
+    .topbar a:hover{opacity:1}
+    .city-select{display:inline-flex; align-items:center; opacity:1 !important; font-weight:600; cursor:default}
+
+    header{background:#1a1a1a}
+    .header-row{display:flex; align-items:center; justify-content:space-between; gap:20px; padding:14px 0}
+    .logo{height:36px}
+    .header-right{display:flex; align-items:center; gap:20px}
+    .auth a{font-weight:600; color:#fff; font-size:14px}
+
+    .user-menu{position:relative; display:flex; align-items:center}
+    .user-avatar{width:36px; height:36px; border-radius:50%; background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:800; cursor:pointer; border:none; font-family:inherit; letter-spacing:.5px}
+    .user-avatar:hover{background:var(--accent-dark)}
+    .user-dropdown{position:absolute; top:100%; right:0; min-width:180px; background:#222; border:1px solid #333; padding:6px 0; display:none; z-index:10000; padding-top:14px}
+    .user-dropdown::before{content:''; position:absolute; top:-8px; left:0; right:0; height:8px}
+    .user-menu:hover .user-dropdown{display:block}
+    .user-dropdown a{display:block; padding:8px 16px; color:rgba(255,255,255,.8); font-size:13px; font-weight:600; transition:color .15s}
+    .user-dropdown a:hover{color:#fff; background:rgba(255,255,255,.05)}
+
+    .container{max-width:1200px; margin:0 auto; padding:0 20px}
+
+    .page-main{flex:1; padding:40px 0}
+    .page-title{font-size:24px; font-weight:800; text-transform:uppercase; letter-spacing:1px; margin:0 0 32px}
+
+    .account-grid{display:grid; grid-template-columns:280px 1fr; gap:32px; align-items:start}
+    @media(max-width:768px){.account-grid{grid-template-columns:1fr}}
+
+    .sidebar{background:#fff; border:1px solid var(--line); padding:24px}
+    .sidebar-avatar{width:80px; height:80px; border-radius:50%; background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center; font-size:28px; font-weight:800; margin:0 auto 16px; letter-spacing:1px}
+    .sidebar-name{text-align:center; font-size:16px; font-weight:800; margin-bottom:4px}
+    .sidebar-email{text-align:center; font-size:13px; color:var(--muted); margin-bottom:20px; word-break:break-all}
+    .sidebar-nav a{display:block; padding:10px 12px; font-size:14px; font-weight:600; color:var(--muted); border-left:3px solid transparent; transition:all .15s}
+    .sidebar-nav a:hover{color:var(--ink); background:#f8f8f8}
+    .sidebar-nav a.active{color:var(--accent); border-left-color:var(--accent); background:rgba(178,0,9,.04)}
+
+    .card{background:#fff; border:1px solid var(--line); padding:28px; margin-bottom:24px}
+    .card-title{font-size:16px; font-weight:800; text-transform:uppercase; letter-spacing:.5px; margin:0 0 24px; padding-bottom:12px; border-bottom:1px solid var(--line)}
+
+    .order-card{margin-bottom:20px; border:1px solid var(--line); background:#fff; padding:20px 22px}
+    .order-card-head{display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px; padding-bottom:12px; border-bottom:1px solid var(--line)}
+    .order-card-head-left{display:flex; flex-wrap:wrap; align-items:baseline; gap:12px 20px}
+    .order-id{font-size:15px; font-weight:800; letter-spacing:.3px}
+    .order-date{font-size:13px; color:var(--muted); font-weight:600}
+    .status-badge{font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; padding:4px 10px; border-radius:4px}
+    .status-PENDING{background:#fef3c7; color:#92400e}
+    .status-CONFIRMED{background:#dbeafe; color:#1e40af}
+    .status-FULFILLED{background:#d1fae5; color:#065f46}
+    .status-CANCELLED{background:#f3f4f6; color:#6b7280}
+    .order-total{font-size:16px; font-weight:800; white-space:nowrap}
+    .order-note{font-size:13px; color:var(--ink); margin-top:10px; padding:10px 12px; background:#f8fafc; border:1px solid var(--line)}
+    .order-note-label{font-size:11px; font-weight:800; text-transform:uppercase; color:var(--muted); margin-bottom:4px}
+    .order-items{width:100%; border-collapse:collapse; font-size:13px; margin-top:8px}
+    .order-items th{text-align:left; font-weight:700; color:var(--muted); text-transform:uppercase; font-size:11px; letter-spacing:.04em; padding:8px 10px 8px 0; border-bottom:1px solid var(--line)}
+    .order-items td{padding:10px 10px 10px 0; border-bottom:1px solid #f3f4f6; vertical-align:top}
+    .order-items tr:last-child td{border-bottom:none}
+    .order-empty{text-align:center; padding:48px 24px; color:var(--muted); font-size:15px; line-height:1.5; max-width:420px; margin:0 auto}
+    .order-empty a{color:var(--accent); font-weight:700}
+
+    footer{background:#1a1a1a; color:rgba(255,255,255,.5); margin-top:auto}
+    .footer-bottom{padding:16px 0; font-size:12px; color:rgba(255,255,255,.3); text-align:center}
+  </style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="container">
+      <div class="topbar-row">
+        <div class="links">
+          <a href="{% url 'shop:index' %}">Shop</a>
+          <a href="{% url 'shop:preorder' %}">Preorder</a>
+        </div>
+        <a href="#" class="city-select" onclick="return false">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style="vertical-align:-1px; margin-right:4px"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" stroke="currentColor" stroke-width="2" fill="none"/><circle cx="12" cy="9" r="2.5" stroke="currentColor" stroke-width="1.5"/></svg>Tbilisi
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <header>
+    <div class="container">
+      <div class="header-row">
+        <a href="{% url 'shop:index' %}" aria-label="Home">
+          <img class="logo" src="{% static 'assets/img/TR Logo 25/TR 25 LOGO HOR RED.svg' %}" alt="TR Shop">
+        </a>
+        <div class="header-right">
+          <div class="auth">
+            {% if user.is_authenticated %}
+            <div class="user-menu">
+              <button class="user-avatar">{{ user.first_name|make_list|first|default:"?" }}{{ user.last_name|make_list|first|default:"?" }}</button>
+              <div class="user-dropdown">
+                <a href="{% url 'persons:account_details' %}">Account</a>
+                <a href="{% url 'persons:shop_order_history' %}">Order history</a>
+                <a href="{% url 'account_logout' %}">Log out</a>
+              </div>
+            </div>
+            {% else %}
+            <a href="{% url 'account_login' %}">Sign in</a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="page-main">
+    <div class="container">
+      <h1 class="page-title">Order history</h1>
+
+      <div class="account-grid">
+        {% include 'includes/account_sidebar.html' with active_nav='orders' %}
+
+        <div>
+          <div class="card">
+            <h2 class="card-title">Your orders</h2>
+            {% if orders %}
+              {% for order in orders %}
+              <div class="order-card">
+                <div class="order-card-head">
+                  <div class="order-card-head-left">
+                    <span class="order-id">Order #{{ order.pk }}</span>
+                    <span class="order-date">{{ order.created_at|date:"M j, Y — H:i" }}</span>
+                    <span class="status-badge status-{{ order.status }}">{{ order.get_status_display }}</span>
+                  </div>
+                  <div class="order-total">{{ order.total_amount|floatformat:2 }}&nbsp;₾</div>
+                </div>
+                {% if order.customer_note %}
+                <div class="order-note">
+                  <div class="order-note-label">Note</div>
+                  {{ order.customer_note }}
+                </div>
+                {% endif %}
+                <table class="order-items">
+                  <thead>
+                    <tr>
+                      <th>Item</th>
+                      <th>Variant</th>
+                      <th style="text-align:right">Qty</th>
+                      <th style="text-align:right">Price</th>
+                      <th style="text-align:right">Line</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for line in order.items.all %}
+                    <tr>
+                      <td>
+                        {% if line.brand %}<span style="color:var(--muted); font-size:12px; display:block">{{ line.brand }}</span>{% endif %}
+                        {{ line.product_name }}
+                      </td>
+                      <td>{{ line.variant_label|default:"—" }}</td>
+                      <td style="text-align:right">{{ line.quantity }}</td>
+                      <td style="text-align:right">{{ line.unit_price|floatformat:2 }}&nbsp;₾</td>
+                      <td style="text-align:right">{{ line.line_total|floatformat:2 }}&nbsp;₾</td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+              {% endfor %}
+            {% else %}
+              <div class="order-empty">
+                No orders yet. When you place a preorder, completed orders will appear here.
+                <br><br>
+                <a href="{% url 'shop:preorder' %}">Go to Preorder</a>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="container">
+      <div class="footer-bottom">© 2026 TenRivals Shop. All rights reserved.</div>
+    </div>
+  </footer>
+
+</body>
+</html>

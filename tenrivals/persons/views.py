@@ -23,6 +23,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.utils import timezone
 from django.contrib.auth import logout, login
+from shop.models import ProductListing, ProductListingChannel, ShopOrder
 import hashlib
 import hmac
 from django.utils.encoding import force_str
@@ -87,6 +88,15 @@ class AccountDetailView(LoginRequiredMixin, UpdateView):
     def form_valid(self, form):
         messages.success(self.request, 'Account updated successfully.')
         return super().form_valid(form)
+
+
+class ShopOrderHistoryView(LoginRequiredMixin, ListView):
+    model = ShopOrder
+    template_name = 'account_order_history.html'
+    context_object_name = 'orders'
+
+    def get_queryset(self):
+        return ShopOrder.objects.filter(user=self.request.user).prefetch_related('items')
 
 def generate_verification_code():
     # Генерация случайного кода верификации
@@ -593,12 +603,30 @@ def _sync_primary_email_address(user):
 
 @login_required
 @user_passes_test(_superuser_required)
+def redirect_legacy_superuser_users(request):
+    return redirect("persons:staff_users")
+
+
+@login_required
+@user_passes_test(_superuser_required)
+def redirect_legacy_superuser_send_verification(request, user_id):
+    return redirect("persons:superuser_send_email_verification", user_id=user_id)
+
+
+@login_required
+@user_passes_test(_superuser_required)
+def redirect_legacy_superuser_user_edit(request, user_id):
+    return redirect("persons:superuser_user_edit", user_id=user_id)
+
+
+@login_required
+@user_passes_test(_superuser_required)
 @require_POST
 def superuser_send_email_verification(request, user_id):
     target = get_object_or_404(CustomUser, pk=user_id)
     if target.is_primary_email_verified:
         messages.info(request, f"{target.email} is already verified.")
-        return redirect("persons:superuser_users")
+        return redirect("persons:staff_users")
     try:
         send_email_confirmation(request, target, signup=False)
         messages.success(
@@ -611,7 +639,7 @@ def superuser_send_email_verification(request, user_id):
             request,
             "Could not send verification email. Check SMTP or logs.",
         )
-    return redirect("persons:superuser_users")
+    return redirect("persons:staff_users")
 
 
 @login_required
@@ -657,20 +685,76 @@ def superuser_user_edit(request, user_id):
                 )
             else:
                 messages.success(request, f"User {user.email} (ID {user.pk}) updated.")
-                return redirect("persons:superuser_users")
+                return redirect("persons:staff_users")
     else:
         form = SuperuserUserEditForm(instance=target, editor=request.user)
 
     return render(
         request,
         "persons/superuser_user_edit.html",
-        {"form": form, "edit_user": target},
+        {
+            "form": form,
+            "edit_user": target,
+            "staff_nav_active": "users",
+        },
+    )
+
+
+def _staff_listings_page(request, channel: str, nav_key: str):
+    redirect_name = "persons:staff_stock" if nav_key == "stock" else "persons:staff_preorder"
+    if request.method == "POST":
+        if request.POST.get("action") == "remove_listing":
+            try:
+                lid = int(request.POST.get("listing_id", "0"))
+            except (TypeError, ValueError):
+                messages.error(request, "Invalid listing.")
+                return redirect(redirect_name)
+            deleted, _ = ProductListing.objects.filter(pk=lid, channel=channel).delete()
+            if deleted:
+                messages.success(request, "Removed from this catalog channel.")
+            else:
+                messages.warning(request, "Listing not found.")
+        return redirect(redirect_name)
+
+    listings = (
+        ProductListing.objects.filter(channel=channel)
+        .select_related("product")
+        .order_by("product__name", "product__id")
+    )
+    heading = (
+        "In stock"
+        if channel == ProductListingChannel.STOCK
+        else "Preorder"
+    )
+    note = "Products in this catalog channel. Edit opens the product form with catalog and quantity. Remove only deletes this listing row."
+    return render(
+        request,
+        "persons/staff_listings.html",
+        {
+            "listings": listings,
+            "listing_channel": channel,
+            "staff_nav_active": nav_key,
+            "page_heading": heading,
+            "page_note": note,
+        },
     )
 
 
 @login_required
 @user_passes_test(_superuser_required)
-def superuser_users(request):
+def staff_stock_list(request):
+    return _staff_listings_page(request, ProductListingChannel.STOCK, "stock")
+
+
+@login_required
+@user_passes_test(_superuser_required)
+def staff_preorder_list(request):
+    return _staff_listings_page(request, ProductListingChannel.PREORDER, "preorder")
+
+
+@login_required
+@user_passes_test(_superuser_required)
+def staff_users(request):
     """
     Superuser-only: list users, create user, delete user (not self, not other superusers).
     """
@@ -681,21 +765,21 @@ def superuser_users(request):
                 target_id = int(request.POST.get("user_id", "0"))
             except (TypeError, ValueError):
                 messages.error(request, "Invalid user.")
-                return redirect("persons:superuser_users")
+                return redirect("persons:staff_users")
             if target_id == request.user.pk:
                 messages.error(request, "You cannot delete your own account here.")
-                return redirect("persons:superuser_users")
+                return redirect("persons:staff_users")
             target = get_object_or_404(CustomUser, pk=target_id)
             if target.is_superuser:
                 messages.error(
                     request,
                     "Superuser accounts cannot be removed from this page. Use Django admin if needed.",
                 )
-                return redirect("persons:superuser_users")
+                return redirect("persons:staff_users")
             email = target.email
             target.delete()
             messages.success(request, f"User {email} has been deleted.")
-            return redirect("persons:superuser_users")
+            return redirect("persons:staff_users")
 
         if action == "create":
             form = SuperuserCreateUserForm(request.POST)
@@ -731,14 +815,18 @@ def superuser_users(request):
                     ).order_by("-date_joined")
                     return render(
                         request,
-                        "persons/superuser_users.html",
-                        {"users": users, "create_form": form},
+                        "persons/staff_users.html",
+                        {
+                            "users": users,
+                            "create_form": form,
+                            "staff_nav_active": "users",
+                        },
                     )
                 messages.success(
                     request,
                     f"User {user.email} created.",
                 )
-                return redirect("persons:superuser_users")
+                return redirect("persons:staff_users")
         else:
             form = SuperuserCreateUserForm()
     else:
@@ -749,6 +837,10 @@ def superuser_users(request):
     )
     return render(
         request,
-        "persons/superuser_users.html",
-        {"users": users, "create_form": form},
+        "persons/staff_users.html",
+        {
+            "users": users,
+            "create_form": form,
+            "staff_nav_active": "users",
+        },
     )

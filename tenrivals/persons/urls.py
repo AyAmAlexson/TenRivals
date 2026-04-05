@@ -11,6 +11,7 @@ urlpatterns = [
     
     # Управление аккаунтом
     path('my_account/', views.AccountDetailView.as_view(), name='account_details'),
+    path('my_account/orders/', views.ShopOrderHistoryView.as_view(), name='shop_order_history'),
     path('delete/', views.delete_profile, name='delete_profile'),
     
     # Управление email
@@ -31,16 +32,28 @@ urlpatterns = [
         name='account_password_request_tg'
     ),
 
-    path('superuser/users/', views.superuser_users, name='superuser_users'),
+    path('staff/users/', views.staff_users, name='staff_users'),
     path(
-        'superuser/users/<int:user_id>/send-email-verification/',
+        'staff/users/<int:user_id>/send-email-verification/',
         views.superuser_send_email_verification,
         name='superuser_send_email_verification',
     ),
     path(
-        'superuser/users/<int:user_id>/edit/',
+        'staff/users/<int:user_id>/edit/',
         views.superuser_user_edit,
         name='superuser_user_edit',
+    ),
+    path('staff/stock/', views.staff_stock_list, name='staff_stock'),
+    path('staff/preorder/', views.staff_preorder_list, name='staff_preorder'),
+
+    path('superuser/users/', views.redirect_legacy_superuser_users, name='superuser_users'),
+    path(
+        'superuser/users/<int:user_id>/send-email-verification/',
+        views.redirect_legacy_superuser_send_verification,
+    ),
+    path(
+        'superuser/users/<int:user_id>/edit/',
+        views.redirect_legacy_superuser_user_edit,
     ),
 
 ]

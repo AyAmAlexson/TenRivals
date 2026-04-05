@@ -278,7 +278,12 @@
         <hr class="pdp-divider">
 
         <div class="pdp-prices">
-          <span class="pdp-price">˜{{ product.price }} ₾</span>
+          {% if product.actual_price %}
+          <span class="pdp-price-old">{{ product.initial_price }} ₾</span>
+          <span class="pdp-price">˜{{ product.margin_price }} ₾</span>
+          {% else %}
+          <span class="pdp-price">˜{{ product.margin_price }} ₾</span>
+          {% endif %}
         </div>
         <p style="font-size:12px;color:var(--muted);margin:-12px 0 16px">Indicative price (±30 ₾). Final price when you confirm your order.</p>
 

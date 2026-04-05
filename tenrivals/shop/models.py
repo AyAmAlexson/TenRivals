@@ -1,3 +1,6 @@
+from decimal import Decimal
+
+from django.conf import settings
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -14,6 +17,7 @@ class ProductType(models.TextChoices):
     STRINGS = 'STRINGS', 'Strings'
     GRIPS = 'GRIPS', 'Grips and Accessories'
     BALLS = 'BALLS', 'Balls'
+    ACCESSORIES = 'ACCESSORIES', 'Accessories'
     OTHER = 'OTHER', 'Other'
 
 
@@ -55,7 +59,8 @@ class Product(models.Model):
     brand = models.CharField(max_length=120, blank=True, null=True)
 
     # Pricing and availability
-    price = models.DecimalField(max_digits=10, decimal_places=2)
+    initial_price = models.DecimalField(max_digits=10, decimal_places=2)
+    actual_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     in_stock = models.BooleanField(default=True)
     is_active = models.BooleanField(default=True)
 
@@ -101,13 +106,21 @@ class Product(models.Model):
             return None
 
     @property
+    def primary_price(self):
+        """Selling price: actual if set, otherwise initial."""
+        if self.actual_price is not None:
+            return self.actual_price
+        return self.initial_price
+
+    @property
     def margin_price(self):
-        # price + 5%, rounded up to nearest 10 (₾)
+        # primary_price + 5%, rounded up to nearest 10 (₾)
         from decimal import Decimal, ROUND_CEILING
-        if self.price is None:
+
+        base_price = self.primary_price
+        if base_price is None:
             return None
-        base = (self.price * Decimal('1.05')).quantize(Decimal('0.01'))
-        # ceil to nearest 10
+        base = (base_price * Decimal('1.05')).quantize(Decimal('0.01'))
         tens = (base / Decimal('10')).to_integral_value(rounding=ROUND_CEILING) * Decimal('10')
         return tens
 
@@ -184,3 +197,128 @@ class Accessory(Product):
     class Meta:
         verbose_name = 'Accessory'
         verbose_name_plural = 'Accessories'
+
+
+class ProductListingChannel(models.TextChoices):
+    STOCK = 'STOCK', _('In stock')
+    PREORDER = 'PREORDER', _('Preorder')
+
+
+class ProductListing(models.Model):
+    """Links a product to in-stock or preorder catalog with quantity (stock on hand)."""
+
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='listings')
+    channel = models.CharField(max_length=16, choices=ProductListingChannel.choices)
+    quantity = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['-id']
+        constraints = [
+            models.UniqueConstraint(
+                fields=('product', 'channel'),
+                name='shop_product_listing_unique_channel',
+            ),
+        ]
+
+    def __str__(self):
+        return f'{self.product_id} {self.channel} ×{self.quantity}'
+
+
+class ShopOrder(models.Model):
+    """Customer order (created via admin or future checkout)."""
+
+    class Status(models.TextChoices):
+        PENDING = 'PENDING', _('Pending')
+        CONFIRMED = 'CONFIRMED', _('Confirmed')
+        FULFILLED = 'FULFILLED', _('Fulfilled')
+        CANCELLED = 'CANCELLED', _('Cancelled')
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='shop_orders',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    status = models.CharField(
+        max_length=16,
+        choices=Status.choices,
+        default=Status.PENDING,
+        db_index=True,
+    )
+    total_amount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        help_text=_('Total in GEL (₾); updated from line items on save.'),
+    )
+    customer_note = models.TextField(blank=True)
+    internal_note = models.TextField(blank=True, help_text=_('Staff only, not shown to customer.'))
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'Order #{self.pk} — {self.user.email}'
+
+    def recalculate_total(self):
+        from django.db.models import Sum
+
+        agg = self.items.aggregate(s=Sum('line_total'))
+        total = agg['s'] or Decimal('0.00')
+        self.total_amount = total
+
+
+class ShopOrderItem(models.Model):
+    """Single line on a shop order (product snapshot + pricing)."""
+
+    order = models.ForeignKey(
+        ShopOrder,
+        on_delete=models.CASCADE,
+        related_name='items',
+    )
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='order_items',
+    )
+    product_name = models.CharField(max_length=200)
+    brand = models.CharField(max_length=120, blank=True)
+    sku = models.CharField(max_length=64, blank=True)
+    variant_label = models.CharField(
+        max_length=120,
+        blank=True,
+        help_text=_('Size, grip, colorway, etc.'),
+    )
+    quantity = models.PositiveIntegerField(default=1)
+    unit_price = models.DecimalField(max_digits=10, decimal_places=2)
+    line_total = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=Decimal('0.00'),
+    )
+
+    class Meta:
+        ordering = ['id']
+
+    def __str__(self):
+        return f'{self.product_name} × {self.quantity}'
+
+    def save(self, *args, **kwargs):
+        if self.unit_price is not None and self.quantity:
+            self.line_total = (self.unit_price * self.quantity).quantize(Decimal('0.01'))
+        super().save(*args, **kwargs)
+        self._refresh_order_total()
+
+    def delete(self, *args, **kwargs):
+        order = self.order
+        super().delete(*args, **kwargs)
+        order.recalculate_total()
+        order.save(update_fields=['total_amount', 'updated_at'])
+
+    def _refresh_order_total(self):
+        order = self.order
+        order.recalculate_total()
+        order.save(update_fields=['total_amount', 'updated_at'])

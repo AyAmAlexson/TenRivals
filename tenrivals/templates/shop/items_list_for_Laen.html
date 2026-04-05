@@ -149,7 +149,14 @@
             <a href="{% url 'shop:product_edit' p.pk %}" class="icon-edit" title="Edit">✎</a>
             {% endif %}
           </div>
-          <div class="price">{{ p.price }} ₾</div>
+          <div class="price">
+            {% if p.actual_price %}
+            <span style="text-decoration:line-through;color:#94a3b8;font-weight:500;margin-right:6px">{{ p.initial_price }} ₾</span>
+            <strong>{{ p.actual_price }} ₾</strong>
+            {% else %}
+            <strong>{{ p.initial_price }} ₾</strong>
+            {% endif %}
+          </div>
           <div class="attrs">
             {% if p.short_description %}<p>{{ p.short_description }}</p>{% endif %}
             {% if p.type == 'RACKET' %}

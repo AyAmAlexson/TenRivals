@@ -456,7 +456,7 @@ class Command(BaseCommand):
                 shoe_obj = Shoe(
                     type=type_code,
                     name=title[:200],
-                    price=price,
+                    initial_price=price,
                     brand=brand,
                     sku=sku,
                     short_description=short_description,
@@ -465,7 +465,7 @@ class Command(BaseCommand):
                 )
             else:
                 shoe_obj.type = type_code
-                shoe_obj.price = price
+                shoe_obj.initial_price = price
                 shoe_obj.brand = brand or shoe_obj.brand
                 shoe_obj.sku = sku or shoe_obj.sku
                 if description:
@@ -507,7 +507,7 @@ class Command(BaseCommand):
                     racket_obj = Racket(
                         type=type_code,
                         name=title[:200],
-                        price=price,
+                        initial_price=price,
                         brand=brand,
                         sku=sku,
                         short_description=short_description,
@@ -516,7 +516,7 @@ class Command(BaseCommand):
                     )
                 else:
                     racket_obj.type = type_code
-                    racket_obj.price = price
+                    racket_obj.initial_price = price
                     racket_obj.brand = brand or racket_obj.brand
                     racket_obj.sku = sku or racket_obj.sku
                     if description:
@@ -575,7 +575,7 @@ class Command(BaseCommand):
                 # Fallback to base product for other types
                 if product:
                     product.type = type_code
-                    product.price = price
+                    product.initial_price = price
                     product.brand = brand or product.brand
                     product.sku = sku or product.sku
                     if description:
@@ -592,7 +592,7 @@ class Command(BaseCommand):
                     target_obj = Product(
                         type=type_code,
                         name=title[:200],
-                        price=price,
+                        initial_price=price,
                         brand=brand,
                         sku=sku,
                         description=description or "",

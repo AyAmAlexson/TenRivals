@@ -119,6 +119,7 @@
               <button class="user-avatar">{{ user.first_name|make_list|first|default:"?" }}{{ user.last_name|make_list|first|default:"?" }}</button>
               <div class="user-dropdown">
                 <a href="{% url 'persons:account_details' %}">Account</a>
+                <a href="{% url 'persons:shop_order_history' %}">Order history</a>
                 <a href="{% url 'account_logout' %}">Log out</a>
               </div>
             </div>
@@ -136,20 +137,7 @@
       <h1 class="page-title">My Account</h1>
 
       <div class="account-grid">
-        <aside class="sidebar">
-          <div class="sidebar-avatar">{{ user.first_name|make_list|first|default:"?" }}{{ user.last_name|make_list|first|default:"?" }}</div>
-          <div class="sidebar-name">{{ user.first_name }} {{ user.last_name }}</div>
-          <div class="sidebar-email">{{ user.email }}</div>
-          <nav class="sidebar-nav">
-            <a href="{% url 'persons:account_details' %}" class="active">Personal Info</a>
-            <a href="{% url 'account_change_password' %}">Change Password</a>
-            <a href="{% url 'persons:change_email' %}">Change Email</a>
-            {% if user.is_superuser %}
-            <a href="{% url 'persons:superuser_users' %}">User administration</a>
-            {% endif %}
-            <a href="{% url 'shop:index' %}">Back to Shop</a>
-          </nav>
-        </aside>
+        {% include 'includes/account_sidebar.html' with active_nav='profile' %}
 
         <div>
           {% if messages %}
