@@ -90,6 +90,8 @@
     .btn--outline{background:transparent; color:var(--accent); border:1px solid var(--accent)}
     .btn--outline:hover{background:var(--accent); color:#fff}
     .btn--lg{padding:14px 32px; font-size:16px}
+    /* Saira bold (800) only with caps — primary CTA */
+    .btn--cta-telegram{font-weight:800; text-transform:uppercase; letter-spacing:.1em; font-size:13px}
 
     /* Breadcrumb */
     .breadcrumb{padding:16px 0; font-size:13px; color:#94a3b8}
@@ -135,23 +137,27 @@
     /* Shipping info */
     .pdp-shipping{font-size:13px; color:var(--muted); margin-bottom:28px; line-height:1.7}
 
-    /* Tabs */
-    .pdp-tabs{margin-top:8px}
-    .pdp-tab-nav{display:flex; gap:0; border-bottom:1px solid var(--line)}
-    .pdp-tab-btn{padding:12px 20px; font-size:14px; font-weight:600; color:var(--muted); background:none; border:none; border-bottom:2px solid transparent; cursor:pointer; font-family:inherit; transition:color .15s}
-    .pdp-tab-btn.active{color:var(--accent); border-bottom-color:var(--accent)}
-    .pdp-tab-btn:hover{color:var(--ink)}
-    .pdp-tab-panel{padding:20px 0; font-size:14px; line-height:1.7; color:var(--muted)}
-    .pdp-tab-panel h4{text-transform:none; font-weight:600; font-size:15px; margin:16px 0 6px; color:var(--ink)}
-    .pdp-tab-panel ul{padding-left:20px}
-    .pdp-tab-panel li{margin-bottom:4px}
+    .pdp-specs{margin:0 0 24px}
+    .pdp-specs-title{
+      font-size:11px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; color:var(--muted);
+      margin:0 0 12px; padding-bottom:8px; border-bottom:1px solid var(--line);
+    }
+
+    /* Full-width description below gallery row */
+    .pdp-desc-section{margin-top:8px; padding:32px 0 0; border-top:1px solid var(--line)}
+    .pdp-desc-section .pdp-desc-heading{
+      font-size:11px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; color:var(--muted);
+      margin:0 0 16px;
+    }
+    .pdp-desc-body{font-size:15px; line-height:1.75; color:var(--ink); max-width:none; text-transform:none; font-weight:400}
+    .pdp-desc-body p{margin:0 0 12px}
 
     /* Specs table */
     .specs-table{width:100%; border-collapse:collapse}
     .specs-table tr{border-bottom:1px solid var(--line)}
     .specs-table td{padding:10px 0; font-size:14px}
     .specs-table td:first-child{color:var(--muted); width:180px}
-    .specs-table td:last-child{color:var(--ink); font-weight:600}
+    .specs-table td:last-child{color:var(--ink); font-weight:600; text-transform:none}
 
     /* Responsive */
     @media(max-width:1024px){
@@ -247,9 +253,11 @@
     <div class="breadcrumb">
       <a href="{% url 'shop:index' %}">Home</a><span>/</span>
       {% if pdp_mode == 'stock' %}
-      <a href="{% url 'shop:stock' %}">In stock</a><span>/</span>
+      <a href="{% url 'shop:stock' %}">Stock</a><span>/</span>
+      <a href="{% url 'shop:stock' %}?type={{ product.type }}">{{ pdp_type_breadcrumb_label }}</a><span>/</span>
       {% else %}
       <a href="{% url 'shop:preorder' %}">Preorder</a><span>/</span>
+      <a href="{% url 'shop:preorder' %}?type={{ product.type }}">{{ pdp_type_breadcrumb_label }}</a><span>/</span>
       {% endif %}
       <span style="color:var(--ink)">{{ product.name }}</span>
     </div>
@@ -315,6 +323,37 @@
         <p style="font-size:12px;color:var(--muted);margin:-12px 0 16px">Indicative price (±30 ₾). Final price when you confirm your order.</p>
         {% endif %}
 
+        <div class="pdp-specs" aria-labelledby="pdp-specs-title">
+          <h2 class="pdp-specs-title" id="pdp-specs-title">Specifications</h2>
+          <table class="specs-table">
+            <tr><td>SKU</td><td>{{ product.sku|default:"—" }}</td></tr>
+            <tr><td>Type</td><td>{{ product.get_type_display }}</td></tr>
+            {% if product.category %}<tr><td>Category</td><td>{{ product.category.name }}</td></tr>{% endif %}
+            {% if product.type == 'RACKET' %}
+              {% with r=product.racket %}
+              {% if r %}
+            <tr><td>Weight</td><td>{% if r.weight_grams %}{{ r.weight_grams }} g{% if r.is_strung %} (strung){% else %} (unstrung){% endif %}{% else %}—{% endif %}</td></tr>
+            <tr><td>Head size</td><td>{% if r.head_size_sq_in %}{{ r.head_size_sq_in }} in²{% else %}—{% endif %}</td></tr>
+            <tr><td>String pattern</td><td>{{ r.string_pattern|default:"—" }}</td></tr>
+            <tr><td>Length</td><td>{% if r.length_in %}{{ r.length_in }} in{% else %}—{% endif %}</td></tr>
+            <tr><td>Balance</td><td>{% if r.balance_mm %}{{ r.balance_mm }} mm{% else %}—{% endif %}</td></tr>
+            <tr><td>Swingweight</td><td>{% if r.swingweight %}{{ r.swingweight }}{% else %}—{% endif %}</td></tr>
+              {% endif %}
+              {% endwith %}
+            {% elif product.type == 'M_SHOES' or product.type == 'W_SHOES' or product.type == 'J_SHOES' %}
+              {% with s=product.shoe %}
+              {% if s %}
+            <tr><td>Surface</td><td>{{ s.get_surface_display }}</td></tr>
+            <tr><td>Gender</td><td>{{ s.get_gender_display }}</td></tr>
+              {% endif %}
+              {% endwith %}
+            {% endif %}
+            {% for key, val in product.attributes.items %}
+            <tr><td>{{ key }}</td><td>{{ val }}</td></tr>
+            {% endfor %}
+          </table>
+        </div>
+
         {% if product.sizes_list %}
         <div class="pdp-variants">
           <div class="pdp-variants-label">Available sizes</div>
@@ -340,7 +379,7 @@
         {% endif %}
 
         <div class="pdp-cart-row">
-          <a class="btn btn--lg" href="https://t.me/tennis_rivals_shop_tbilisi?direct" target="_blank" rel="noopener">Order via Telegram</a>
+          <a class="btn btn--lg btn--cta-telegram" href="https://t.me/tennis_rivals_shop_tbilisi?direct" target="_blank" rel="noopener">Order via Telegram</a>
         </div>
 
         <div class="pdp-shipping">
@@ -352,52 +391,19 @@
           {% endif %}
         </div>
 
-        <div class="pdp-tabs">
-          <div class="pdp-tab-nav">
-            <button type="button" class="pdp-tab-btn active" data-tab="desc">Description</button>
-            <button type="button" class="pdp-tab-btn" data-tab="specs">Specifications</button>
-          </div>
-
-          <div class="pdp-tab-panel" id="tab-desc">
-            {% if product.description %}
-            <div style="white-space:pre-wrap">{{ product.description }}</div>
-            {% else %}
-            <p>No detailed description yet. Message us on Telegram for more info.</p>
-            {% endif %}
-          </div>
-
-          <div class="pdp-tab-panel" id="tab-specs" style="display:none">
-            <table class="specs-table">
-              <tr><td>SKU</td><td>{{ product.sku|default:"—" }}</td></tr>
-              <tr><td>Type</td><td>{{ product.get_type_display }}</td></tr>
-              {% if product.category %}<tr><td>Category</td><td>{{ product.category.name }}</td></tr>{% endif %}
-              {% if product.type == 'RACKET' %}
-                {% with r=product.racket %}
-                {% if r %}
-              <tr><td>Weight</td><td>{% if r.weight_grams %}{{ r.weight_grams }} g{% if r.is_strung %} (strung){% else %} (unstrung){% endif %}{% else %}—{% endif %}</td></tr>
-              <tr><td>Head size</td><td>{% if r.head_size_sq_in %}{{ r.head_size_sq_in }} in²{% else %}—{% endif %}</td></tr>
-              <tr><td>String pattern</td><td>{{ r.string_pattern|default:"—" }}</td></tr>
-              <tr><td>Length</td><td>{% if r.length_in %}{{ r.length_in }} in{% else %}—{% endif %}</td></tr>
-              <tr><td>Balance</td><td>{% if r.balance_mm %}{{ r.balance_mm }} mm{% else %}—{% endif %}</td></tr>
-              <tr><td>Swingweight</td><td>{% if r.swingweight %}{{ r.swingweight }}{% else %}—{% endif %}</td></tr>
-                {% endif %}
-                {% endwith %}
-              {% elif product.type == 'M_SHOES' or product.type == 'W_SHOES' or product.type == 'J_SHOES' %}
-                {% with s=product.shoe %}
-                {% if s %}
-              <tr><td>Surface</td><td>{{ s.get_surface_display }}</td></tr>
-              <tr><td>Gender</td><td>{{ s.get_gender_display }}</td></tr>
-                {% endif %}
-                {% endwith %}
-              {% endif %}
-              {% for key, val in product.attributes.items %}
-              <tr><td>{{ key }}</td><td>{{ val }}</td></tr>
-              {% endfor %}
-            </table>
-          </div>
-        </div>
       </div>
     </div>
+
+    <section class="pdp-desc-section" aria-labelledby="pdp-desc-heading">
+      <h2 class="pdp-desc-heading" id="pdp-desc-heading">Description</h2>
+      <div class="pdp-desc-body">
+        {% if product.description %}
+        <div style="white-space:pre-wrap">{{ product.description }}</div>
+        {% else %}
+        <p>No detailed description yet. Message us on Telegram for more info.</p>
+        {% endif %}
+      </div>
+    </section>
   </main>
 
   <!-- Footer -->
@@ -408,7 +414,7 @@
           <h4>Tennis Rivals: The Line for Your Growth.</h4>
           <p>Catalog UI scaffold. Content will be added later.</p>
           <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap">
-            <a class="btn btn--outline" href="{% url 'shop:stock' %}">In stock</a>
+            <a class="btn btn--outline" href="{% url 'shop:stock' %}">Stock</a>
             <a class="btn btn--outline" href="{% url 'shop:preorder' %}">Preorder</a>
           </div>
         </div>
@@ -445,15 +451,6 @@
   </footer>
 
   <script>
-    document.querySelectorAll('.pdp-tab-btn').forEach(btn => {
-      btn.addEventListener('click', function() {
-        const id = this.getAttribute('data-tab');
-        document.querySelectorAll('.pdp-tab-panel').forEach(p => p.style.display = 'none');
-        document.querySelectorAll('.pdp-tab-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById('tab-' + id).style.display = 'block';
-        this.classList.add('active');
-      });
-    });
     document.querySelectorAll('.pdp-thumb').forEach(th => {
       th.addEventListener('click', function() {
         const src = this.getAttribute('data-src');

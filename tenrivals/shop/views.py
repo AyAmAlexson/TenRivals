@@ -84,6 +84,30 @@ def _resolve_pdp_display_mode(request, product: Product) -> str:
     return 'preorder'
 
 
+_PDP_BREADCRUMB_TYPE_LABELS = {
+    ProductType.RACKET: 'Rackets',
+    ProductType.MENS_APPAREL: "Men's apparel",
+    ProductType.WOMENS_APPAREL: "Women's apparel",
+    ProductType.JUNIOR_APPAREL: 'Junior apparel',
+    ProductType.MENS_SHOES: "Men's Shoes",
+    ProductType.WOMENS_SHOES: "Women's Shoes",
+    ProductType.JUNIOR_SHOES: 'Junior Shoes',
+    ProductType.BAGS: 'Bags & covers',
+    ProductType.STRINGS: 'Strings',
+    ProductType.GRIPS: 'Grips',
+    ProductType.BALLS: 'Balls',
+    ProductType.ACCESSORIES: 'Accessories',
+    ProductType.OTHER: 'Other',
+}
+
+
+def _pdp_breadcrumb_type_label(product: Product) -> str:
+    return _PDP_BREADCRUMB_TYPE_LABELS.get(
+        product.type,
+        product.get_type_display(),
+    )
+
+
 def _save_listing_from_form(product, form):
     ch = form.cleaned_data.get('listing_channel')
     if not ch:
@@ -161,7 +185,10 @@ def index(request):
 
 def product_detail(request, pk):
     product = get_object_or_404(
-        Product.objects.prefetch_related('listings'),
+        Product.objects.select_related(
+            *_PRODUCT_SUBCLASS_SELECT,
+            'category',
+        ).prefetch_related('listings'),
         pk=pk,
         is_active=True,
     )
@@ -180,6 +207,7 @@ def product_detail(request, pk):
             "pdp_gallery": gallery,
             "pdp_mode": pdp_mode,
             "stock_listing_qty": stock_listing_qty,
+            "pdp_type_breadcrumb_label": _pdp_breadcrumb_type_label(product),
         },
     )
 
