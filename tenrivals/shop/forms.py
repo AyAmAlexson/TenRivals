@@ -15,29 +15,32 @@ from .models import (
 
 class ProductForm(forms.ModelForm):
     listing_channel = forms.ChoiceField(
-        required=False,
+        required=True,
         label='Catalog',
-        help_text='In stock = warehouse qty; Preorder = catalog without holding qty requirement.',
+        help_text='Preorder — indicative catalog; In stock — warehouse listing with quantity.',
     )
     listing_quantity = forms.IntegerField(
         min_value=0,
         initial=0,
         required=False,
-        label='Quantity (on hand)',
+        label='Quantity (in stock)',
     )
 
     class Meta:
         model = Product
         fields = [
-            'type',
-            'name',
-            'sku',
+            'category',
             'brand',
+            'name',
+            'type',
+            'sku',
             'initial_price',
             'actual_price',
             'in_stock',
             'is_active',
             'featured_product',
+            'listing_channel',
+            'listing_quantity',
             'image_1',
             'image_2',
             'image_3',
@@ -52,13 +55,16 @@ class ProductForm(forms.ModelForm):
         self, *args, default_listing_channel=None, listing_quantity=None, **kwargs
     ):
         super().__init__(*args, **kwargs)
-        self.fields['listing_channel'].choices = [
-            ('', '—'),
-        ] + list(ProductListingChannel.choices)
-        if default_listing_channel:
-            self.fields['listing_channel'].initial = default_listing_channel
-        if listing_quantity is not None:
-            self.fields['listing_quantity'].initial = listing_quantity
+        self.fields['listing_channel'].choices = list(ProductListingChannel.choices)
+        self.fields['type'].label = 'Product type'
+        self.fields['name'].label = 'Model'
+        self.fields['category'].required = False
+        self.fields['category'].empty_label = '— None —'
+
+        ch = default_listing_channel or ProductListingChannel.PREORDER
+        qty_init = 0 if listing_quantity is None else int(listing_quantity)
+        self.fields['listing_channel'].initial = ch
+        self.fields['listing_quantity'].initial = qty_init
 
 
 class ShoeForm(ProductForm):

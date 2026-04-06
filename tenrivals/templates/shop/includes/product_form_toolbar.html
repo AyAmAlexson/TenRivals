@@ -1,0 +1,15 @@
+{# Requires: form_back_url, is_edit. Optional: toolbar_extra_class. Submit targets form id shop-product-form. #}
+<div class="form-toolbar{% if toolbar_extra_class %} {{ toolbar_extra_class }}{% endif %}" role="toolbar" aria-label="Product form actions">
+  <a href="{{ form_back_url }}" class="tb-btn tb-btn--ghost" title="Back to catalog" aria-label="Back to catalog">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M15 18L9 12l6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </a>
+  <div class="tb-grow"></div>
+  {% if is_edit %}
+  <button type="button" class="tb-btn tb-btn--danger" onclick="confirmDelete()" title="Delete product" aria-label="Delete product">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 002 2h6a2 2 0 002-2l1-12M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+  </button>
+  {% endif %}
+  <button type="submit" form="shop-product-form" class="tb-btn tb-btn--primary" title="Save" aria-label="Save">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 3h11l4 4v14a1 1 0 01-1 1H5a1 1 0 01-1-1V4a1 1 0 011-1z" stroke="currentColor" stroke-width="1.7"/><path d="M7 3v8h6V3M7 21v-6h10v6" stroke="currentColor" stroke-width="1.7"/></svg>
+  </button>
+</div>

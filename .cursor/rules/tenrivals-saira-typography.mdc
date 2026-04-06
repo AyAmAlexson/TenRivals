@@ -1,0 +1,11 @@
+---
+description: Saira typography for TenRivals shop UI
+globs: tenrivals/templates/**/*.html
+---
+
+# Saira font rules (shop)
+
+- **Saira extrabold (800) or semibold (600+) used as emphasis on labels/UI chrome → always `text-transform: uppercase` + letter-spacing.**
+- **Readable body / product copy / captions (names, descriptions, specs values) → `font-weight: 400`, sentence case (`text-transform: none`).**
+- **Prices** may stay `font-weight: 800` without forcing uppercase (numbers/symbols).
+- **Place names** (e.g. city in header) stay regular weight, not uppercase.

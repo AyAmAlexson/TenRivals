@@ -1,127 +1,236 @@
 <!doctype html>
+{% load static %}
 <html lang="en">
 <head>
   {% include 'includes/google_tag_gtag.html' %}
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Shop Product Form</title>
-  <link href="/static/css/styles.css" rel="stylesheet">
+  <title>{% if is_edit %}Edit product{% else %}Add product{% endif %} — TR Shop</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Saira:wght@400;600;800&family=Saira+Condensed:wght@400&display=swap" rel="stylesheet">
+  <link rel="icon" href="{% static 'assets/img/favicon.png' %}">
+  <link href="{% static 'css/styles.css' %}" rel="stylesheet">
   <style>
-    .form-wrap { max-width: 840px; margin: 24px auto; padding: 16px; background:#fff; border:1px solid #e5e7eb; border-radius: 8px; }
-    .row { display:flex; gap:16px; }
-    .col { flex:1; }
-    .field { margin-bottom:12px; }
-    label { display:block; font-weight:600; margin-bottom:6px; }
-    input[type="text"], input[type="number"], textarea, select { width:100%; padding:8px; border:1px solid #d1d5db; border-radius:6px; }
+    :root{
+      --accent:#B20009;
+      --accent-dark:#8E0007;
+      --ink:#1a1a1a;
+      --muted:#64748b;
+      --line:#e5e7eb;
+      --bg:#f8fafc;
+      --panel:#fff;
+    }
+    *{box-sizing:border-box; margin:0; padding:0}
+    body{font-family:'Saira',system-ui,sans-serif;font-weight:400;color:var(--ink);background:var(--bg);min-height:100vh}
+    a{color:inherit}
+    .wrap{max-width:920px;margin:0 auto;padding:0 20px 48px}
+    .mast{padding:20px 0 8px;border-bottom:1px solid var(--line);margin-bottom:20px;background:var(--panel)}
+    .mast-inner{max-width:920px;margin:0 auto;padding:0 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+    .mast a.brand{display:flex;align-items:center}
+    .mast .logo{height:32px}
+    .mast h1{font-size:15px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--ink)}
+    .mast .sub{font-size:12px;color:var(--muted);margin-left:auto}
+
+    .form-toolbar{
+      display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--panel);
+      border:1px solid var(--line);border-radius:0;margin-bottom:20px;position:sticky;top:0;z-index:50;
+      box-shadow:0 4px 12px rgba(0,0,0,.04);
+    }
+    .form-toolbar--bottom{margin-top:28px;margin-bottom:0;position:static;box-shadow:none}
+    .tb-grow{flex:1}
+    .tb-btn{
+      display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;
+      border-radius:0;border:1px solid var(--line);background:var(--panel);cursor:pointer;
+      color:var(--ink);transition:background .15s,border-color .15s,color .15s;text-decoration:none;
+    }
+    .tb-btn:hover{background:#f1f5f9;border-color:#cbd5e1}
+    .tb-btn--primary{background:var(--accent);border-color:var(--accent);color:#fff}
+    .tb-btn--primary:hover{background:var(--accent-dark);border-color:var(--accent-dark);color:#fff}
+    .tb-btn--danger:hover{background:#fef2f2;border-color:#fca5a5;color:#b91c1c}
+    .tb-btn--ghost{background:transparent}
+
+    .form-card{background:var(--panel);border:1px solid var(--line);padding:22px 20px;margin-bottom:18px}
+    .form-card h2{
+      font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);
+      margin:0 0 16px;padding-bottom:10px;border-bottom:1px solid var(--line);
+    }
+    .form-card h3{margin:0 0 12px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--muted)}
+    .row{display:flex;gap:14px;flex-wrap:wrap}
+    .col{flex:1;min-width:200px}
+    .field{margin-bottom:14px}
+    .field label{display:block;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px}
+    input[type="text"],input[type="number"],input[type="file"],textarea,select{
+      width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:0;font-family:inherit;font-size:14px;background:#fff
+    }
+    input:focus,select:focus,textarea:focus{outline:2px solid rgba(178,0,9,.25);border-color:var(--accent)}
+    textarea{min-height:88px;resize:vertical}
+    .hint{font-size:11px;color:var(--muted);margin-top:6px;line-height:1.4}
+    .img-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px}
+    .img-slot{border:1px solid var(--line);padding:12px;background:#f8fafc}
+    .img-slot .preview{display:block;max-width:100%;max-height:140px;object-fit:contain;margin:0 auto 10px;background:#fff;border:1px solid var(--line)}
+    .img-slot .no-preview{font-size:12px;color:#94a3b8;text-align:center;padding:24px 8px}
+    input[type="checkbox"]{width:auto;margin-right:8px}
+    .field-check label{display:inline;font-weight:400;text-transform:none;letter-spacing:0}
+
+    .errorlist{color:#b91c1c;font-size:13px;margin:8px 0;list-style:none}
+    .errorlist li{margin-bottom:4px}
   </style>
-  {% load static %}
 </head>
 <body>
 {% include 'includes/google_tag_manager_body.html' %}
-  <div class="form-wrap">
-    <h2 style="margin-top:0;">{% if is_edit %}Edit{% else %}Add{% endif %} Product</h2>
-    <form method="post" enctype="multipart/form-data">
+
+  <header class="mast">
+    <div class="mast-inner">
+      <a class="brand" href="{% url 'shop:index' %}"><img class="logo" src="{% static 'assets/img/TR Logo 25/TR 25 LOGO HOR RED.svg' %}" alt="TR Shop"></a>
+      <h1>{% if is_edit %}Edit product{% else %}Add product{% endif %}</h1>
+      {% if is_edit and object.pk %}<span class="sub">ID {{ object.pk }}</span>{% endif %}
+    </div>
+  </header>
+
+  <div class="wrap">
+    <form id="shop-product-form" method="post" enctype="multipart/form-data">
       {% csrf_token %}
-      {% if return_next %}
-      <input type="hidden" name="next" value="{{ return_next }}">
-      {% endif %}
-      <div class="field">{{ form.type.label_tag }}{{ form.type }}</div>
-      <div class="row">
-        <div class="col"><div class="field">{{ form.name.label_tag }}{{ form.name }}</div></div>
-        <div class="col"><div class="field">{{ form.brand.label_tag }}{{ form.brand }}</div></div>
-        <div class="col"><div class="field">{{ form.sku.label_tag }}{{ form.sku }}</div></div>
+      {% if return_next %}<input type="hidden" name="next" value="{{ return_next }}">{% endif %}
+
+      {% if form.non_field_errors %}<ul class="errorlist">{% for e in form.non_field_errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+
+      {% include 'shop/includes/product_form_toolbar.html' %}
+
+      <div class="form-card">
+        <h2>Classification &amp; catalog</h2>
+        <div class="row">
+          <div class="col"><div class="field">{{ form.category.label_tag }}{{ form.category }}{% if form.category.errors %}<ul class="errorlist">{% for e in form.category.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}</div></div>
+          <div class="col"><div class="field">{{ form.brand.label_tag }}{{ form.brand }}{% if form.brand.errors %}<ul class="errorlist">{% for e in form.brand.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}</div></div>
+          <div class="col"><div class="field">{{ form.name.label_tag }}{{ form.name }}{% if form.name.errors %}<ul class="errorlist">{% for e in form.name.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}</div></div>
+        </div>
+        <div class="row">
+          <div class="col"><div class="field">{{ form.type.label_tag }}{{ form.type }}{% if form.type.errors %}<ul class="errorlist">{% for e in form.type.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}</div></div>
+          <div class="col"><div class="field">{{ form.sku.label_tag }}{{ form.sku }}{% if form.sku.errors %}<ul class="errorlist">{% for e in form.sku.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}</div></div>
+        </div>
+        <div class="row">
+          <div class="col"><div class="field">{{ form.listing_channel.label_tag }}{{ form.listing_channel }}{% if form.listing_channel.help_text %}<p class="hint">{{ form.listing_channel.help_text }}</p>{% endif %}{% if form.listing_channel.errors %}<ul class="errorlist">{% for e in form.listing_channel.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}</div></div>
+          <div class="col"><div class="field">{{ form.listing_quantity.label_tag }}{{ form.listing_quantity }}{% if form.listing_quantity.errors %}<ul class="errorlist">{% for e in form.listing_quantity.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}</div></div>
+        </div>
       </div>
-      <div class="row">
-        <div class="col"><div class="field">{{ form.initial_price.label_tag }}{{ form.initial_price }} <span style="font-size:11px;color:#64748b">(shown struck through if sale price set)</span></div></div>
-        <div class="col"><div class="field">{{ form.actual_price.label_tag }}{{ form.actual_price }} <span style="font-size:11px;color:#64748b">(optional; main price if set)</span></div></div>
-        <div class="col"><div class="field">{{ form.in_stock.label_tag }}{{ form.in_stock }}</div></div>
-      </div>
-      <div class="row">
-        <div class="col"><div class="field">{{ form.is_active.label_tag }}{{ form.is_active }}</div></div>
-        <div class="col"><div class="field">{{ form.featured_product.label_tag }}{{ form.featured_product }}{% if form.featured_product.help_text %}<p style="font-size:12px;color:#64748b;margin-top:6px">{{ form.featured_product.help_text }}</p>{% endif %}</div></div>
-      </div>
-      <div class="row">
-        <div class="col"><div class="field">{{ form.listing_channel.label_tag }}{{ form.listing_channel }}{% if form.listing_channel.help_text %}<p style="font-size:12px;color:#64748b;margin-top:6px">{{ form.listing_channel.help_text }}</p>{% endif %}</div></div>
-        <div class="col"><div class="field">{{ form.listing_quantity.label_tag }}{{ form.listing_quantity }}</div></div>
+
+      <div class="form-card">
+        <h2>Pricing &amp; status</h2>
+        <div class="row">
+          <div class="col"><div class="field">{{ form.initial_price.label_tag }}{{ form.initial_price }}<p class="hint">Base/list price (struck through when sale price set)</p>{% if form.initial_price.errors %}<ul class="errorlist">{% for e in form.initial_price.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}</div></div>
+          <div class="col"><div class="field">{{ form.actual_price.label_tag }}{{ form.actual_price }}<p class="hint">Optional sale / current price</p>{% if form.actual_price.errors %}<ul class="errorlist">{% for e in form.actual_price.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}</div></div>
+        </div>
+        <div class="row">
+          <div class="col field-check"><div class="field">{{ form.in_stock }}{{ form.in_stock.label_tag }}</div></div>
+          <div class="col field-check"><div class="field">{{ form.is_active }}{{ form.is_active.label_tag }}</div></div>
+          <div class="col field-check"><div class="field">{{ form.featured_product }}{{ form.featured_product.label_tag }}{% if form.featured_product.help_text %}<p class="hint">{{ form.featured_product.help_text }}</p>{% endif %}</div></div>
+        </div>
       </div>
 
       {% if 'color' in form.fields %}
-      <h3 style="margin:20px 0 8px;font-size:15px;">Shoes</h3>
-      <div class="row">
-        <div class="col"><div class="field">{{ form.gender.label_tag }}{{ form.gender }}</div></div>
-        <div class="col"><div class="field">{{ form.surface.label_tag }}{{ form.surface }}</div></div>
-        <div class="col"><div class="field">{{ form.color.label_tag }}{{ form.color }}</div></div>
+      <div class="form-card">
+        <h3>Shoes</h3>
+        <div class="row">
+          <div class="col"><div class="field">{{ form.gender.label_tag }}{{ form.gender }}</div></div>
+          <div class="col"><div class="field">{{ form.surface.label_tag }}{{ form.surface }}</div></div>
+          <div class="col"><div class="field">{{ form.color.label_tag }}{{ form.color }}</div></div>
+        </div>
+        <div class="field">{{ form.sizes.label_tag }}{{ form.sizes }}<p class="hint">JSON list, e.g. [&quot;EU 42&quot;, &quot;EU 43&quot;]</p></div>
       </div>
-      <div class="field">{{ form.sizes.label_tag }}{{ form.sizes }}<p style="font-size:12px;color:#64748b;margin-top:6px">JSON list of sizes, e.g. [&quot;EU 42&quot;, &quot;EU 43&quot;]</p></div>
       {% elif 'weight_grams' in form.fields %}
-      <h3 style="margin:20px 0 8px;font-size:15px;">Racket specifications</h3>
-      <div class="row">
-        <div class="col"><div class="field">{{ form.weight_grams.label_tag }}{{ form.weight_grams }} <span style="font-size:11px;color:#64748b">grams</span></div></div>
-        <div class="col"><div class="field">{{ form.head_size_sq_in.label_tag }}{{ form.head_size_sq_in }} <span style="font-size:11px;color:#64748b">in²</span></div></div>
-        <div class="col"><div class="field">{{ form.string_pattern.label_tag }}{{ form.string_pattern }}</div></div>
+      <div class="form-card">
+        <h3>Racket specifications</h3>
+        <div class="row">
+          <div class="col"><div class="field">{{ form.weight_grams.label_tag }}{{ form.weight_grams }}<p class="hint">grams</p></div></div>
+          <div class="col"><div class="field">{{ form.head_size_sq_in.label_tag }}{{ form.head_size_sq_in }}<p class="hint">in²</p></div></div>
+          <div class="col"><div class="field">{{ form.string_pattern.label_tag }}{{ form.string_pattern }}</div></div>
+        </div>
+        <div class="row">
+          <div class="col"><div class="field">{{ form.length_in.label_tag }}{{ form.length_in }}<p class="hint">inches</p></div></div>
+          <div class="col"><div class="field">{{ form.balance_mm.label_tag }}{{ form.balance_mm }}<p class="hint">mm</p></div></div>
+          <div class="col"><div class="field">{{ form.swingweight.label_tag }}{{ form.swingweight }}</div></div>
+        </div>
+        <div class="field field-check">{{ form.is_strung }}{{ form.is_strung.label_tag }}</div>
+        <div class="field">{{ form.grip_sizes.label_tag }}{{ form.grip_sizes }}<p class="hint">JSON list, e.g. [&quot;L2&quot;, &quot;L3&quot;]</p></div>
       </div>
-      <div class="row">
-        <div class="col"><div class="field">{{ form.length_in.label_tag }}{{ form.length_in }} <span style="font-size:11px;color:#64748b">inches</span></div></div>
-        <div class="col"><div class="field">{{ form.balance_mm.label_tag }}{{ form.balance_mm }} <span style="font-size:11px;color:#64748b">mm</span></div></div>
-        <div class="col"><div class="field">{{ form.swingweight.label_tag }}{{ form.swingweight }}</div></div>
-      </div>
-      <div class="field">{{ form.is_strung.label_tag }}{{ form.is_strung }}</div>
-      <div class="field">{{ form.grip_sizes.label_tag }}{{ form.grip_sizes }}<p style="font-size:12px;color:#64748b;margin-top:6px">JSON list of grip sizes, e.g. [&quot;L2&quot;, &quot;L3&quot;]</p></div>
       {% elif 'gauge_mm' in form.fields %}
-      <h3 style="margin:20px 0 8px;font-size:15px;">String specifications</h3>
-      <div class="row">
-        <div class="col"><div class="field">{{ form.gauge_mm.label_tag }}{{ form.gauge_mm }} <span style="font-size:11px;color:#64748b">mm</span></div></div>
-        <div class="col"><div class="field">{{ form.material.label_tag }}{{ form.material }}</div></div>
-        <div class="col"><div class="field">{{ form.length_m.label_tag }}{{ form.length_m }} <span style="font-size:11px;color:#64748b">meters per set</span></div></div>
+      <div class="form-card">
+        <h3>String specifications</h3>
+        <div class="row">
+          <div class="col"><div class="field">{{ form.gauge_mm.label_tag }}{{ form.gauge_mm }}<p class="hint">mm</p></div></div>
+          <div class="col"><div class="field">{{ form.material.label_tag }}{{ form.material }}</div></div>
+          <div class="col"><div class="field">{{ form.length_m.label_tag }}{{ form.length_m }}<p class="hint">m per set</p></div></div>
+        </div>
       </div>
-      {% elif 'material' in form.fields %}
-      <h3 style="margin:20px 0 8px;font-size:15px;">Apparel</h3>
-      <div class="row">
-        <div class="col"><div class="field">{{ form.gender.label_tag }}{{ form.gender }}</div></div>
-        <div class="col"><div class="field">{{ form.material.label_tag }}{{ form.material }}</div></div>
+      {% elif 'material' in form.fields and 'gauge_mm' not in form.fields %}
+      <div class="form-card">
+        <h3>Apparel</h3>
+        <div class="row">
+          <div class="col"><div class="field">{{ form.gender.label_tag }}{{ form.gender }}</div></div>
+          <div class="col"><div class="field">{{ form.material.label_tag }}{{ form.material }}</div></div>
+        </div>
+        <div class="field">{{ form.sizes.label_tag }}{{ form.sizes }}<p class="hint">JSON list, e.g. [&quot;S&quot;, &quot;M&quot;]</p></div>
       </div>
-      <div class="field">{{ form.sizes.label_tag }}{{ form.sizes }}<p style="font-size:12px;color:#64748b;margin-top:6px">JSON list, e.g. [&quot;S&quot;, &quot;M&quot;, &quot;L&quot;]</p></div>
       {% elif 'capacity_rackets' in form.fields %}
-      <h3 style="margin:20px 0 8px;font-size:15px;">Bag</h3>
-      <div class="field">{{ form.capacity_rackets.label_tag }}{{ form.capacity_rackets }} <span style="font-size:11px;color:#64748b">racket capacity</span></div>
+      <div class="form-card">
+        <h3>Bag</h3>
+        <div class="field">{{ form.capacity_rackets.label_tag }}{{ form.capacity_rackets }}<p class="hint">Racket capacity</p></div>
+      </div>
       {% elif 'balls_per_can' in form.fields %}
-      <h3 style="margin:20px 0 8px;font-size:15px;">Balls</h3>
-      <div class="row">
-        <div class="col"><div class="field">{{ form.balls_per_can.label_tag }}{{ form.balls_per_can }}</div></div>
-        <div class="col"><div class="field">{{ form.surface.label_tag }}{{ form.surface }}</div></div>
+      <div class="form-card">
+        <h3>Balls</h3>
+        <div class="row">
+          <div class="col"><div class="field">{{ form.balls_per_can.label_tag }}{{ form.balls_per_can }}</div></div>
+          <div class="col"><div class="field">{{ form.surface.label_tag }}{{ form.surface }}</div></div>
+        </div>
       </div>
       {% endif %}
 
-      <div class="row">
-        <div class="col"><div class="field">{{ form.image_1.label_tag }}{{ form.image_1 }}</div></div>
-        <div class="col"><div class="field">{{ form.image_2.label_tag }}{{ form.image_2 }}</div></div>
-        <div class="col"><div class="field">{{ form.image_3.label_tag }}{{ form.image_3 }}</div></div>
-      </div>
-      <div class="row">
-        <div class="col"><div class="field">{{ form.image_4.label_tag }}{{ form.image_4 }}</div></div>
-        <div class="col"><div class="field">{{ form.image_5.label_tag }}{{ form.image_5 }}</div></div>
+      <div class="form-card">
+        <h2>Images</h2>
+        <div class="img-grid">
+          <div class="img-slot">
+            {% if form.instance.image_1 %}<img class="preview" src="{{ form.instance.image_1.url }}" alt="">{% else %}<div class="no-preview">No image 1</div>{% endif %}
+            <div class="field">{{ form.image_1.label_tag }}{{ form.image_1 }}</div>
+          </div>
+          <div class="img-slot">
+            {% if form.instance.image_2 %}<img class="preview" src="{{ form.instance.image_2.url }}" alt="">{% else %}<div class="no-preview">No image 2</div>{% endif %}
+            <div class="field">{{ form.image_2.label_tag }}{{ form.image_2 }}</div>
+          </div>
+          <div class="img-slot">
+            {% if form.instance.image_3 %}<img class="preview" src="{{ form.instance.image_3.url }}" alt="">{% else %}<div class="no-preview">No image 3</div>{% endif %}
+            <div class="field">{{ form.image_3.label_tag }}{{ form.image_3 }}</div>
+          </div>
+          <div class="img-slot">
+            {% if form.instance.image_4 %}<img class="preview" src="{{ form.instance.image_4.url }}" alt="">{% else %}<div class="no-preview">No image 4</div>{% endif %}
+            <div class="field">{{ form.image_4.label_tag }}{{ form.image_4 }}</div>
+          </div>
+          <div class="img-slot">
+            {% if form.instance.image_5 %}<img class="preview" src="{{ form.instance.image_5.url }}" alt="">{% else %}<div class="no-preview">No image 5</div>{% endif %}
+            <div class="field">{{ form.image_5.label_tag }}{{ form.image_5 }}</div>
+          </div>
+        </div>
       </div>
 
-      <div class="field">{{ form.short_description.label_tag }}{{ form.short_description }}</div>
-      <div class="field">{{ form.description.label_tag }}{{ form.description }}</div>
-      <div class="field">{{ form.attributes.label_tag }}{{ form.attributes }}</div>
+      <div class="form-card">
+        <h2>Description</h2>
+        <div class="field">{{ form.short_description.label_tag }}{{ form.short_description }}</div>
+        <div class="field">{{ form.description.label_tag }}{{ form.description }}</div>
+        <div class="field">{{ form.attributes.label_tag }}{{ form.attributes }}<p class="hint">JSON object for extra specs shown on PDP</p></div>
+      </div>
 
-      <button type="submit" style="margin-top:12px; padding:8px 14px; border:1px solid #0e8b84; background:#0e8b84; color:#fff; border-radius:6px; cursor:pointer;">Save</button>
-      {% if is_edit %}
-      <a href="/shop/items_list" style="margin-left:12px;">Back to list</a>
-      <button type="button" onclick="confirmDelete()" style="margin-left:12px; padding:8px 14px; border:1px solid #dc2626; background:#fff; color:#dc2626; border-radius:6px; cursor:pointer;">Delete</button>
-      {% endif %}
+      {% include 'shop/includes/product_form_toolbar.html' with toolbar_extra_class='form-toolbar--bottom' %}
     </form>
   </div>
 
-  {% if is_edit and object %}
+  {% if is_edit and object.pk %}
   <form id="deleteForm" method="post" action="{% url 'shop:product_edit' object.pk %}" style="display:none;">
     {% csrf_token %}
-    <input type="hidden" name="_delete" value="1" />
+    <input type="hidden" name="_delete" value="1">
   </form>
   <script>
     function confirmDelete(){
-      if (confirm('Delete this product? This will remove images too.')){
+      if (confirm('Delete this product? This will remove images too.')) {
         document.getElementById('deleteForm').submit();
       }
     }
@@ -129,5 +238,3 @@
   {% endif %}
 </body>
 </html>
-
-

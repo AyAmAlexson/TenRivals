@@ -201,6 +201,20 @@ def _save_listing_from_form(product, form):
     )
 
 
+def _edit_listing_channel_and_qty(product: Product, query_channel: str | None):
+    """Default catalog row for staff edit: ?channel= wins; else stock listing if any; else preorder."""
+    if query_channel:
+        row = product.listings.filter(channel=query_channel).first()
+        return query_channel, int(row.quantity) if row else 0
+    stock_row = product.listings.filter(channel=ProductListingChannel.STOCK).first()
+    if stock_row:
+        return ProductListingChannel.STOCK, int(stock_row.quantity)
+    preorder_row = product.listings.filter(channel=ProductListingChannel.PREORDER).first()
+    if preorder_row:
+        return ProductListingChannel.PREORDER, int(preorder_row.quantity)
+    return ProductListingChannel.PREORDER, 0
+
+
 def _safe_internal_redirect(request, url: str | None):
     if not url:
         return None
@@ -489,7 +503,10 @@ def product_create(request):
             initial_kw['type'] = type_code
         form = FormClass(
             initial=initial_kw,
-            default_listing_channel=edit_channel,
+            default_listing_channel=(
+                edit_channel or ProductListingChannel.PREORDER
+            ),
+            listing_quantity=0,
         )
 
     return render(
@@ -499,6 +516,8 @@ def product_create(request):
             'form': form,
             'is_edit': False,
             'return_next': return_next,
+            'form_back_url': _safe_internal_redirect(request, return_next)
+            or reverse('shop:stock'),
         },
     )
 
@@ -509,10 +528,8 @@ def product_edit(request, pk):
     instance, FormClass = _edit_instance_and_form(base)
 
     edit_channel = _parse_listing_channel_param(request.GET.get('channel'))
-    listing_row = None
-    if edit_channel:
-        listing_row = base.listings.filter(channel=edit_channel).first()
     return_next = request.GET.get('next', '')
+    list_ch, list_qty = _edit_listing_channel_and_qty(base, edit_channel)
 
     if request.method == 'POST':
         if request.POST.get('_delete') == '1':
@@ -536,8 +553,8 @@ def product_edit(request, pk):
     else:
         form = FormClass(
             instance=instance,
-            default_listing_channel=edit_channel,
-            listing_quantity=(listing_row.quantity if listing_row else None),
+            default_listing_channel=list_ch,
+            listing_quantity=list_qty,
         )
 
     return render(
@@ -549,5 +566,7 @@ def product_edit(request, pk):
             'object': instance,
             'return_next': return_next,
             'edit_channel': request.GET.get('channel', ''),
+            'form_back_url': _safe_internal_redirect(request, return_next)
+            or reverse('shop:stock'),
         },
     )
