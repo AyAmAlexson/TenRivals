@@ -94,75 +94,38 @@
     .btn--cta-telegram{font-weight:800; text-transform:uppercase; letter-spacing:.1em; font-size:13px}
 
     /* Breadcrumb */
-    .breadcrumb{padding:20px 0 12px; font-size:13px; color:#94a3b8; line-height:1.5}
+    .breadcrumb{padding:16px 0; font-size:13px; color:#94a3b8}
     .breadcrumb a{color:var(--muted); transition:color .15s}
     .breadcrumb a:hover{color:var(--accent)}
     .breadcrumb span{margin:0 6px; color:#d1d5db}
 
-    /* Product layout — retail-style grid, calmer hierarchy */
-    .pdp{
-      display:grid; grid-template-columns:minmax(0,1.05fr) minmax(0,0.95fr); gap:clamp(28px,4vw,56px);
-      align-items:start; padding:8px 0 56px;
-    }
+    /* Product layout */
+    .pdp{display:grid; grid-template-columns:1fr 1fr; gap:48px; padding:0 0 48px}
 
     /* Gallery */
-    .pdp-gallery{display:flex; flex-direction:column; gap:14px; position:sticky; top:20px}
-    .pdp-main-img{
-      aspect-ratio:1/1; background:linear-gradient(160deg, #f8fafc 0%, #f1f5f9 100%);
-      display:flex; align-items:center; justify-content:center; color:#c4c9d2; font-size:14px;
-      overflow:hidden; border-radius:14px; border:1px solid var(--line);
-      box-shadow:0 1px 2px rgba(15,23,42,.04), 0 8px 24px rgba(15,23,42,.06);
-    }
-    .pdp-main-img img{width:100%; height:100%; object-fit:contain; padding:8%;}
-    .pdp-thumbs{display:flex; gap:10px; flex-wrap:wrap}
-    .pdp-thumb{
-      width:72px; height:72px; flex-shrink:0; background:#f8fafc; display:flex; align-items:center; justify-content:center;
-      color:#c4c9d2; font-size:10px; cursor:pointer; border:2px solid transparent; transition:border-color .15s, box-shadow .15s;
-      overflow:hidden; padding:0; border-radius:10px;
-    }
-    .pdp-thumb img{width:100%; height:100%; object-fit:contain; padding:4px;}
-    .pdp-thumb.active{border-color:var(--accent); box-shadow:0 0 0 1px var(--accent)}
-    .pdp-thumb:hover{border-color:#cbd5e1}
+    .pdp-gallery{display:flex; flex-direction:column; gap:10px}
+    .pdp-main-img{aspect-ratio:1/1; background:#f3f4f6; display:flex; align-items:center; justify-content:center; color:#c4c9d2; font-size:14px; overflow:hidden}
+    .pdp-main-img img{width:100%; height:100%; object-fit:contain}
+    .pdp-thumbs{display:flex; gap:8px}
+    .pdp-thumb{width:68px; height:68px; flex-shrink:0; background:#f3f4f6; display:flex; align-items:center; justify-content:center; color:#c4c9d2; font-size:10px; cursor:pointer; border:2px solid transparent; transition:border-color .15s; overflow:hidden; padding:0}
+    .pdp-thumb img{width:100%; height:100%; object-fit:contain}
+    .pdp-thumb.active{border-color:var(--accent)}
+    .pdp-thumb:hover{border-color:var(--ink)}
 
-    /* Info panel — buy column */
-    .pdp-info{
-      display:flex; flex-direction:column; gap:0;
-      padding:clamp(8px,1.5vw,20px) 0 0;
-    }
-    .pdp-buy-card{
-      background:#fff; border:1px solid var(--line); border-radius:16px;
-      padding:clamp(20px,3vw,28px) clamp(20px,3vw,28px) clamp(24px,3.5vw,32px);
-      box-shadow:0 1px 0 rgba(15,23,42,.04), 0 12px 40px rgba(15,23,42,.05);
-    }
-    .pdp-staff-tools{margin-bottom:12px}
-    .pdp-staff-tools .btn{padding:8px 16px; font-size:12px}
-    .pdp-brand{
-      font-family:'Saira Condensed', 'Saira', sans-serif; font-size:12px; font-weight:600; color:var(--muted);
-      text-transform:uppercase; letter-spacing:.14em; margin-bottom:8px;
-    }
-    .pdp-title{
-      font-size:clamp(22px,2.4vw,30px); margin:0 0 10px; line-height:1.18;
-      text-transform:none; letter-spacing:-0.02em; font-weight:800; color:var(--ink);
-    }
-    .pdp-color{
-      font-size:15px; font-weight:400; color:var(--muted); margin-bottom:16px; text-transform:none; line-height:1.5;
-    }
-    .pdp-meta-stack{display:flex; flex-direction:column; gap:14px; margin-bottom:22px}
-    .pdp-divider{
-      border:none; border-top:1px solid var(--line); margin:0;
-    }
-    .pdp-prices{display:flex; align-items:baseline; flex-wrap:wrap; gap:10px 14px; margin-bottom:0}
-    .pdp-price-row{margin-bottom:6px}
-    .pdp-price{font-size:clamp(24px,2.2vw,30px); font-weight:800; color:var(--accent); letter-spacing:-0.02em}
-    .pdp-price-old{font-size:17px; color:#94a3b8; text-decoration:line-through; font-weight:500}
-    .pdp-price-muted{font-size:17px; font-weight:500; color:var(--muted); text-transform:none}
-    .pdp-preorder-note{
-      font-size:13px; color:var(--muted); line-height:1.5; margin:4px 0 0;
-    }
+    /* Info panel */
+    .pdp-info{display:flex; flex-direction:column}
+    .pdp-brand{font-family:'Saira Condensed', 'Saira', sans-serif; font-size:13px; font-weight:400; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; margin-bottom:6px}
+    .pdp-title{font-size:22px; margin:0 0 6px; line-height:1.2}
+    .pdp-color{font-size:14px; font-weight:400; color:#94a3b8; margin-bottom:20px; text-transform:none; line-height:1.45}
+    .pdp-divider{border:none; border-top:1px solid var(--line); margin:0 0 20px}
+    .pdp-prices{display:flex; align-items:baseline; gap:12px; margin-bottom:20px}
+    .pdp-price{font-size:22px; font-weight:800; color:var(--accent)}
+    .pdp-price-old{font-size:16px; color:#94a3b8; text-decoration:line-through}
+    .pdp-price-muted{font-size:16px; font-weight:400; color:var(--muted); text-transform:none}
 
     /* One line: label + status (Wilson-style spec row) */
     .pdp-availability-row{
-      display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px;margin-bottom:0;
+      display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px;margin-bottom:20px;
       font-size:14px;line-height:1.35;
     }
     .pdp-availability-key{
@@ -180,64 +143,44 @@
     .pdp-availability-row.pdp-availability--soon .pdp-availability-val__dot{background:#cbd5e1}
 
     /* Variant selector */
-    .pdp-variants{margin:22px 0 0}
-    .pdp-variants-label{
-      font-size:12px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:var(--muted);
-      margin-bottom:10px;
-    }
+    .pdp-variants{margin-bottom:24px}
+    .pdp-variants-label{font-size:13px; color:var(--muted); margin-bottom:8px}
     .pdp-variant-options{display:flex; gap:8px; flex-wrap:wrap}
-    .pdp-variant-btn{
-      min-height:44px; padding:10px 18px; border:1px solid var(--line); background:#fafafa; cursor:pointer;
-      font-family:inherit; font-size:14px; font-weight:600; color:var(--ink); border-radius:10px;
-      transition:border-color .15s, background .15s, color .15s;
-    }
-    .pdp-variant-btn.active{border-color:var(--accent); background:rgba(178,0,9,.06); color:var(--accent)}
-    .pdp-variant-btn:hover:not(.active){border-color:#cbd5e1; background:#fff}
+    .pdp-variant-btn{padding:8px 18px; border:1px solid var(--line); background:#fff; cursor:pointer; font-family:inherit; font-size:13px; color:var(--ink); transition:border-color .15s}
+    .pdp-variant-btn.active{border-color:var(--accent); color:var(--accent)}
+    .pdp-variant-btn:hover{border-color:var(--ink)}
 
     /* Add to cart area */
-    .pdp-cart-row{display:flex; gap:12px; align-items:center; margin-top:22px}
-    .pdp-cart-row .btn--lg{width:100%; justify-content:center; border-radius:12px; min-height:52px}
+    .pdp-cart-row{display:flex; gap:12px; align-items:center; margin-bottom:24px}
 
     /* Shipping info */
-    .pdp-shipping{
-      font-size:13px; color:var(--muted); margin-top:20px; line-height:1.65;
-      padding-top:18px; border-top:1px solid var(--line);
-    }
+    .pdp-shipping{font-size:13px; color:var(--muted); margin-bottom:28px; line-height:1.7}
 
-    /* Specs — secondary card below buy box */
-    .pdp-specs-section{margin-top:20px}
-    .pdp-specs{
-      margin:0; background:#f8fafc; border:1px solid var(--line); border-radius:16px; padding:22px 24px 8px;
-    }
+    .pdp-specs{margin:0 0 24px}
     .pdp-specs-title{
       font-size:11px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; color:var(--muted);
-      margin:0 0 14px; padding:0; border:none;
+      margin:0 0 12px; padding-bottom:8px; border-bottom:1px solid var(--line);
     }
 
     /* Full-width description below gallery row */
-    .pdp-desc-section{
-      margin-top:16px; padding:40px 0 8px; border-top:1px solid var(--line);
-      max-width:880px; margin-left:auto; margin-right:auto;
-    }
+    .pdp-desc-section{margin-top:8px; padding:32px 0 0; border-top:1px solid var(--line)}
     .pdp-desc-section .pdp-desc-heading{
       font-size:11px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; color:var(--muted);
-      margin:0 0 18px;
+      margin:0 0 16px;
     }
-    .pdp-desc-body{font-size:16px; line-height:1.78; color:#334155; max-width:none; text-transform:none; font-weight:400}
-    .pdp-desc-body p{margin:0 0 14px}
+    .pdp-desc-body{font-size:15px; line-height:1.75; color:var(--ink); max-width:none; text-transform:none; font-weight:400}
+    .pdp-desc-body p{margin:0 0 12px}
 
     /* Specs table */
     .specs-table{width:100%; border-collapse:collapse}
-    .specs-table tr{border-bottom:1px solid #e2e8f0}
-    .specs-table tr:last-child{border-bottom:none}
-    .specs-table td{padding:12px 0; font-size:14px; vertical-align:top}
-    .specs-table td:first-child{color:var(--muted); width:42%; max-width:200px; font-weight:500; font-size:13px}
-    .specs-table td:last-child{color:var(--ink); font-weight:500; text-transform:none}
+    .specs-table tr{border-bottom:1px solid var(--line)}
+    .specs-table td{padding:10px 0; font-size:14px}
+    .specs-table td:first-child{color:var(--muted); width:180px}
+    .specs-table td:last-child{color:var(--ink); font-weight:400; text-transform:none}
 
     /* Responsive */
     @media(max-width:1024px){
-      .pdp{grid-template-columns:1fr; gap:28px; padding-bottom:40px}
-      .pdp-gallery{position:static}
+      .pdp{grid-template-columns:1fr; gap:24px}
       .header-row{grid-template-columns:140px 1fr auto; grid-auto-flow:row}
     }
     @media(max-width:640px){
@@ -360,177 +303,166 @@
 
       <div class="pdp-info">
         {% if user.is_staff %}
-        <div class="pdp-staff-tools">
-          <a href="{% url 'shop:product_edit' product.pk %}" class="btn btn--outline">Edit product</a>
+        <p style="margin-bottom:10px"><a href="{% url 'shop:product_edit' product.pk %}" class="btn btn--outline" style="padding:8px 16px;font-size:13px">Edit product</a></p>
+        {% endif %}
+        <div class="pdp-brand">{{ product.brand|default:"—" }}</div>
+        <h1 class="pdp-title">{{ product.name }}</h1>
+        <div class="pdp-color">
+          {% if product.type == 'M_SHOES' or product.type == 'W_SHOES' or product.type == 'J_SHOES' %}
+            {% with s=product.shoe %}{% if s %}{{ s.color|default:"—" }}{% else %}—{% endif %}{% endwith %}
+          {% else %}
+            {{ product.short_description|default:"—" }}
+          {% endif %}
         </div>
+
+        {% if pdp_mode == 'stock' %}
+          {% if stock_listing_qty >= 2 %}
+        <div class="pdp-availability-row pdp-availability--instock" role="status">
+          <span class="pdp-availability-key">Availability</span><span class="pdp-availability-sep">:</span>
+          <span class="pdp-availability-val">
+            <span class="pdp-availability-val__dot" aria-hidden="true"></span>
+            <span>In Stock</span>
+          </span>
+        </div>
+          {% elif stock_listing_qty == 1 %}
+        <div class="pdp-availability-row pdp-availability--last" role="status">
+          <span class="pdp-availability-key">Availability</span><span class="pdp-availability-sep">:</span>
+          <span class="pdp-availability-val">
+            <span class="pdp-availability-val__dot" aria-hidden="true"></span>
+            <span>Last item in stock</span>
+          </span>
+        </div>
+          {% else %}
+        <div class="pdp-availability-row pdp-availability--soon" role="status">
+          <span class="pdp-availability-key">Availability</span><span class="pdp-availability-sep">:</span>
+          <span class="pdp-availability-val">
+            <span class="pdp-availability-val__dot" aria-hidden="true"></span>
+            <span>Coming Soon</span>
+          </span>
+        </div>
+          {% endif %}
         {% endif %}
 
-        <div class="pdp-buy-card">
-          <div class="pdp-brand">{{ product.brand|default:"—" }}</div>
-          <h1 class="pdp-title">{{ product.name }}</h1>
-          <div class="pdp-color">
-            {% if product.type == 'M_SHOES' or product.type == 'W_SHOES' or product.type == 'J_SHOES' %}
-              {% with s=product.shoe %}{% if s %}{{ s.color|default:"—" }}{% else %}—{% endif %}{% endwith %}
-            {% else %}
-              {{ product.short_description|default:"—" }}
-            {% endif %}
-          </div>
+        <hr class="pdp-divider">
 
-          <div class="pdp-meta-stack">
-            {% if pdp_mode == 'stock' %}
-              {% if stock_listing_qty >= 2 %}
-            <div class="pdp-availability-row pdp-availability--instock" role="status">
-              <span class="pdp-availability-key">Availability</span><span class="pdp-availability-sep">:</span>
-              <span class="pdp-availability-val">
-                <span class="pdp-availability-val__dot" aria-hidden="true"></span>
-                <span>In Stock</span>
-              </span>
-            </div>
-              {% elif stock_listing_qty == 1 %}
-            <div class="pdp-availability-row pdp-availability--last" role="status">
-              <span class="pdp-availability-key">Availability</span><span class="pdp-availability-sep">:</span>
-              <span class="pdp-availability-val">
-                <span class="pdp-availability-val__dot" aria-hidden="true"></span>
-                <span>Last item in stock</span>
-              </span>
-            </div>
+        <div class="pdp-prices">
+          {% if pdp_mode == 'stock' %}
+            {% if stock_listing_qty > 0 %}
+              {% if product.actual_price %}
+              <span class="pdp-price-old">{{ product.initial_price }} ₾</span>
+              <span class="pdp-price">{{ product.actual_price }} ₾</span>
               {% else %}
-            <div class="pdp-availability-row pdp-availability--soon" role="status">
-              <span class="pdp-availability-key">Availability</span><span class="pdp-availability-sep">:</span>
-              <span class="pdp-availability-val">
-                <span class="pdp-availability-val__dot" aria-hidden="true"></span>
-                <span>Coming Soon</span>
-              </span>
-            </div>
+              <span class="pdp-price">{{ product.initial_price }} ₾</span>
               {% endif %}
+            {% else %}
+              <span class="pdp-price-muted">Coming soon · Pre-order</span>
             {% endif %}
-
-            <hr class="pdp-divider">
-
-            <div class="pdp-price-row">
-              <div class="pdp-prices">
-                {% if pdp_mode == 'stock' %}
-                  {% if stock_listing_qty > 0 %}
-                    {% if product.actual_price %}
-                    <span class="pdp-price-old">{{ product.initial_price }} ₾</span>
-                    <span class="pdp-price">{{ product.actual_price }} ₾</span>
-                    {% else %}
-                    <span class="pdp-price">{{ product.initial_price }} ₾</span>
-                    {% endif %}
-                  {% else %}
-                    <span class="pdp-price-muted">Coming soon · Pre-order</span>
-                  {% endif %}
-                {% else %}
-                  {% if product.actual_price %}
-                  <span class="pdp-price-old">{{ product.initial_price }} ₾</span>
-                  <span class="pdp-price">˜{{ product.margin_price }} ₾</span>
-                  {% else %}
-                  <span class="pdp-price">˜{{ product.margin_price }} ₾</span>
-                  {% endif %}
-                {% endif %}
-              </div>
-              {% if pdp_mode == 'preorder' %}
-              <p class="pdp-preorder-note">Indicative price (±30 ₾). Final price when you confirm your order.</p>
-              {% endif %}
-            </div>
-          </div>
-
-          {% if product.sizes_list %}
-          <div class="pdp-variants">
-            <div class="pdp-variants-label">Available sizes</div>
-            <div class="pdp-variant-options">
-              {% for sz in product.sizes_list %}
-              <span class="pdp-variant-btn active" style="cursor:default">{{ sz }}</span>
-              {% endfor %}
-            </div>
-          </div>
-          {% elif product.type == 'RACKET' %}
-            {% if product.grip_sizes_display %}
-          <div class="pdp-variants">
-            <div class="pdp-variants-label">Grip sizes</div>
-            <div class="pdp-variant-options">
-              {% for g in product.grip_sizes_display %}
-              <span class="pdp-variant-btn active" style="cursor:default">{{ g }}</span>
-              {% endfor %}
-            </div>
-          </div>
+          {% else %}
+            {% if product.actual_price %}
+            <span class="pdp-price-old">{{ product.initial_price }} ₾</span>
+            <span class="pdp-price">˜{{ product.margin_price }} ₾</span>
+            {% else %}
+            <span class="pdp-price">˜{{ product.margin_price }} ₾</span>
             {% endif %}
           {% endif %}
+        </div>
+        {% if pdp_mode == 'preorder' %}
+        <p style="font-size:12px;color:var(--muted);margin:-12px 0 16px">Indicative price (±30 ₾). Final price when you confirm your order.</p>
+        {% endif %}
 
-          <div class="pdp-cart-row">
-            <a class="btn btn--lg btn--cta-telegram" href="https://t.me/tennis_rivals_shop_tbilisi?direct" target="_blank" rel="noopener">Order via Telegram</a>
-          </div>
-
-          <div class="pdp-shipping">
-            Free delivery in Tbilisi<br>
-            {% if pdp_mode == 'preorder' %}
-            Pre-order from US &amp; EU with official customs clearance — contact us for details.
-            {% else %}
-            Items listed here are in our Tbilisi catalog; ask us on Telegram for sizes and exact pickup time.
+        <div class="pdp-specs" aria-labelledby="pdp-specs-title">
+          <h2 class="pdp-specs-title" id="pdp-specs-title">Specifications</h2>
+          <table class="specs-table">
+            <tr><td>SKU</td><td>{{ product.sku|default:"—" }}</td></tr>
+            <tr><td>Type</td><td>{{ product.get_type_display }}</td></tr>
+            {% if product.category %}<tr><td>Category</td><td>{{ product.category.name }}</td></tr>{% endif %}
+            {% if product.type == 'RACKET' %}
+              {% with r=product.racket %}
+              {% if r %}
+            <tr><td>Weight</td><td>{% if r.weight_grams %}{{ r.weight_grams }} g{% if r.is_strung %} (strung){% else %} (unstrung){% endif %}{% else %}—{% endif %}</td></tr>
+            <tr><td>Head size</td><td>{% if r.head_size_sq_in %}{{ r.head_size_sq_in }} in²{% else %}—{% endif %}</td></tr>
+            <tr><td>String pattern</td><td>{{ r.string_pattern|default:"—" }}</td></tr>
+            <tr><td>Length</td><td>{% if r.length_in %}{{ r.length_in }} in{% else %}—{% endif %}</td></tr>
+            <tr><td>Balance</td><td>{% if r.balance_mm %}{{ r.balance_mm }} mm{% else %}—{% endif %}</td></tr>
+            <tr><td>Swingweight</td><td>{% if r.swingweight %}{{ r.swingweight }}{% else %}—{% endif %}</td></tr>
+              {% endif %}
+              {% endwith %}
+            {% elif product.type == 'M_SHOES' or product.type == 'W_SHOES' or product.type == 'J_SHOES' %}
+              {% with s=product.shoe %}
+              {% if s %}
+            <tr><td>Surface</td><td>{{ s.get_surface_display }}</td></tr>
+            <tr><td>Gender</td><td>{{ s.get_gender_display }}</td></tr>
+            <tr><td>Width</td><td>{{ s.width|default:"—" }}</td></tr>
+              {% endif %}
+              {% endwith %}
+            {% elif product.type == 'BALLS' %}
+              {% with b=product.balls %}
+              {% if b %}
+            <tr><td>Balls per can</td><td>{% if b.balls_per_can %}{{ b.balls_per_can }}{% else %}—{% endif %}</td></tr>
+            <tr><td>Court surface</td><td>{{ b.get_surface_display }}</td></tr>
+              {% endif %}
+              {% endwith %}
+            {% elif product.type == 'BAGS' %}
+              {% with g=product.bag %}
+              {% if g %}
+            <tr><td>Racket capacity</td><td>{% if g.capacity_rackets %}{{ g.capacity_rackets }}{% else %}—{% endif %}</td></tr>
+              {% endif %}
+              {% endwith %}
+            {% elif product.type == 'STRINGS' %}
+              {% with st=product.string %}
+              {% if st %}
+            <tr><td>Gauge</td><td>{% if st.gauge_mm %}{{ st.gauge_mm }} mm{% else %}—{% endif %}</td></tr>
+            <tr><td>Material</td><td>{{ st.material|default:"—" }}</td></tr>
+            <tr><td>Length</td><td>{% if st.length_m %}{{ st.length_m }} m{% else %}—{% endif %}</td></tr>
+              {% endif %}
+              {% endwith %}
+            {% elif product.type == 'M_APP' or product.type == 'W_APP' or product.type == 'J_APP' %}
+              {% with a=product.apparel %}
+              {% if a %}
+            <tr><td>Gender</td><td>{{ a.get_gender_display }}</td></tr>
+            <tr><td>Material</td><td>{{ a.material|default:"—" }}</td></tr>
+              {% endif %}
+              {% endwith %}
             {% endif %}
-          </div>
+            {% for key, val in product.attributes.items %}
+            <tr><td>{{ key }}</td><td>{{ val }}</td></tr>
+            {% endfor %}
+          </table>
         </div>
 
-        <div class="pdp-specs-section">
-          <div class="pdp-specs" aria-labelledby="pdp-specs-title">
-            <h2 class="pdp-specs-title" id="pdp-specs-title">Specifications</h2>
-            <table class="specs-table">
-              <tr><td>SKU</td><td>{{ product.sku|default:"—" }}</td></tr>
-              <tr><td>Type</td><td>{{ product.get_type_display }}</td></tr>
-              {% if product.category %}<tr><td>Category</td><td>{{ product.category.name }}</td></tr>{% endif %}
-              {% if product.type == 'RACKET' %}
-                {% with r=product.racket %}
-                {% if r %}
-              <tr><td>Weight</td><td>{% if r.weight_grams %}{{ r.weight_grams }} g{% if r.is_strung %} (strung){% else %} (unstrung){% endif %}{% else %}—{% endif %}</td></tr>
-              <tr><td>Head size</td><td>{% if r.head_size_sq_in %}{{ r.head_size_sq_in }} in²{% else %}—{% endif %}</td></tr>
-              <tr><td>String pattern</td><td>{{ r.string_pattern|default:"—" }}</td></tr>
-              <tr><td>Length</td><td>{% if r.length_in %}{{ r.length_in }} in{% else %}—{% endif %}</td></tr>
-              <tr><td>Balance</td><td>{% if r.balance_mm %}{{ r.balance_mm }} mm{% else %}—{% endif %}</td></tr>
-              <tr><td>Swingweight</td><td>{% if r.swingweight %}{{ r.swingweight }}{% else %}—{% endif %}</td></tr>
-                {% endif %}
-                {% endwith %}
-              {% elif product.type == 'M_SHOES' or product.type == 'W_SHOES' or product.type == 'J_SHOES' %}
-                {% with s=product.shoe %}
-                {% if s %}
-              <tr><td>Surface</td><td>{{ s.get_surface_display }}</td></tr>
-              <tr><td>Gender</td><td>{{ s.get_gender_display }}</td></tr>
-              <tr><td>Width</td><td>{{ s.width|default:"—" }}</td></tr>
-                {% endif %}
-                {% endwith %}
-              {% elif product.type == 'BALLS' %}
-                {% with b=product.balls %}
-                {% if b %}
-              <tr><td>Balls per can</td><td>{% if b.balls_per_can %}{{ b.balls_per_can }}{% else %}—{% endif %}</td></tr>
-              <tr><td>Court surface</td><td>{{ b.get_surface_display }}</td></tr>
-                {% endif %}
-                {% endwith %}
-              {% elif product.type == 'BAGS' %}
-                {% with g=product.bag %}
-                {% if g %}
-              <tr><td>Racket capacity</td><td>{% if g.capacity_rackets %}{{ g.capacity_rackets }}{% else %}—{% endif %}</td></tr>
-                {% endif %}
-                {% endwith %}
-              {% elif product.type == 'STRINGS' %}
-                {% with st=product.string %}
-                {% if st %}
-              <tr><td>Gauge</td><td>{% if st.gauge_mm %}{{ st.gauge_mm }} mm{% else %}—{% endif %}</td></tr>
-              <tr><td>Material</td><td>{{ st.material|default:"—" }}</td></tr>
-              <tr><td>Length</td><td>{% if st.length_m %}{{ st.length_m }} m{% else %}—{% endif %}</td></tr>
-                {% endif %}
-                {% endwith %}
-              {% elif product.type == 'M_APP' or product.type == 'W_APP' or product.type == 'J_APP' %}
-                {% with a=product.apparel %}
-                {% if a %}
-              <tr><td>Gender</td><td>{{ a.get_gender_display }}</td></tr>
-              <tr><td>Material</td><td>{{ a.material|default:"—" }}</td></tr>
-                {% endif %}
-                {% endwith %}
-              {% endif %}
-              {% for key, val in product.attributes.items %}
-              <tr><td>{{ key }}</td><td>{{ val }}</td></tr>
-              {% endfor %}
-            </table>
+        {% if product.sizes_list %}
+        <div class="pdp-variants">
+          <div class="pdp-variants-label">Available sizes</div>
+          <div class="pdp-variant-options">
+            {% for sz in product.sizes_list %}
+            <span class="pdp-variant-btn active" style="cursor:default">{{ sz }}</span>
+            {% endfor %}
           </div>
+        </div>
+        {% elif product.type == 'RACKET' %}
+          {% if product.grip_sizes_display %}
+        <div class="pdp-variants">
+          <div class="pdp-variants-label">Grip sizes</div>
+          <div class="pdp-variant-options">
+            {% for g in product.grip_sizes_display %}
+            <span class="pdp-variant-btn active" style="cursor:default">{{ g }}</span>
+            {% endfor %}
+          </div>
+        </div>
+          {% endif %}
+        {% endif %}
+
+        <div class="pdp-cart-row">
+          <a class="btn btn--lg btn--cta-telegram" href="https://t.me/tennis_rivals_shop_tbilisi?direct" target="_blank" rel="noopener">Order via Telegram</a>
+        </div>
+
+        <div class="pdp-shipping">
+          Free delivery in Tbilisi<br>
+          {% if pdp_mode == 'preorder' %}
+          Pre-order from US &amp; EU with official customs clearance — contact us for details.
+          {% else %}
+          Items listed here are in our Tbilisi catalog; ask us on Telegram for sizes and exact pickup time.
+          {% endif %}
         </div>
 
       </div>
