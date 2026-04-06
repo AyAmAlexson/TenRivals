@@ -201,6 +201,22 @@ def _save_listing_from_form(product, form):
     )
 
 
+def _redirect_after_product_form_save(request, product, form):
+    """Honor `next` if internal; otherwise show the public product page in the right catalog context."""
+    next_url = _safe_internal_redirect(request, request.POST.get('next'))
+    if next_url:
+        return redirect(next_url)
+    ch = (
+        form.cleaned_data.get('listing_channel') or ProductListingChannel.PREORDER
+    )
+    channel_q = (
+        'stock' if ch == ProductListingChannel.STOCK else 'preorder'
+    )
+    return redirect(
+        f'{reverse("shop:product_detail", args=[product.pk])}?channel={channel_q}'
+    )
+
+
 def _edit_listing_channel_and_qty(product: Product, query_channel: str | None):
     """Default catalog row for staff edit: ?channel= wins; else stock listing if any; else preorder."""
     if query_channel:
@@ -528,10 +544,7 @@ def product_create(request):
         if form.is_valid():
             obj = form.save()
             _save_listing_from_form(obj, form)
-            next_url = _safe_internal_redirect(request, request.POST.get('next'))
-            if next_url:
-                return redirect(next_url)
-            return redirect(reverse('shop:product_edit', args=[obj.pk]))
+            return _redirect_after_product_form_save(request, obj, form)
     else:
         FormClass = _form_class_for_product_type(type_code)
         form = FormClass(
@@ -584,10 +597,7 @@ def product_edit(request, pk):
         if form.is_valid():
             obj = form.save()
             _save_listing_from_form(obj, form)
-            next_url = _safe_internal_redirect(request, request.POST.get('next'))
-            if next_url:
-                return redirect(next_url)
-            return redirect(reverse('shop:product_edit', args=[obj.pk]))
+            return _redirect_after_product_form_save(request, obj, form)
     else:
         form = FormClass(
             instance=instance,

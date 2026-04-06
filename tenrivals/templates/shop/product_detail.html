@@ -123,6 +123,20 @@
     .pdp-price-old{font-size:16px; color:#94a3b8; text-decoration:line-through}
     .pdp-price-muted{font-size:16px; font-weight:400; color:var(--muted); text-transform:none}
 
+    .pdp-availability-block{margin-bottom:20px}
+    .pdp-availability-label{
+      font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);
+      margin:0 0 8px;
+    }
+    .pdp-availability{display:inline-flex;align-items:center;gap:10px;font-size:14px;font-weight:600;text-transform:none;letter-spacing:0}
+    .pdp-availability__dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+    .pdp-availability--instock{color:#166534}
+    .pdp-availability--instock .pdp-availability__dot{background:#22c55e;box-shadow:0 0 0 2px rgba(34,197,94,.2)}
+    .pdp-availability--last{color:#a16207}
+    .pdp-availability--last .pdp-availability__dot{background:#eab308;box-shadow:0 0 0 2px rgba(234,179,8,.25)}
+    .pdp-availability--soon{color:#64748b}
+    .pdp-availability--soon .pdp-availability__dot{background:#cbd5e1}
+
     /* Variant selector */
     .pdp-variants{margin-bottom:24px}
     .pdp-variants-label{font-size:13px; color:var(--muted); margin-bottom:8px}
@@ -296,6 +310,28 @@
           {% endif %}
         </div>
 
+        {% if pdp_mode == 'stock' %}
+        <div class="pdp-availability-block">
+          <div class="pdp-availability-label">Availability</div>
+          {% if stock_listing_qty >= 2 %}
+          <div class="pdp-availability pdp-availability--instock" role="status">
+            <span class="pdp-availability__dot" aria-hidden="true"></span>
+            <span>In Stock</span>
+          </div>
+          {% elif stock_listing_qty == 1 %}
+          <div class="pdp-availability pdp-availability--last" role="status">
+            <span class="pdp-availability__dot" aria-hidden="true"></span>
+            <span>Last item in stock</span>
+          </div>
+          {% else %}
+          <div class="pdp-availability pdp-availability--soon" role="status">
+            <span class="pdp-availability__dot" aria-hidden="true"></span>
+            <span>Coming Soon</span>
+          </div>
+          {% endif %}
+        </div>
+        {% endif %}
+
         <hr class="pdp-divider">
 
         <div class="pdp-prices">
@@ -346,6 +382,34 @@
             <tr><td>Surface</td><td>{{ s.get_surface_display }}</td></tr>
             <tr><td>Gender</td><td>{{ s.get_gender_display }}</td></tr>
             <tr><td>Width</td><td>{{ s.width|default:"—" }}</td></tr>
+              {% endif %}
+              {% endwith %}
+            {% elif product.type == 'BALLS' %}
+              {% with b=product.balls %}
+              {% if b %}
+            <tr><td>Balls per can</td><td>{% if b.balls_per_can %}{{ b.balls_per_can }}{% else %}—{% endif %}</td></tr>
+            <tr><td>Court surface</td><td>{{ b.get_surface_display }}</td></tr>
+              {% endif %}
+              {% endwith %}
+            {% elif product.type == 'BAGS' %}
+              {% with g=product.bag %}
+              {% if g %}
+            <tr><td>Racket capacity</td><td>{% if g.capacity_rackets %}{{ g.capacity_rackets }}{% else %}—{% endif %}</td></tr>
+              {% endif %}
+              {% endwith %}
+            {% elif product.type == 'STRINGS' %}
+              {% with st=product.string %}
+              {% if st %}
+            <tr><td>Gauge</td><td>{% if st.gauge_mm %}{{ st.gauge_mm }} mm{% else %}—{% endif %}</td></tr>
+            <tr><td>Material</td><td>{{ st.material|default:"—" }}</td></tr>
+            <tr><td>Length</td><td>{% if st.length_m %}{{ st.length_m }} m{% else %}—{% endif %}</td></tr>
+              {% endif %}
+              {% endwith %}
+            {% elif product.type == 'M_APP' or product.type == 'W_APP' or product.type == 'J_APP' %}
+              {% with a=product.apparel %}
+              {% if a %}
+            <tr><td>Gender</td><td>{{ a.get_gender_display }}</td></tr>
+            <tr><td>Material</td><td>{{ a.material|default:"—" }}</td></tr>
               {% endif %}
               {% endwith %}
             {% endif %}
