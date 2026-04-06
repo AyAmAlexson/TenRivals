@@ -123,19 +123,24 @@
     .pdp-price-old{font-size:16px; color:#94a3b8; text-decoration:line-through}
     .pdp-price-muted{font-size:16px; font-weight:400; color:var(--muted); text-transform:none}
 
-    .pdp-availability-block{margin-bottom:20px}
-    .pdp-availability-label{
-      font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);
-      margin:0 0 8px;
+    /* One line: label + status (Wilson-style spec row) */
+    .pdp-availability-row{
+      display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px;margin-bottom:20px;
+      font-size:14px;line-height:1.35;
     }
-    .pdp-availability{display:inline-flex;align-items:center;gap:10px;font-size:14px;font-weight:600;text-transform:none;letter-spacing:0}
-    .pdp-availability__dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
-    .pdp-availability--instock{color:#166534}
-    .pdp-availability--instock .pdp-availability__dot{background:#22c55e;box-shadow:0 0 0 2px rgba(34,197,94,.2)}
-    .pdp-availability--last{color:#a16207}
-    .pdp-availability--last .pdp-availability__dot{background:#eab308;box-shadow:0 0 0 2px rgba(234,179,8,.25)}
-    .pdp-availability--soon{color:#64748b}
-    .pdp-availability--soon .pdp-availability__dot{background:#cbd5e1}
+    .pdp-availability-key{
+      font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);
+      white-space:nowrap;
+    }
+    .pdp-availability-row .pdp-availability-sep{color:var(--muted);font-weight:400;margin:0 2px 0 0}
+    .pdp-availability-val{display:inline-flex;align-items:center;gap:8px;font-weight:600;text-transform:none;letter-spacing:0}
+    .pdp-availability-val__dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+    .pdp-availability-row.pdp-availability--instock .pdp-availability-val{color:#166534}
+    .pdp-availability-row.pdp-availability--instock .pdp-availability-val__dot{background:#22c55e;box-shadow:0 0 0 2px rgba(34,197,94,.2)}
+    .pdp-availability-row.pdp-availability--last .pdp-availability-val{color:#a16207}
+    .pdp-availability-row.pdp-availability--last .pdp-availability-val__dot{background:#eab308;box-shadow:0 0 0 2px rgba(234,179,8,.25)}
+    .pdp-availability-row.pdp-availability--soon .pdp-availability-val{color:#64748b}
+    .pdp-availability-row.pdp-availability--soon .pdp-availability-val__dot{background:#cbd5e1}
 
     /* Variant selector */
     .pdp-variants{margin-bottom:24px}
@@ -311,25 +316,31 @@
         </div>
 
         {% if pdp_mode == 'stock' %}
-        <div class="pdp-availability-block">
-          <div class="pdp-availability-label">Availability</div>
           {% if stock_listing_qty >= 2 %}
-          <div class="pdp-availability pdp-availability--instock" role="status">
-            <span class="pdp-availability__dot" aria-hidden="true"></span>
+        <div class="pdp-availability-row pdp-availability--instock" role="status">
+          <span class="pdp-availability-key">Availability</span><span class="pdp-availability-sep">:</span>
+          <span class="pdp-availability-val">
+            <span class="pdp-availability-val__dot" aria-hidden="true"></span>
             <span>In Stock</span>
-          </div>
-          {% elif stock_listing_qty == 1 %}
-          <div class="pdp-availability pdp-availability--last" role="status">
-            <span class="pdp-availability__dot" aria-hidden="true"></span>
-            <span>Last item in stock</span>
-          </div>
-          {% else %}
-          <div class="pdp-availability pdp-availability--soon" role="status">
-            <span class="pdp-availability__dot" aria-hidden="true"></span>
-            <span>Coming Soon</span>
-          </div>
-          {% endif %}
+          </span>
         </div>
+          {% elif stock_listing_qty == 1 %}
+        <div class="pdp-availability-row pdp-availability--last" role="status">
+          <span class="pdp-availability-key">Availability</span><span class="pdp-availability-sep">:</span>
+          <span class="pdp-availability-val">
+            <span class="pdp-availability-val__dot" aria-hidden="true"></span>
+            <span>Last item in stock</span>
+          </span>
+        </div>
+          {% else %}
+        <div class="pdp-availability-row pdp-availability--soon" role="status">
+          <span class="pdp-availability-key">Availability</span><span class="pdp-availability-sep">:</span>
+          <span class="pdp-availability-val">
+            <span class="pdp-availability-val__dot" aria-hidden="true"></span>
+            <span>Coming Soon</span>
+          </span>
+        </div>
+          {% endif %}
         {% endif %}
 
         <hr class="pdp-divider">
