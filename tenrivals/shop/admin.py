@@ -46,7 +46,7 @@ class RacketAdmin(admin.ModelAdmin):
 
 @admin.register(Shoe)
 class ShoeAdmin(admin.ModelAdmin):
-    list_display = ("name", "brand", "initial_price", "actual_price", "gender", "surface")
+    list_display = ("name", "brand", "initial_price", "actual_price", "gender", "surface", "width")
 
 
 @admin.register(Apparel)

@@ -98,6 +98,11 @@
 
     .errorlist{color:#b91c1c;font-size:13px;margin:8px 0;list-style:none}
     .errorlist li{margin-bottom:4px}
+    .form-errors-banner{border:1px solid #fca5a5;background:#fef2f2;padding:14px 16px;margin-bottom:20px}
+    .form-errors-banner strong{display:block;margin-bottom:8px;color:#991b1b;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.06em}
+    .img-slot{overflow:hidden;min-width:0}
+    .img-slot .field{overflow:hidden;max-width:100%}
+    .img-slot input[type=file]{max-width:100%;font-size:12px;word-break:break-all}
   </style>
 </head>
 <body>
@@ -115,7 +120,17 @@
       {% csrf_token %}
       {% if return_next %}<input type="hidden" name="next" value="{{ return_next }}">{% endif %}
 
-      {% if form.non_field_errors %}<ul class="errorlist">{% for e in form.non_field_errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+      {% if form.errors %}
+      <div class="form-errors-banner" role="alert">
+        <strong>Form could not be saved</strong>
+        <ul class="errorlist">
+          {% for err in form.non_field_errors %}<li>{{ err }}</li>{% endfor %}
+          {% for field in form %}
+            {% for err in field.errors %}<li>{{ field.label }}: {{ err }}</li>{% endfor %}
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
 
       {% include 'shop/includes/product_form_toolbar.html' with toolbar_title=is_edit|yesno:"Edit product,Add product" %}
 
@@ -148,7 +163,6 @@
       <div class="form-card">
         <h2>Classification &amp; catalog</h2>
         <div class="row">
-          <div class="col"><div class="field">{{ form.category.label_tag }}{{ form.category }}{% if form.category.help_text %}<p class="hint">{{ form.category.help_text }}</p>{% endif %}{% if form.category.errors %}<ul class="errorlist">{% for e in form.category.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}</div></div>
           <div class="col"><div class="field">{{ form.brand.label_tag }}{{ form.brand }}{% if form.brand.errors %}<ul class="errorlist">{% for e in form.brand.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}</div></div>
           <div class="col"><div class="field">{{ form.name.label_tag }}{{ form.name }}{% if form.name.errors %}<ul class="errorlist">{% for e in form.name.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}</div></div>
         </div>
@@ -179,13 +193,14 @@
       <div class="form-card">
         <h3>Shoes</h3>
         <div class="row">
-          <div class="col"><div class="field">{{ form.gender.label_tag }}{{ form.gender }}</div></div>
-          <div class="col"><div class="field">{{ form.surface.label_tag }}{{ form.surface }}</div></div>
-          <div class="col"><div class="field">{{ form.color.label_tag }}{{ form.color }}</div></div>
+          <div class="col"><div class="field">{{ form.gender.label_tag }}{{ form.gender }}{% if form.gender.errors %}<ul class="errorlist">{% for e in form.gender.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}</div></div>
+          <div class="col"><div class="field">{{ form.surface.label_tag }}{{ form.surface }}{% if form.surface.errors %}<ul class="errorlist">{% for e in form.surface.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}</div></div>
+          <div class="col"><div class="field">{{ form.color.label_tag }}{{ form.color }}{% if form.color.errors %}<ul class="errorlist">{% for e in form.color.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}</div></div>
+          <div class="col"><div class="field">{{ form.width.label_tag }}{{ form.width }}{% if form.width.help_text %}<p class="hint">{{ form.width.help_text }}</p>{% endif %}{% if form.width.errors %}<ul class="errorlist">{% for e in form.width.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}</div></div>
         </div>
         <div class="field">
-          <span class="size-inv-heading" id="label-shoe-sizes" style="display:block;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px">Stock by shoe size (EU)</span>
-          <p class="hint">Quantity on hand per size. Saved as JSON; total quantity is the sum of these cells.</p>
+          <span class="size-inv-heading" id="label-shoe-sizes" style="display:block;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px">Stock by shoe size (US)</span>
+          <p class="hint">Quantity on hand per US size (half sizes through 16). Saved as JSON; total quantity is the sum of these cells.</p>
           <div class="size-inv-board js-size-inventory-grid" role="group" aria-labelledby="label-shoe-sizes" data-json-input-id="id_sizes">
             {% for label, qty in form.size_inventory_rows %}
             <div class="size-inv-row">
@@ -267,8 +282,8 @@
       <div class="form-card">
         <h3>Balls</h3>
         <div class="row">
-          <div class="col"><div class="field">{{ form.balls_per_can.label_tag }}{{ form.balls_per_can }}</div></div>
-          <div class="col"><div class="field">{{ form.surface.label_tag }}{{ form.surface }}</div></div>
+          <div class="col"><div class="field">{{ form.balls_per_can.label_tag }}{{ form.balls_per_can }}{% if form.balls_per_can.errors %}<ul class="errorlist">{% for e in form.balls_per_can.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}</div></div>
+          <div class="col"><div class="field">{{ form.surface.label_tag }}{{ form.surface }}{% if form.surface.help_text %}<p class="hint">{{ form.surface.help_text }}</p>{% endif %}{% if form.surface.errors %}<ul class="errorlist">{% for e in form.surface.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}</div></div>
         </div>
       </div>
       {% endif %}

@@ -345,6 +345,7 @@
               {% if s %}
             <tr><td>Surface</td><td>{{ s.get_surface_display }}</td></tr>
             <tr><td>Gender</td><td>{{ s.get_gender_display }}</td></tr>
+            <tr><td>Width</td><td>{{ s.width|default:"—" }}</td></tr>
               {% endif %}
               {% endwith %}
             {% endif %}

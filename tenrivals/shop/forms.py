@@ -8,7 +8,7 @@ from .models import (
     Apparel,
     Bag,
     Balls,
-    Category,
+    CourtSurface,
     Product,
     ProductListingChannel,
     Racket,
@@ -18,9 +18,9 @@ from .models import (
 from .size_inventory import (
     APPAREL_SIZE_LABELS,
     GRIP_SIZE_LABELS,
-    eu_shoe_size_labels,
     labels_for_size_grid,
     normalize_sizes_to_qty_map,
+    us_shoe_size_labels,
 )
 
 
@@ -40,7 +40,6 @@ class ProductForm(forms.ModelForm):
     class Meta:
         model = Product
         fields = [
-            'category',
             'brand',
             'name',
             'type',
@@ -69,18 +68,6 @@ class ProductForm(forms.ModelForm):
         self.fields['listing_channel'].choices = list(ProductListingChannel.choices)
         self.fields['type'].label = 'Product type'
         self.fields['name'].label = 'Model'
-        self.fields['category'].required = False
-        self.fields['category'].empty_label = '— None —'
-        self.fields['category'].help_text = (
-            'Optional filter group in the catalog (not the same as product type). '
-            'Product type defines the item class (racket, shoe, apparel, etc.). '
-            'Categories are created in Admin and stay empty here until you add some.'
-        )
-        if not Category.objects.exists():
-            self.fields['category'].help_text = (
-                'Optional catalog grouping. The dropdown is empty until you create '
-                'Categories in Django Admin — separate from product type above.'
-            )
 
         self.fields['attributes'].widget = forms.HiddenInput()
         self.fields['attributes'].required = False
@@ -142,12 +129,14 @@ def _clean_qty_map_field(raw, *, error_label: str) -> dict[str, int]:
 class ShoeForm(ProductForm):
     class Meta(ProductForm.Meta):
         model = Shoe
-        fields = ProductForm.Meta.fields + ['gender', 'surface', 'sizes', 'color']
+        fields = ProductForm.Meta.fields + ['gender', 'surface', 'sizes', 'color', 'width']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields['surface'].required = False
         self.fields['sizes'].widget = forms.HiddenInput()
         self.fields['sizes'].required = False
+        self.fields['width'].required = False
         self.fields['listing_quantity'].widget.attrs['readonly'] = True
         self.fields['listing_quantity'].label = 'Total quantity (auto)'
         self.fields['listing_quantity'].help_text = (
@@ -155,8 +144,14 @@ class ShoeForm(ProductForm):
         )
         self._init_shoe_size_rows()
 
+    def clean_surface(self):
+        v = self.cleaned_data.get('surface')
+        if v in (None, ''):
+            return CourtSurface.ALL_COURT
+        return v
+
     def _init_shoe_size_rows(self):
-        allowed = eu_shoe_size_labels()
+        allowed = us_shoe_size_labels()
         if self.data:
             raw = self.data.get('sizes', '')
             try:
@@ -317,6 +312,16 @@ class BallsForm(ProductForm):
     class Meta(ProductForm.Meta):
         model = Balls
         fields = ProductForm.Meta.fields + ['balls_per_can', 'surface']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['surface'].required = False
+
+    def clean_surface(self):
+        v = self.cleaned_data.get('surface')
+        if v in (None, ''):
+            return CourtSurface.ALL_COURT
+        return v
 
 
 class AccessoryForm(ProductForm):

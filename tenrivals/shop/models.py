@@ -167,7 +167,13 @@ class Shoe(Product):
     # Tennis shoes specific fields
     gender = models.CharField(max_length=1, choices=Gender.choices, default=Gender.UNISEX)
     surface = models.CharField(max_length=2, choices=CourtSurface.choices, default=CourtSurface.ALL_COURT)
-    sizes = models.JSONField(default=list, blank=True)  # e.g. ["EU 41", "EU 42", "EU 43"]
+    sizes = models.JSONField(default=list, blank=True)  # US size keys -> qty, e.g. {"US 10.5": 2}
+    width = models.CharField(
+        max_length=24,
+        blank=True,
+        null=True,
+        help_text=_('Width / last (e.g. D, 2E, Wide).'),
+    )
     color = models.CharField(max_length=80, blank=True, null=True)
 
     class Meta:

@@ -5,12 +5,15 @@ from __future__ import annotations
 from typing import Any
 
 
-def eu_shoe_size_labels() -> list[str]:
-    """Common EU tennis shoe sizes (half sizes)."""
+def us_shoe_size_labels() -> list[str]:
+    """US sizes from 3.5 through 16.0 in half-size steps (typical tennis / running retail range)."""
     labels: list[str] = []
-    for whole in range(35, 50):
-        labels.append(f"EU {whole}")
-        labels.append(f"EU {whole}.5")
+    for tick in range(7, 33):  # 3.5 .. 16.0
+        v = tick / 2
+        if v == int(v):
+            labels.append(f"US {int(v)}")
+        else:
+            labels.append(f"US {v}")
     return labels
 
 
