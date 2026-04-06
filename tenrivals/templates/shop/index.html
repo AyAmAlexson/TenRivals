@@ -6,6 +6,7 @@
   <title>TR Shop</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   {% load static %}
+  {% load catalog_tags %}
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -202,7 +203,7 @@
   <header>
     <div class="container">
       <div class="header-row">
-        <a href="#" class="brand" aria-label="Home">
+        <a href="{% url 'shop:index' %}" class="brand" aria-label="Home">
           <img class="logo" src="{% static 'assets/img/TR Logo 25/TR 25 LOGO HOR RED.svg' %}" alt="TR Shop">
         </a>
         <label class="search" aria-label="Search">
@@ -248,181 +249,7 @@
   <nav>
     <div class="container">
       <div class="nav-row">
-        <div class="dropdown">
-          <a class="nav-link dropdown-toggle" href="#">Rackets</a>
-          <div class="dropdown-menu">
-            <div class="dropdown-grid">
-              <div>
-                <div class="dropdown-title">All</div>
-                <a class="dropdown-item" href="#">All rackets</a>
-              </div>
-              <div>
-                <div class="dropdown-title">Brands</div>
-                <a class="dropdown-item" href="#">Nike</a>
-                <a class="dropdown-item" href="#">adidas</a>
-                <a class="dropdown-item" href="#">ASICS</a>
-                <a class="dropdown-item" href="#">Babolat</a>
-                <a class="dropdown-item" href="#">Wilson</a>
-                <a class="dropdown-item" href="#">HEAD</a>
-                <a class="dropdown-item" href="#">Yonex</a>
-                <a class="dropdown-item" href="#">Prince</a>
-                <a class="dropdown-item" href="#">Lacoste</a>
-                <a class="dropdown-item" href="#">K-Swiss</a>
-                <a class="dropdown-item" href="#">Mizuno</a>
-                <a class="dropdown-item" href="#">Lotto</a>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="dropdown">
-          <a class="nav-link dropdown-toggle" href="#">Bags & Covers</a>
-          <div class="dropdown-menu">
-            <div class="dropdown-grid">
-              <div>
-                <div class="dropdown-title">All</div>
-                <a class="dropdown-item" href="#">All bags & covers</a>
-              </div>
-              <div>
-                <div class="dropdown-title">Brands</div>
-                <a class="dropdown-item" href="#">Nike</a>
-                <a class="dropdown-item" href="#">adidas</a>
-                <a class="dropdown-item" href="#">ASICS</a>
-                <a class="dropdown-item" href="#">Babolat</a>
-                <a class="dropdown-item" href="#">Wilson</a>
-                <a class="dropdown-item" href="#">HEAD</a>
-                <a class="dropdown-item" href="#">Yonex</a>
-                <a class="dropdown-item" href="#">Prince</a>
-                <a class="dropdown-item" href="#">Lacoste</a>
-                <a class="dropdown-item" href="#">K-Swiss</a>
-                <a class="dropdown-item" href="#">Mizuno</a>
-                <a class="dropdown-item" href="#">Lotto</a>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="dropdown">
-          <a class="nav-link dropdown-toggle" href="#">Clothing</a>
-          <div class="dropdown-menu">
-            <div class="dropdown-grid">
-              <div>
-                <div class="dropdown-title">All</div>
-                <a class="dropdown-item" href="#">All clothing</a>
-              </div>
-              <div>
-                <div class="dropdown-title">By gender</div>
-                <a class="dropdown-item" href="#">Men's</a>
-                <a class="dropdown-item" href="#">Women's</a>
-                <a class="dropdown-item" href="#">Kids</a>
-              </div>
-              <div>
-                <div class="dropdown-title">Brands</div>
-                <a class="dropdown-item" href="#">Nike</a>
-                <a class="dropdown-item" href="#">adidas</a>
-                <a class="dropdown-item" href="#">ASICS</a>
-                <a class="dropdown-item" href="#">Babolat</a>
-                <a class="dropdown-item" href="#">Wilson</a>
-                <a class="dropdown-item" href="#">HEAD</a>
-                <a class="dropdown-item" href="#">Yonex</a>
-                <a class="dropdown-item" href="#">Lacoste</a>
-                <a class="dropdown-item" href="#">New Balance</a>
-                <a class="dropdown-item" href="#">K-Swiss</a>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="dropdown">
-          <a class="nav-link dropdown-toggle" href="#">Shoes</a>
-          <div class="dropdown-menu">
-            <div class="dropdown-grid">
-              <div>
-                <div class="dropdown-title">All</div>
-                <a class="dropdown-item" href="#">All shoes</a>
-              </div>
-              <div>
-                <div class="dropdown-title">By gender</div>
-                <a class="dropdown-item" href="#">Men's</a>
-                <a class="dropdown-item" href="#">Women's</a>
-                <a class="dropdown-item" href="#">Kids</a>
-              </div>
-              <div>
-                <div class="dropdown-title">Brands</div>
-                <a class="dropdown-item" href="#">Nike</a>
-                <a class="dropdown-item" href="#">adidas</a>
-                <a class="dropdown-item" href="#">ASICS</a>
-                <a class="dropdown-item" href="#">Babolat</a>
-                <a class="dropdown-item" href="#">Wilson</a>
-                <a class="dropdown-item" href="#">HEAD</a>
-                <a class="dropdown-item" href="#">Yonex</a>
-                <a class="dropdown-item" href="#">Mizuno</a>
-                <a class="dropdown-item" href="#">K-Swiss</a>
-                <a class="dropdown-item" href="#">Lotto</a>
-                <a class="dropdown-item" href="#">New Balance</a>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="dropdown">
-          <a class="nav-link dropdown-toggle" href="#">Balls</a>
-          <div class="dropdown-menu">
-            <div class="dropdown-grid">
-              <div>
-                <div class="dropdown-title">All</div>
-                <a class="dropdown-item" href="#">All balls</a>
-              </div>
-              <div>
-                <div class="dropdown-title">Brands</div>
-                <a class="dropdown-item" href="#">Wilson</a>
-                <a class="dropdown-item" href="#">HEAD</a>
-                <a class="dropdown-item" href="#">Babolat</a>
-                <a class="dropdown-item" href="#">Dunlop</a>
-                <a class="dropdown-item" href="#">Penn</a>
-                <a class="dropdown-item" href="#">Tecnifibre</a>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="dropdown">
-          <a class="nav-link dropdown-toggle" href="#">Accessories</a>
-          <div class="dropdown-menu">
-            <div class="dropdown-grid">
-              <div>
-                <div class="dropdown-title">All</div>
-                <a class="dropdown-item" href="#">All accessories</a>
-              </div>
-              <div>
-                <div class="dropdown-title">Brands</div>
-                <a class="dropdown-item" href="#">Wilson</a>
-                <a class="dropdown-item" href="#">HEAD</a>
-                <a class="dropdown-item" href="#">Babolat</a>
-                <a class="dropdown-item" href="#">Yonex</a>
-                <a class="dropdown-item" href="#">Prince</a>
-                <a class="dropdown-item" href="#">Tecnifibre</a>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="dropdown">
-          <a class="nav-link dropdown-toggle" href="#">Equipment</a>
-          <div class="dropdown-menu">
-            <div class="dropdown-grid">
-              <div>
-                <div class="dropdown-title">All</div>
-                <a class="dropdown-item" href="#">All equipment</a>
-              </div>
-              <div>
-                <div class="dropdown-title">Brands</div>
-                <a class="dropdown-item" href="#">Wilson</a>
-                <a class="dropdown-item" href="#">HEAD</a>
-                <a class="dropdown-item" href="#">Babolat</a>
-                <a class="dropdown-item" href="#">Yonex</a>
-                <a class="dropdown-item" href="#">Gamma</a>
-                <a class="dropdown-item" href="#">Tourna</a>
-              </div>
-            </div>
-          </div>
-        </div>
-        <!-- Only working link as requested -->
-        <a class="nav-link nav-link--primary" href="{% url 'shop:preorder' %}">Preorder</a>
+        {% stock_catalog_nav %}
       </div>
     </div>
   </nav>
@@ -488,7 +315,7 @@
   <div class="cat-strip">
     <div class="container">
       <div class="cat-grid">
-        <a class="cat-tile" href="#">
+        <a class="cat-tile" href="{% url 'shop:items_list_for_Laen' %}?type=RACKET">
           <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
             <ellipse cx="16" cy="11" rx="7" ry="9" stroke="currentColor" stroke-width="1.6"/>
             <line x1="16" y1="20" x2="16" y2="30" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
@@ -501,21 +328,21 @@
           </svg>
           <span class="cat-tile-label">Rackets</span>
         </a>
-        <a class="cat-tile" href="#">
+        <a class="cat-tile" href="{% url 'shop:items_list_for_Laen' %}?type=M_SHOES">
           <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
             <path d="M5 24h22" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
             <path d="M7 24v-3c0-2 1.5-3.5 3.5-4L15 16l1-5c.2-.8.8-1.2 1.5-1c.7.2 1 .9.8 1.6L17.5 14l4 .5c3 .5 5.5 2.5 5.5 5.5v4" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
           </svg>
           <span class="cat-tile-label">Shoes</span>
         </a>
-        <a class="cat-tile" href="#">
+        <a class="cat-tile" href="{% url 'shop:items_list_for_Laen' %}?type=BAGS">
           <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
             <rect x="6" y="10" width="20" height="16" rx="2" stroke="currentColor" stroke-width="1.6"/>
             <path d="M11 10V7a5 5 0 0110 0v3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
           </svg>
           <span class="cat-tile-label">Bags</span>
         </a>
-        <a class="cat-tile" href="#">
+        <a class="cat-tile" href="{% url 'shop:items_list_for_Laen' %}?type=M_APP">
           <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
             <path d="M12 4L10 4L8 8L6 14v14h20V14l-2-6-2-4h-2" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
             <path d="M12 4c0 2 1.5 4 4 4s4-2 4-4" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/>
@@ -524,7 +351,7 @@
           </svg>
           <span class="cat-tile-label">Clothing</span>
         </a>
-        <a class="cat-tile" href="#">
+        <a class="cat-tile" href="{% url 'shop:items_list_for_Laen' %}?type=BALLS">
           <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
             <circle cx="16" cy="16" r="10" stroke="currentColor" stroke-width="1.6"/>
             <path d="M7 11c3 5 9 7 15 3" stroke="currentColor" stroke-width="1.2" fill="none"/>
@@ -532,7 +359,7 @@
           </svg>
           <span class="cat-tile-label">Balls</span>
         </a>
-        <a class="cat-tile" href="#">
+        <a class="cat-tile" href="{% url 'shop:items_list_for_Laen' %}?type=ACCESSORIES">
           <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
             <rect x="8" y="6" width="16" height="6" rx="3" stroke="currentColor" stroke-width="1.6"/>
             <line x1="14" y1="9" x2="18" y2="9" stroke="currentColor" stroke-width="1.2"/>
@@ -541,7 +368,7 @@
           </svg>
           <span class="cat-tile-label">Accessories</span>
         </a>
-        <a class="cat-tile" href="#">
+        <a class="cat-tile" href="{% url 'shop:items_list_for_Laen' %}?type=STRINGS">
           <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
             <path d="M10 6l-4 4 6 6-6 6 4 4 6-6 6 6 4-4-6-6 6-6-4-4-6 6-6-6z" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linejoin="round"/>
           </svg>
@@ -630,14 +457,11 @@
     <div class="container">
       <div class="section-head"><h2>Our Brands</h2><a href="#">View all &rarr;</a></div>
       <div class="brands-row">
-        <a class="brand-name" href="#">Wilson</a>
-        <a class="brand-name" href="#">Babolat</a>
-        <a class="brand-name" href="#">HEAD</a>
-        <a class="brand-name" href="#">Yonex</a>
-        <a class="brand-name" href="#">ASICS</a>
-        <a class="brand-name" href="#">Nike</a>
-        <a class="brand-name" href="#">adidas</a>
-        <a class="brand-name" href="#">New Balance</a>
+        {% for b in home_catalog_brands %}
+        <a class="brand-name" href="{% url 'shop:items_list_for_Laen' %}?cbrand={{ b|urlencode }}">{{ b }}</a>
+        {% empty %}
+        <span class="brand-name" style="color:#cbd5e1;font-size:14px;text-transform:none">Brands appear when products are in stock</span>
+        {% endfor %}
       </div>
     </div>
   </section>

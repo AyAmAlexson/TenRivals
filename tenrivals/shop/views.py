@@ -1,12 +1,19 @@
 from itertools import chain
+from urllib.parse import quote
 
 from django.conf import settings
 from django.contrib.admin.views.decorators import staff_member_required
-from django.db.models.functions import Coalesce
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 
+from .catalog_utils import (
+    annotate_stock_listing_quantity,
+    distinct_brands_for_type,
+    filter_products_by_listing_channel,
+    order_products_by_effective_price,
+    stock_catalog_base_queryset,
+)
 from .forms import ProductForm, ShoeForm
 from .models import (
     Category,
@@ -32,19 +39,6 @@ _PRODUCT_SUBCLASS_SELECT = (
     'balls',
     'accessory',
 )
-
-
-def _filter_by_listing_channel(qs, channel: str):
-    """Once any listing rows exist for a channel, public lists only show those products."""
-    if ProductListing.objects.filter(channel=channel).exists():
-        return qs.filter(listings__channel=channel).distinct()
-    return qs
-
-
-def _order_by_effective_price(qs):
-    return qs.annotate(sort_price=Coalesce('actual_price', 'initial_price')).order_by(
-        'sort_price', 'id'
-    )
 
 
 def _parse_listing_channel_param(raw):
@@ -108,6 +102,14 @@ def index(request):
             )[:1],
         )
     )
+    home_catalog_brands = list(
+        stock_catalog_base_queryset()
+        .exclude(brand__isnull=True)
+        .exclude(brand__exact='')
+        .values_list('brand', flat=True)
+        .distinct()
+        .order_by('brand')
+    )
     return render(
         request,
         'shop/index.html',
@@ -117,6 +119,7 @@ def index(request):
             'promo_strip_right_visible': promo.right_visible,
             'featured_products': featured_products,
             'new_arrivals': new_arrivals,
+            'home_catalog_brands': home_catalog_brands,
         },
     )
 
@@ -147,11 +150,13 @@ def items_list_for_Laen(request):
     racket_weight = request.GET.get('w', 'all')     # lt280 | 280_299 | 300 | ge301
     racket_head = request.GET.get('head', 'all')    # lt100 | 100 | ge101
     racket_pattern = request.GET.get('pat', 'all')  # e.g., 16x19, 18x20
+    catalog_brand = (request.GET.get('cbrand') or '').strip()
 
     categories = Category.objects.all().order_by('name')
 
     products = Product.objects.filter(is_active=True)
     active_tab = 'all'
+    shoe_brands = []
 
     if category_slug:
         products = products.filter(category__slug=category_slug)
@@ -184,16 +189,7 @@ def items_list_for_Laen(request):
         if surface_filter in surf_map:
             products = products.filter(shoe__surface=surf_map[surface_filter])
 
-        # Shoes brand options and filter
-        shoe_brands_qs = (
-            Product.objects.filter(is_active=True, type=type_code)
-            .exclude(brand__isnull=True)
-            .exclude(brand__exact='')
-            .values_list('brand', flat=True)
-            .distinct()
-            .order_by('brand')
-        )
-        shoe_brands = list(shoe_brands_qs)
+        shoe_brands = distinct_brands_for_type(stock_catalog_base_queryset(), type_code)
         if shoe_brand != 'all':
             products = products.filter(brand=shoe_brand)
 
@@ -201,11 +197,8 @@ def items_list_for_Laen(request):
     racket_brands = []
     racket_patterns = []
     if show_racket_filters:
-        # Options
-        racket_brands = list(
-            Product.objects.filter(is_active=True, type=ProductType.RACKET)
-            .exclude(brand__isnull=True).exclude(brand__exact='')
-            .values_list('brand', flat=True).distinct().order_by('brand')
+        racket_brands = distinct_brands_for_type(
+            stock_catalog_base_queryset(), ProductType.RACKET
         )
         racket_patterns = list(
             Racket.objects.filter(is_active=True)
@@ -239,8 +232,14 @@ def items_list_for_Laen(request):
         if racket_pattern != 'all':
             products = products.filter(racket__string_pattern=racket_pattern)
 
-    products = _filter_by_listing_channel(products, ProductListingChannel.STOCK)
-    products = _order_by_effective_price(products)
+    if catalog_brand:
+        products = products.filter(brand=catalog_brand)
+        if not category_slug and not type_code:
+            active_tab = f'cbrand:{catalog_brand}'
+
+    products = filter_products_by_listing_channel(products, ProductListingChannel.STOCK)
+    products = annotate_stock_listing_quantity(products)
+    products = order_products_by_effective_price(products)
 
     # For tabs, we provide both: category list and fixed type list
     type_tabs = [(choice.value, choice.label) for choice in ProductType]
@@ -263,6 +262,8 @@ def items_list_for_Laen(request):
         'racket_head_active': racket_head,
         'racket_patterns': racket_patterns,
         'racket_pattern_active': racket_pattern,
+        'catalog_brand': catalog_brand,
+        'cbrand_qs': f'&cbrand={quote(catalog_brand)}' if catalog_brand else '',
     }
     return render(request, 'shop/items_list_for_Laen.html', context)
 
@@ -359,8 +360,8 @@ def preorder(request):
         if racket_pattern != 'all':
             products = products.filter(racket__string_pattern=racket_pattern)
 
-    products = _filter_by_listing_channel(products, ProductListingChannel.PREORDER)
-    products = _order_by_effective_price(products)
+    products = filter_products_by_listing_channel(products, ProductListingChannel.PREORDER)
+    products = order_products_by_effective_price(products)
 
     type_tabs = [(choice.value, choice.label) for choice in ProductType]
 

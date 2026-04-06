@@ -68,72 +68,68 @@
     </div>
   
 
-    <!-- Tabs: by product type (only Rackets, Men's Shoes, Women's Shoes) -->
     <div class="tabs" role="tablist" aria-label="Product types">
+      <a class="tab {% if not request.GET.type and not request.GET.category %}active{% endif %}" href="?{% if catalog_brand %}cbrand={{ catalog_brand|urlencode }}{% endif %}">All in stock</a>
       {% for code, label in type_tabs %}
-        {% if code == 'RACKET' or code == 'M_SHOES' or code == 'W_SHOES' %}
-          <a class="tab {% if active_tab == 'type:'|add:code %}active{% endif %}" href="?type={{ code }}">{{ label }}</a>
+        {% if code != 'OTHER' %}
+          <a class="tab {% if active_tab == 'type:'|add:code %}active{% endif %}" href="?type={{ code }}{{ cbrand_qs }}">{{ label }}</a>
         {% endif %}
       {% endfor %}
     </div>
 
-    <!-- Optional category tabs if you use categories -->
     {% if categories %}
     <div class="tabs" role="tablist" aria-label="Categories">
       {% for c in categories %}
-        <a class="tab {% if active_tab == 'cat:'|add:c.slug %}active{% endif %}" href="?category={{ c.slug }}">{{ c.name }}</a>
+        <a class="tab {% if active_tab == 'cat:'|add:c.slug %}active{% endif %}" href="?category={{ c.slug }}{{ cbrand_qs }}">{{ c.name }}</a>
       {% endfor %}
     </div>
     {% endif %}
 
     {% if show_racket_filters %}
-    <!-- Racket-only filters -->
     <div class="tabs" role="tablist" aria-label="Racket brand">
-      <a class="tab {% if racket_brand_active == 'all' %}active{% endif %}" href="?type={{ active_type_code }}&brand=all&w={{ racket_weight_active }}&head={{ racket_head_active }}&pat={{ racket_pattern_active }}">All brands</a>
+      <a class="tab {% if racket_brand_active == 'all' %}active{% endif %}" href="?type={{ active_type_code }}&amp;brand=all&amp;w={{ racket_weight_active }}&amp;head={{ racket_head_active }}&amp;pat={{ racket_pattern_active }}{{ cbrand_qs }}">All brands</a>
       {% for b in racket_brands %}
-        <a class="tab {% if racket_brand_active == b %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ b }}&w={{ racket_weight_active }}&head={{ racket_head_active }}&pat={{ racket_pattern_active }}">{{ b }}</a>
+        <a class="tab {% if racket_brand_active == b %}active{% endif %}" href="?type={{ active_type_code }}&amp;brand={{ b|urlencode }}&amp;w={{ racket_weight_active }}&amp;head={{ racket_head_active }}&amp;pat={{ racket_pattern_active }}{{ cbrand_qs }}">{{ b }}</a>
       {% endfor %}
     </div>
 
     <div class="tabs" role="tablist" aria-label="Racket weight">
-      <a class="tab {% if racket_weight_active == 'all' %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ racket_brand_active }}&w=all&head={{ racket_head_active }}&pat={{ racket_pattern_active }}">All weight</a>
-      <a class="tab {% if racket_weight_active == 'lt280' %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ racket_brand_active }}&w=lt280&head={{ racket_head_active }}&pat={{ racket_pattern_active }}"><280</a>
-      <a class="tab {% if racket_weight_active == '280_299' %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ racket_brand_active }}&w=280_299&head={{ racket_head_active }}&pat={{ racket_pattern_active }}">280-299</a>
-      <a class="tab {% if racket_weight_active == '300' %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ racket_brand_active }}&w=300&head={{ racket_head_active }}&pat={{ racket_pattern_active }}">300</a>
-      <a class="tab {% if racket_weight_active == 'ge301' %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ racket_brand_active }}&w=ge301&head={{ racket_head_active }}&pat={{ racket_pattern_active }}">301+</a>
+      <a class="tab {% if racket_weight_active == 'all' %}active{% endif %}" href="?type={{ active_type_code }}&amp;brand={{ racket_brand_active|urlencode }}&amp;w=all&amp;head={{ racket_head_active }}&amp;pat={{ racket_pattern_active }}{{ cbrand_qs }}">All weight</a>
+      <a class="tab {% if racket_weight_active == 'lt280' %}active{% endif %}" href="?type={{ active_type_code }}&amp;brand={{ racket_brand_active|urlencode }}&amp;w=lt280&amp;head={{ racket_head_active }}&amp;pat={{ racket_pattern_active }}{{ cbrand_qs }}">&lt;280</a>
+      <a class="tab {% if racket_weight_active == '280_299' %}active{% endif %}" href="?type={{ active_type_code }}&amp;brand={{ racket_brand_active|urlencode }}&amp;w=280_299&amp;head={{ racket_head_active }}&amp;pat={{ racket_pattern_active }}{{ cbrand_qs }}">280-299</a>
+      <a class="tab {% if racket_weight_active == '300' %}active{% endif %}" href="?type={{ active_type_code }}&amp;brand={{ racket_brand_active|urlencode }}&amp;w=300&amp;head={{ racket_head_active }}&amp;pat={{ racket_pattern_active }}{{ cbrand_qs }}">300</a>
+      <a class="tab {% if racket_weight_active == 'ge301' %}active{% endif %}" href="?type={{ active_type_code }}&amp;brand={{ racket_brand_active|urlencode }}&amp;w=ge301&amp;head={{ racket_head_active }}&amp;pat={{ racket_pattern_active }}{{ cbrand_qs }}">301+</a>
     </div>
 
     <div class="tabs" role="tablist" aria-label="Head size">
-      <a class="tab {% if racket_head_active == 'all' %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ racket_brand_active }}&w={{ racket_weight_active }}&head=all&pat={{ racket_pattern_active }}">All head</a>
-      <a class="tab {% if racket_head_active == 'lt100' %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ racket_brand_active }}&w={{ racket_weight_active }}&head=lt100&pat={{ racket_pattern_active }}"><100</a>
-      <a class="tab {% if racket_head_active == '100' %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ racket_brand_active }}&w={{ racket_weight_active }}&head=100&pat={{ racket_pattern_active }}">100</a>
-      <a class="tab {% if racket_head_active == 'ge101' %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ racket_brand_active }}&w={{ racket_weight_active }}&head=ge101&pat={{ racket_pattern_active }}">101+</a>
+      <a class="tab {% if racket_head_active == 'all' %}active{% endif %}" href="?type={{ active_type_code }}&amp;brand={{ racket_brand_active|urlencode }}&amp;w={{ racket_weight_active }}&amp;head=all&amp;pat={{ racket_pattern_active }}{{ cbrand_qs }}">All head</a>
+      <a class="tab {% if racket_head_active == 'lt100' %}active{% endif %}" href="?type={{ active_type_code }}&amp;brand={{ racket_brand_active|urlencode }}&amp;w={{ racket_weight_active }}&amp;head=lt100&amp;pat={{ racket_pattern_active }}{{ cbrand_qs }}">&lt;100</a>
+      <a class="tab {% if racket_head_active == '100' %}active{% endif %}" href="?type={{ active_type_code }}&amp;brand={{ racket_brand_active|urlencode }}&amp;w={{ racket_weight_active }}&amp;head=100&amp;pat={{ racket_pattern_active }}{{ cbrand_qs }}">100</a>
+      <a class="tab {% if racket_head_active == 'ge101' %}active{% endif %}" href="?type={{ active_type_code }}&amp;brand={{ racket_brand_active|urlencode }}&amp;w={{ racket_weight_active }}&amp;head=ge101&amp;pat={{ racket_pattern_active }}{{ cbrand_qs }}">101+</a>
     </div>
 
     <div class="tabs" role="tablist" aria-label="String pattern">
-      <a class="tab {% if racket_pattern_active == 'all' %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ racket_brand_active }}&w={{ racket_weight_active }}&head={{ racket_head_active }}&pat=all">All patterns</a>
+      <a class="tab {% if racket_pattern_active == 'all' %}active{% endif %}" href="?type={{ active_type_code }}&amp;brand={{ racket_brand_active|urlencode }}&amp;w={{ racket_weight_active }}&amp;head={{ racket_head_active }}&amp;pat=all{{ cbrand_qs }}">All patterns</a>
       {% for sp in racket_patterns %}
-        <a class="tab {% if racket_pattern_active == sp %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ racket_brand_active }}&w={{ racket_weight_active }}&head={{ racket_head_active }}&pat={{ sp }}">{{ sp }}</a>
+        <a class="tab {% if racket_pattern_active == sp %}active{% endif %}" href="?type={{ active_type_code }}&amp;brand={{ racket_brand_active|urlencode }}&amp;w={{ racket_weight_active }}&amp;head={{ racket_head_active }}&amp;pat={{ sp|urlencode }}{{ cbrand_qs }}">{{ sp }}</a>
       {% endfor %}
     </div>
     {% endif %}
 
     {% if show_shoe_filters %}
-    <!-- Shoes-only filters: surfaces only -->
     <div class="tabs" role="tablist" aria-label="Shoes surface">
-      <a class="tab {% if surface_active == 'all' %}active{% endif %}" href="?type={{ active_type_code }}&surf=all">All</a>
-      <a class="tab {% if surface_active == 'clay' %}active{% endif %}" href="?type={{ active_type_code }}&surf=clay">Clay</a>
-      <a class="tab {% if surface_active == 'hard' %}active{% endif %}" href="?type={{ active_type_code }}&surf=hard">Hard</a>
-      <a class="tab {% if surface_active == 'allcourt' %}active{% endif %}" href="?type={{ active_type_code }}&surf=allcourt">AllCourt</a>
-      <a class="tab {% if surface_active == 'grass' %}active{% endif %}" href="?type={{ active_type_code }}&surf=grass">Grass</a>
-      <a class="tab {% if surface_active == 'padel' %}active{% endif %}" href="?type={{ active_type_code }}&surf=padel">Padel</a>
+      <a class="tab {% if surface_active == 'all' %}active{% endif %}" href="?type={{ active_type_code }}&amp;surf=all{{ cbrand_qs }}">All</a>
+      <a class="tab {% if surface_active == 'clay' %}active{% endif %}" href="?type={{ active_type_code }}&amp;surf=clay{{ cbrand_qs }}">Clay</a>
+      <a class="tab {% if surface_active == 'hard' %}active{% endif %}" href="?type={{ active_type_code }}&amp;surf=hard{{ cbrand_qs }}">Hard</a>
+      <a class="tab {% if surface_active == 'allcourt' %}active{% endif %}" href="?type={{ active_type_code }}&amp;surf=allcourt{{ cbrand_qs }}">AllCourt</a>
+      <a class="tab {% if surface_active == 'grass' %}active{% endif %}" href="?type={{ active_type_code }}&amp;surf=grass{{ cbrand_qs }}">Grass</a>
+      <a class="tab {% if surface_active == 'padel' %}active{% endif %}" href="?type={{ active_type_code }}&amp;surf=padel{{ cbrand_qs }}">Padel</a>
     </div>
-    <!-- Shoes brand filter -->
     {% if shoe_brands %}
     <div class="tabs" role="tablist" aria-label="Shoes brand">
-      <a class="tab {% if shoe_brand_active == 'all' %}active{% endif %}" href="?type={{ active_type_code }}&surf={{ surface_active }}&sbrand=all">All brands</a>
+      <a class="tab {% if shoe_brand_active == 'all' %}active{% endif %}" href="?type={{ active_type_code }}&amp;surf={{ surface_active }}&amp;sbrand=all{{ cbrand_qs }}">All brands</a>
       {% for b in shoe_brands %}
-        <a class="tab {% if shoe_brand_active == b %}active{% endif %}" href="?type={{ active_type_code }}&surf={{ surface_active }}&sbrand={{ b }}">{{ b }}</a>
+        <a class="tab {% if shoe_brand_active == b %}active{% endif %}" href="?type={{ active_type_code }}&amp;surf={{ surface_active }}&amp;sbrand={{ b|urlencode }}{{ cbrand_qs }}">{{ b }}</a>
       {% endfor %}
     </div>
     {% endif %}
@@ -151,11 +147,15 @@
             {% endif %}
           </div>
           <div class="price">
-            {% if p.actual_price %}
-            <span style="text-decoration:line-through;color:#94a3b8;font-weight:500;margin-right:6px">{{ p.initial_price }} ₾</span>
-            <strong>{{ p.actual_price }} ₾</strong>
+            {% if p.stock_listing_qty > 0 %}
+              {% if p.actual_price %}
+              <span style="text-decoration:line-through;color:#94a3b8;font-weight:500;margin-right:6px">{{ p.initial_price }} ₾</span>
+              <strong>{{ p.actual_price }} ₾</strong>
+              {% else %}
+              <strong>{{ p.initial_price }} ₾</strong>
+              {% endif %}
             {% else %}
-            <strong>{{ p.initial_price }} ₾</strong>
+              <strong style="color:#64748b;font-weight:600">Coming soon · Pre-order</strong>
             {% endif %}
           </div>
           <div class="attrs">

@@ -1,0 +1,164 @@
+{# Stock catalog links → items_list_for_Laen (in-stock channel). Wrap with .nav-row in parent. #}
+  <div class="dropdown">
+    <a class="nav-link dropdown-toggle" href="{{ catalog_url }}?type=RACKET">Rackets</a>
+    <div class="dropdown-menu">
+      <div class="dropdown-grid">
+        <div>
+          <div class="dropdown-title">All</div>
+          <a class="dropdown-item" href="{{ catalog_url }}?type=RACKET">All rackets</a>
+        </div>
+        <div>
+          <div class="dropdown-title">Brands</div>
+          {% for b in racket_brands %}
+          <a class="dropdown-item" href="{{ catalog_url }}?type=RACKET&amp;brand={{ b|urlencode }}">{{ b }}</a>
+          {% empty %}
+          <span class="dropdown-item" style="opacity:.5">No brands in stock</span>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="dropdown">
+    <a class="nav-link dropdown-toggle" href="{{ catalog_url }}?type=BAGS">Bags &amp; Covers</a>
+    <div class="dropdown-menu">
+      <div class="dropdown-grid">
+        <div>
+          <div class="dropdown-title">All</div>
+          <a class="dropdown-item" href="{{ catalog_url }}?type=BAGS">All bags &amp; covers</a>
+        </div>
+        <div>
+          <div class="dropdown-title">Brands</div>
+          {% for b in bag_brands %}
+          <a class="dropdown-item" href="{{ catalog_url }}?type=BAGS&amp;cbrand={{ b|urlencode }}">{{ b }}</a>
+          {% empty %}
+          <span class="dropdown-item" style="opacity:.5">No brands in stock</span>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="dropdown">
+    <a class="nav-link dropdown-toggle" href="{{ catalog_url }}?type=M_APP">Clothing</a>
+    <div class="dropdown-menu">
+      <div class="dropdown-grid">
+        <div>
+          <div class="dropdown-title">All</div>
+          <a class="dropdown-item" href="{{ catalog_url }}?type=M_APP">Men&apos;s apparel</a>
+          <a class="dropdown-item" href="{{ catalog_url }}?type=W_APP">Women&apos;s apparel</a>
+          <a class="dropdown-item" href="{{ catalog_url }}?type=J_APP">Junior apparel</a>
+        </div>
+        <div>
+          <div class="dropdown-title">Men&apos;s brands</div>
+          {% for b in m_app_brands %}
+          <a class="dropdown-item" href="{{ catalog_url }}?type=M_APP&amp;cbrand={{ b|urlencode }}">{{ b }}</a>
+          {% empty %}
+          <span class="dropdown-item" style="opacity:.5">—</span>
+          {% endfor %}
+        </div>
+        <div>
+          <div class="dropdown-title">Women&apos;s brands</div>
+          {% for b in w_app_brands %}
+          <a class="dropdown-item" href="{{ catalog_url }}?type=W_APP&amp;cbrand={{ b|urlencode }}">{{ b }}</a>
+          {% empty %}
+          <span class="dropdown-item" style="opacity:.5">—</span>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="dropdown">
+    <a class="nav-link dropdown-toggle" href="{{ catalog_url }}?type=M_SHOES">Shoes</a>
+    <div class="dropdown-menu">
+      <div class="dropdown-grid">
+        <div>
+          <div class="dropdown-title">All</div>
+          <a class="dropdown-item" href="{{ catalog_url }}?type=M_SHOES">Men&apos;s shoes</a>
+          <a class="dropdown-item" href="{{ catalog_url }}?type=W_SHOES">Women&apos;s shoes</a>
+          <a class="dropdown-item" href="{{ catalog_url }}?type=J_SHOES">Junior shoes</a>
+        </div>
+        <div>
+          <div class="dropdown-title">Men&apos;s brands</div>
+          {% for b in m_shoe_brands %}
+          <a class="dropdown-item" href="{{ catalog_url }}?type=M_SHOES&amp;sbrand={{ b|urlencode }}">{{ b }}</a>
+          {% empty %}
+          <span class="dropdown-item" style="opacity:.5">—</span>
+          {% endfor %}
+        </div>
+        <div>
+          <div class="dropdown-title">Women&apos;s brands</div>
+          {% for b in w_shoe_brands %}
+          <a class="dropdown-item" href="{{ catalog_url }}?type=W_SHOES&amp;sbrand={{ b|urlencode }}">{{ b }}</a>
+          {% empty %}
+          <span class="dropdown-item" style="opacity:.5">—</span>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="dropdown">
+    <a class="nav-link dropdown-toggle" href="{{ catalog_url }}?type=BALLS">Balls</a>
+    <div class="dropdown-menu">
+      <div class="dropdown-grid">
+        <div>
+          <div class="dropdown-title">All</div>
+          <a class="dropdown-item" href="{{ catalog_url }}?type=BALLS">All balls</a>
+        </div>
+        <div>
+          <div class="dropdown-title">Brands</div>
+          {% for b in ball_brands %}
+          <a class="dropdown-item" href="{{ catalog_url }}?type=BALLS&amp;cbrand={{ b|urlencode }}">{{ b }}</a>
+          {% empty %}
+          <span class="dropdown-item" style="opacity:.5">No brands in stock</span>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="dropdown">
+    <a class="nav-link dropdown-toggle" href="{{ catalog_url }}?type=ACCESSORIES">Accessories</a>
+    <div class="dropdown-menu">
+      <div class="dropdown-grid">
+        <div>
+          <div class="dropdown-title">All</div>
+          <a class="dropdown-item" href="{{ catalog_url }}?type=ACCESSORIES">All accessories</a>
+        </div>
+        <div>
+          <div class="dropdown-title">Brands</div>
+          {% for b in acc_brands %}
+          <a class="dropdown-item" href="{{ catalog_url }}?type=ACCESSORIES&amp;cbrand={{ b|urlencode }}">{{ b }}</a>
+          {% empty %}
+          <span class="dropdown-item" style="opacity:.5">No brands in stock</span>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="dropdown">
+    <a class="nav-link dropdown-toggle" href="{{ catalog_url }}?type=STRINGS">Equipment</a>
+    <div class="dropdown-menu">
+      <div class="dropdown-grid">
+        <div>
+          <div class="dropdown-title">Categories</div>
+          <a class="dropdown-item" href="{{ catalog_url }}?type=STRINGS">Strings</a>
+          <a class="dropdown-item" href="{{ catalog_url }}?type=GRIPS">Grips</a>
+        </div>
+        <div>
+          <div class="dropdown-title">String brands</div>
+          {% for b in string_brands %}
+          <a class="dropdown-item" href="{{ catalog_url }}?type=STRINGS&amp;cbrand={{ b|urlencode }}">{{ b }}</a>
+          {% empty %}
+          <span class="dropdown-item" style="opacity:.5">—</span>
+          {% endfor %}
+        </div>
+        <div>
+          <div class="dropdown-title">Grip brands</div>
+          {% for b in grip_brands %}
+          <a class="dropdown-item" href="{{ catalog_url }}?type=GRIPS&amp;cbrand={{ b|urlencode }}">{{ b }}</a>
+          {% empty %}
+          <span class="dropdown-item" style="opacity:.5">—</span>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+  <a class="nav-link nav-link--primary" href="{{ preorder_url }}">Preorder</a>
