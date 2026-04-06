@@ -367,7 +367,7 @@
           {% if user.is_staff %}
           <a href="{% url 'shop:product_edit' p.pk %}" class="card-staff-edit">Edit</a>
           {% endif %}
-          <a class="card" href="{% url 'shop:product_detail' p.pk %}">
+          <a class="card" href="{% url 'shop:product_detail' p.pk %}?channel={{ browse_mode }}">
             <div class="card__img">
               {% if p.main_image %}
               <img src="{{ p.main_image.url }}" alt="{{ p.name }}" loading="lazy">

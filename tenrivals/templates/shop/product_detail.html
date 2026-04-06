@@ -119,6 +119,7 @@
     .pdp-prices{display:flex; align-items:baseline; gap:12px; margin-bottom:20px}
     .pdp-price{font-size:22px; font-weight:800; color:var(--accent)}
     .pdp-price-old{font-size:16px; color:#94a3b8; text-decoration:line-through}
+    .pdp-price-muted{font-size:16px; font-weight:600; color:var(--muted)}
 
     /* Variant selector */
     .pdp-variants{margin-bottom:24px}
@@ -245,7 +246,11 @@
   <main class="container">
     <div class="breadcrumb">
       <a href="{% url 'shop:index' %}">Home</a><span>/</span>
+      {% if pdp_mode == 'stock' %}
+      <a href="{% url 'shop:stock' %}">In stock</a><span>/</span>
+      {% else %}
       <a href="{% url 'shop:preorder' %}">Preorder</a><span>/</span>
+      {% endif %}
       <span style="color:var(--ink)">{{ product.name }}</span>
     </div>
 
@@ -286,14 +291,29 @@
         <hr class="pdp-divider">
 
         <div class="pdp-prices">
-          {% if product.actual_price %}
-          <span class="pdp-price-old">{{ product.initial_price }} ₾</span>
-          <span class="pdp-price">˜{{ product.margin_price }} ₾</span>
+          {% if pdp_mode == 'stock' %}
+            {% if stock_listing_qty > 0 %}
+              {% if product.actual_price %}
+              <span class="pdp-price-old">{{ product.initial_price }} ₾</span>
+              <span class="pdp-price">{{ product.actual_price }} ₾</span>
+              {% else %}
+              <span class="pdp-price">{{ product.initial_price }} ₾</span>
+              {% endif %}
+            {% else %}
+              <span class="pdp-price-muted">Coming soon · Pre-order</span>
+            {% endif %}
           {% else %}
-          <span class="pdp-price">˜{{ product.margin_price }} ₾</span>
+            {% if product.actual_price %}
+            <span class="pdp-price-old">{{ product.initial_price }} ₾</span>
+            <span class="pdp-price">˜{{ product.margin_price }} ₾</span>
+            {% else %}
+            <span class="pdp-price">˜{{ product.margin_price }} ₾</span>
+            {% endif %}
           {% endif %}
         </div>
+        {% if pdp_mode == 'preorder' %}
         <p style="font-size:12px;color:var(--muted);margin:-12px 0 16px">Indicative price (±30 ₾). Final price when you confirm your order.</p>
+        {% endif %}
 
         {% if product.sizes_list %}
         <div class="pdp-variants">
@@ -325,7 +345,11 @@
 
         <div class="pdp-shipping">
           Free delivery in Tbilisi<br>
+          {% if pdp_mode == 'preorder' %}
           Pre-order from US &amp; EU with official customs clearance — contact us for details.
+          {% else %}
+          Items listed here are in our Tbilisi catalog; ask us on Telegram for sizes and exact pickup time.
+          {% endif %}
         </div>
 
         <div class="pdp-tabs">
@@ -383,7 +407,8 @@
         <div>
           <h4>Tennis Rivals: The Line for Your Growth.</h4>
           <p>Catalog UI scaffold. Content will be added later.</p>
-          <div style="margin-top:10px">
+          <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap">
+            <a class="btn btn--outline" href="{% url 'shop:stock' %}">In stock</a>
             <a class="btn btn--outline" href="{% url 'shop:preorder' %}">Preorder</a>
           </div>
         </div>

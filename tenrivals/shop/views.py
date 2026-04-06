@@ -49,6 +49,41 @@ def _parse_listing_channel_param(raw):
     return None
 
 
+def _product_on_listing_channel(product: Product, channel: str) -> bool:
+    """Match catalog rules: if no rows exist for a channel, any product is eligible."""
+    if not ProductListing.objects.filter(channel=channel).exists():
+        return True
+    return product.listings.filter(channel=channel).exists()
+
+
+def _stock_listing_quantity(product: Product) -> int:
+    row = product.listings.filter(channel=ProductListingChannel.STOCK).first()
+    return int(row.quantity) if row else 0
+
+
+def _resolve_pdp_display_mode(request, product: Product) -> str:
+    """'stock' | 'preorder' — drives breadcrumbs and price copy."""
+    requested = _parse_listing_channel_param(
+        request.GET.get('channel') or request.GET.get('from')
+    )
+    on_stock = _product_on_listing_channel(product, ProductListingChannel.STOCK)
+    on_preorder = _product_on_listing_channel(product, ProductListingChannel.PREORDER)
+    qty = _stock_listing_quantity(product)
+
+    if requested == ProductListingChannel.STOCK:
+        return 'stock'
+    if requested == ProductListingChannel.PREORDER:
+        return 'preorder'
+
+    if qty > 0 and on_stock:
+        return 'stock'
+    if on_preorder:
+        return 'preorder'
+    if on_stock:
+        return 'stock'
+    return 'preorder'
+
+
 def _save_listing_from_form(product, form):
     ch = form.cleaned_data.get('listing_channel')
     if not ch:
@@ -125,16 +160,27 @@ def index(request):
 
 
 def product_detail(request, pk):
-    product = get_object_or_404(Product, pk=pk, is_active=True)
+    product = get_object_or_404(
+        Product.objects.prefetch_related('listings'),
+        pk=pk,
+        is_active=True,
+    )
     gallery = []
     for name in ("image_1", "image_2", "image_3", "image_4", "image_5"):
         f = getattr(product, name)
         if f:
             gallery.append(f.url)
+    pdp_mode = _resolve_pdp_display_mode(request, product)
+    stock_listing_qty = _stock_listing_quantity(product)
     return render(
         request,
         "shop/product_detail.html",
-        {"product": product, "pdp_gallery": gallery},
+        {
+            "product": product,
+            "pdp_gallery": gallery,
+            "pdp_mode": pdp_mode,
+            "stock_listing_qty": stock_listing_qty,
+        },
     )
 
 
