@@ -1,3 +1,5 @@
+from itertools import chain
+
 from django.conf import settings
 from django.contrib.admin.views.decorators import staff_member_required
 from django.db.models.functions import Coalesce
@@ -19,6 +21,16 @@ from .models import (
     ProductType,
     Racket,
     Shoe,
+)
+
+_PRODUCT_SUBCLASS_SELECT = (
+    'shoe',
+    'racket',
+    'apparel',
+    'string',
+    'bag',
+    'balls',
+    'accessory',
 )
 
 
@@ -81,18 +93,20 @@ def index(request):
             .first()
         )
     promo = HomePromoStripSettings.load()
+    active_products = Product.objects.filter(is_active=True).select_related(
+        *_PRODUCT_SUBCLASS_SELECT,
+    )
     featured_products = (
-        Product.objects.filter(is_active=True, featured_product=True)
-        .select_related(
-            'shoe',
-            'racket',
-            'apparel',
-            'string',
-            'bag',
-            'balls',
-            'accessory',
+        active_products.filter(featured_product=True).order_by('-created_at')[:5]
+    )
+    new_arrivals = list(
+        chain(
+            active_products.filter(type=ProductType.RACKET).order_by('-created_at')[:2],
+            active_products.filter(type=ProductType.MENS_SHOES).order_by('-created_at')[:2],
+            active_products.filter(type=ProductType.WOMENS_SHOES).order_by(
+                '-created_at'
+            )[:1],
         )
-        .order_by('-created_at')[:5]
     )
     return render(
         request,
@@ -102,6 +116,7 @@ def index(request):
             'promo_strip_left_visible': promo.left_visible,
             'promo_strip_right_visible': promo.right_visible,
             'featured_products': featured_products,
+            'new_arrivals': new_arrivals,
         },
     )
 
