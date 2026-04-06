@@ -1,8 +1,16 @@
-{# Google tag (gtag.js) — GA4 G-V8HERB0J9S #}
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-V8HERB0J9S"></script>
+{# Site analytics: load GTM only. Configure GA4 (and other tags) in container GTM-5VHQRLRX. #}
+{# Do not add gtag.js here — it would double-count with the GA4 tag in GTM. #}
 <script>
   window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-V8HERB0J9S');
+  window.trAnalytics = window.trAnalytics || {};
+  window.trAnalytics.pushEvent = function (name, payload) {
+    var o = { event: name };
+    if (payload && typeof payload === 'object') {
+      for (var k in payload) {
+        if (Object.prototype.hasOwnProperty.call(payload, k)) o[k] = payload[k];
+      }
+    }
+    window.dataLayer.push(o);
+  };
 </script>
+{% include 'includes/google_tag_manager_head.html' %}

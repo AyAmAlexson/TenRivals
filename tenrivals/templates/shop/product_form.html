@@ -17,6 +17,7 @@
   {% load static %}
 </head>
 <body>
+{% include 'includes/google_tag_manager_body.html' %}
   <div class="form-wrap">
     <h2 style="margin-top:0;">{% if is_edit %}Edit{% else %}Add{% endif %} Product</h2>
     <form method="post" enctype="multipart/form-data">

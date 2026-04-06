@@ -1,0 +1,21 @@
+{# GA4-friendly view_item for GTM (use GA4 Event tag, Data Layer trigger: view_item) #}
+{% load l10n %}
+<script>
+  window.dataLayer = window.dataLayer || [];
+  window.dataLayer.push({ ecommerce: null });
+  window.dataLayer.push({
+    event: 'view_item',
+    ecommerce: {
+      currency: 'GEL',
+      value: {{ product.primary_price|unlocalize }},
+      items: [{
+        item_id: "{{ product.sku|default:product.pk|escapejs }}",
+        item_name: "{{ product.name|escapejs }}",
+        item_brand: "{{ product.brand|default:''|escapejs }}",
+        item_category: "{{ product.get_type_display|escapejs }}",
+        price: {{ product.primary_price|unlocalize }},
+        quantity: 1
+      }]
+    }
+  });
+</script>
