@@ -243,6 +243,7 @@ def index(request):
     promo = HomePromoStripSettings.load()
     active_products = Product.objects.filter(is_active=True).select_related(
         *_PRODUCT_SUBCLASS_SELECT,
+        'category',
     )
     featured_products = (
         active_products.filter(featured_product=True).order_by('-created_at')[:5]
@@ -434,7 +435,7 @@ def _catalog_browse_context(request, browse_mode: str):
             active_tab = f'cbrand:{catalog_brand}'
 
     products = filter_products_by_listing_channel(products, channel)
-    products = products.select_related(*_PRODUCT_SUBCLASS_SELECT)
+    products = products.select_related(*_PRODUCT_SUBCLASS_SELECT, 'category')
     if browse_mode == 'stock':
         products = annotate_stock_listing_quantity(products)
     products = order_products_by_effective_price(products)

@@ -106,10 +106,26 @@ class Product(models.Model):
 
     @property
     def sizes_list(self):
+        """Shoe or apparel sizes/grip-style list for PDP (dict → in-stock keys only)."""
+        from .size_inventory import sizes_for_pdp_display
+
         try:
-            return self.shoe.sizes
+            return sizes_for_pdp_display(self.shoe.sizes) or None
+        except Exception:
+            pass
+        try:
+            return sizes_for_pdp_display(self.apparel.sizes) or None
         except Exception:
             return None
+
+    @property
+    def grip_sizes_display(self):
+        try:
+            from .size_inventory import sizes_for_pdp_display
+
+            return sizes_for_pdp_display(self.racket.grip_sizes)
+        except Exception:
+            return []
 
     @property
     def primary_price(self):

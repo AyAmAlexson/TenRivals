@@ -1,8 +1,11 @@
-{# Requires: form_back_url, is_edit. Optional: toolbar_extra_class. Submit targets form id shop-product-form. #}
+{# Requires: form_back_url, is_edit. Optional: toolbar_extra_class, toolbar_title, hide_toolbar_title. Submit targets form id shop-product-form. #}
 <div class="form-toolbar{% if toolbar_extra_class %} {{ toolbar_extra_class }}{% endif %}" role="toolbar" aria-label="Product form actions">
   <a href="{{ form_back_url }}" class="tb-btn tb-btn--ghost" title="Back to catalog" aria-label="Back to catalog">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M15 18L9 12l6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
   </a>
+  {% if toolbar_title and not hide_toolbar_title %}
+  <span class="toolbar-title">{{ toolbar_title }}</span>
+  {% endif %}
   <div class="tb-grow"></div>
   {% if is_edit %}
   <button type="button" class="tb-btn tb-btn--danger" onclick="confirmDelete()" title="Delete product" aria-label="Delete product">

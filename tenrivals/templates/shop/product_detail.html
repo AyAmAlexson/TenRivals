@@ -364,18 +364,16 @@
           </div>
         </div>
         {% elif product.type == 'RACKET' %}
-          {% with r=product.racket %}
-          {% if r and r.grip_sizes %}
+          {% if product.grip_sizes_display %}
         <div class="pdp-variants">
           <div class="pdp-variants-label">Grip sizes</div>
           <div class="pdp-variant-options">
-            {% for g in r.grip_sizes %}
+            {% for g in product.grip_sizes_display %}
             <span class="pdp-variant-btn active" style="cursor:default">{{ g }}</span>
             {% endfor %}
           </div>
         </div>
           {% endif %}
-          {% endwith %}
         {% endif %}
 
         <div class="pdp-cart-row">

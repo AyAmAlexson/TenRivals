@@ -13,6 +13,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Saira:wght@400;600;800&family=Saira+Condensed:wght@400&display=swap" rel="stylesheet">
   <link rel="icon" href="{% static 'assets/img/favicon.png' %}">
   <link href="{% static 'css/styles.css' %}" rel="stylesheet">
+  {% include 'shop/includes/product_tile_styles.html' %}
   <style>
     :root{
       --accent:#B20009;
@@ -21,6 +22,11 @@
       --muted:#64748b;
       --line:#e5e7eb;
       --bg:#fff;
+      --tile-photo-bg:#f4f4f4;
+      --tile-accent:#B20009;
+      --tile-ink:#1a1a1a;
+      --tile-muted:#64748b;
+      --tile-cat:#94a3b8;
     }
     *{box-sizing:border-box; margin:0; padding:0}
     body{font-family:'Saira', system-ui, -apple-system, sans-serif; font-weight:400; color:var(--ink); background:var(--bg)}
@@ -112,7 +118,7 @@
     .section-head h2{margin:0; font-size:18px; letter-spacing:1px}
     .section-head a{font-size:11px; color:var(--muted); font-weight:800; text-transform:uppercase; letter-spacing:.08em; transition:color .15s}
     .section-head a:hover{color:var(--accent)}
-    .grid{display:grid; grid-template-columns:repeat(5,1fr); gap:20px}
+    main .product-grid{grid-template-columns:repeat(4, minmax(0, 1fr)); gap:28px 22px}
 
     /* Brands strip */
     .brands-strip{background:#f3f4f6; padding:36px 0}
@@ -120,22 +126,6 @@
     .brands-row{display:flex; align-items:center; justify-content:space-between; gap:16px}
     .brand-name{font-family:'Saira Condensed','Saira',sans-serif; font-size:24px; font-weight:400; text-transform:uppercase; letter-spacing:1px; color:#94a3b8; transition:color .15s; text-decoration:none}
     .brand-name:hover{color:var(--accent)}
-
-    /* Product cards — override Bootstrap .card completely */
-    .card, .card.card{
-      --bs-card-border-width:0; --bs-card-border-color:transparent; --bs-card-border-radius:0;
-      --bs-card-box-shadow:none; --bs-card-bg:transparent; --bs-card-cap-bg:transparent;
-      background:none !important; border:none !important; border-radius:0 !important;
-      box-shadow:none !important; display:flex; flex-direction:column; text-decoration:none; color:var(--ink); min-width:0;
-    }
-    .card__img{aspect-ratio:1/1; background:#f3f4f6; display:flex; align-items:center; justify-content:center; color:#c4c9d2; font-size:13px; overflow:hidden}
-    .card__info{padding:10px 0 0}
-    .card__brand{font-family:'Saira Condensed', 'Saira', sans-serif; font-size:12px; font-weight:400; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; margin-bottom:2px}
-    .card__name{font-size:14px; font-weight:400; color:var(--ink); line-height:1.45; margin-bottom:2px; text-transform:none}
-    .card__color{font-size:12px; font-weight:400; color:#94a3b8; margin-bottom:5px; text-transform:none; line-height:1.4}
-    .card__prices{display:flex; align-items:baseline; gap:8px}
-    .card__price{font-size:14px; font-weight:800; color:var(--accent)}
-    .card__price-old{font-size:13px; color:#94a3b8; text-decoration:line-through}
 
     /* Headings */
     h1, h2, h3, h4, h5{font-family:'Saira', system-ui, sans-serif; font-weight:800; letter-spacing:.3px; text-transform:uppercase}
@@ -151,7 +141,7 @@
 
     /* Responsive */
     @media(max-width:1024px){
-      .grid{grid-template-columns:repeat(3,1fr)}
+      main .product-grid{grid-template-columns:repeat(3, minmax(0, 1fr))}
       .cat-grid{grid-template-columns:repeat(4,1fr)}
       .header-row{grid-template-columns:140px 1fr auto; grid-auto-flow:row}
       .hero-top{grid-template-columns:1fr}
@@ -160,7 +150,6 @@
       .brands-row{flex-wrap:wrap; justify-content:center; gap:24px}
     }
     @media(max-width:640px){
-      .grid{grid-template-columns:repeat(2,1fr)}
       .cat-grid{grid-template-columns:repeat(3,1fr)}
       .footer-top{grid-template-columns:1fr 1fr}
       .auth{display:none}
@@ -381,72 +370,18 @@
   <main class="container">
     <section class="section">
       <div class="section-head"><h2>Featured Products</h2><a href="{% url 'shop:preorder' %}">View all &rarr;</a></div>
-      <div class="grid">
+      <div class="product-grid">
         {% for p in featured_products %}
-        <a class="card" href="{% url 'shop:product_detail' p.pk %}">
-          <div class="card__img">
-            {% if p.main_image %}
-            <img src="{{ p.main_image.url }}" alt="{{ p.name }}" loading="lazy">
-            {% else %}
-            <svg width="48" height="48" viewBox="0 0 48 48" fill="none" aria-hidden="true"><rect x="8" y="12" width="32" height="28" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M8 32l8-8 6 6 8-10 10 12" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="18" cy="20" r="3" stroke="currentColor" stroke-width="1.5"/></svg>
-            {% endif %}
-          </div>
-          <div class="card__info">
-            <div class="card__brand">{{ p.brand|default:"—" }}</div>
-            <div class="card__name">{{ p.name }}</div>
-            <div class="card__color">
-              {% if p.type == 'M_SHOES' or p.type == 'W_SHOES' or p.type == 'J_SHOES' %}
-                {% with s=p.shoe %}{% if s %}{{ s.color|default:"" }}{% endif %}{% endwith %}
-              {% else %}
-                {{ p.short_description|default:"" }}
-              {% endif %}
-            </div>
-            <div class="card__prices">
-              {% if p.actual_price %}
-              <span class="card__price-old">{{ p.initial_price }} ₾</span>
-              <span class="card__price">˜{{ p.margin_price }} ₾</span>
-              {% else %}
-              <span class="card__price">˜{{ p.margin_price }} ₾</span>
-              {% endif %}
-            </div>
-          </div>
-        </a>
+        {% include 'shop/includes/product_tile.html' with p=p %}
         {% endfor %}
       </div>
     </section>
 
     <section class="section">
       <div class="section-head"><h2>New Arrivals</h2><a href="{% url 'shop:preorder' %}">View all &rarr;</a></div>
-      <div class="grid">
+      <div class="product-grid">
         {% for p in new_arrivals %}
-        <a class="card" href="{% url 'shop:product_detail' p.pk %}">
-          <div class="card__img">
-            {% if p.main_image %}
-            <img src="{{ p.main_image.url }}" alt="{{ p.name }}" loading="lazy">
-            {% else %}
-            <svg width="48" height="48" viewBox="0 0 48 48" fill="none" aria-hidden="true"><rect x="8" y="12" width="32" height="28" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M8 32l8-8 6 6 8-10 10 12" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="18" cy="20" r="3" stroke="currentColor" stroke-width="1.5"/></svg>
-            {% endif %}
-          </div>
-          <div class="card__info">
-            <div class="card__brand">{{ p.brand|default:"—" }}</div>
-            <div class="card__name">{{ p.name }}</div>
-            <div class="card__color">
-              {% if p.type == 'M_SHOES' or p.type == 'W_SHOES' or p.type == 'J_SHOES' %}
-                {% with s=p.shoe %}{% if s %}{{ s.color|default:"" }}{% endif %}{% endwith %}
-              {% else %}
-                {{ p.short_description|default:"" }}
-              {% endif %}
-            </div>
-            <div class="card__prices">
-              {% if p.actual_price %}
-              <span class="card__price-old">{{ p.initial_price }} ₾</span>
-              <span class="card__price">˜{{ p.margin_price }} ₾</span>
-              {% else %}
-              <span class="card__price">˜{{ p.margin_price }} ₾</span>
-              {% endif %}
-            </div>
-          </div>
-        </a>
+        {% include 'shop/includes/product_tile.html' with p=p %}
         {% endfor %}
       </div>
     </section>

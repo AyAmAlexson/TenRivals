@@ -1,15 +1,26 @@
+import json
+
 from django import forms
+from django.core.exceptions import ValidationError
 
 from .models import (
     Accessory,
     Apparel,
     Bag,
     Balls,
+    Category,
     Product,
     ProductListingChannel,
     Racket,
     Shoe,
     String,
+)
+from .size_inventory import (
+    APPAREL_SIZE_LABELS,
+    GRIP_SIZE_LABELS,
+    eu_shoe_size_labels,
+    labels_for_size_grid,
+    normalize_sizes_to_qty_map,
 )
 
 
@@ -60,17 +71,123 @@ class ProductForm(forms.ModelForm):
         self.fields['name'].label = 'Model'
         self.fields['category'].required = False
         self.fields['category'].empty_label = '— None —'
+        self.fields['category'].help_text = (
+            'Optional filter group in the catalog (not the same as product type). '
+            'Product type defines the item class (racket, shoe, apparel, etc.). '
+            'Categories are created in Admin and stay empty here until you add some.'
+        )
+        if not Category.objects.exists():
+            self.fields['category'].help_text = (
+                'Optional catalog grouping. The dropdown is empty until you create '
+                'Categories in Django Admin — separate from product type above.'
+            )
+
+        self.fields['attributes'].widget = forms.HiddenInput()
+        self.fields['attributes'].required = False
 
         ch = default_listing_channel or ProductListingChannel.PREORDER
         qty_init = 0 if listing_quantity is None else int(listing_quantity)
         self.fields['listing_channel'].initial = ch
         self.fields['listing_quantity'].initial = qty_init
+        self.size_inventory_rows = []
+
+    def clean_attributes(self):
+        val = self.cleaned_data.get('attributes')
+        if val in (None, ''):
+            return {}
+        if isinstance(val, str):
+            try:
+                val = json.loads(val) if val.strip() else {}
+            except json.JSONDecodeError as e:
+                raise ValidationError('Invalid extra attributes JSON.') from e
+        if not isinstance(val, dict):
+            raise ValidationError('Extra attributes must be a JSON object.')
+        out = {}
+        for k, v in val.items():
+            k = str(k).strip()
+            if not k:
+                continue
+            out[k] = str(v).strip() if v is not None else ''
+        return out
+
+
+def _clean_qty_map_field(raw, *, error_label: str) -> dict[str, int]:
+    if raw in (None, '', {}):
+        return {}
+    if isinstance(raw, str):
+        try:
+            raw = json.loads(raw) if raw.strip() else {}
+        except json.JSONDecodeError as e:
+            raise ValidationError(f'Invalid {error_label} data.') from e
+    if isinstance(raw, list):
+        raw = normalize_sizes_to_qty_map(raw, fallback_total=0)
+    if not isinstance(raw, dict):
+        raise ValidationError(f'Invalid {error_label} data.')
+    out: dict[str, int] = {}
+    for k, v in raw.items():
+        k = str(k).strip()
+        if not k:
+            continue
+        try:
+            n = int(v)
+        except (TypeError, ValueError) as e:
+            raise ValidationError(f'Invalid quantity for “{k}”.') from e
+        if n < 0:
+            raise ValidationError('Quantities cannot be negative.')
+        if n > 0:
+            out[k] = n
+    return out
 
 
 class ShoeForm(ProductForm):
     class Meta(ProductForm.Meta):
         model = Shoe
         fields = ProductForm.Meta.fields + ['gender', 'surface', 'sizes', 'color']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['sizes'].widget = forms.HiddenInput()
+        self.fields['sizes'].required = False
+        self.fields['listing_quantity'].widget.attrs['readonly'] = True
+        self.fields['listing_quantity'].label = 'Total quantity (auto)'
+        self.fields['listing_quantity'].help_text = (
+            'Auto: sum of per-size quantities (you edit quantities below).'
+        )
+        self._init_shoe_size_rows()
+
+    def _init_shoe_size_rows(self):
+        allowed = eu_shoe_size_labels()
+        if self.data:
+            raw = self.data.get('sizes', '')
+            try:
+                parsed = json.loads(raw) if raw else {}
+                qty_map = normalize_sizes_to_qty_map(parsed, fallback_total=0)
+            except json.JSONDecodeError:
+                qty_map = {}
+        else:
+            raw_sizes = self.instance.sizes if self.instance.pk else self.initial.get('sizes')
+            fb = int(self.initial.get('listing_quantity', 0) or 0)
+            if isinstance(raw_sizes, dict):
+                qty_map = normalize_sizes_to_qty_map(raw_sizes, fallback_total=0)
+            elif isinstance(raw_sizes, list):
+                qty_map = normalize_sizes_to_qty_map(raw_sizes, fallback_total=fb)
+            else:
+                qty_map = {}
+        labels = labels_for_size_grid(allowed, qty_map)
+        self.size_inventory_rows = [(lab, qty_map.get(lab, 0)) for lab in labels]
+
+    def clean_sizes(self):
+        return _clean_qty_map_field(
+            self.cleaned_data.get('sizes'),
+            error_label='shoe size',
+        )
+
+    def clean(self):
+        cd = super().clean()
+        sizes = cd.get('sizes')
+        if isinstance(sizes, dict):
+            cd['listing_quantity'] = sum(sizes.values())
+        return cd
 
 
 class RacketForm(ProductForm):
@@ -87,11 +204,101 @@ class RacketForm(ProductForm):
             'grip_sizes',
         ]
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['grip_sizes'].widget = forms.HiddenInput()
+        self.fields['grip_sizes'].required = False
+        self.fields['listing_quantity'].widget.attrs['readonly'] = True
+        self.fields['listing_quantity'].label = 'Total quantity (auto)'
+        self.fields['listing_quantity'].help_text = (
+            'Auto: sum of per-grip quantities (you edit quantities below).'
+        )
+        self._init_grip_size_rows()
+
+    def _init_grip_size_rows(self):
+        allowed = list(GRIP_SIZE_LABELS)
+        if self.data:
+            raw = self.data.get('grip_sizes', '')
+            try:
+                parsed = json.loads(raw) if raw else {}
+                qty_map = normalize_sizes_to_qty_map(parsed, fallback_total=0)
+            except json.JSONDecodeError:
+                qty_map = {}
+        else:
+            raw_sizes = self.instance.grip_sizes if self.instance.pk else self.initial.get('grip_sizes')
+            fb = int(self.initial.get('listing_quantity', 0) or 0)
+            if isinstance(raw_sizes, dict):
+                qty_map = normalize_sizes_to_qty_map(raw_sizes, fallback_total=0)
+            elif isinstance(raw_sizes, list):
+                qty_map = normalize_sizes_to_qty_map(raw_sizes, fallback_total=fb)
+            else:
+                qty_map = {}
+        labels = labels_for_size_grid(allowed, qty_map)
+        self.size_inventory_rows = [(lab, qty_map.get(lab, 0)) for lab in labels]
+
+    def clean_grip_sizes(self):
+        return _clean_qty_map_field(
+            self.cleaned_data.get('grip_sizes'),
+            error_label='grip size',
+        )
+
+    def clean(self):
+        cd = super().clean()
+        grips = cd.get('grip_sizes')
+        if isinstance(grips, dict):
+            cd['listing_quantity'] = sum(grips.values())
+        return cd
+
 
 class ApparelForm(ProductForm):
     class Meta(ProductForm.Meta):
         model = Apparel
         fields = ProductForm.Meta.fields + ['gender', 'sizes', 'material']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['sizes'].widget = forms.HiddenInput()
+        self.fields['sizes'].required = False
+        self.fields['listing_quantity'].widget.attrs['readonly'] = True
+        self.fields['listing_quantity'].label = 'Total quantity (auto)'
+        self.fields['listing_quantity'].help_text = (
+            'Auto: sum of per-size quantities (you edit quantities below).'
+        )
+        self._init_apparel_size_rows()
+
+    def _init_apparel_size_rows(self):
+        allowed = list(APPAREL_SIZE_LABELS)
+        if self.data:
+            raw = self.data.get('sizes', '')
+            try:
+                parsed = json.loads(raw) if raw else {}
+                qty_map = normalize_sizes_to_qty_map(parsed, fallback_total=0)
+            except json.JSONDecodeError:
+                qty_map = {}
+        else:
+            raw_sizes = self.instance.sizes if self.instance.pk else self.initial.get('sizes')
+            fb = int(self.initial.get('listing_quantity', 0) or 0)
+            if isinstance(raw_sizes, dict):
+                qty_map = normalize_sizes_to_qty_map(raw_sizes, fallback_total=0)
+            elif isinstance(raw_sizes, list):
+                qty_map = normalize_sizes_to_qty_map(raw_sizes, fallback_total=fb)
+            else:
+                qty_map = {}
+        labels = labels_for_size_grid(allowed, qty_map)
+        self.size_inventory_rows = [(lab, qty_map.get(lab, 0)) for lab in labels]
+
+    def clean_sizes(self):
+        return _clean_qty_map_field(
+            self.cleaned_data.get('sizes'),
+            error_label='apparel size',
+        )
+
+    def clean(self):
+        cd = super().clean()
+        sizes = cd.get('sizes')
+        if isinstance(sizes, dict):
+            cd['listing_quantity'] = sum(sizes.values())
+        return cd
 
 
 class StringForm(ProductForm):

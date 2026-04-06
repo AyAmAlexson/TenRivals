@@ -29,8 +29,7 @@
     .mast-inner{max-width:920px;margin:0 auto;padding:0 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
     .mast a.brand{display:flex;align-items:center}
     .mast .logo{height:32px}
-    .mast h1{font-size:15px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--ink)}
-    .mast .sub{font-size:12px;color:var(--muted);margin-left:auto}
+    .mast .sub{font-size:12px;color:var(--muted);margin-left:auto;font-weight:400;text-transform:none}
 
     .form-toolbar{
       display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--panel);
@@ -38,6 +37,10 @@
       box-shadow:0 4px 12px rgba(0,0,0,.04);
     }
     .form-toolbar--bottom{margin-top:28px;margin-bottom:0;position:static;box-shadow:none}
+    .toolbar-title{
+      font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--ink);
+      white-space:nowrap;
+    }
     .tb-grow{flex:1}
     .tb-btn{
       display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;
@@ -63,15 +66,35 @@
     input[type="text"],input[type="number"],input[type="file"],textarea,select{
       width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:0;font-family:inherit;font-size:14px;background:#fff
     }
+    input[readonly]{background:#f1f5f9;color:#475569}
     input:focus,select:focus,textarea:focus{outline:2px solid rgba(178,0,9,.25);border-color:var(--accent)}
     textarea{min-height:88px;resize:vertical}
-    .hint{font-size:11px;color:var(--muted);margin-top:6px;line-height:1.4}
+    .hint{font-size:11px;color:var(--muted);margin-top:6px;line-height:1.4;text-transform:none;font-weight:400;letter-spacing:0}
     .img-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px}
     .img-slot{border:1px solid var(--line);padding:12px;background:#f8fafc}
     .img-slot .preview{display:block;max-width:100%;max-height:140px;object-fit:contain;margin:0 auto 10px;background:#fff;border:1px solid var(--line)}
     .img-slot .no-preview{font-size:12px;color:#94a3b8;text-align:center;padding:24px 8px}
     input[type="checkbox"]{width:auto;margin-right:8px}
     .field-check label{display:inline;font-weight:400;text-transform:none;letter-spacing:0}
+
+    .size-inv-board{
+      display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:10px;
+      max-height:320px;overflow:auto;padding:6px 2px 10px;margin-bottom:6px;border:1px solid var(--line);background:#fafafa;
+    }
+    .size-inv-row{display:flex;flex-direction:column;gap:4px;padding:6px;background:var(--panel);border:1px solid var(--line)}
+    .size-inv-label{font-size:11px;font-weight:600;color:var(--muted);text-transform:none;letter-spacing:0}
+    .size-inv-qty{max-width:100%;padding:8px 10px}
+
+    .attr-rows{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
+    .attr-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .attr-row .attr-key{flex:1;min-width:120px}
+    .attr-row .attr-val{flex:1.2;min-width:140px}
+    .attr-row .attr-remove{width:40px;min-width:40px;padding:0;flex-shrink:0}
+    .attr-add-btn{
+      display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;
+      border:1px dashed var(--line);background:#fff;cursor:pointer;font-size:20px;line-height:1;color:var(--muted);
+    }
+    .attr-add-btn:hover{border-color:var(--accent);color:var(--accent)}
 
     .errorlist{color:#b91c1c;font-size:13px;margin:8px 0;list-style:none}
     .errorlist li{margin-bottom:4px}
@@ -83,7 +106,6 @@
   <header class="mast">
     <div class="mast-inner">
       <a class="brand" href="{% url 'shop:index' %}"><img class="logo" src="{% static 'assets/img/TR Logo 25/TR 25 LOGO HOR RED.svg' %}" alt="TR Shop"></a>
-      <h1>{% if is_edit %}Edit product{% else %}Add product{% endif %}</h1>
       {% if is_edit and object.pk %}<span class="sub">ID {{ object.pk }}</span>{% endif %}
     </div>
   </header>
@@ -95,96 +117,7 @@
 
       {% if form.non_field_errors %}<ul class="errorlist">{% for e in form.non_field_errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
 
-      {% include 'shop/includes/product_form_toolbar.html' %}
-
-      <div class="form-card">
-        <h2>Classification &amp; catalog</h2>
-        <div class="row">
-          <div class="col"><div class="field">{{ form.category.label_tag }}{{ form.category }}{% if form.category.errors %}<ul class="errorlist">{% for e in form.category.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}</div></div>
-          <div class="col"><div class="field">{{ form.brand.label_tag }}{{ form.brand }}{% if form.brand.errors %}<ul class="errorlist">{% for e in form.brand.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}</div></div>
-          <div class="col"><div class="field">{{ form.name.label_tag }}{{ form.name }}{% if form.name.errors %}<ul class="errorlist">{% for e in form.name.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}</div></div>
-        </div>
-        <div class="row">
-          <div class="col"><div class="field">{{ form.type.label_tag }}{{ form.type }}{% if form.type.errors %}<ul class="errorlist">{% for e in form.type.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}</div></div>
-          <div class="col"><div class="field">{{ form.sku.label_tag }}{{ form.sku }}{% if form.sku.errors %}<ul class="errorlist">{% for e in form.sku.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}</div></div>
-        </div>
-        <div class="row">
-          <div class="col"><div class="field">{{ form.listing_channel.label_tag }}{{ form.listing_channel }}{% if form.listing_channel.help_text %}<p class="hint">{{ form.listing_channel.help_text }}</p>{% endif %}{% if form.listing_channel.errors %}<ul class="errorlist">{% for e in form.listing_channel.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}</div></div>
-          <div class="col"><div class="field">{{ form.listing_quantity.label_tag }}{{ form.listing_quantity }}{% if form.listing_quantity.errors %}<ul class="errorlist">{% for e in form.listing_quantity.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}</div></div>
-        </div>
-      </div>
-
-      <div class="form-card">
-        <h2>Pricing &amp; status</h2>
-        <div class="row">
-          <div class="col"><div class="field">{{ form.initial_price.label_tag }}{{ form.initial_price }}<p class="hint">Base/list price (struck through when sale price set)</p>{% if form.initial_price.errors %}<ul class="errorlist">{% for e in form.initial_price.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}</div></div>
-          <div class="col"><div class="field">{{ form.actual_price.label_tag }}{{ form.actual_price }}<p class="hint">Optional sale / current price</p>{% if form.actual_price.errors %}<ul class="errorlist">{% for e in form.actual_price.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}</div></div>
-        </div>
-        <div class="row">
-          <div class="col field-check"><div class="field">{{ form.in_stock }}{{ form.in_stock.label_tag }}</div></div>
-          <div class="col field-check"><div class="field">{{ form.is_active }}{{ form.is_active.label_tag }}</div></div>
-          <div class="col field-check"><div class="field">{{ form.featured_product }}{{ form.featured_product.label_tag }}{% if form.featured_product.help_text %}<p class="hint">{{ form.featured_product.help_text }}</p>{% endif %}</div></div>
-        </div>
-      </div>
-
-      {% if 'color' in form.fields %}
-      <div class="form-card">
-        <h3>Shoes</h3>
-        <div class="row">
-          <div class="col"><div class="field">{{ form.gender.label_tag }}{{ form.gender }}</div></div>
-          <div class="col"><div class="field">{{ form.surface.label_tag }}{{ form.surface }}</div></div>
-          <div class="col"><div class="field">{{ form.color.label_tag }}{{ form.color }}</div></div>
-        </div>
-        <div class="field">{{ form.sizes.label_tag }}{{ form.sizes }}<p class="hint">JSON list, e.g. [&quot;EU 42&quot;, &quot;EU 43&quot;]</p></div>
-      </div>
-      {% elif 'weight_grams' in form.fields %}
-      <div class="form-card">
-        <h3>Racket specifications</h3>
-        <div class="row">
-          <div class="col"><div class="field">{{ form.weight_grams.label_tag }}{{ form.weight_grams }}<p class="hint">grams</p></div></div>
-          <div class="col"><div class="field">{{ form.head_size_sq_in.label_tag }}{{ form.head_size_sq_in }}<p class="hint">in²</p></div></div>
-          <div class="col"><div class="field">{{ form.string_pattern.label_tag }}{{ form.string_pattern }}</div></div>
-        </div>
-        <div class="row">
-          <div class="col"><div class="field">{{ form.length_in.label_tag }}{{ form.length_in }}<p class="hint">inches</p></div></div>
-          <div class="col"><div class="field">{{ form.balance_mm.label_tag }}{{ form.balance_mm }}<p class="hint">mm</p></div></div>
-          <div class="col"><div class="field">{{ form.swingweight.label_tag }}{{ form.swingweight }}</div></div>
-        </div>
-        <div class="field field-check">{{ form.is_strung }}{{ form.is_strung.label_tag }}</div>
-        <div class="field">{{ form.grip_sizes.label_tag }}{{ form.grip_sizes }}<p class="hint">JSON list, e.g. [&quot;L2&quot;, &quot;L3&quot;]</p></div>
-      </div>
-      {% elif 'gauge_mm' in form.fields %}
-      <div class="form-card">
-        <h3>String specifications</h3>
-        <div class="row">
-          <div class="col"><div class="field">{{ form.gauge_mm.label_tag }}{{ form.gauge_mm }}<p class="hint">mm</p></div></div>
-          <div class="col"><div class="field">{{ form.material.label_tag }}{{ form.material }}</div></div>
-          <div class="col"><div class="field">{{ form.length_m.label_tag }}{{ form.length_m }}<p class="hint">m per set</p></div></div>
-        </div>
-      </div>
-      {% elif 'material' in form.fields and 'gauge_mm' not in form.fields %}
-      <div class="form-card">
-        <h3>Apparel</h3>
-        <div class="row">
-          <div class="col"><div class="field">{{ form.gender.label_tag }}{{ form.gender }}</div></div>
-          <div class="col"><div class="field">{{ form.material.label_tag }}{{ form.material }}</div></div>
-        </div>
-        <div class="field">{{ form.sizes.label_tag }}{{ form.sizes }}<p class="hint">JSON list, e.g. [&quot;S&quot;, &quot;M&quot;]</p></div>
-      </div>
-      {% elif 'capacity_rackets' in form.fields %}
-      <div class="form-card">
-        <h3>Bag</h3>
-        <div class="field">{{ form.capacity_rackets.label_tag }}{{ form.capacity_rackets }}<p class="hint">Racket capacity</p></div>
-      </div>
-      {% elif 'balls_per_can' in form.fields %}
-      <div class="form-card">
-        <h3>Balls</h3>
-        <div class="row">
-          <div class="col"><div class="field">{{ form.balls_per_can.label_tag }}{{ form.balls_per_can }}</div></div>
-          <div class="col"><div class="field">{{ form.surface.label_tag }}{{ form.surface }}</div></div>
-        </div>
-      </div>
-      {% endif %}
+      {% include 'shop/includes/product_form_toolbar.html' with toolbar_title=is_edit|yesno:"Edit product,Add product" %}
 
       <div class="form-card">
         <h2>Images</h2>
@@ -213,13 +146,148 @@
       </div>
 
       <div class="form-card">
+        <h2>Classification &amp; catalog</h2>
+        <div class="row">
+          <div class="col"><div class="field">{{ form.category.label_tag }}{{ form.category }}{% if form.category.help_text %}<p class="hint">{{ form.category.help_text }}</p>{% endif %}{% if form.category.errors %}<ul class="errorlist">{% for e in form.category.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}</div></div>
+          <div class="col"><div class="field">{{ form.brand.label_tag }}{{ form.brand }}{% if form.brand.errors %}<ul class="errorlist">{% for e in form.brand.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}</div></div>
+          <div class="col"><div class="field">{{ form.name.label_tag }}{{ form.name }}{% if form.name.errors %}<ul class="errorlist">{% for e in form.name.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}</div></div>
+        </div>
+        <div class="row">
+          <div class="col"><div class="field">{{ form.type.label_tag }}{{ form.type }}{% if form.type.errors %}<ul class="errorlist">{% for e in form.type.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}</div></div>
+          <div class="col"><div class="field">{{ form.sku.label_tag }}{{ form.sku }}{% if form.sku.errors %}<ul class="errorlist">{% for e in form.sku.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}</div></div>
+        </div>
+        <div class="row">
+          <div class="col"><div class="field">{{ form.listing_channel.label_tag }}{{ form.listing_channel }}{% if form.listing_channel.help_text %}<p class="hint">{{ form.listing_channel.help_text }}</p>{% endif %}{% if form.listing_channel.errors %}<ul class="errorlist">{% for e in form.listing_channel.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}</div></div>
+          <div class="col"><div class="field">{{ form.listing_quantity.label_tag }}{{ form.listing_quantity }}{% if form.listing_quantity.help_text %}<p class="hint">{{ form.listing_quantity.help_text }}</p>{% endif %}{% if form.listing_quantity.errors %}<ul class="errorlist">{% for e in form.listing_quantity.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}</div></div>
+        </div>
+      </div>
+
+      <div class="form-card">
+        <h2>Pricing &amp; status</h2>
+        <div class="row">
+          <div class="col"><div class="field">{{ form.initial_price.label_tag }}{{ form.initial_price }}<p class="hint">Base/list price (struck through when sale price set)</p>{% if form.initial_price.errors %}<ul class="errorlist">{% for e in form.initial_price.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}</div></div>
+          <div class="col"><div class="field">{{ form.actual_price.label_tag }}{{ form.actual_price }}<p class="hint">Optional sale / current price</p>{% if form.actual_price.errors %}<ul class="errorlist">{% for e in form.actual_price.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}</div></div>
+        </div>
+        <div class="row">
+          <div class="col field-check"><div class="field">{{ form.in_stock }}{{ form.in_stock.label_tag }}</div></div>
+          <div class="col field-check"><div class="field">{{ form.is_active }}{{ form.is_active.label_tag }}</div></div>
+          <div class="col field-check"><div class="field">{{ form.featured_product }}{{ form.featured_product.label_tag }}{% if form.featured_product.help_text %}<p class="hint">{{ form.featured_product.help_text }}</p>{% endif %}</div></div>
+        </div>
+      </div>
+
+      {% if 'color' in form.fields %}
+      <div class="form-card">
+        <h3>Shoes</h3>
+        <div class="row">
+          <div class="col"><div class="field">{{ form.gender.label_tag }}{{ form.gender }}</div></div>
+          <div class="col"><div class="field">{{ form.surface.label_tag }}{{ form.surface }}</div></div>
+          <div class="col"><div class="field">{{ form.color.label_tag }}{{ form.color }}</div></div>
+        </div>
+        <div class="field">
+          <span class="size-inv-heading" id="label-shoe-sizes" style="display:block;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px">Stock by shoe size (EU)</span>
+          <p class="hint">Quantity on hand per size. Saved as JSON; total quantity is the sum of these cells.</p>
+          <div class="size-inv-board js-size-inventory-grid" role="group" aria-labelledby="label-shoe-sizes" data-json-input-id="id_sizes">
+            {% for label, qty in form.size_inventory_rows %}
+            <div class="size-inv-row">
+              <span class="size-inv-label">{{ label }}</span>
+              <input type="number" min="0" step="1" class="size-inv-qty" data-size-label="{{ label }}" value="{{ qty }}" aria-label="Quantity {{ label }}">
+            </div>
+            {% endfor %}
+          </div>
+          {{ form.sizes }}
+          {% if form.sizes.errors %}<ul class="errorlist">{% for e in form.sizes.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+        </div>
+      </div>
+      {% elif 'weight_grams' in form.fields %}
+      <div class="form-card">
+        <h3>Racket</h3>
+        <div class="row">
+          <div class="col"><div class="field">{{ form.weight_grams.label_tag }}{{ form.weight_grams }}<p class="hint">grams</p></div></div>
+          <div class="col"><div class="field">{{ form.head_size_sq_in.label_tag }}{{ form.head_size_sq_in }}<p class="hint">in²</p></div></div>
+          <div class="col"><div class="field">{{ form.string_pattern.label_tag }}{{ form.string_pattern }}</div></div>
+        </div>
+        <div class="row">
+          <div class="col"><div class="field">{{ form.length_in.label_tag }}{{ form.length_in }}<p class="hint">inches</p></div></div>
+          <div class="col"><div class="field">{{ form.balance_mm.label_tag }}{{ form.balance_mm }}<p class="hint">mm</p></div></div>
+          <div class="col"><div class="field">{{ form.swingweight.label_tag }}{{ form.swingweight }}</div></div>
+        </div>
+        <div class="field field-check">{{ form.is_strung }}{{ form.is_strung.label_tag }}</div>
+        <div class="field">
+          <span id="label-grip-sizes" style="display:block;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px">Stock by grip size</span>
+          <p class="hint">Quantity per grip (L0–L5). Saved as JSON; total quantity sums these cells.</p>
+          <div class="size-inv-board js-size-inventory-grid" role="group" aria-labelledby="label-grip-sizes" data-json-input-id="id_grip_sizes">
+            {% for label, qty in form.size_inventory_rows %}
+            <div class="size-inv-row">
+              <span class="size-inv-label">{{ label }}</span>
+              <input type="number" min="0" step="1" class="size-inv-qty" data-size-label="{{ label }}" value="{{ qty }}" aria-label="Quantity grip {{ label }}">
+            </div>
+            {% endfor %}
+          </div>
+          {{ form.grip_sizes }}
+          {% if form.grip_sizes.errors %}<ul class="errorlist">{% for e in form.grip_sizes.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+        </div>
+      </div>
+      {% elif 'gauge_mm' in form.fields %}
+      <div class="form-card">
+        <h3>String specifications</h3>
+        <div class="row">
+          <div class="col"><div class="field">{{ form.gauge_mm.label_tag }}{{ form.gauge_mm }}<p class="hint">mm</p></div></div>
+          <div class="col"><div class="field">{{ form.material.label_tag }}{{ form.material }}</div></div>
+          <div class="col"><div class="field">{{ form.length_m.label_tag }}{{ form.length_m }}<p class="hint">m per set</p></div></div>
+        </div>
+      </div>
+      {% elif 'material' in form.fields and 'gauge_mm' not in form.fields %}
+      <div class="form-card">
+        <h3>Apparel</h3>
+        <div class="row">
+          <div class="col"><div class="field">{{ form.gender.label_tag }}{{ form.gender }}</div></div>
+          <div class="col"><div class="field">{{ form.material.label_tag }}{{ form.material }}</div></div>
+        </div>
+        <div class="field">
+          <span id="label-apparel-sizes" style="display:block;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px">Stock by apparel size</span>
+          <p class="hint">Quantity per size. Saved as JSON; total quantity sums these cells.</p>
+          <div class="size-inv-board js-size-inventory-grid" role="group" aria-labelledby="label-apparel-sizes" data-json-input-id="id_sizes">
+            {% for label, qty in form.size_inventory_rows %}
+            <div class="size-inv-row">
+              <span class="size-inv-label">{{ label }}</span>
+              <input type="number" min="0" step="1" class="size-inv-qty" data-size-label="{{ label }}" value="{{ qty }}" aria-label="Quantity size {{ label }}">
+            </div>
+            {% endfor %}
+          </div>
+          {{ form.sizes }}
+          {% if form.sizes.errors %}<ul class="errorlist">{% for e in form.sizes.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+        </div>
+      </div>
+      {% elif 'capacity_rackets' in form.fields %}
+      <div class="form-card">
+        <h3>Bag</h3>
+        <div class="field">{{ form.capacity_rackets.label_tag }}{{ form.capacity_rackets }}<p class="hint">Racket capacity</p></div>
+      </div>
+      {% elif 'balls_per_can' in form.fields %}
+      <div class="form-card">
+        <h3>Balls</h3>
+        <div class="row">
+          <div class="col"><div class="field">{{ form.balls_per_can.label_tag }}{{ form.balls_per_can }}</div></div>
+          <div class="col"><div class="field">{{ form.surface.label_tag }}{{ form.surface }}</div></div>
+        </div>
+      </div>
+      {% endif %}
+
+      <div class="form-card">
         <h2>Description</h2>
         <div class="field">{{ form.short_description.label_tag }}{{ form.short_description }}</div>
         <div class="field">{{ form.description.label_tag }}{{ form.description }}</div>
-        <div class="field">{{ form.attributes.label_tag }}{{ form.attributes }}<p class="hint">JSON object for extra specs shown on PDP</p></div>
+        <div class="field">
+          <label for="js-attr-rows" style="margin-bottom:8px">Extra attributes</label>
+          <p class="hint">Shown on the product page as a spec table. Add rows with the plus button; remove with minus.</p>
+          <div id="js-attr-rows" class="attr-rows" aria-label="Attribute pairs"></div>
+          <button type="button" class="attr-add-btn" id="js-attr-add" title="Add attribute" aria-label="Add attribute">+</button>
+          {{ form.attributes }}
+          {% if form.attributes.errors %}<ul class="errorlist">{% for e in form.attributes.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+        </div>
       </div>
 
-      {% include 'shop/includes/product_form_toolbar.html' with toolbar_extra_class='form-toolbar--bottom' %}
+      {% include 'shop/includes/product_form_toolbar.html' with toolbar_extra_class='form-toolbar--bottom' hide_toolbar_title=1 %}
     </form>
   </div>
 
@@ -228,13 +296,114 @@
     {% csrf_token %}
     <input type="hidden" name="_delete" value="1">
   </form>
+  {% endif %}
   <script>
     function confirmDelete(){
       if (confirm('Delete this product? This will remove images too.')) {
         document.getElementById('deleteForm').submit();
       }
     }
+
+    (function(){
+      function syncSizeGrid(grid){
+        var idName = grid.getAttribute('data-json-input-id');
+        if(!idName) return;
+        var hid = document.getElementById(idName);
+        if(!hid) return;
+        var obj = {};
+        grid.querySelectorAll('.size-inv-qty').forEach(function(inp){
+          var k = inp.getAttribute('data-size-label');
+          if(!k) return;
+          var v = parseInt(inp.value, 10) || 0;
+          if(v > 0) obj[k] = v;
+        });
+        hid.value = JSON.stringify(obj);
+        var q = document.getElementById('id_listing_quantity');
+        if(q){
+          var sum = 0;
+          Object.keys(obj).forEach(function(x){ sum += obj[x]; });
+          q.value = sum;
+        }
+      }
+
+      function initSizeGrids(){
+        document.querySelectorAll('.js-size-inventory-grid').forEach(function(grid){
+          grid.addEventListener('input', function(){ syncSizeGrid(grid); });
+          grid.addEventListener('change', function(){ syncSizeGrid(grid); });
+          syncSizeGrid(grid);
+        });
+      }
+
+      function syncAttrs(){
+        var hid = document.getElementById('id_attributes');
+        if(!hid) return;
+        var o = {};
+        document.querySelectorAll('#js-attr-rows .attr-row').forEach(function(row){
+          var kEl = row.querySelector('.attr-key');
+          var vEl = row.querySelector('.attr-val');
+          if(!kEl || !vEl) return;
+          var k = kEl.value.trim();
+          var v = vEl.value.trim();
+          if(k) o[k] = v;
+        });
+        hid.value = JSON.stringify(o);
+      }
+
+      function bindAttrRow(row){
+        row.querySelector('.attr-remove').addEventListener('click', function(){ row.remove(); syncAttrs(); });
+        row.querySelectorAll('.attr-key,.attr-val').forEach(function(el){ el.addEventListener('input', syncAttrs); });
+      }
+
+      function makeAttrRow(key, val){
+        var row = document.createElement('div');
+        row.className = 'attr-row';
+        var ik = document.createElement('input');
+        ik.type = 'text'; ik.className = 'attr-key'; ik.placeholder = 'Parameter'; ik.value = key || '';
+        ik.autocomplete = 'off';
+        var iv = document.createElement('input');
+        iv.type = 'text'; iv.className = 'attr-val'; iv.placeholder = 'Value'; iv.value = val || '';
+        iv.autocomplete = 'off';
+        var rm = document.createElement('button');
+        rm.type = 'button'; rm.className = 'tb-btn attr-remove'; rm.textContent = '−';
+        rm.title = 'Remove'; rm.setAttribute('aria-label', 'Remove row');
+        row.appendChild(ik); row.appendChild(iv); row.appendChild(rm);
+        bindAttrRow(row);
+        return row;
+      }
+
+      function initAttrs(){
+        var root = document.getElementById('js-attr-rows');
+        var hid = document.getElementById('id_attributes');
+        if(!root || !hid) return;
+        var raw = hid.value.trim();
+        var obj = {};
+        try{ obj = raw ? JSON.parse(raw) : {}; }catch(e){ obj = {}; }
+        var keys = Object.keys(obj);
+        if(!keys.length){
+          root.appendChild(makeAttrRow('', ''));
+        } else {
+          keys.forEach(function(k){ root.appendChild(makeAttrRow(k, obj[k])); });
+        }
+        var addBtn = document.getElementById('js-attr-add');
+        if(addBtn){
+          addBtn.addEventListener('click', function(){
+            root.appendChild(makeAttrRow('', ''));
+            syncAttrs();
+          });
+        }
+        syncAttrs();
+      }
+
+      var prodForm = document.getElementById('shop-product-form');
+      if(prodForm){
+        prodForm.addEventListener('submit', function(){
+          document.querySelectorAll('.js-size-inventory-grid').forEach(syncSizeGrid);
+          syncAttrs();
+        });
+      }
+      initSizeGrids();
+      initAttrs();
+    })();
   </script>
-  {% endif %}
 </body>
 </html>

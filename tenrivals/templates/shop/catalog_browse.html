@@ -12,6 +12,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Saira:wght@400;600;800&family=Saira+Condensed:wght@400&display=swap" rel="stylesheet">
   <link rel="icon" href="{% static 'assets/img/favicon.png' %}">
   <link href="{% static 'css/styles.css' %}" rel="stylesheet">
+  {% include 'shop/includes/product_tile_styles.html' %}
   <style>
     :root{
       --accent:#B20009;
@@ -19,8 +20,12 @@
       --ink:#1a1a1a;
       --muted:#64748b;
       --line:#e5e7eb;
-      --bg:#f2f4f7;
-      --card:#fff;
+      --bg:#f5f5f5;
+      --tile-photo-bg:#fff;
+      --tile-accent:#B20009;
+      --tile-ink:#1a1a1a;
+      --tile-muted:#64748b;
+      --tile-cat:#94a3b8;
     }
     *{box-sizing:border-box; margin:0; padding:0}
     body{font-family:'Saira', system-ui, -apple-system, sans-serif; font-weight:400; color:var(--ink); background:var(--bg)}
@@ -85,7 +90,7 @@
     .footer p{font-size:13px; line-height:1.5}
     .footer-bottom{border-top:1px solid rgba(255,255,255,.08); padding:16px 0; font-size:12px; color:rgba(255,255,255,.3)}
 
-    /* Catalog browse — airy layout, white product tiles on cool gray page */
+    /* Catalog browse — filters + product grid */
     .preorder-main{padding:44px 0 64px}
     h1.preorder-page-title, .preorder-main h2{font-family:'Saira', system-ui, sans-serif; font-weight:800; letter-spacing:.3px; text-transform:uppercase}
     .preorder-page-head{display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:space-between; gap:16px; margin-bottom:28px}
@@ -117,40 +122,6 @@
     .preorder-filters .preorder-tab:hover{background:#f8f8f8; border-color:#cbd5e1; color:var(--ink)}
     .preorder-filters .preorder-tab.active{background:var(--accent); color:#fff; border-color:var(--accent)}
     .preorder-results{min-width:0}
-    .preorder-grid{display:grid; grid-template-columns:repeat(3, 1fr); gap:28px}
-    .preorder-card-wrap{
-      position:relative; min-width:0; background:var(--card); border:1px solid var(--line);
-      padding:18px 18px 16px; display:flex; flex-direction:column; box-shadow:0 1px 3px rgba(0,0,0,.04);
-    }
-    /* Product cards */
-    .preorder-results .card, .preorder-results .card.card{
-      --bs-card-border-width:0; --bs-card-border-color:transparent; --bs-card-border-radius:0;
-      --bs-card-box-shadow:none; --bs-card-bg:transparent; --bs-card-cap-bg:transparent;
-      background:transparent !important; border:none !important; border-radius:0 !important;
-      box-shadow:none !important; display:flex; flex-direction:column; text-decoration:none; color:var(--ink); min-width:0; flex:1;
-    }
-    .preorder-results .card__img{
-      aspect-ratio:1/1; background:var(--card); display:flex; align-items:center; justify-content:center;
-      color:#cbd5e1; font-size:13px; overflow:hidden;
-    }
-    .preorder-results .card__img img{max-width:100%; max-height:100%; width:auto; height:auto; object-fit:contain; min-width:0; flex-shrink:1}
-    .preorder-results .card__info{padding:16px 0 0}
-    .preorder-results .card__brand{font-family:'Saira Condensed', 'Saira', sans-serif; font-size:12px; font-weight:400; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; margin-bottom:2px}
-    .preorder-results .card__name{font-size:14px; font-weight:400; color:var(--ink); line-height:1.45; margin-bottom:2px; text-transform:none}
-    .preorder-results .card__color{font-size:12px; font-weight:400; color:#94a3b8; margin-bottom:5px; min-height:1.2em; text-transform:none; line-height:1.4}
-    .preorder-results .card__prices{display:flex; align-items:baseline; gap:8px}
-    .preorder-results .card__price{font-size:14px; font-weight:800; color:var(--accent)}
-    .preorder-results .card__price-old{font-size:13px; color:#94a3b8; text-decoration:line-through; margin-right:8px}
-    .preorder-results .card__price-muted{font-size:13px; font-weight:400; color:var(--muted); text-transform:none; line-height:1.35}
-    .preorder-card-wrap .card-staff-edit{
-      position:absolute; top:14px; right:14px; z-index:3;
-      display:inline-flex; align-items:center; justify-content:center;
-      width:34px; height:34px; padding:0; text-decoration:none;
-      background:rgba(255,255,255,.92); border:1px solid #d1d5db; border-radius:50%;
-      color:#9ca3af; box-shadow:0 1px 2px rgba(0,0,0,.06);
-    }
-    .preorder-card-wrap .card-staff-edit svg{width:16px; height:16px}
-    .preorder-card-wrap .card-staff-edit:hover{border-color:#9ca3af; color:#6b7280; background:#fff}
     .preorder-notice{display:flex; align-items:center; gap:12px; flex-wrap:wrap; background:rgba(178,0,9,.06); border:1px solid rgba(178,0,9,.2); padding:12px 16px; margin:0 0 20px}
     .preorder-notice span{color:var(--ink); font-size:13px; font-weight:400; text-transform:none; line-height:1.45; flex:1; min-width:200px}
 
@@ -159,22 +130,15 @@
       .container{padding:0 24px}
       .preorder-main{padding:36px 0 48px}
       .preorder-layout{gap:32px}
-      .preorder-results .preorder-grid{grid-template-columns:repeat(3, 1fr); gap:16px}
-      .preorder-card-wrap{padding:14px}
       .footer-top{grid-template-columns:1fr 1fr}
     }
     @media(max-width:900px){
       .preorder-layout{grid-template-columns:1fr}
       .preorder-filters{position:static}
     }
-    @media(max-width:768px){
-      .container{padding:0 20px}
-      .preorder-results .preorder-grid{grid-template-columns:repeat(2, 1fr); gap:14px}
-    }
+    @media(max-width:768px){.container{padding:0 20px}}
     @media(max-width:640px){
       .auth{display:none}
-      .preorder-results .preorder-grid{grid-template-columns:repeat(2, 1fr); gap:12px}
-      .preorder-card-wrap{padding:12px}
       .footer-top{grid-template-columns:1fr}
     }
   </style>
@@ -378,56 +342,9 @@
         </div>
         {% endif %}
 
-        <div class="preorder-grid">
+        <div class="product-grid">
       {% for p in products %}
-        <div class="preorder-card-wrap">
-          {% if user.is_staff %}
-          <a href="{% url 'shop:product_edit' p.pk %}?channel={{ browse_mode }}&next={{ request.get_full_path|urlencode }}" class="card-staff-edit" title="Edit product" aria-label="Edit product">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 013 3L8 18l-4 1 1-4L16.5 3.5z"/></svg>
-          </a>
-          {% endif %}
-          <a class="card" href="{% url 'shop:product_detail' p.pk %}?channel={{ browse_mode }}">
-            <div class="card__img">
-              {% if p.main_image %}
-              <img src="{{ p.main_image.url }}" alt="{{ p.name }}" loading="lazy">
-              {% else %}
-              <svg width="48" height="48" viewBox="0 0 48 48" fill="none" aria-hidden="true"><rect x="8" y="12" width="32" height="28" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M8 32l8-8 6 6 8-10 10 12" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="18" cy="20" r="3" stroke="currentColor" stroke-width="1.5"/></svg>
-              {% endif %}
-            </div>
-            <div class="card__info">
-              <div class="card__brand">{{ p.brand|default:"—" }}</div>
-              <div class="card__name">{{ p.name }}</div>
-              <div class="card__color">
-                {% if p.type == 'M_SHOES' or p.type == 'W_SHOES' or p.type == 'J_SHOES' %}
-                  {% with s=p.shoe %}{% if s %}{{ s.color|default:"" }}{% endif %}{% endwith %}
-                {% else %}
-                  {{ p.short_description|default:"" }}
-                {% endif %}
-              </div>
-              <div class="card__prices">
-                {% if browse_mode == 'preorder' %}
-                  {% if p.actual_price %}
-                  <span class="card__price-old">{{ p.initial_price }} ₾</span>
-                  <span class="card__price">˜{{ p.margin_price }} ₾</span>
-                  {% else %}
-                  <span class="card__price">˜{{ p.margin_price }} ₾</span>
-                  {% endif %}
-                {% else %}
-                  {% if p.stock_listing_qty > 0 %}
-                    {% if p.actual_price %}
-                    <span class="card__price-old">{{ p.initial_price }} ₾</span>
-                    <span class="card__price">{{ p.actual_price }} ₾</span>
-                    {% else %}
-                    <span class="card__price">{{ p.initial_price }} ₾</span>
-                    {% endif %}
-                  {% else %}
-                    <span class="card__price-muted">Coming soon · Pre-order</span>
-                  {% endif %}
-                {% endif %}
-              </div>
-            </div>
-          </a>
-        </div>
+        {% include 'shop/includes/product_tile.html' with p=p browse_mode=browse_mode %}
       {% empty %}
         <p style="grid-column:1/-1">No products to display.</p>
       {% endfor %}
