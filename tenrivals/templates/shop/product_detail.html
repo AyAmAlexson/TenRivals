@@ -104,17 +104,17 @@
 
     /* Gallery */
     .pdp-gallery{display:flex; flex-direction:column; gap:10px}
-    .pdp-main-img{aspect-ratio:1/1; background:#f3f4f6; display:flex; align-items:center; justify-content:center; color:#c4c9d2; font-size:14px; overflow:hidden}
+    .pdp-main-img{aspect-ratio:1/1; background:#fff; display:flex; align-items:center; justify-content:center; color:#c4c9d2; font-size:14px; overflow:hidden}
     .pdp-main-img img{width:100%; height:100%; object-fit:contain}
     .pdp-thumbs{display:flex; gap:8px}
-    .pdp-thumb{width:68px; height:68px; flex-shrink:0; background:#f3f4f6; display:flex; align-items:center; justify-content:center; color:#c4c9d2; font-size:10px; cursor:pointer; border:2px solid transparent; transition:border-color .15s; overflow:hidden; padding:0}
+    .pdp-thumb{width:68px; height:68px; flex-shrink:0; background:#fff; display:flex; align-items:center; justify-content:center; color:#c4c9d2; font-size:10px; cursor:pointer; border:2px solid transparent; transition:border-color .15s; overflow:hidden; padding:0}
     .pdp-thumb img{width:100%; height:100%; object-fit:contain}
     .pdp-thumb.active{border-color:var(--accent)}
     .pdp-thumb:hover{border-color:var(--ink)}
 
     /* Info panel */
     .pdp-info{display:flex; flex-direction:column}
-    .pdp-brand{font-family:'Saira Condensed', 'Saira', sans-serif; font-size:13px; font-weight:400; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; margin-bottom:6px}
+    .pdp-brand{font-family:'Saira Condensed', 'Saira', sans-serif; font-size:17px; font-weight:500; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; margin-bottom:6px}
     .pdp-title{font-size:22px; margin:0 0 6px; line-height:1.2}
     .pdp-color{font-size:14px; font-weight:400; color:#94a3b8; margin-bottom:20px; text-transform:none; line-height:1.45}
     .pdp-divider{border:none; border-top:1px solid var(--line); margin:0 0 20px}
@@ -370,6 +370,41 @@
         <p style="font-size:12px;color:var(--muted);margin:-12px 0 16px">Indicative price (±30 ₾). Final price when you confirm your order.</p>
         {% endif %}
 
+        {% if product.sizes_list %}
+        <div class="pdp-variants">
+          <div class="pdp-variants-label">Available sizes</div>
+          <div class="pdp-variant-options">
+            {% for sz in product.sizes_list %}
+            <span class="pdp-variant-btn active" style="cursor:default">{{ sz }}</span>
+            {% endfor %}
+          </div>
+        </div>
+        {% elif product.type == 'RACKET' %}
+          {% if product.grip_sizes_display %}
+        <div class="pdp-variants">
+          <div class="pdp-variants-label">Grip sizes</div>
+          <div class="pdp-variant-options">
+            {% for g in product.grip_sizes_display %}
+            <span class="pdp-variant-btn active" style="cursor:default">{{ g }}</span>
+            {% endfor %}
+          </div>
+        </div>
+          {% endif %}
+        {% endif %}
+
+        <div class="pdp-cart-row">
+          <a class="btn btn--lg btn--cta-telegram" href="https://t.me/tennis_rivals_shop_tbilisi?direct" target="_blank" rel="noopener">Order via Telegram</a>
+        </div>
+
+        <div class="pdp-shipping">
+          Free delivery in Tbilisi<br>
+          {% if pdp_mode == 'preorder' %}
+          Pre-order from US &amp; EU with official customs clearance — contact us for details.
+          {% else %}
+          Items listed here are in our Tbilisi catalog; ask us on Telegram for sizes and exact pickup time.
+          {% endif %}
+        </div>
+
         <div class="pdp-specs" aria-labelledby="pdp-specs-title">
           <h2 class="pdp-specs-title" id="pdp-specs-title">Specifications</h2>
           <table class="specs-table">
@@ -428,41 +463,6 @@
             <tr><td>{{ key }}</td><td>{{ val }}</td></tr>
             {% endfor %}
           </table>
-        </div>
-
-        {% if product.sizes_list %}
-        <div class="pdp-variants">
-          <div class="pdp-variants-label">Available sizes</div>
-          <div class="pdp-variant-options">
-            {% for sz in product.sizes_list %}
-            <span class="pdp-variant-btn active" style="cursor:default">{{ sz }}</span>
-            {% endfor %}
-          </div>
-        </div>
-        {% elif product.type == 'RACKET' %}
-          {% if product.grip_sizes_display %}
-        <div class="pdp-variants">
-          <div class="pdp-variants-label">Grip sizes</div>
-          <div class="pdp-variant-options">
-            {% for g in product.grip_sizes_display %}
-            <span class="pdp-variant-btn active" style="cursor:default">{{ g }}</span>
-            {% endfor %}
-          </div>
-        </div>
-          {% endif %}
-        {% endif %}
-
-        <div class="pdp-cart-row">
-          <a class="btn btn--lg btn--cta-telegram" href="https://t.me/tennis_rivals_shop_tbilisi?direct" target="_blank" rel="noopener">Order via Telegram</a>
-        </div>
-
-        <div class="pdp-shipping">
-          Free delivery in Tbilisi<br>
-          {% if pdp_mode == 'preorder' %}
-          Pre-order from US &amp; EU with official customs clearance — contact us for details.
-          {% else %}
-          Items listed here are in our Tbilisi catalog; ask us on Telegram for sizes and exact pickup time.
-          {% endif %}
         </div>
 
       </div>
