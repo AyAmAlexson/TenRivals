@@ -481,12 +481,46 @@ def preorder(request):
     )
 
 
+def _product_create_pick_type_qs(return_next: str, channel_raw: str) -> str:
+    parts = []
+    if return_next:
+        parts.append(f'next={quote(return_next)}')
+    if channel_raw:
+        parts.append(f'channel={quote(channel_raw)}')
+    return '&'.join(parts)
+
+
 @staff_member_required
 def product_create(request):
-    type_code = request.GET.get('type')
+    """Create flow: GET /add → pick product type; GET /add?type=X → type-specific ModelForm."""
     return_next = request.GET.get('next', '')
-    edit_channel = _parse_listing_channel_param(request.GET.get('channel'))
-    FormClass = _form_class_for_product_type(type_code)
+    channel_raw = request.GET.get('channel', '')
+    edit_channel = _parse_listing_channel_param(channel_raw)
+    type_code = request.GET.get('type')
+    pick_type_qs = _product_create_pick_type_qs(return_next, channel_raw)
+    form_back_url = _safe_internal_redirect(request, return_next) or reverse(
+        'shop:stock'
+    )
+
+    if request.method == 'GET' and not type_code:
+        return render(
+            request,
+            'shop/product_create_pick_type.html',
+            {
+                'return_next': return_next,
+                'channel_raw': channel_raw,
+                'pick_type_qs': pick_type_qs,
+                'product_types': ProductType.choices,
+                'form_back_url': form_back_url,
+            },
+        )
+
+    type_labels = dict(ProductType.choices)
+    if request.method == 'GET' and type_code not in type_labels:
+        base = reverse('shop:product_create')
+        if pick_type_qs:
+            return redirect(f'{base}?{pick_type_qs}')
+        return redirect(base)
 
     if request.method == 'POST':
         FormClass = _form_class_for_product_type(request.POST.get('type'))
@@ -499,16 +533,18 @@ def product_create(request):
                 return redirect(next_url)
             return redirect(reverse('shop:product_edit', args=[obj.pk]))
     else:
-        initial_kw = {}
-        if type_code:
-            initial_kw['type'] = type_code
+        FormClass = _form_class_for_product_type(type_code)
         form = FormClass(
-            initial=initial_kw,
+            initial={'type': type_code},
             default_listing_channel=(
                 edit_channel or ProductListingChannel.PREORDER
             ),
             listing_quantity=0,
         )
+
+    display_type = (
+        request.POST.get('type') if request.method == 'POST' else type_code
+    )
 
     return render(
         request,
@@ -517,8 +553,9 @@ def product_create(request):
             'form': form,
             'is_edit': False,
             'return_next': return_next,
-            'form_back_url': _safe_internal_redirect(request, return_next)
-            or reverse('shop:stock'),
+            'pick_type_qs': pick_type_qs,
+            'product_type_label': type_labels.get(display_type, display_type or ''),
+            'form_back_url': form_back_url,
         },
     )
 
