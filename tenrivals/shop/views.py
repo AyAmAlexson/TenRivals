@@ -14,8 +14,21 @@ from .catalog_utils import (
     order_products_by_effective_price,
     stock_catalog_base_queryset,
 )
-from .forms import ProductForm, ShoeForm
+from .forms import (
+    AccessoryForm,
+    ApparelForm,
+    BagForm,
+    BallsForm,
+    ProductForm,
+    RacketForm,
+    ShoeForm,
+    StringForm,
+)
 from .models import (
+    Accessory,
+    Apparel,
+    Bag,
+    Balls,
     Category,
     CourtSurface,
     Gender,
@@ -28,6 +41,7 @@ from .models import (
     ProductType,
     Racket,
     Shoe,
+    String,
 )
 
 _PRODUCT_SUBCLASS_SELECT = (
@@ -39,6 +53,73 @@ _PRODUCT_SUBCLASS_SELECT = (
     'balls',
     'accessory',
 )
+
+_SHOE_TYPES = frozenset(
+    {
+        ProductType.MENS_SHOES,
+        ProductType.WOMENS_SHOES,
+        ProductType.JUNIOR_SHOES,
+    }
+)
+_APPAREL_TYPES = frozenset(
+    {
+        ProductType.MENS_APPAREL,
+        ProductType.WOMENS_APPAREL,
+        ProductType.JUNIOR_APPAREL,
+    }
+)
+_ACCESSORY_TYPES = frozenset({ProductType.GRIPS, ProductType.ACCESSORIES})
+
+
+def _form_class_for_product_type(type_code: str | None):
+    if not type_code:
+        return ProductForm
+    if type_code in _SHOE_TYPES:
+        return ShoeForm
+    if type_code == ProductType.RACKET:
+        return RacketForm
+    if type_code in _APPAREL_TYPES:
+        return ApparelForm
+    if type_code == ProductType.STRINGS:
+        return StringForm
+    if type_code == ProductType.BAGS:
+        return BagForm
+    if type_code == ProductType.BALLS:
+        return BallsForm
+    if type_code in _ACCESSORY_TYPES:
+        return AccessoryForm
+    return ProductForm
+
+
+def _edit_instance_and_form(base: Product):
+    """Resolve MTI child instance and matching ModelForm for staff edit."""
+    t = base.type
+    try:
+        if t in _SHOE_TYPES:
+            return base.shoe, ShoeForm
+        if t == ProductType.RACKET:
+            return base.racket, RacketForm
+        if t in _APPAREL_TYPES:
+            return base.apparel, ApparelForm
+        if t == ProductType.STRINGS:
+            return base.string, StringForm
+        if t == ProductType.BAGS:
+            return base.bag, BagForm
+        if t == ProductType.BALLS:
+            return base.balls, BallsForm
+        if t in _ACCESSORY_TYPES:
+            return base.accessory, AccessoryForm
+    except (
+        Shoe.DoesNotExist,
+        Racket.DoesNotExist,
+        Apparel.DoesNotExist,
+        String.DoesNotExist,
+        Bag.DoesNotExist,
+        Balls.DoesNotExist,
+        Accessory.DoesNotExist,
+    ):
+        pass
+    return base, ProductForm
 
 
 def _parse_listing_channel_param(raw):
@@ -390,14 +471,10 @@ def product_create(request):
     type_code = request.GET.get('type')
     return_next = request.GET.get('next', '')
     edit_channel = _parse_listing_channel_param(request.GET.get('channel'))
-    is_shoe = type_code in {ProductType.MENS_SHOES, ProductType.WOMENS_SHOES, ProductType.JUNIOR_SHOES}
-    FormClass = ShoeForm if is_shoe else ProductForm
+    FormClass = _form_class_for_product_type(type_code)
 
     if request.method == 'POST':
-        # Decide form by posted type
-        posted_type = request.POST.get('type')
-        is_shoe_post = posted_type in {ProductType.MENS_SHOES, ProductType.WOMENS_SHOES, ProductType.JUNIOR_SHOES}
-        FormClass = ShoeForm if is_shoe_post else ProductForm
+        FormClass = _form_class_for_product_type(request.POST.get('type'))
         form = FormClass(request.POST, request.FILES)
         if form.is_valid():
             obj = form.save()
@@ -429,12 +506,7 @@ def product_create(request):
 @staff_member_required
 def product_edit(request, pk):
     base = get_object_or_404(Product, pk=pk)
-    instance = base
-    try:
-        instance = base.shoe
-        FormClass = ShoeForm
-    except Shoe.DoesNotExist:
-        FormClass = ProductForm
+    instance, FormClass = _edit_instance_and_form(base)
 
     edit_channel = _parse_listing_channel_param(request.GET.get('channel'))
     listing_row = None

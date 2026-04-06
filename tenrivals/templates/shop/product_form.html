@@ -45,13 +45,51 @@
         <div class="col"><div class="field">{{ form.listing_quantity.label_tag }}{{ form.listing_quantity }}</div></div>
       </div>
 
-      {% if form.surface %}
+      {% if 'color' in form.fields %}
+      <h3 style="margin:20px 0 8px;font-size:15px;">Shoes</h3>
       <div class="row">
         <div class="col"><div class="field">{{ form.gender.label_tag }}{{ form.gender }}</div></div>
         <div class="col"><div class="field">{{ form.surface.label_tag }}{{ form.surface }}</div></div>
         <div class="col"><div class="field">{{ form.color.label_tag }}{{ form.color }}</div></div>
       </div>
-      <div class="field">{{ form.sizes.label_tag }}{{ form.sizes }}</div>
+      <div class="field">{{ form.sizes.label_tag }}{{ form.sizes }}<p style="font-size:12px;color:#64748b;margin-top:6px">JSON list of sizes, e.g. [&quot;EU 42&quot;, &quot;EU 43&quot;]</p></div>
+      {% elif 'weight_grams' in form.fields %}
+      <h3 style="margin:20px 0 8px;font-size:15px;">Racket specifications</h3>
+      <div class="row">
+        <div class="col"><div class="field">{{ form.weight_grams.label_tag }}{{ form.weight_grams }} <span style="font-size:11px;color:#64748b">grams</span></div></div>
+        <div class="col"><div class="field">{{ form.head_size_sq_in.label_tag }}{{ form.head_size_sq_in }} <span style="font-size:11px;color:#64748b">in²</span></div></div>
+        <div class="col"><div class="field">{{ form.string_pattern.label_tag }}{{ form.string_pattern }}</div></div>
+      </div>
+      <div class="row">
+        <div class="col"><div class="field">{{ form.length_in.label_tag }}{{ form.length_in }} <span style="font-size:11px;color:#64748b">inches</span></div></div>
+        <div class="col"><div class="field">{{ form.balance_mm.label_tag }}{{ form.balance_mm }} <span style="font-size:11px;color:#64748b">mm</span></div></div>
+        <div class="col"><div class="field">{{ form.swingweight.label_tag }}{{ form.swingweight }}</div></div>
+      </div>
+      <div class="field">{{ form.is_strung.label_tag }}{{ form.is_strung }}</div>
+      <div class="field">{{ form.grip_sizes.label_tag }}{{ form.grip_sizes }}<p style="font-size:12px;color:#64748b;margin-top:6px">JSON list of grip sizes, e.g. [&quot;L2&quot;, &quot;L3&quot;]</p></div>
+      {% elif 'gauge_mm' in form.fields %}
+      <h3 style="margin:20px 0 8px;font-size:15px;">String specifications</h3>
+      <div class="row">
+        <div class="col"><div class="field">{{ form.gauge_mm.label_tag }}{{ form.gauge_mm }} <span style="font-size:11px;color:#64748b">mm</span></div></div>
+        <div class="col"><div class="field">{{ form.material.label_tag }}{{ form.material }}</div></div>
+        <div class="col"><div class="field">{{ form.length_m.label_tag }}{{ form.length_m }} <span style="font-size:11px;color:#64748b">meters per set</span></div></div>
+      </div>
+      {% elif 'material' in form.fields %}
+      <h3 style="margin:20px 0 8px;font-size:15px;">Apparel</h3>
+      <div class="row">
+        <div class="col"><div class="field">{{ form.gender.label_tag }}{{ form.gender }}</div></div>
+        <div class="col"><div class="field">{{ form.material.label_tag }}{{ form.material }}</div></div>
+      </div>
+      <div class="field">{{ form.sizes.label_tag }}{{ form.sizes }}<p style="font-size:12px;color:#64748b;margin-top:6px">JSON list, e.g. [&quot;S&quot;, &quot;M&quot;, &quot;L&quot;]</p></div>
+      {% elif 'capacity_rackets' in form.fields %}
+      <h3 style="margin:20px 0 8px;font-size:15px;">Bag</h3>
+      <div class="field">{{ form.capacity_rackets.label_tag }}{{ form.capacity_rackets }} <span style="font-size:11px;color:#64748b">racket capacity</span></div>
+      {% elif 'balls_per_can' in form.fields %}
+      <h3 style="margin:20px 0 8px;font-size:15px;">Balls</h3>
+      <div class="row">
+        <div class="col"><div class="field">{{ form.balls_per_can.label_tag }}{{ form.balls_per_can }}</div></div>
+        <div class="col"><div class="field">{{ form.surface.label_tag }}{{ form.surface }}</div></div>
+      </div>
       {% endif %}
 
       <div class="row">
