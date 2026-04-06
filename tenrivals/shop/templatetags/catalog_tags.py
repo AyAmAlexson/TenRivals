@@ -15,7 +15,7 @@ def stock_catalog_nav():
         return distinct_brands_for_type(stock, tc)
 
     return {
-        'catalog_url': reverse('shop:items_list_for_Laen'),
+        'catalog_url': reverse('shop:stock'),
         'preorder_url': reverse('shop:preorder'),
         'index_url': reverse('shop:index'),
         'racket_brands': b(ProductType.RACKET),

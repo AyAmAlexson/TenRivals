@@ -315,7 +315,7 @@
   <div class="cat-strip">
     <div class="container">
       <div class="cat-grid">
-        <a class="cat-tile" href="{% url 'shop:items_list_for_Laen' %}?type=RACKET">
+        <a class="cat-tile" href="{% url 'shop:stock' %}?type=RACKET">
           <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
             <ellipse cx="16" cy="11" rx="7" ry="9" stroke="currentColor" stroke-width="1.6"/>
             <line x1="16" y1="20" x2="16" y2="30" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
@@ -328,21 +328,21 @@
           </svg>
           <span class="cat-tile-label">Rackets</span>
         </a>
-        <a class="cat-tile" href="{% url 'shop:items_list_for_Laen' %}?type=M_SHOES">
+        <a class="cat-tile" href="{% url 'shop:stock' %}?type=M_SHOES">
           <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
             <path d="M5 24h22" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
             <path d="M7 24v-3c0-2 1.5-3.5 3.5-4L15 16l1-5c.2-.8.8-1.2 1.5-1c.7.2 1 .9.8 1.6L17.5 14l4 .5c3 .5 5.5 2.5 5.5 5.5v4" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
           </svg>
           <span class="cat-tile-label">Shoes</span>
         </a>
-        <a class="cat-tile" href="{% url 'shop:items_list_for_Laen' %}?type=BAGS">
+        <a class="cat-tile" href="{% url 'shop:stock' %}?type=BAGS">
           <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
             <rect x="6" y="10" width="20" height="16" rx="2" stroke="currentColor" stroke-width="1.6"/>
             <path d="M11 10V7a5 5 0 0110 0v3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
           </svg>
           <span class="cat-tile-label">Bags</span>
         </a>
-        <a class="cat-tile" href="{% url 'shop:items_list_for_Laen' %}?type=M_APP">
+        <a class="cat-tile" href="{% url 'shop:stock' %}?type=M_APP">
           <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
             <path d="M12 4L10 4L8 8L6 14v14h20V14l-2-6-2-4h-2" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
             <path d="M12 4c0 2 1.5 4 4 4s4-2 4-4" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/>
@@ -351,7 +351,7 @@
           </svg>
           <span class="cat-tile-label">Clothing</span>
         </a>
-        <a class="cat-tile" href="{% url 'shop:items_list_for_Laen' %}?type=BALLS">
+        <a class="cat-tile" href="{% url 'shop:stock' %}?type=BALLS">
           <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
             <circle cx="16" cy="16" r="10" stroke="currentColor" stroke-width="1.6"/>
             <path d="M7 11c3 5 9 7 15 3" stroke="currentColor" stroke-width="1.2" fill="none"/>
@@ -359,7 +359,7 @@
           </svg>
           <span class="cat-tile-label">Balls</span>
         </a>
-        <a class="cat-tile" href="{% url 'shop:items_list_for_Laen' %}?type=ACCESSORIES">
+        <a class="cat-tile" href="{% url 'shop:stock' %}?type=ACCESSORIES">
           <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
             <rect x="8" y="6" width="16" height="6" rx="3" stroke="currentColor" stroke-width="1.6"/>
             <line x1="14" y1="9" x2="18" y2="9" stroke="currentColor" stroke-width="1.2"/>
@@ -368,7 +368,7 @@
           </svg>
           <span class="cat-tile-label">Accessories</span>
         </a>
-        <a class="cat-tile" href="{% url 'shop:items_list_for_Laen' %}?type=STRINGS">
+        <a class="cat-tile" href="{% url 'shop:stock' %}?type=STRINGS">
           <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
             <path d="M10 6l-4 4 6 6-6 6 4 4 6-6 6 6 4-4-6-6 6-6-4-4-6 6-6-6z" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linejoin="round"/>
           </svg>
@@ -458,7 +458,7 @@
       <div class="section-head"><h2>Our Brands</h2><a href="#">View all &rarr;</a></div>
       <div class="brands-row">
         {% for b in home_catalog_brands %}
-        <a class="brand-name" href="{% url 'shop:items_list_for_Laen' %}?cbrand={{ b|urlencode }}">{{ b }}</a>
+        <a class="brand-name" href="{% url 'shop:stock' %}?cbrand={{ b|urlencode }}">{{ b }}</a>
         {% empty %}
         <span class="brand-name" style="color:#cbd5e1;font-size:14px;text-transform:none">Brands appear when products are in stock</span>
         {% endfor %}

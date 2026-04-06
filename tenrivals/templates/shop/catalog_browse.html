@@ -6,7 +6,7 @@
   {% include 'includes/google_tag_gtag.html' %}
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>TR Shop — Preorder</title>
+  <title>{% if browse_mode == 'preorder' %}TR Shop — Preorder{% else %}TR Shop — In stock{% endif %}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Saira:wght@400;800&family=Saira+Condensed:wght@400&display=swap" rel="stylesheet">
@@ -132,6 +132,7 @@
     .preorder-results .card__prices{display:flex; align-items:baseline; gap:8px}
     .preorder-results .card__price{font-size:14px; font-weight:700; color:var(--accent)}
     .preorder-results .card__price-old{font-size:13px; color:#94a3b8; text-decoration:line-through; margin-right:8px}
+    .preorder-results .card__price-muted{font-size:13px; font-weight:600; color:var(--muted)}
     .preorder-card-wrap{position:relative; min-width:0}
     .preorder-card-wrap .card-staff-edit{
       position:absolute; top:8px; right:8px; z-index:2; padding:4px 8px; font-size:11px; font-weight:700;
@@ -235,7 +236,7 @@
   <main class="container preorder-main">
     <div class="preorder-page-head">
       <div>
-        <h1 class="preorder-page-title">Preorder</h1>
+        <h1 class="preorder-page-title">{% if browse_mode == 'preorder' %}Preorder{% else %}In stock{% endif %}</h1>
         <p class="preorder-meta" style="margin-top:6px">Updated: 14.10.2025</p>
       </div>
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
@@ -252,9 +253,16 @@
         <div class="preorder-filter-group">
           <span class="preorder-filter-label" id="preorder-filter-type">Product type</span>
           <div class="preorder-tabs" role="group" aria-labelledby="preorder-filter-type">
+            {% if browse_mode == 'stock' %}
+            <a class="preorder-tab {% if active_tab == 'all' or active_tab|slice:':7' == 'cbrand:' %}active{% endif %}" href="?{% if catalog_brand %}cbrand={{ catalog_brand|urlencode }}{% endif %}">All in stock</a>
+            {% endif %}
             {% for code, label in type_tabs %}
-              {% if code == 'RACKET' or code == 'M_SHOES' or code == 'W_SHOES' %}
-                <a class="preorder-tab {% if active_tab == 'type:'|add:code %}active{% endif %}" href="?type={{ code }}">{{ label }}</a>
+              {% if code != 'OTHER' %}
+                {% if browse_mode == 'stock' %}
+                <a class="preorder-tab {% if active_tab == 'type:'|add:code %}active{% endif %}" href="?type={{ code }}{{ cbrand_qs }}">{{ label }}</a>
+                {% elif code == 'RACKET' or code == 'M_SHOES' or code == 'W_SHOES' %}
+                <a class="preorder-tab {% if active_tab == 'type:'|add:code %}active{% endif %}" href="?type={{ code }}{{ cbrand_qs }}">{{ label }}</a>
+                {% endif %}
               {% endif %}
             {% endfor %}
           </div>
@@ -265,7 +273,7 @@
           <span class="preorder-filter-label" id="preorder-filter-cat">Category</span>
           <div class="preorder-tabs" role="group" aria-labelledby="preorder-filter-cat">
             {% for c in categories %}
-              <a class="preorder-tab {% if active_tab == 'cat:'|add:c.slug %}active{% endif %}" href="?category={{ c.slug }}">{{ c.name }}</a>
+              <a class="preorder-tab {% if active_tab == 'cat:'|add:c.slug %}active{% endif %}" href="?category={{ c.slug }}{{ cbrand_qs }}">{{ c.name }}</a>
             {% endfor %}
           </div>
         </div>
@@ -275,9 +283,9 @@
         <div class="preorder-filter-group">
           <span class="preorder-filter-label" id="preorder-filter-racket-brand">Racket brand</span>
           <div class="preorder-tabs" role="group" aria-labelledby="preorder-filter-racket-brand">
-            <a class="preorder-tab {% if racket_brand_active == 'all' %}active{% endif %}" href="?type={{ active_type_code }}&brand=all&w={{ racket_weight_active }}&head={{ racket_head_active }}&pat={{ racket_pattern_active }}">All brands</a>
+            <a class="preorder-tab {% if racket_brand_active == 'all' %}active{% endif %}" href="?type={{ active_type_code }}&brand=all&w={{ racket_weight_active }}&head={{ racket_head_active }}&pat={{ racket_pattern_active }}{{ cbrand_qs }}">All brands</a>
             {% for b in racket_brands %}
-              <a class="preorder-tab {% if racket_brand_active == b %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ b }}&w={{ racket_weight_active }}&head={{ racket_head_active }}&pat={{ racket_pattern_active }}">{{ b }}</a>
+              <a class="preorder-tab {% if racket_brand_active == b %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ b|urlencode }}&w={{ racket_weight_active }}&head={{ racket_head_active }}&pat={{ racket_pattern_active }}{{ cbrand_qs }}">{{ b }}</a>
             {% endfor %}
           </div>
         </div>
@@ -285,30 +293,30 @@
         <div class="preorder-filter-group">
           <span class="preorder-filter-label" id="preorder-filter-racket-weight">Racket weight</span>
           <div class="preorder-tabs" role="group" aria-labelledby="preorder-filter-racket-weight">
-            <a class="preorder-tab {% if racket_weight_active == 'all' %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ racket_brand_active }}&w=all&head={{ racket_head_active }}&pat={{ racket_pattern_active }}">All weight</a>
-            <a class="preorder-tab {% if racket_weight_active == 'lt280' %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ racket_brand_active }}&w=lt280&head={{ racket_head_active }}&pat={{ racket_pattern_active }}"><280</a>
-            <a class="preorder-tab {% if racket_weight_active == '280_299' %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ racket_brand_active }}&w=280_299&head={{ racket_head_active }}&pat={{ racket_pattern_active }}">280-299</a>
-            <a class="preorder-tab {% if racket_weight_active == '300' %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ racket_brand_active }}&w=300&head={{ racket_head_active }}&pat={{ racket_pattern_active }}">300</a>
-            <a class="preorder-tab {% if racket_weight_active == 'ge301' %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ racket_brand_active }}&w=ge301&head={{ racket_head_active }}&pat={{ racket_pattern_active }}">301+</a>
+            <a class="preorder-tab {% if racket_weight_active == 'all' %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ racket_brand_active|urlencode }}&w=all&head={{ racket_head_active }}&pat={{ racket_pattern_active }}{{ cbrand_qs }}">All weight</a>
+            <a class="preorder-tab {% if racket_weight_active == 'lt280' %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ racket_brand_active|urlencode }}&w=lt280&head={{ racket_head_active }}&pat={{ racket_pattern_active }}{{ cbrand_qs }}"><280</a>
+            <a class="preorder-tab {% if racket_weight_active == '280_299' %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ racket_brand_active|urlencode }}&w=280_299&head={{ racket_head_active }}&pat={{ racket_pattern_active }}{{ cbrand_qs }}">280-299</a>
+            <a class="preorder-tab {% if racket_weight_active == '300' %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ racket_brand_active|urlencode }}&w=300&head={{ racket_head_active }}&pat={{ racket_pattern_active }}{{ cbrand_qs }}">300</a>
+            <a class="preorder-tab {% if racket_weight_active == 'ge301' %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ racket_brand_active|urlencode }}&w=ge301&head={{ racket_head_active }}&pat={{ racket_pattern_active }}{{ cbrand_qs }}">301+</a>
           </div>
         </div>
 
         <div class="preorder-filter-group">
           <span class="preorder-filter-label" id="preorder-filter-head">Head size</span>
           <div class="preorder-tabs" role="group" aria-labelledby="preorder-filter-head">
-            <a class="preorder-tab {% if racket_head_active == 'all' %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ racket_brand_active }}&w={{ racket_weight_active }}&head=all&pat={{ racket_pattern_active }}">All head</a>
-            <a class="preorder-tab {% if racket_head_active == 'lt100' %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ racket_brand_active }}&w={{ racket_weight_active }}&head=lt100&pat={{ racket_pattern_active }}"><100</a>
-            <a class="preorder-tab {% if racket_head_active == '100' %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ racket_brand_active }}&w={{ racket_weight_active }}&head=100&pat={{ racket_pattern_active }}">100</a>
-            <a class="preorder-tab {% if racket_head_active == 'ge101' %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ racket_brand_active }}&w={{ racket_weight_active }}&head=ge101&pat={{ racket_pattern_active }}">101+</a>
+            <a class="preorder-tab {% if racket_head_active == 'all' %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ racket_brand_active|urlencode }}&w={{ racket_weight_active }}&head=all&pat={{ racket_pattern_active }}{{ cbrand_qs }}">All head</a>
+            <a class="preorder-tab {% if racket_head_active == 'lt100' %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ racket_brand_active|urlencode }}&w={{ racket_weight_active }}&head=lt100&pat={{ racket_pattern_active }}{{ cbrand_qs }}"><100</a>
+            <a class="preorder-tab {% if racket_head_active == '100' %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ racket_brand_active|urlencode }}&w={{ racket_weight_active }}&head=100&pat={{ racket_pattern_active }}{{ cbrand_qs }}">100</a>
+            <a class="preorder-tab {% if racket_head_active == 'ge101' %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ racket_brand_active|urlencode }}&w={{ racket_weight_active }}&head=ge101&pat={{ racket_pattern_active }}{{ cbrand_qs }}">101+</a>
           </div>
         </div>
 
         <div class="preorder-filter-group">
           <span class="preorder-filter-label" id="preorder-filter-pattern">String pattern</span>
           <div class="preorder-tabs" role="group" aria-labelledby="preorder-filter-pattern">
-            <a class="preorder-tab {% if racket_pattern_active == 'all' %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ racket_brand_active }}&w={{ racket_weight_active }}&head={{ racket_head_active }}&pat=all">All patterns</a>
+            <a class="preorder-tab {% if racket_pattern_active == 'all' %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ racket_brand_active|urlencode }}&w={{ racket_weight_active }}&head={{ racket_head_active }}&pat=all{{ cbrand_qs }}">All patterns</a>
             {% for sp in racket_patterns %}
-              <a class="preorder-tab {% if racket_pattern_active == sp %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ racket_brand_active }}&w={{ racket_weight_active }}&head={{ racket_head_active }}&pat={{ sp }}">{{ sp }}</a>
+              <a class="preorder-tab {% if racket_pattern_active == sp %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ racket_brand_active|urlencode }}&w={{ racket_weight_active }}&head={{ racket_head_active }}&pat={{ sp|urlencode }}{{ cbrand_qs }}">{{ sp }}</a>
             {% endfor %}
           </div>
         </div>
@@ -318,21 +326,21 @@
         <div class="preorder-filter-group">
           <span class="preorder-filter-label" id="preorder-filter-surface">Shoe surface</span>
           <div class="preorder-tabs" role="group" aria-labelledby="preorder-filter-surface">
-            <a class="preorder-tab {% if surface_active == 'all' %}active{% endif %}" href="?type={{ active_type_code }}&surf=all&sbrand={{ shoe_brand_active|default:'all' }}">All</a>
-            <a class="preorder-tab {% if surface_active == 'clay' %}active{% endif %}" href="?type={{ active_type_code }}&surf=clay&sbrand={{ shoe_brand_active|default:'all' }}">Clay</a>
-            <a class="preorder-tab {% if surface_active == 'hard' %}active{% endif %}" href="?type={{ active_type_code }}&surf=hard&sbrand={{ shoe_brand_active|default:'all' }}">Hard</a>
-            <a class="preorder-tab {% if surface_active == 'allcourt' %}active{% endif %}" href="?type={{ active_type_code }}&surf=allcourt&sbrand={{ shoe_brand_active|default:'all' }}">AllCourt</a>
-            <a class="preorder-tab {% if surface_active == 'grass' %}active{% endif %}" href="?type={{ active_type_code }}&surf=grass&sbrand={{ shoe_brand_active|default:'all' }}">Grass</a>
-            <a class="preorder-tab {% if surface_active == 'padel' %}active{% endif %}" href="?type={{ active_type_code }}&surf=padel&sbrand={{ shoe_brand_active|default:'all' }}">Padel</a>
+            <a class="preorder-tab {% if surface_active == 'all' %}active{% endif %}" href="?type={{ active_type_code }}&surf=all&sbrand={{ shoe_brand_active|default:'all' }}{{ cbrand_qs }}">All</a>
+            <a class="preorder-tab {% if surface_active == 'clay' %}active{% endif %}" href="?type={{ active_type_code }}&surf=clay&sbrand={{ shoe_brand_active|default:'all' }}{{ cbrand_qs }}">Clay</a>
+            <a class="preorder-tab {% if surface_active == 'hard' %}active{% endif %}" href="?type={{ active_type_code }}&surf=hard&sbrand={{ shoe_brand_active|default:'all' }}{{ cbrand_qs }}">Hard</a>
+            <a class="preorder-tab {% if surface_active == 'allcourt' %}active{% endif %}" href="?type={{ active_type_code }}&surf=allcourt&sbrand={{ shoe_brand_active|default:'all' }}{{ cbrand_qs }}">AllCourt</a>
+            <a class="preorder-tab {% if surface_active == 'grass' %}active{% endif %}" href="?type={{ active_type_code }}&surf=grass&sbrand={{ shoe_brand_active|default:'all' }}{{ cbrand_qs }}">Grass</a>
+            <a class="preorder-tab {% if surface_active == 'padel' %}active{% endif %}" href="?type={{ active_type_code }}&surf=padel&sbrand={{ shoe_brand_active|default:'all' }}{{ cbrand_qs }}">Padel</a>
           </div>
         </div>
         {% if shoe_brands %}
         <div class="preorder-filter-group">
           <span class="preorder-filter-label" id="preorder-filter-shoe-brand">Shoe brand</span>
           <div class="preorder-tabs" role="group" aria-labelledby="preorder-filter-shoe-brand">
-            <a class="preorder-tab {% if shoe_brand_active == 'all' %}active{% endif %}" href="?type={{ active_type_code }}&surf={{ surface_active }}&sbrand=all">All brands</a>
+            <a class="preorder-tab {% if shoe_brand_active == 'all' %}active{% endif %}" href="?type={{ active_type_code }}&surf={{ surface_active }}&sbrand=all{{ cbrand_qs }}">All brands</a>
             {% for b in shoe_brands %}
-              <a class="preorder-tab {% if shoe_brand_active == b %}active{% endif %}" href="?type={{ active_type_code }}&surf={{ surface_active }}&sbrand={{ b }}">{{ b }}</a>
+              <a class="preorder-tab {% if shoe_brand_active == b %}active{% endif %}" href="?type={{ active_type_code }}&surf={{ surface_active }}&sbrand={{ b|urlencode }}{{ cbrand_qs }}">{{ b }}</a>
             {% endfor %}
           </div>
         </div>
@@ -341,10 +349,17 @@
       </aside>
 
       <div class="preorder-results">
+        {% if browse_mode == 'preorder' %}
         <div class="preorder-notice">
           <span>The price is indicative (±30 ₾). Fixed upon order confirmation.</span>
           <a href="https://t.me/tennis_rivals_shop_tbilisi" class="btn" style="margin-left:auto">Contact us</a>
         </div>
+        {% else %}
+        <div class="preorder-notice">
+          <span>Items on hand in Tbilisi. Contact us to confirm size and pickup.</span>
+          <a href="https://t.me/tennis_rivals_shop_tbilisi" class="btn" style="margin-left:auto">Contact us</a>
+        </div>
+        {% endif %}
 
         <div class="preorder-grid">
       {% for p in products %}
@@ -371,11 +386,24 @@
                 {% endif %}
               </div>
               <div class="card__prices">
-                {% if p.actual_price %}
-                <span class="card__price-old">{{ p.initial_price }} ₾</span>
-                <span class="card__price">˜{{ p.margin_price }} ₾</span>
+                {% if browse_mode == 'preorder' %}
+                  {% if p.actual_price %}
+                  <span class="card__price-old">{{ p.initial_price }} ₾</span>
+                  <span class="card__price">˜{{ p.margin_price }} ₾</span>
+                  {% else %}
+                  <span class="card__price">˜{{ p.margin_price }} ₾</span>
+                  {% endif %}
                 {% else %}
-                <span class="card__price">˜{{ p.margin_price }} ₾</span>
+                  {% if p.stock_listing_qty > 0 %}
+                    {% if p.actual_price %}
+                    <span class="card__price-old">{{ p.initial_price }} ₾</span>
+                    <span class="card__price">{{ p.actual_price }} ₾</span>
+                    {% else %}
+                    <span class="card__price">{{ p.initial_price }} ₾</span>
+                    {% endif %}
+                  {% else %}
+                    <span class="card__price-muted">Coming soon · Pre-order</span>
+                  {% endif %}
                 {% endif %}
               </div>
             </div>
@@ -395,7 +423,8 @@
         <div>
           <h4>Tennis Rivals: The Line for Your Growth.</h4>
           <p>Catalog UI scaffold. Content will be added later.</p>
-          <div style="margin-top:10px">
+          <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap">
+            <a class="btn btn--outline" href="{% url 'shop:stock' %}">In stock</a>
             <a class="btn btn--outline" href="{% url 'shop:preorder' %}">Preorder</a>
           </div>
         </div>
