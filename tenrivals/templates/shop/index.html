@@ -330,7 +330,7 @@
       {% for slide in hero_slides %}
       <div class="hero-slide{% if forloop.first %} is-active{% endif %}" data-hero-slide>
         {% if slide.image_link_url %}
-        <a href="{{ slide.image_link_url }}"{% if slide.image_link_url|slice:":4" == "http" %} target="_blank" rel="noopener"{% endif %}>
+        <a href="{{ slide.image_link_url|abs_site_href }}"{% if slide.image_link_url|slice:":4" == "http" %} target="_blank" rel="noopener"{% endif %}>
           <img src="{{ slide.image.url }}" alt="">
         </a>
         {% else %}
@@ -348,10 +348,10 @@
         {% if hero_content.subtext %}<p class="hero-sub">{{ hero_content.subtext }}</p>{% endif %}
         <div class="hero-cta-row">
           {% if hero_content.cta_label and hero_content.cta_url %}
-          <a class="btn hero-cta-primary" href="{{ hero_content.cta_url }}">{{ hero_content.cta_label }}</a>
+          <a class="btn hero-cta-primary" href="{{ hero_content.cta_url|abs_site_href }}">{{ hero_content.cta_label }}</a>
           {% endif %}
           {% if hero_content.secondary_link_label and hero_content.secondary_link_url %}
-          <a class="hero-cta-secondary" href="{{ hero_content.secondary_link_url }}">{{ hero_content.secondary_link_label }}</a>
+          <a class="hero-cta-secondary" href="{{ hero_content.secondary_link_url|abs_site_href }}">{{ hero_content.secondary_link_label }}</a>
           {% endif %}
         </div>
       </div>
@@ -481,7 +481,7 @@
     <section class="section featured-story-block">
       <div class="section-head"><h2>Featured Stories</h2></div>
       {% if featured_story.link_url %}
-      <a class="featured-story-card{% if not featured_story.image %} featured-story-card--text-only{% endif %}" href="{{ featured_story.link_url }}">
+      <a class="featured-story-card{% if not featured_story.image %} featured-story-card--text-only{% endif %}" href="{{ featured_story.link_url|abs_site_href }}">
       {% else %}
       <div class="featured-story-card{% if not featured_story.image %} featured-story-card--text-only{% endif %}" style="cursor:default">
       {% endif %}

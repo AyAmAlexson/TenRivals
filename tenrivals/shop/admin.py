@@ -106,6 +106,18 @@ class HomePromoStripSettingsAdmin(admin.ModelAdmin):
 class HomeHeroContentAdmin(admin.ModelAdmin):
     list_display = ("id", "headline", "cta_label", "updated_at")
 
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        form.base_fields["cta_url"].help_text = (
+            "Path from site root (leading /) or full https URL, e.g. "
+            "/shop/stock/?type=RACKET — type codes are RACKET, M_SHOES, W_SHOES, … "
+            "(not “RACKETS”)."
+        )
+        form.base_fields["secondary_link_url"].help_text = (
+            "Same as primary URL: prefer /shop/… from the domain root."
+        )
+        return form
+
     def has_add_permission(self, request):
         return not HomeHeroContent.objects.exists()
 

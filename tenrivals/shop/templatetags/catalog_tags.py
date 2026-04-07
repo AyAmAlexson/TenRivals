@@ -7,6 +7,18 @@ from ..models import ProductType
 register = template.Library()
 
 
+@register.filter(name='abs_site_href')
+def abs_site_href(url):
+    """Ensure internal paths are root-absolute so they work from any page (e.g. /shop/ → not /shop/shop/...)."""
+    u = (url or '').strip()
+    if not u:
+        return u
+    low = u.lower()
+    if low.startswith(('http://', 'https://', '//')):
+        return u
+    return u if u.startswith('/') else f'/{u}'
+
+
 @register.inclusion_tag('shop/includes/stock_catalog_nav.html')
 def stock_catalog_nav():
     stock = stock_catalog_base_queryset()

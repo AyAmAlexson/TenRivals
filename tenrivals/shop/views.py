@@ -330,6 +330,8 @@ def _catalog_browse_context(request, browse_mode: str):
 
     category_slug = request.GET.get('category')
     type_code = request.GET.get('type')
+    if type_code == 'RACKETS':
+        type_code = ProductType.RACKET
     gender_filter = request.GET.get('g', 'all')
     surface_filter = request.GET.get('surf', 'all')
     shoe_brand = request.GET.get('sbrand', 'all')
