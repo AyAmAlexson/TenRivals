@@ -32,6 +32,7 @@ from .models import (
     Category,
     CourtSurface,
     Gender,
+    BlogPost,
     HomeFeaturedStory,
     HomeHeroContent,
     HomeHeroSlide,
@@ -251,7 +252,12 @@ def _safe_internal_redirect(request, url: str | None):
 def index(request):
     hero_content = HomeHeroContent.load()
     hero_slides = list(HomeHeroSlide.objects.all()[:5])
-    featured_story = HomeFeaturedStory.load()
+    featured_stories = list(
+        HomeFeaturedStory.objects.filter(is_active=True)
+        .select_related('blog_post')
+        .order_by('sort_order', 'id')
+    )
+    featured_stories = [s for s in featured_stories if s.is_visible]
     active_products = Product.objects.filter(is_active=True).select_related(
         *_PRODUCT_SUBCLASS_SELECT,
         'category',
@@ -282,7 +288,7 @@ def index(request):
         {
             'hero_content': hero_content,
             'hero_slides': hero_slides,
-            'featured_story': featured_story,
+            'featured_stories': featured_stories,
             'featured_products': featured_products,
             'new_arrivals': new_arrivals,
             'home_catalog_brands': home_catalog_brands,
@@ -491,6 +497,28 @@ def preorder(request):
         request,
         'shop/catalog_browse.html',
         _catalog_browse_context(request, 'preorder'),
+    )
+
+
+def blog_index(request):
+    posts = BlogPost.objects.filter(is_published=True).order_by('-published_at', '-id')
+    return render(
+        request,
+        'shop/blog_index.html',
+        {'blog_posts': posts},
+    )
+
+
+def blog_post(request, slug):
+    post = get_object_or_404(
+        BlogPost,
+        slug=slug,
+        is_published=True,
+    )
+    return render(
+        request,
+        'shop/blog_post.html',
+        {'post': post},
     )
 
 

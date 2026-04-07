@@ -1,0 +1,34 @@
+{% extends 'shop/base_marketing.html' %}
+{% block title %}Blog — TR Shop{% endblock %}
+{% block content %}
+<div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:32px">
+  <div>
+    <h1 class="blog-page-title">Stories</h1>
+    <p class="blog-section-title" style="margin:0;font-weight:400;text-transform:none">Guides, gear notes, and updates from Tennis Rivals.</p>
+  </div>
+  <a class="btn btn--outline" href="{% url 'shop:index' %}">← Shop home</a>
+</div>
+
+{% if blog_posts %}
+<div class="blog-grid">
+  {% for post in blog_posts %}
+  <a class="blog-card" href="{% url 'shop:blog_post' slug=post.slug %}">
+    <div class="blog-card__media">
+      {% if post.hero_image %}
+      <img src="{{ post.hero_image.url }}" alt="" loading="lazy">
+      {% else %}
+      <div style="width:100%;height:100%;min-height:200px;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.1em">Ten Rivals</div>
+      {% endif %}
+    </div>
+    <div class="blog-card__body">
+      <h2 class="blog-card__title">{{ post.title }}</h2>
+      {% if post.lead %}<p class="blog-card__excerpt">{{ post.lead|truncatewords:36 }}</p>{% endif %}
+      {% if post.published_at %}<span class="blog-card__meta">{{ post.published_at|date:"M j, Y" }}</span>{% endif %}
+    </div>
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+<p style="color:var(--muted);font-size:15px;line-height:1.6;max-width:520px;text-transform:none">No published articles yet. Add posts in Django admin (Blog posts) and mark them as published.</p>
+{% endif %}
+{% endblock %}

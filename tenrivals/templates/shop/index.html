@@ -184,25 +184,34 @@
     }
     .product-rail__cell{flex:0 0 clamp(220px, 22vw, 260px); min-width:220px}
     .product-rail__track .product-tile{height:100%}
-    /* Featured story */
-    .featured-story-block{margin-top:8px}
-    .featured-story-card{
-      display:grid; grid-template-columns:minmax(0, 1fr) minmax(0, 1.15fr); gap:clamp(24px,4vw,48px);
-      align-items:center; text-decoration:none; color:inherit;
-      padding:8px 0; transition:opacity .15s;
+    /* Featured stories — vertical cards, horizontal carousel */
+    .featured-stories-block{margin-top:8px}
+    .story-rail__cell{flex:0 0 clamp(220px, 24vw, 280px); min-width:220px}
+    .story-rail__track{padding-bottom:20px}
+    .story-card{
+      display:flex; flex-direction:column; height:100%; min-height:420px;
+      background:#fff; border:1px solid var(--line); border-radius:16px; overflow:hidden;
+      text-decoration:none; color:inherit; transition:box-shadow .15s, border-color .15s;
     }
-    .featured-story-card:hover{opacity:.94}
-    .featured-story-card:hover .featured-story__link{color:var(--accent)}
-    .featured-story__media{
-      border-radius:16px; overflow:hidden; background:#f3f4f6;
-      aspect-ratio:3/4; max-height:min(520px, 70vh);
+    .story-card:hover{box-shadow:0 12px 36px rgba(0,0,0,.08); border-color:#cbd5e1}
+    .story-card:hover .story-card__cta{color:var(--accent)}
+    .story-card--static{cursor:default}
+    .story-card--static:hover{box-shadow:none; border-color:var(--line)}
+    .story-card__media{
+      flex-shrink:0; aspect-ratio:3/4; background:#f3f4f6; overflow:hidden;
     }
-    .featured-story__media img{width:100%; height:100%; object-fit:cover; display:block}
-    .featured-story__body{align-self:center}
-    .featured-story__title{font-size:clamp(22px,2.5vw,30px); font-weight:600; line-height:1.15; margin:0 0 14px; text-transform:none; letter-spacing:-.02em}
-    .featured-story__caption{font-size:15px; line-height:1.75; color:var(--muted); margin:0 0 20px; text-transform:none; font-weight:400}
-    .featured-story__link{font-size:13px; font-weight:800; text-transform:uppercase; letter-spacing:.1em; color:var(--ink)}
-    .featured-story-card--text-only{grid-template-columns:1fr}
+    .story-card__media img{width:100%; height:100%; object-fit:cover; display:block}
+    .story-card__body{display:flex; flex-direction:column; flex:1; padding:18px 16px 20px}
+    .story-card__title{
+      font-size:15px; font-weight:800; line-height:1.25; margin:0 0 10px;
+      text-transform:uppercase; letter-spacing:.06em;
+    }
+    .story-card__caption{
+      font-size:13px; line-height:1.55; color:var(--muted); margin:0 0 auto; flex:1;
+      text-transform:none; font-weight:400;
+      display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; overflow:hidden;
+    }
+    .story-card__cta{margin-top:16px; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.1em; color:var(--ink)}
 
     /* Brands strip */
     .brands-strip{background:#f3f4f6; padding:36px 0}
@@ -228,8 +237,6 @@
       .cat-grid{grid-template-columns:repeat(4,1fr)}
       .header-row{grid-template-columns:140px 1fr auto; grid-auto-flow:row}
       .brands-row{flex-wrap:wrap; justify-content:center; gap:24px}
-      .featured-story-card{grid-template-columns:1fr}
-      .featured-story__media{max-height:420px; aspect-ratio:4/5}
     }
     @media(max-width:640px){
       .cat-grid{grid-template-columns:repeat(3,1fr)}
@@ -477,31 +484,45 @@
       </div>
     </section>
 
-    {% if featured_story.is_visible %}
-    <section class="section featured-story-block">
-      <div class="section-head"><h2>Featured Stories</h2></div>
-      {% if featured_story.link_url %}
-      <a class="featured-story-card{% if not featured_story.image %} featured-story-card--text-only{% endif %}" href="{{ featured_story.link_url|abs_site_href }}">
-      {% else %}
-      <div class="featured-story-card{% if not featured_story.image %} featured-story-card--text-only{% endif %}" style="cursor:default">
-      {% endif %}
-        {% if featured_story.image %}
-        <div class="featured-story__media">
-          <img src="{{ featured_story.image.url }}" alt="{{ featured_story.title|default:'Featured story' }}">
-        </div>
-        {% endif %}
-        <div class="featured-story__body">
-          {% if featured_story.title %}<h3 class="featured-story__title">{{ featured_story.title }}</h3>{% endif %}
-          {% if featured_story.caption %}<p class="featured-story__caption">{{ featured_story.caption|linebreaksbr }}</p>{% endif %}
-          {% if featured_story.link_label and featured_story.link_url %}
-          <span class="featured-story__link">{{ featured_story.link_label }} →</span>
-          {% endif %}
-        </div>
-      {% if featured_story.link_url %}
-      </a>
-      {% else %}
+    {% if featured_stories %}
+    <section class="section featured-stories-block">
+      <div class="section-head"><h2>Featured Stories</h2><a href="{% url 'shop:blog_index' %}">View all &rarr;</a></div>
+      <div class="product-rail-wrap" data-product-rail>
+        <button type="button" class="product-rail-nav" aria-label="Scroll stories left" data-rail-prev>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg>
+        </button>
+        <div class="product-rail"><div class="product-rail__track story-rail__track">
+          {% for story in featured_stories %}
+          <div class="product-rail__cell story-rail__cell">
+            {% if story.blog_post %}
+            <a class="story-card" href="{% url 'shop:blog_post' slug=story.blog_post.slug %}">
+            {% elif story.link_url %}
+            <a class="story-card" href="{{ story.link_url|abs_site_href }}"{% if story.link_url|slice:":4" == "http" %} target="_blank" rel="noopener"{% endif %}>
+            {% else %}
+            <div class="story-card story-card--static">
+            {% endif %}
+              {% if story.image %}
+              <div class="story-card__media">
+                <img src="{{ story.image.url }}" alt="{{ story.title|default:'Story' }}" loading="lazy">
+              </div>
+              {% else %}
+              <div class="story-card__media" style="min-height:160px;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase">Ten Rivals</div>
+              {% endif %}
+              <div class="story-card__body">
+                {% if story.title %}<h3 class="story-card__title">{{ story.title }}</h3>{% endif %}
+                {% if story.caption %}<p class="story-card__caption">{{ story.caption|striptags|truncatewords:28 }}</p>{% endif %}
+                {% if story.blog_post or story.link_url %}
+                  {% if story.link_label %}<span class="story-card__cta">{{ story.link_label }} →</span>{% endif %}
+                {% endif %}
+              </div>
+            {% if story.blog_post or story.link_url %}</a>{% else %}</div>{% endif %}
+          </div>
+          {% endfor %}
+        </div></div>
+        <button type="button" class="product-rail-nav" aria-label="Scroll stories right" data-rail-next>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
+        </button>
       </div>
-      {% endif %}
     </section>
     {% endif %}
 
@@ -526,7 +547,8 @@
         <div>
           <h4>Tennis Rivals: The Line for Your Growth.</h4>
           <p>Catalog UI scaffold. Content will be added later.</p>
-          <div style="margin-top:10px">
+          <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap">
+            <a class="btn btn--outline" href="{% url 'shop:blog_index' %}">Blog</a>
             <a class="btn btn--outline" href="{% url 'shop:preorder' %}">Preorder</a>
           </div>
         </div>

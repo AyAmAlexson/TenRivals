@@ -1,5 +1,6 @@
 from django.contrib import admin
 from .models import (
+    BlogPost,
     HomeBanner,
     HomeFeaturedStory,
     HomeHeroContent,
@@ -132,15 +133,22 @@ class HomeHeroSlideAdmin(admin.ModelAdmin):
     ordering = ("sort_order", "id")
 
 
+@admin.register(BlogPost)
+class BlogPostAdmin(admin.ModelAdmin):
+    list_display = ("title", "slug", "is_published", "published_at", "updated_at")
+    list_filter = ("is_published",)
+    search_fields = ("title", "slug", "lead")
+    prepopulated_fields = {"slug": ("title",)}
+    ordering = ("-published_at", "-id")
+
+
 @admin.register(HomeFeaturedStory)
 class HomeFeaturedStoryAdmin(admin.ModelAdmin):
-    list_display = ("id", "title", "is_active", "updated_at")
-
-    def has_add_permission(self, request):
-        return not HomeFeaturedStory.objects.exists()
-
-    def has_delete_permission(self, request, obj=None):
-        return False
+    list_display = ("id", "sort_order", "title", "blog_post", "is_active", "updated_at")
+    list_filter = ("is_active",)
+    list_editable = ("sort_order", "is_active")
+    ordering = ("sort_order", "id")
+    raw_id_fields = ("blog_post",)
 
 
 class ShopOrderItemInline(admin.TabularInline):

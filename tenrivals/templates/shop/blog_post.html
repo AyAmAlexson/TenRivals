@@ -1,0 +1,31 @@
+{% extends 'shop/base_marketing.html' %}
+{% block title %}{{ post.title }} — TR Shop Blog{% endblock %}
+{% block content %}
+<article itemscope itemtype="https://schema.org/Article">
+  <a class="back-to-blog" href="{% url 'shop:blog_index' %}">← All stories</a>
+
+  {% if post.hero_image %}
+  <div class="article-hero">
+    <img src="{{ post.hero_image.url }}" alt="" itemprop="image">
+  </div>
+  {% endif %}
+
+  <header>
+    <h1 class="article-title" itemprop="headline">{{ post.title }}</h1>
+    {% if post.published_at %}
+    <p class="article-meta"><time datetime="{{ post.published_at|date:'c' }}" itemprop="datePublished">{{ post.published_at|date:"F j, Y" }}</time></p>
+    {% endif %}
+    {% if post.lead %}
+    <p class="article-lead" itemprop="description">{{ post.lead }}</p>
+    {% endif %}
+  </header>
+
+  <div class="article-body" itemprop="articleBody">
+    {% if post.body %}
+      {{ post.body|linebreaks }}
+    {% else %}
+      <p style="color:var(--muted)">More content coming soon.</p>
+    {% endif %}
+  </div>
+</article>
+{% endblock %}

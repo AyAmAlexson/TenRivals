@@ -9,6 +9,8 @@ urlpatterns = [
     path('', views.index, name='index'),
     path('product/<int:pk>/', views.product_detail, name='product_detail'),
     path('stock/', views.stock, name='stock'),
+    path('blog/', views.blog_index, name='blog_index'),
+    path('blog/<slug:slug>/', views.blog_post, name='blog_post'),
     path(
         'items_list_for_Laen',
         RedirectView.as_view(

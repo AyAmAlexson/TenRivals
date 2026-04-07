@@ -24,6 +24,7 @@ from django.contrib import messages
 from django.utils import timezone
 from django.contrib.auth import logout, login
 from shop.models import (
+    BlogPost,
     HomeFeaturedStory,
     HomeHeroContent,
     HomeHeroSlide,
@@ -792,6 +793,7 @@ def staff_preorder_list(request):
 
 
 _MAX_HERO_SLIDES = 5
+_MAX_FEATURED_STORIES = 12
 
 
 @login_required
@@ -852,18 +854,76 @@ def staff_home_banners(request):
             slide.save(update_fields=["image_link_url", "internal_note"])
             messages.success(request, "Slide link and note updated.")
             return redirect("persons:staff_home_banners")
-        if action == "save_featured_story":
-            fs = HomeFeaturedStory.load()
+        if action == "add_featured_story":
+            if HomeFeaturedStory.objects.count() >= _MAX_FEATURED_STORIES:
+                messages.error(
+                    request,
+                    f"You can have at most {_MAX_FEATURED_STORIES} featured story cards.",
+                )
+                return redirect("persons:staff_home_banners")
+            title = (request.POST.get("story_title") or "").strip()[:200]
+            image = request.FILES.get("story_image")
+            if not image and not title:
+                messages.error(request, "Add an image or a title for the new card.")
+                return redirect("persons:staff_home_banners")
+            caption = (request.POST.get("story_caption") or "").strip()
+            link_label = (request.POST.get("story_link_label") or "").strip()[:120] or "Read more"
+            link_url = (request.POST.get("story_link_url") or "").strip()[:500]
+            blog_post_id = (request.POST.get("blog_post_id") or "").strip()
+            blog_post = None
+            if blog_post_id.isdigit():
+                blog_post = BlogPost.objects.filter(pk=int(blog_post_id)).first()
+            next_order = (HomeFeaturedStory.objects.aggregate(m=Max("sort_order"))["m"] or 0) + 1
+            fs = HomeFeaturedStory(
+                sort_order=next_order,
+                title=title,
+                caption=caption,
+                link_label=link_label,
+                link_url="" if blog_post else link_url,
+                blog_post=blog_post,
+                is_active=request.POST.get("story_is_active") == "1",
+            )
+            if image:
+                fs.image = image
+            fs.save()
+            messages.success(request, "Featured story card added.")
+            return redirect("persons:staff_home_banners")
+        if action == "delete_featured_story":
+            try:
+                fid = int(request.POST.get("story_id", "0"))
+            except (TypeError, ValueError):
+                messages.error(request, "Invalid story card.")
+                return redirect("persons:staff_home_banners")
+            get_object_or_404(HomeFeaturedStory, pk=fid).delete()
+            messages.success(request, "Featured story card removed.")
+            return redirect("persons:staff_home_banners")
+        if action == "update_featured_story":
+            try:
+                fid = int(request.POST.get("story_id", "0"))
+            except (TypeError, ValueError):
+                messages.error(request, "Invalid story card.")
+                return redirect("persons:staff_home_banners")
+            fs = get_object_or_404(HomeFeaturedStory, pk=fid)
             fs.title = (request.POST.get("story_title") or "").strip()[:200]
             fs.caption = (request.POST.get("story_caption") or "").strip()
-            fs.link_label = (request.POST.get("story_link_label") or "").strip()[:120]
-            fs.link_url = (request.POST.get("story_link_url") or "").strip()[:500]
+            fs.link_label = (request.POST.get("story_link_label") or "").strip()[:120] or "Read more"
+            link_url = (request.POST.get("story_link_url") or "").strip()[:500]
+            blog_post_id = (request.POST.get("blog_post_id") or "").strip()
+            blog_post = None
+            if blog_post_id.isdigit():
+                blog_post = BlogPost.objects.filter(pk=int(blog_post_id)).first()
+            fs.blog_post = blog_post
+            fs.link_url = "" if blog_post else link_url
             fs.is_active = request.POST.get("story_is_active") == "1"
+            try:
+                fs.sort_order = max(0, int(request.POST.get("sort_order") or 0))
+            except ValueError:
+                fs.sort_order = 0
             img = request.FILES.get("story_image")
             if img:
                 fs.image = img
             fs.save()
-            messages.success(request, "Featured story saved.")
+            messages.success(request, "Featured story card updated.")
             return redirect("persons:staff_home_banners")
         messages.error(request, "Unknown action.")
         return redirect("persons:staff_home_banners")
@@ -875,12 +935,16 @@ def staff_home_banners(request):
             "staff_nav_active": "banners",
             "hero_content": HomeHeroContent.load(),
             "hero_slides": HomeHeroSlide.objects.all(),
-            "featured_story": HomeFeaturedStory.load(),
+            "featured_stories": HomeFeaturedStory.objects.select_related("blog_post").order_by(
+                "sort_order", "id"
+            ),
+            "blog_posts": BlogPost.objects.order_by("-is_published", "title"),
             "max_hero_slides": _MAX_HERO_SLIDES,
-            "page_heading": "Shop home — hero & featured story",
+            "max_featured_stories": _MAX_FEATURED_STORIES,
+            "page_heading": "Shop home — hero & featured stories",
             "page_note": "Hero: up to 5 full-width slides (rotation every 7s and arrows). "
             "One headline and subtext apply to all slides. "
-            "Featured story: tall image + copy, similar to Pro:Direct tennis home.",
+            "Featured stories: vertical cards in a carousel (Pro:Direct-style); link each to a blog post or a custom URL.",
         },
     )
 

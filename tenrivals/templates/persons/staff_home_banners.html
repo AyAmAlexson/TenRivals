@@ -119,42 +119,117 @@
 </div>
 
 <div class="card">
-  <h2 class="card-title">Featured story (shop home)</h2>
-  <p class="page-note" style="margin-top:-6px">Tall image + title and caption. Turn off “Show on home” to hide the block.</p>
-  {% if featured_story.image %}
-  <p style="margin-bottom:12px"><img class="story-preview" src="{{ featured_story.image.url }}" alt=""></p>
-  {% endif %}
-  <form method="post" enctype="multipart/form-data" action="{% url 'persons:staff_home_banners' %}">
-    {% csrf_token %}
-    <input type="hidden" name="action" value="save_featured_story">
-    <div class="form-grid form-grid--wide">
-      <div class="form-group">
-        <label for="id_story_image">Replace image (optional)</label>
-        <input id="id_story_image" name="story_image" type="file" accept="image/*">
-      </div>
-      <div class="form-group">
-        <label for="id_story_title">Title</label>
-        <input id="id_story_title" name="story_title" type="text" class="form-control" value="{{ featured_story.title }}" maxlength="200">
-      </div>
-      <div class="form-group">
-        <label for="id_story_caption">Caption / body</label>
-        <textarea id="id_story_caption" name="story_caption" rows="5" class="form-control">{{ featured_story.caption }}</textarea>
-      </div>
-      <div class="form-group">
-        <label for="id_story_link_label">Link label</label>
-        <input id="id_story_link_label" name="story_link_label" type="text" class="form-control" value="{{ featured_story.link_label }}" maxlength="120">
-      </div>
-      <div class="form-group">
-        <label for="id_story_link_url">Link URL</label>
-        <input id="id_story_link_url" name="story_link_url" type="text" class="form-control" value="{{ featured_story.link_url }}" maxlength="500">
-      </div>
-      <div class="check-row">
-        <input type="checkbox" name="story_is_active" id="id_story_is_active" value="1" {% if featured_story.is_active %}checked{% endif %}>
-        <label for="id_story_is_active">Show on home (needs image or title)</label>
-      </div>
+  <h2 class="card-title">Featured stories carousel (shop home)</h2>
+  <p class="page-note" style="margin-top:-6px">Vertical cards in a horizontal carousel (similar to Pro:Direct featured). Max {{ max_featured_stories }} cards. Create posts in <strong>Django admin → Blog posts</strong> (check <strong>Published</strong> and set <strong>Published at</strong> or visitors get 404), then link a card here or use a custom URL.</p>
+
+  {% for story in featured_stories %}
+  <div class="hero-slide-row" style="grid-template-columns:minmax(0,120px) 1fr auto">
+    {% if story.image %}
+    <a href="{{ story.image.url }}" target="_blank" rel="noopener"><img class="story-preview" style="max-width:120px;max-height:180px" src="{{ story.image.url }}" alt=""></a>
+    {% else %}
+    <span class="muted">No image</span>
+    {% endif %}
+    <div>
+      <form method="post" enctype="multipart/form-data" action="{% url 'persons:staff_home_banners' %}" class="form-grid form-grid--wide" style="max-width:100%">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="update_featured_story">
+        <input type="hidden" name="story_id" value="{{ story.pk }}">
+        <div class="form-group" style="margin:0">
+          <label>Replace image (optional)</label>
+          <input name="story_image" type="file" accept="image/*">
+        </div>
+        <div class="form-group" style="margin:0">
+          <label>Title</label>
+          <input name="story_title" type="text" class="form-control" value="{{ story.title }}" maxlength="200">
+        </div>
+        <div class="form-group" style="margin:0">
+          <label>Caption (short; shows on card)</label>
+          <textarea name="story_caption" rows="3" class="form-control">{{ story.caption }}</textarea>
+        </div>
+        <div class="form-group" style="margin:0">
+          <label>Blog post (optional — overrides link URL when set)</label>
+          <select name="blog_post_id" class="form-control">
+            <option value="">— None — use URL below</option>
+            {% for p in blog_posts %}
+            <option value="{{ p.pk }}" {% if story.blog_post_id == p.pk %}selected{% endif %}>{{ p.title }} ({{ p.slug }}){% if not p.is_published %} [draft]{% endif %}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group" style="margin:0">
+          <label>Link URL (when no blog post)</label>
+          <input name="story_link_url" type="text" class="form-control" value="{{ story.link_url }}" maxlength="500" placeholder="/shop/blog/your-slug/">
+        </div>
+        <div class="form-group" style="margin:0">
+          <label>Link / CTA label</label>
+          <input name="story_link_label" type="text" class="form-control" value="{{ story.link_label }}" maxlength="120">
+        </div>
+        <div class="form-group" style="margin:0">
+          <label>Sort order</label>
+          <input name="sort_order" type="number" min="0" class="form-control" value="{{ story.sort_order }}" style="max-width:120px">
+        </div>
+        <div class="check-row" style="margin:0">
+          <input type="checkbox" name="story_is_active" id="story_active_{{ story.pk }}" value="1" {% if story.is_active %}checked{% endif %}>
+          <label for="story_active_{{ story.pk }}">Show on home</label>
+        </div>
+        <button type="submit" class="btn btn--sm">Save card</button>
+      </form>
     </div>
-    <button type="submit" class="btn" style="margin-top:16px">Save featured story</button>
-  </form>
+    <form method="post" action="{% url 'persons:staff_home_banners' %}" onsubmit="return confirm('Remove this featured story card?');" style="align-self:start">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="delete_featured_story">
+      <input type="hidden" name="story_id" value="{{ story.pk }}">
+      <button type="submit" class="btn btn--sm" style="background:#6b7280" title="Remove card">− Remove</button>
+    </form>
+  </div>
+  {% empty %}
+  <p class="muted" style="padding:12px 0">No story cards yet — add the first one below.</p>
+  {% endfor %}
+
+  {% if featured_stories|length < max_featured_stories %}
+  <div style="margin-top:20px;padding-top:20px;border-top:1px dashed var(--line)">
+    <h3 class="card-title" style="font-size:15px;margin-bottom:12px">Add story card (+)</h3>
+    <form method="post" enctype="multipart/form-data" action="{% url 'persons:staff_home_banners' %}">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="add_featured_story">
+      <div class="form-grid form-grid--wide">
+        <div class="form-group">
+          <label for="id_add_story_image">Image (or fill title at minimum)</label>
+          <input id="id_add_story_image" name="story_image" type="file" accept="image/*">
+        </div>
+        <div class="form-group">
+          <label for="id_add_story_title">Title</label>
+          <input id="id_add_story_title" name="story_title" type="text" class="form-control" maxlength="200">
+        </div>
+        <div class="form-group">
+          <label for="id_add_story_caption">Caption</label>
+          <textarea id="id_add_story_caption" name="story_caption" rows="3" class="form-control"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="id_add_story_blog">Blog post (optional)</label>
+          <select id="id_add_story_blog" name="blog_post_id" class="form-control">
+            <option value="">— None —</option>
+            {% for p in blog_posts %}
+            <option value="{{ p.pk }}">{{ p.title }} ({{ p.slug }}){% if not p.is_published %} [draft]{% endif %}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="id_add_story_link_url">Link URL if no blog post</label>
+          <input id="id_add_story_link_url" name="story_link_url" type="text" class="form-control" maxlength="500" placeholder="/shop/blog/…">
+        </div>
+        <div class="form-group">
+          <label for="id_add_story_link_label">CTA label</label>
+          <input id="id_add_story_link_label" name="story_link_label" type="text" class="form-control" value="Read more" maxlength="120">
+        </div>
+        <div class="check-row">
+          <input type="checkbox" name="story_is_active" id="id_add_story_active" value="1" checked>
+          <label for="id_add_story_active">Show on home</label>
+        </div>
+      </div>
+      <button type="submit" class="btn">+ Add story card</button>
+    </form>
+  </div>
+  {% endif %}
 </div>
 
 {% endblock %}

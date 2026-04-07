@@ -327,29 +327,55 @@ class HomeHeroSlide(models.Model):
         return f'Hero slide #{self.pk}'
 
 
-class HomeFeaturedStory(models.Model):
-    """Singleton (pk=1): large editorial block on the shop home (“Featured stories”)."""
+class BlogPost(models.Model):
+    """Editorial post at /shop/blog/<slug>/ — featured home cards can link here."""
 
+    slug = models.SlugField(max_length=160, unique=True, db_index=True)
+    title = models.CharField(max_length=220)
+    lead = models.TextField(blank=True, help_text=_('Short intro under the title (plain text).'))
+    body = models.TextField(blank=True, help_text=_('Article body (plain text; line breaks preserved).'))
+    hero_image = models.ImageField(upload_to='shop/blog/', null=True, blank=True)
+    is_published = models.BooleanField(default=False, db_index=True)
+    published_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-published_at', '-id']
+        verbose_name = 'Blog post'
+        verbose_name_plural = 'Blog posts'
+
+    def __str__(self):
+        return self.title
+
+
+class HomeFeaturedStory(models.Model):
+    """Vertical story tiles on the shop home carousel; optional blog post or custom URL."""
+
+    sort_order = models.PositiveIntegerField(default=0, db_index=True)
     image = models.ImageField(upload_to='shop/featured_stories/', null=True, blank=True)
     title = models.CharField(max_length=200, blank=True)
     caption = models.TextField(blank=True)
-    link_label = models.CharField(max_length=120, blank=True, default='Shop now')
-    link_url = models.CharField(max_length=500, blank=True)
+    link_label = models.CharField(max_length=120, blank=True, default='Read more')
+    link_url = models.CharField(
+        max_length=500,
+        blank=True,
+        help_text=_('Used when no blog post is selected (e.g. /shop/blog/your-slug/).'),
+    )
+    blog_post = models.ForeignKey(
+        BlogPost,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='home_featured_cards',
+    )
     is_active = models.BooleanField(default=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
+        ordering = ['sort_order', 'id']
         verbose_name = 'Home featured story'
-        verbose_name_plural = 'Home featured story'
-
-    def save(self, *args, **kwargs):
-        self.pk = 1
-        super().save(*args, **kwargs)
-
-    @classmethod
-    def load(cls):
-        obj, _ = cls.objects.get_or_create(pk=1, defaults={'is_active': False})
-        return obj
+        verbose_name_plural = 'Home featured stories'
 
     @property
     def is_visible(self) -> bool:
