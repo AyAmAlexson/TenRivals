@@ -1,6 +1,9 @@
 from django.contrib import admin
 from .models import (
     HomeBanner,
+    HomeFeaturedStory,
+    HomeHeroContent,
+    HomeHeroSlide,
     HomePromoStripSettings,
     Product,
     Category,
@@ -94,6 +97,35 @@ class HomePromoStripSettingsAdmin(admin.ModelAdmin):
 
     def has_add_permission(self, request):
         return not HomePromoStripSettings.objects.exists()
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(HomeHeroContent)
+class HomeHeroContentAdmin(admin.ModelAdmin):
+    list_display = ("id", "headline", "cta_label", "updated_at")
+
+    def has_add_permission(self, request):
+        return not HomeHeroContent.objects.exists()
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(HomeHeroSlide)
+class HomeHeroSlideAdmin(admin.ModelAdmin):
+    list_display = ("id", "sort_order", "internal_note", "created_at")
+    list_editable = ("sort_order",)
+    ordering = ("sort_order", "id")
+
+
+@admin.register(HomeFeaturedStory)
+class HomeFeaturedStoryAdmin(admin.ModelAdmin):
+    list_display = ("id", "title", "is_active", "updated_at")
+
+    def has_add_permission(self, request):
+        return not HomeFeaturedStory.objects.exists()
 
     def has_delete_permission(self, request, obj=None):
         return False

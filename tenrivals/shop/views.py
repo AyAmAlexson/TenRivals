@@ -32,9 +32,9 @@ from .models import (
     Category,
     CourtSurface,
     Gender,
-    HomeBanner,
-    HomeBannerSlot,
-    HomePromoStripSettings,
+    HomeFeaturedStory,
+    HomeHeroContent,
+    HomeHeroSlide,
     Product,
     ProductListing,
     ProductListingChannel,
@@ -249,14 +249,9 @@ def _safe_internal_redirect(request, url: str | None):
     return None
 
 def index(request):
-    home_banners = {}
-    for slot_value, _label in HomeBannerSlot.choices:
-        home_banners[slot_value] = (
-            HomeBanner.objects.filter(slot=slot_value, archived_at__isnull=True)
-            .order_by('-created_at')
-            .first()
-        )
-    promo = HomePromoStripSettings.load()
+    hero_content = HomeHeroContent.load()
+    hero_slides = list(HomeHeroSlide.objects.all()[:5])
+    featured_story = HomeFeaturedStory.load()
     active_products = Product.objects.filter(is_active=True).select_related(
         *_PRODUCT_SUBCLASS_SELECT,
         'category',
@@ -279,15 +274,15 @@ def index(request):
         .exclude(brand__exact='')
         .values_list('brand', flat=True)
         .distinct()
-        .order_by('brand')
+        .order_by('brand')[:7]
     )
     return render(
         request,
         'shop/index.html',
         {
-            'home_banners': home_banners,
-            'promo_strip_left_visible': promo.left_visible,
-            'promo_strip_right_visible': promo.right_visible,
+            'hero_content': hero_content,
+            'hero_slides': hero_slides,
+            'featured_story': featured_story,
             'featured_products': featured_products,
             'new_arrivals': new_arrivals,
             'home_catalog_brands': home_catalog_brands,

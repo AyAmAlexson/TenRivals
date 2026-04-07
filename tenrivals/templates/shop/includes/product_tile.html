@@ -14,7 +14,8 @@
       {% endif %}
     </div>
     <div class="product-tile__meta">
-      <p class="product-tile__title">{% if p.brand %}<span class="product-tile__brand">{{ p.brand }}</span> {% endif %}<span class="product-tile__model">{{ p.name }}</span></p>
+      {% if p.brand %}<p class="product-tile__brand">{{ p.brand }}</p>{% endif %}
+      <p class="product-tile__model">{{ p.name }}</p>
       {% if p.type == 'M_SHOES' or p.type == 'W_SHOES' or p.type == 'J_SHOES' %}
         {% with s=p.shoe %}
         {% if s and s.color %}
@@ -24,7 +25,7 @@
       {% elif p.short_description %}
       <p class="product-tile__color">{{ p.short_description }}</p>
       {% endif %}
-      <p class="product-tile__category">{% if p.category %}{{ p.category.name }}{% else %}{{ p.get_type_display }}{% endif %}</p>
+      <p class="product-tile__type">{{ p.get_type_display }}</p>
       <div class="product-tile__prices">
         {% if browse_mode == 'preorder' %}
           {% if p.actual_price %}

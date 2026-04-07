@@ -272,6 +272,90 @@ class HomePromoStripSettings(models.Model):
         return obj
 
 
+class HomeHeroContent(models.Model):
+    """Singleton (pk=1): headline, subcopy, CTA + secondary link overlaid on the home hero carousel."""
+
+    headline = models.TextField(
+        default='The Line for Your Growth',
+        help_text=_('Use a line break for a second line, e.g. before “Your Growth”.'),
+    )
+    subtext = models.TextField(
+        blank=True,
+        default=(
+            'Curated tennis equipment from top brands. Free delivery in Tbilisi. '
+            'Pre-order from US & EU with official customs clearance.'
+        ),
+    )
+    cta_label = models.CharField(max_length=120, default='Shop Preorder')
+    cta_url = models.CharField(max_length=500, default='/shop/preorder')
+    secondary_link_label = models.CharField(max_length=120, blank=True)
+    secondary_link_url = models.CharField(max_length=500, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Home hero text & CTAs'
+        verbose_name_plural = 'Home hero text & CTAs'
+
+    def save(self, *args, **kwargs):
+        self.pk = 1
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def load(cls):
+        obj, _ = cls.objects.get_or_create(
+            pk=1,
+            defaults={},
+        )
+        return obj
+
+
+class HomeHeroSlide(models.Model):
+    """Up to five rotating full-width hero images on the shop home."""
+
+    image = models.ImageField(upload_to='shop/hero_slides/')
+    sort_order = models.PositiveSmallIntegerField(default=0, db_index=True)
+    image_link_url = models.CharField(blank=True, max_length=500)
+    internal_note = models.CharField(max_length=200, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['sort_order', 'id']
+        verbose_name = 'Home hero slide'
+        verbose_name_plural = 'Home hero slides'
+
+    def __str__(self):
+        return f'Hero slide #{self.pk}'
+
+
+class HomeFeaturedStory(models.Model):
+    """Singleton (pk=1): large editorial block on the shop home (“Featured stories”)."""
+
+    image = models.ImageField(upload_to='shop/featured_stories/', null=True, blank=True)
+    title = models.CharField(max_length=200, blank=True)
+    caption = models.TextField(blank=True)
+    link_label = models.CharField(max_length=120, blank=True, default='Shop now')
+    link_url = models.CharField(max_length=500, blank=True)
+    is_active = models.BooleanField(default=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Home featured story'
+        verbose_name_plural = 'Home featured story'
+
+    def save(self, *args, **kwargs):
+        self.pk = 1
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def load(cls):
+        obj, _ = cls.objects.get_or_create(pk=1, defaults={'is_active': False})
+        return obj
+
+    @property
+    def is_visible(self) -> bool:
+        return self.is_active and bool(self.image or self.title)
+
+
 class ProductListingChannel(models.TextChoices):
     STOCK = 'STOCK', _('In stock')
     PREORDER = 'PREORDER', _('Preorder')

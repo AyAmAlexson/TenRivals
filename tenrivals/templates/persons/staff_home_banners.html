@@ -1,109 +1,160 @@
 {% extends 'persons/staff_base.html' %}
-{% block title %}Homepage banners — Staff — TR Shop{% endblock %}
+{% block title %}Shop home content — Staff — TR Shop{% endblock %}
 {% block page_heading %}{{ page_heading }}{% endblock %}
 {% block page_note %}<p class="page-note">{{ page_note }}</p>{% endblock %}
 {% block extra_head %}
 <style>
-  .banner-preview{max-width:100%;max-height:180px;border-radius:6px;border:1px solid var(--line);object-fit:contain;background:#f3f4f6}
-  .banner-preview--sm{max-height:100px}
-  .banner-slot-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;margin-bottom:28px}
-  .arch-thumb{width:72px;height:48px;object-fit:cover;border-radius:4px;border:1px solid var(--line)}
-  input[type="file"]{font-size:13px}
+  .form-control{width:100%;padding:9px 12px;border:1px solid var(--line);font-size:14px;font-family:inherit;border-radius:4px}
+  .form-control:focus{outline:none;border-color:var(--accent)}
+  textarea.form-control{min-height:80px;resize:vertical}
+  .hero-slide-row{display:grid;grid-template-columns:minmax(0,200px) 1fr auto;gap:16px;align-items:start;padding:14px 0;border-bottom:1px solid var(--line)}
+  .hero-slide-thumb{max-width:200px;max-height:100px;object-fit:cover;border-radius:6px;border:1px solid var(--line)}
+  .form-grid{display:grid;gap:12px;max-width:560px}
+  .form-grid--wide{max-width:720px}
+  .inline-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .muted{font-size:12px;color:var(--muted)}
+  .story-preview{max-width:240px;max-height:360px;object-fit:cover;border-radius:8px;border:1px solid var(--line)}
 </style>
 {% endblock %}
 {% block content %}
 
-<div class="card" style="margin-bottom:24px">
-  <h2 class="card-title">Small promo row (under main hero)</h2>
-  <p class="page-note" style="margin-top:-8px">Turn slots off to hide them on the storefront (main hero is not affected).</p>
+<div class="card" style="margin-bottom:28px">
+  <h2 class="card-title">Hero — headline & text (same for all slides)</h2>
   <form method="post" action="{% url 'persons:staff_home_banners' %}">
     {% csrf_token %}
-    <input type="hidden" name="action" value="promo_strip_visibility">
-    <div class="check-grid" style="max-width:440px">
-      <div class="check-row">
-        <input type="checkbox" name="promo_left_visible" id="id_promo_left_visible" value="1" {% if promo_strip_settings.left_visible %}checked{% endif %}>
-        <label for="id_promo_left_visible">Show left promo</label>
+    <input type="hidden" name="action" value="save_hero_content">
+    <div class="form-grid form-grid--wide">
+      <div class="form-group">
+        <label for="id_headline">Headline</label>
+        <textarea id="id_headline" name="headline" rows="3" class="form-control">{{ hero_content.headline }}</textarea>
+        <p class="muted">Line breaks become new lines on the storefront.</p>
       </div>
-      <div class="check-row">
-        <input type="checkbox" name="promo_right_visible" id="id_promo_right_visible" value="1" {% if promo_strip_settings.right_visible %}checked{% endif %}>
-        <label for="id_promo_right_visible">Show right promo</label>
+      <div class="form-group">
+        <label for="id_subtext">Text under headline</label>
+        <textarea id="id_subtext" name="subtext" rows="4" class="form-control">{{ hero_content.subtext }}</textarea>
+      </div>
+      <div class="form-group">
+        <label for="id_cta_label">Primary button label</label>
+        <input id="id_cta_label" name="cta_label" type="text" class="form-control" value="{{ hero_content.cta_label }}" maxlength="120">
+      </div>
+      <div class="form-group">
+        <label for="id_cta_url">Primary button URL</label>
+        <input id="id_cta_url" name="cta_url" type="text" class="form-control" value="{{ hero_content.cta_url }}" maxlength="500" placeholder="/shop/preorder or https://…">
+      </div>
+      <div class="form-group">
+        <label for="id_secondary_link_label">Secondary link label</label>
+        <input id="id_secondary_link_label" name="secondary_link_label" type="text" class="form-control" value="{{ hero_content.secondary_link_label }}" maxlength="120">
+      </div>
+      <div class="form-group">
+        <label for="id_secondary_link_url">Secondary link URL</label>
+        <input id="id_secondary_link_url" name="secondary_link_url" type="text" class="form-control" value="{{ hero_content.secondary_link_url }}" maxlength="500">
       </div>
     </div>
-    <button type="submit" class="btn" style="margin-top:16px">Save visibility</button>
+    <button type="submit" class="btn" style="margin-top:16px">Save hero text</button>
   </form>
 </div>
 
-<div class="banner-slot-grid">
-  {% for slot in banner_slots %}
-  <div class="card">
-    <h2 class="card-title">{{ slot.label }}</h2>
-    <p style="font-size:12px;color:var(--muted);margin:-8px 0 14px">Code: <span class="mono">{{ slot.value }}</span></p>
-    {% if slot.current %}
-    <div style="margin-bottom:14px">
-      <img class="banner-preview {% if slot.value != 'HERO_MAIN' %}banner-preview--sm{% endif %}" src="{{ slot.current.image.url }}" alt="">
-      {% if slot.current.link_url %}<p style="font-size:12px;margin-top:8px;word-break:break-all"><a href="{{ slot.current.link_url }}" target="_blank" rel="noopener">Open link</a></p>{% endif %}
-      {% if slot.current.internal_note %}<p style="font-size:12px;color:var(--muted)">{{ slot.current.internal_note }}</p>{% endif %}
-    </div>
+<div class="card" style="margin-bottom:28px">
+  <h2 class="card-title">Hero slides (max {{ max_hero_slides }})</h2>
+  <p class="page-note" style="margin-top:-6px">One storefront carousel; multiple images rotate. Arrows appear only if there are 2+ slides.</p>
+
+  {% for slide in hero_slides %}
+  <div class="hero-slide-row">
+    {% if slide.image %}
+    <a href="{{ slide.image.url }}" target="_blank" rel="noopener"><img class="hero-slide-thumb" src="{{ slide.image.url }}" alt=""></a>
     {% else %}
-    <p style="font-size:13px;color:var(--muted);margin-bottom:14px">No image — storefront shows placeholder for this slot.</p>
+    <span class="muted">—</span>
     {% endif %}
-    <form method="post" enctype="multipart/form-data" action="{% url 'persons:staff_home_banners' %}">
+    <div>
+      <form method="post" action="{% url 'persons:staff_home_banners' %}" class="form-grid" style="max-width:100%">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="update_hero_slide">
+        <input type="hidden" name="slide_id" value="{{ slide.pk }}">
+        <div class="form-group" style="margin:0">
+          <label>Image click URL (optional)</label>
+          <input name="image_link_url" type="text" class="form-control" value="{{ slide.image_link_url }}" maxlength="500">
+        </div>
+        <div class="form-group" style="margin:0">
+          <label>Staff note (optional)</label>
+          <input name="internal_note" type="text" class="form-control" value="{{ slide.internal_note }}" maxlength="200">
+        </div>
+        <button type="submit" class="btn btn--sm">Update link & note</button>
+      </form>
+    </div>
+    <form method="post" action="{% url 'persons:staff_home_banners' %}" onsubmit="return confirm('Remove this slide from the home hero?');">
       {% csrf_token %}
-      <input type="hidden" name="action" value="replace_banner">
-      <input type="hidden" name="slot" value="{{ slot.value }}">
-      <div class="form-group">
-        <label for="img-{{ slot.value }}">New image</label>
-        <input id="img-{{ slot.value }}" type="file" name="image" accept="image/*" required>
-      </div>
-      <div class="form-group">
-        <label for="link-{{ slot.value }}">Link URL (optional)</label>
-        <input id="link-{{ slot.value }}" type="url" name="link_url" placeholder="https://">
-      </div>
-      <div class="form-group">
-        <label for="note-{{ slot.value }}">Note (optional, staff only)</label>
-        <input id="note-{{ slot.value }}" type="text" name="internal_note" maxlength="200">
-      </div>
-      <button type="submit" class="btn">Replace &amp; archive previous</button>
+      <input type="hidden" name="action" value="delete_hero_slide">
+      <input type="hidden" name="slide_id" value="{{ slide.pk }}">
+      <button type="submit" class="btn btn--sm" style="background:#6b7280" title="Remove slide">− Remove</button>
     </form>
   </div>
+  {% empty %}
+  <p class="muted" style="padding:12px 0">No slides yet — storefront shows a neutral hero until you add at least one image.</p>
   {% endfor %}
+
+  {% if hero_slides|length < max_hero_slides %}
+  <div style="margin-top:20px;padding-top:20px;border-top:1px dashed var(--line)">
+    <h3 class="card-title" style="font-size:15px;margin-bottom:12px">Add slide (+)</h3>
+    <form method="post" enctype="multipart/form-data" action="{% url 'persons:staff_home_banners' %}">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="add_hero_slide">
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="id_add_image">Image (required)</label>
+          <input id="id_add_image" name="image" type="file" accept="image/*" required>
+        </div>
+        <div class="form-group">
+          <label for="id_add_link">Image link URL (optional)</label>
+          <input id="id_add_link" name="image_link_url" type="text" class="form-control" maxlength="500">
+        </div>
+        <div class="form-group">
+          <label for="id_add_note">Staff note (optional)</label>
+          <input id="id_add_note" name="internal_note" type="text" class="form-control" maxlength="200">
+        </div>
+      </div>
+      <button type="submit" class="btn">+ Add slide</button>
+    </form>
+  </div>
+  {% endif %}
 </div>
 
 <div class="card">
-  <h2 class="card-title">Archive (previous banners)</h2>
-  <p class="page-note" style="margin-top:-8px">Latest 200 archived images. Restore makes one live again and archives the current image for that slot.</p>
-  <div class="table-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th></th>
-          <th>Slot</th>
-          <th>Archived</th>
-          <th>Note</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for row in archived_banners %}
-        <tr>
-          <td><img class="arch-thumb" src="{{ row.image.url }}" alt=""></td>
-          <td class="mono">{{ row.get_slot_display }}</td>
-          <td>{{ row.archived_at|date:"Y-m-d H:i" }}</td>
-          <td style="max-width:220px;font-size:12px">{{ row.internal_note|default:"—" }}</td>
-          <td>
-            <form method="post" action="{% url 'persons:staff_home_banners' %}" style="display:inline">
-              {% csrf_token %}
-              <input type="hidden" name="action" value="restore_banner">
-              <input type="hidden" name="banner_id" value="{{ row.pk }}">
-              <button type="submit" class="btn btn--sm">Restore</button>
-            </form>
-          </td>
-        </tr>
-        {% empty %}
-        <tr><td colspan="5">No archived banners yet.</td></tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
+  <h2 class="card-title">Featured story (shop home)</h2>
+  <p class="page-note" style="margin-top:-6px">Tall image + title and caption. Turn off “Show on home” to hide the block.</p>
+  {% if featured_story.image %}
+  <p style="margin-bottom:12px"><img class="story-preview" src="{{ featured_story.image.url }}" alt=""></p>
+  {% endif %}
+  <form method="post" enctype="multipart/form-data" action="{% url 'persons:staff_home_banners' %}">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="save_featured_story">
+    <div class="form-grid form-grid--wide">
+      <div class="form-group">
+        <label for="id_story_image">Replace image (optional)</label>
+        <input id="id_story_image" name="story_image" type="file" accept="image/*">
+      </div>
+      <div class="form-group">
+        <label for="id_story_title">Title</label>
+        <input id="id_story_title" name="story_title" type="text" class="form-control" value="{{ featured_story.title }}" maxlength="200">
+      </div>
+      <div class="form-group">
+        <label for="id_story_caption">Caption / body</label>
+        <textarea id="id_story_caption" name="story_caption" rows="5" class="form-control">{{ featured_story.caption }}</textarea>
+      </div>
+      <div class="form-group">
+        <label for="id_story_link_label">Link label</label>
+        <input id="id_story_link_label" name="story_link_label" type="text" class="form-control" value="{{ featured_story.link_label }}" maxlength="120">
+      </div>
+      <div class="form-group">
+        <label for="id_story_link_url">Link URL</label>
+        <input id="id_story_link_url" name="story_link_url" type="text" class="form-control" value="{{ featured_story.link_url }}" maxlength="500">
+      </div>
+      <div class="check-row">
+        <input type="checkbox" name="story_is_active" id="id_story_is_active" value="1" {% if featured_story.is_active %}checked{% endif %}>
+        <label for="id_story_is_active">Show on home (needs image or title)</label>
+      </div>
+    </div>
+    <button type="submit" class="btn" style="margin-top:16px">Save featured story</button>
+  </form>
 </div>
+
 {% endblock %}

@@ -24,9 +24,9 @@ from django.contrib import messages
 from django.utils import timezone
 from django.contrib.auth import logout, login
 from shop.models import (
-    HomeBanner,
-    HomeBannerSlot,
-    HomePromoStripSettings,
+    HomeFeaturedStory,
+    HomeHeroContent,
+    HomeHeroSlide,
     Product,
     ProductListing,
     ProductListingChannel,
@@ -43,7 +43,7 @@ import json
 from django.shortcuts import get_object_or_404
 import time
 from .services import generate_verification_code_service
-from django.db.models import Q
+from django.db.models import Max, Q
 import qrcode
 import base64
 from io import BytesIO
@@ -791,7 +791,7 @@ def staff_preorder_list(request):
     return _staff_listings_page(request, ProductListingChannel.PREORDER, "preorder")
 
 
-_VALID_BANNER_SLOTS = {c[0] for c in HomeBannerSlot.choices}
+_MAX_HERO_SLIDES = 5
 
 
 @login_required
@@ -799,82 +799,88 @@ _VALID_BANNER_SLOTS = {c[0] for c in HomeBannerSlot.choices}
 def staff_home_banners(request):
     if request.method == "POST":
         action = request.POST.get("action")
-        if action == "replace_banner":
-            slot = request.POST.get("slot", "")
-            if slot not in _VALID_BANNER_SLOTS:
-                messages.error(request, "Invalid banner slot.")
+        if action == "save_hero_content":
+            h = HomeHeroContent.load()
+            h.headline = (request.POST.get("headline") or "").strip()
+            h.subtext = (request.POST.get("subtext") or "").strip()
+            h.cta_label = (request.POST.get("cta_label") or "").strip()[:120]
+            h.cta_url = (request.POST.get("cta_url") or "").strip()[:500]
+            h.secondary_link_label = (request.POST.get("secondary_link_label") or "").strip()[
+                :120
+            ]
+            h.secondary_link_url = (request.POST.get("secondary_link_url") or "").strip()[:500]
+            h.save()
+            messages.success(request, "Hero headline, text, and links saved.")
+            return redirect("persons:staff_home_banners")
+        if action == "add_hero_slide":
+            if HomeHeroSlide.objects.count() >= _MAX_HERO_SLIDES:
+                messages.error(request, "You can have at most 5 hero slides.")
                 return redirect("persons:staff_home_banners")
             image = request.FILES.get("image")
             if not image:
-                messages.error(request, "Choose an image file.")
+                messages.error(request, "Choose an image file for the new slide.")
                 return redirect("persons:staff_home_banners")
-            link_url = (request.POST.get("link_url") or "").strip()
+            link = (request.POST.get("image_link_url") or "").strip()[:500]
             note = (request.POST.get("internal_note") or "").strip()[:200]
-            with transaction.atomic():
-                now = timezone.now()
-                HomeBanner.objects.filter(slot=slot, archived_at__isnull=True).update(
-                    archived_at=now
-                )
-                HomeBanner.objects.create(
-                    slot=slot,
-                    image=image,
-                    link_url=link_url,
-                    internal_note=note,
-                )
-            messages.success(request, "Homepage banner updated. Previous image moved to archive.")
+            next_order = (HomeHeroSlide.objects.aggregate(m=Max("sort_order"))["m"] or 0) + 1
+            HomeHeroSlide.objects.create(
+                image=image,
+                sort_order=next_order,
+                image_link_url=link,
+                internal_note=note,
+            )
+            messages.success(request, "Hero slide added.")
             return redirect("persons:staff_home_banners")
-        if action == "restore_banner":
+        if action == "delete_hero_slide":
             try:
-                bid = int(request.POST.get("banner_id", "0"))
+                sid = int(request.POST.get("slide_id", "0"))
             except (TypeError, ValueError):
-                messages.error(request, "Invalid banner.")
+                messages.error(request, "Invalid slide.")
                 return redirect("persons:staff_home_banners")
-            banner = get_object_or_404(HomeBanner, pk=bid)
-            if banner.archived_at is None:
-                messages.warning(request, "That banner is already live.")
+            get_object_or_404(HomeHeroSlide, pk=sid).delete()
+            messages.success(request, "Hero slide removed.")
+            return redirect("persons:staff_home_banners")
+        if action == "update_hero_slide":
+            try:
+                sid = int(request.POST.get("slide_id", "0"))
+            except (TypeError, ValueError):
+                messages.error(request, "Invalid slide.")
                 return redirect("persons:staff_home_banners")
-            slot = banner.slot
-            with transaction.atomic():
-                now = timezone.now()
-                HomeBanner.objects.filter(slot=slot, archived_at__isnull=True).update(
-                    archived_at=now
-                )
-                banner.archived_at = None
-                banner.save(update_fields=["archived_at"])
-            messages.success(request, "Banner restored as current for its slot.")
+            slide = get_object_or_404(HomeHeroSlide, pk=sid)
+            slide.image_link_url = (request.POST.get("image_link_url") or "").strip()[:500]
+            slide.internal_note = (request.POST.get("internal_note") or "").strip()[:200]
+            slide.save(update_fields=["image_link_url", "internal_note"])
+            messages.success(request, "Slide link and note updated.")
             return redirect("persons:staff_home_banners")
-        if action == "promo_strip_visibility":
-            s = HomePromoStripSettings.load()
-            s.left_visible = request.POST.get("promo_left_visible") == "1"
-            s.right_visible = request.POST.get("promo_right_visible") == "1"
-            s.save(update_fields=["left_visible", "right_visible", "updated_at"])
-            messages.success(request, "Promo strip visibility updated.")
+        if action == "save_featured_story":
+            fs = HomeFeaturedStory.load()
+            fs.title = (request.POST.get("story_title") or "").strip()[:200]
+            fs.caption = (request.POST.get("story_caption") or "").strip()
+            fs.link_label = (request.POST.get("story_link_label") or "").strip()[:120]
+            fs.link_url = (request.POST.get("story_link_url") or "").strip()[:500]
+            fs.is_active = request.POST.get("story_is_active") == "1"
+            img = request.FILES.get("story_image")
+            if img:
+                fs.image = img
+            fs.save()
+            messages.success(request, "Featured story saved.")
             return redirect("persons:staff_home_banners")
+        messages.error(request, "Unknown action.")
+        return redirect("persons:staff_home_banners")
 
-    current_banners = {}
-    for slot_value, _label in HomeBannerSlot.choices:
-        current_banners[slot_value] = (
-            HomeBanner.objects.filter(slot=slot_value, archived_at__isnull=True)
-            .order_by("-created_at")
-            .first()
-        )
-    archived_banners = HomeBanner.objects.filter(archived_at__isnull=False).order_by(
-        "-archived_at", "-id"
-    )[:200]
-    banner_slots = [
-        {"value": v, "label": lbl, "current": current_banners[v]}
-        for v, lbl in HomeBannerSlot.choices
-    ]
     return render(
         request,
         "persons/staff_home_banners.html",
         {
             "staff_nav_active": "banners",
-            "banner_slots": banner_slots,
-            "archived_banners": archived_banners,
-            "promo_strip_settings": HomePromoStripSettings.load(),
-            "page_heading": "Homepage banners",
-            "page_note": "Replace images for the shop home hero (3 slots). Uploading archives the previous image for that slot. Restore any archived row to make it live again.",
+            "hero_content": HomeHeroContent.load(),
+            "hero_slides": HomeHeroSlide.objects.all(),
+            "featured_story": HomeFeaturedStory.load(),
+            "max_hero_slides": _MAX_HERO_SLIDES,
+            "page_heading": "Shop home — hero & featured story",
+            "page_note": "Hero: up to 5 full-width slides (rotation every 7s and arrows). "
+            "One headline and subtext apply to all slides. "
+            "Featured story: tall image + copy, similar to Pro:Direct tennis home.",
         },
     )
 
