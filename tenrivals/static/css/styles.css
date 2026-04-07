@@ -21623,3 +21623,42 @@ section {
   width: 100%;
   height: 4rem;
 }
+
+/* TR global: sharp corners — override all Bootstrap border-radius */
+:root {
+  --bs-border-radius: 0 !important;
+  --bs-border-radius-sm: 0 !important;
+  --bs-border-radius-lg: 0 !important;
+  --bs-border-radius-xl: 0 !important;
+  --bs-border-radius-2xl: 0 !important;
+  --bs-border-radius-pill: 0 !important;
+  --bs-card-border-radius: 0;
+  --bs-card-inner-border-radius: 0;
+  --bs-btn-border-radius: 0;
+  --bs-modal-border-radius: 0;
+  --bs-modal-inner-border-radius: 0;
+  --bs-dropdown-border-radius: 0;
+  --bs-dropdown-inner-border-radius: 0;
+  --bs-nav-tabs-border-radius: 0;
+  --bs-nav-pills-border-radius: 0;
+  --bs-navbar-toggler-border-radius: 0;
+  --bs-accordion-border-radius: 0;
+  --bs-accordion-inner-border-radius: 0;
+  --bs-pagination-border-radius: 0;
+  --bs-badge-border-radius: 0;
+  --bs-alert-border-radius: 0;
+  --bs-progress-border-radius: 0;
+  --bs-list-group-border-radius: 0;
+  --bs-toast-border-radius: 0;
+  --bs-tooltip-border-radius: 0;
+  --bs-popover-border-radius: 0;
+  --bs-popover-inner-border-radius: 0;
+}
+.rounded, .rounded-1, .rounded-2, .rounded-3, .rounded-4, .rounded-5 {
+  border-radius: 0 !important;
+}
+.rounded-top { border-top-left-radius: 0 !important; border-top-right-radius: 0 !important; }
+.rounded-end { border-top-right-radius: 0 !important; border-bottom-right-radius: 0 !important; }
+.rounded-bottom { border-bottom-right-radius: 0 !important; border-bottom-left-radius: 0 !important; }
+.rounded-start { border-bottom-left-radius: 0 !important; border-top-left-radius: 0 !important; }
+.rounded-pill { border-radius: 0 !important; }
