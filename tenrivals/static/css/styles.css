@@ -21662,3 +21662,15 @@ section {
 .rounded-bottom { border-bottom-right-radius: 0 !important; border-bottom-left-radius: 0 !important; }
 .rounded-start { border-bottom-left-radius: 0 !important; border-top-left-radius: 0 !important; }
 .rounded-pill { border-radius: 0 !important; }
+.btn, .btn-sm, .btn-lg, .btn-primary, .btn-secondary, .btn-success,
+.btn-danger, .btn-warning, .btn-info, .btn-light, .btn-dark,
+.btn-outline-primary, .btn-outline-secondary, .btn-outline-success,
+.btn-outline-danger, .btn-outline-warning, .btn-outline-info,
+.btn-outline-light, .btn-outline-dark,
+.form-control, .form-select, .input-group-text,
+.card, .alert, .badge, .dropdown-menu, .modal-content,
+.toast, .popover, .tooltip-inner, .accordion-item,
+.list-group, .list-group-item, .nav-link, .navbar-toggler,
+.pagination .page-link, .progress {
+  border-radius: 0 !important;
+}
