@@ -90,19 +90,31 @@
     .footer p{font-size:13px; line-height:1.5}
     .footer-bottom{border-top:1px solid rgba(255,255,255,.08); padding:16px 0; font-size:12px; color:rgba(255,255,255,.3)}
 
-    /* Catalog browse — filters + product grid */
-    .preorder-main{padding:44px 0 64px}
-    h1.preorder-page-title, .preorder-main h2{font-family:'Saira', system-ui, sans-serif; font-weight:800; letter-spacing:.3px; text-transform:uppercase}
-    .preorder-page-head{display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:space-between; gap:16px; margin-bottom:28px}
-    .preorder-page-title{font-size:24px; margin:0; letter-spacing:1px}
-    .preorder-meta{font-size:13px; color:var(--muted); font-weight:400; text-transform:none}
+    /* Catalog browse — header bar + filters + product grid */
+    .preorder-main{padding:0 0 64px}
+    .catalog-bar{
+      display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px 28px;
+      padding:20px 0 18px; margin-bottom:28px; border-bottom:1px solid var(--line);
+    }
+    .catalog-bar__left{display:flex; align-items:baseline; gap:10px; flex-wrap:wrap}
+    .catalog-bar__tabs{display:flex; gap:0; list-style:none; margin:0; padding:0}
+    .catalog-bar__tab{
+      font-size:13px; font-weight:800; text-transform:uppercase; letter-spacing:.08em;
+      padding:0; color:var(--muted); text-decoration:none !important;
+      transition:color .15s; border-bottom:2px solid transparent; padding-bottom:2px;
+    }
+    .catalog-bar__tab:hover{color:var(--ink)}
+    .catalog-bar__tab.is-active{color:var(--ink); border-bottom-color:var(--accent)}
+    .catalog-bar__sep{color:var(--line); font-weight:400; font-size:14px; margin:0 12px; user-select:none}
+    .catalog-bar__count{font-size:13px; font-weight:400; color:var(--muted); text-transform:none; white-space:nowrap}
+    .catalog-bar__right{display:flex; align-items:center; gap:12px; flex-wrap:wrap}
     .preorder-layout{display:grid; grid-template-columns:minmax(220px, 260px) 1fr; gap:40px; align-items:start}
     .preorder-filters{
-      border:1px solid var(--line); background:#fff; padding:16px 14px;
-      position:sticky; top:12px; align-self:start;
+      border:1px solid var(--line); background:#fff; padding:18px 16px;
+      position:sticky; top:12px; align-self:start; border-radius:10px;
     }
     .preorder-filters-title{
-      font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.12em; color:var(--muted);
+      font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.12em; color:var(--muted);
       margin:0 0 16px; padding-bottom:10px; border-bottom:1px solid var(--line);
     }
     .preorder-filter-group{margin-bottom:22px}
@@ -114,21 +126,26 @@
     .preorder-filters .preorder-tabs{display:flex; flex-direction:column; flex-wrap:nowrap; gap:6px; margin:0}
     .preorder-filters .preorder-tab{
       display:block; width:100%; box-sizing:border-box;
-      padding:9px 11px; border-radius:0; border:1px solid var(--line);
-      color:var(--ink); background:#fff; text-decoration:none; font-size:11px; font-weight:800;
-      text-align:left; line-height:1.35; text-transform:uppercase; letter-spacing:.06em;
+      padding:8px 11px; border-radius:5px; border:1px solid var(--line);
+      color:var(--ink); background:#fff; text-decoration:none !important; font-size:11px; font-weight:600;
+      text-align:left; line-height:1.35; text-transform:none; letter-spacing:0;
       transition:background .12s, color .12s, border-color .12s;
     }
-    .preorder-filters .preorder-tab:hover{background:#f8f8f8; border-color:#cbd5e1; color:var(--ink)}
+    .preorder-filters .preorder-tab:hover{background:#f5f5f7; border-color:#cbd5e1; color:var(--ink); text-decoration:none !important}
     .preorder-filters .preorder-tab.active{background:var(--accent); color:#fff; border-color:var(--accent)}
     .preorder-results{min-width:0}
-    .preorder-notice{display:flex; align-items:center; gap:12px; flex-wrap:wrap; background:rgba(178,0,9,.06); border:1px solid rgba(178,0,9,.2); padding:12px 16px; margin:0 0 20px}
+    .preorder-notice{
+      display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+      background:rgba(178,0,9,.04); border:1px solid rgba(178,0,9,.12);
+      padding:10px 16px; margin:0 0 20px; border-radius:6px;
+    }
     .preorder-notice span{color:var(--ink); font-size:13px; font-weight:400; text-transform:none; line-height:1.45; flex:1; min-width:200px}
+    .preorder-notice .btn{padding:8px 18px; font-size:11px}
 
     @media(max-width:1024px){
       .header-row{grid-template-columns:140px 1fr auto}
       .container{padding:0 24px}
-      .preorder-main{padding:36px 0 48px}
+      .preorder-main{padding:0 0 48px}
       .preorder-layout{gap:32px}
       .footer-top{grid-template-columns:1fr 1fr}
     }
@@ -209,14 +226,18 @@
   </nav>
 
   <main class="container preorder-main">
-    <div class="preorder-page-head">
-      <div>
-        <h1 class="preorder-page-title">{% if browse_mode == 'preorder' %}Preorder{% else %}In stock{% endif %}</h1>
-        <p class="preorder-meta" style="margin-top:6px">Updated: 14.10.2025</p>
+    <div class="catalog-bar">
+      <div class="catalog-bar__left">
+        <ul class="catalog-bar__tabs">
+          <li><a class="catalog-bar__tab {% if browse_mode == 'stock' %}is-active{% endif %}" href="{% url 'shop:stock' %}">In Stock</a></li>
+          <span class="catalog-bar__sep">/</span>
+          <li><a class="catalog-bar__tab {% if browse_mode == 'preorder' %}is-active{% endif %}" href="{% url 'shop:preorder' %}">Preorder</a></li>
+        </ul>
+        <span class="catalog-bar__count">{{ product_count }} product{{ product_count|pluralize }}</span>
       </div>
-      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <div class="catalog-bar__right">
         {% if user.is_staff %}
-        <a href="{% url 'shop:product_create' %}" class="btn btn--outline">Add Product</a>
+        <a href="{% url 'shop:product_create' %}" class="btn btn--outline" style="padding:8px 16px;font-size:11px">Add Product</a>
         {% endif %}
       </div>
     </div>

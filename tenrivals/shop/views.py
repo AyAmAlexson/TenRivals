@@ -461,8 +461,11 @@ def _catalog_browse_context(request, browse_mode: str):
     products = order_products_by_effective_price(products)
     type_tabs = [(choice.value, choice.label) for choice in ProductType]
 
+    product_count = products.count()
+
     return {
         'browse_mode': browse_mode,
+        'product_count': product_count,
         'categories': categories,
         'type_tabs': type_tabs,
         'products': products,
