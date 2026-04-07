@@ -3,6 +3,7 @@ from urllib.parse import quote
 
 from django.conf import settings
 from django.contrib.admin.views.decorators import staff_member_required
+from django.db.models import Q
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
@@ -482,6 +483,59 @@ def _catalog_browse_context(request, browse_mode: str):
         'catalog_brand': catalog_brand,
         'cbrand_qs': f'&cbrand={quote(catalog_brand)}' if catalog_brand else '',
     }
+
+
+def product_search(request):
+    q = (request.GET.get('q') or '').strip()
+    channel = _parse_listing_channel_param((request.GET.get('channel') or '').strip())
+
+    products = Product.objects.filter(is_active=True).select_related(
+        *_PRODUCT_SUBCLASS_SELECT,
+        'category',
+    )
+    if q:
+        products = products.filter(
+            Q(name__icontains=q)
+            | Q(brand__icontains=q)
+            | Q(short_description__icontains=q)
+            | Q(description__icontains=q)
+            | Q(sku__icontains=q)
+            | Q(shoe__color__icontains=q)
+        ).distinct()
+    else:
+        products = products.none()
+
+    if channel == ProductListingChannel.STOCK:
+        products = filter_products_by_listing_channel(
+            products, ProductListingChannel.STOCK
+        )
+        products = annotate_stock_listing_quantity(products)
+    elif channel == ProductListingChannel.PREORDER:
+        products = filter_products_by_listing_channel(
+            products, ProductListingChannel.PREORDER
+        )
+
+    products = order_products_by_effective_price(products)
+    if channel == ProductListingChannel.STOCK:
+        tile_mode = 'stock'
+        search_channel = 'stock'
+    elif channel == ProductListingChannel.PREORDER:
+        tile_mode = 'preorder'
+        search_channel = 'preorder'
+    else:
+        tile_mode = 'home'
+        search_channel = ''
+
+    return render(
+        request,
+        'shop/search_results.html',
+        {
+            'q': q,
+            'products': products,
+            'search_channel': search_channel,
+            'tile_browse_mode': tile_mode,
+        },
+    )
 
 
 def stock(request):

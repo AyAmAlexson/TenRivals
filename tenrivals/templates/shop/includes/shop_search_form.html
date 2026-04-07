@@ -1,0 +1,11 @@
+{# Search GET form. Optional: search_channel = "stock" | "preorder" scopes results to that catalog. #}
+<form class="search" role="search" action="{% url 'shop:product_search' %}" method="get">
+  {% if search_channel == 'stock' or search_channel == 'preorder' %}
+  <input type="hidden" name="channel" value="{{ search_channel }}">
+  {% endif %}
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <path d="M21 21l-4.2-4.2" stroke="#aaa" stroke-width="2" stroke-linecap="round"/>
+    <circle cx="10" cy="10" r="7" stroke="#aaa" stroke-width="2"/>
+  </svg>
+  <input type="search" name="q" value="{{ request.GET.q }}" placeholder="Search the catalog" autocomplete="off" aria-label="Search the catalog">
+</form>

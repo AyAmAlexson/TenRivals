@@ -1,0 +1,229 @@
+<!doctype html>
+{% load static %}
+{% load catalog_tags %}
+<html lang="en">
+<head>
+  {% include 'includes/google_tag_gtag.html' %}
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% if q %}Search: {{ q }} — {% endif %}TR Shop</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Saira:wght@400;600;800&family=Saira+Condensed:wght@400&display=swap" rel="stylesheet">
+  <link rel="icon" href="{% static 'assets/img/favicon.png' %}">
+  <link href="{% static 'css/styles.css' %}" rel="stylesheet">
+  {% include 'shop/includes/product_tile_styles.html' %}
+  <style>
+    :root{
+      --accent:#B20009;
+      --accent-dark:#8E0007;
+      --ink:#1a1a1a;
+      --muted:#64748b;
+      --line:#e5e7eb;
+      --bg:#fff;
+      --tile-photo-bg:#fff;
+      --tile-accent:#B20009;
+      --tile-ink:#1a1a1a;
+      --tile-muted:#64748b;
+      --tile-cat:#94a3b8;
+    }
+    *{box-sizing:border-box; margin:0; padding:0}
+    body{font-family:'Saira', system-ui, -apple-system, sans-serif; font-weight:400; color:var(--ink); background:var(--bg)}
+    a{color:inherit; text-decoration:none}
+    img{display:block; max-width:100%}
+    .container{max-width:1180px; margin:0 auto; padding:0 32px}
+
+    .topbar{background:#111; color:rgba(255,255,255,.7); font-size:12px}
+    .topbar .topbar-row{display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:34px}
+    .topbar .links{display:flex; gap:20px; flex-wrap:wrap}
+    .topbar a{opacity:.8; transition:opacity .15s}
+    .topbar a:hover{opacity:1}
+    .city-select{display:inline-flex; align-items:center; opacity:1 !important; font-weight:400; cursor:default; text-transform:none}
+
+    header{background:#1a1a1a}
+    .header-row{display:grid; grid-template-columns:180px 1fr auto auto; align-items:center; gap:20px; padding:14px 0}
+    .logo{height:36px}
+    .search{display:flex; align-items:center; gap:8px; border:1px solid #333; padding:9px 14px; background:#252525; margin:0}
+    .search input{border:0; outline:0; width:100%; font-size:14px; background:transparent; color:#fff; font-family:inherit}
+    .search input::placeholder{color:#666}
+    .auth a{font-weight:800; color:#fff; font-size:13px; text-transform:uppercase; letter-spacing:.08em}
+    .user-menu{position:relative; display:flex; align-items:center}
+    .user-avatar{width:36px; height:36px; border-radius:50%; background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:800; text-transform:uppercase; cursor:pointer; border:none; font-family:inherit; letter-spacing:.5px}
+    .user-avatar:hover{background:var(--accent-dark)}
+    .user-dropdown{position:absolute; top:100%; right:0; min-width:180px; background:#222; border:1px solid #333; padding:6px 0; display:none; z-index:10000; padding-top:14px; margin-top:0}
+    .user-dropdown::before{content:''; position:absolute; top:-8px; left:0; right:0; height:8px}
+    .user-menu:hover .user-dropdown{display:block}
+    .user-dropdown a{display:block; padding:8px 16px; color:rgba(255,255,255,.8); font-size:13px; font-weight:400; text-transform:none; transition:color .15s}
+    .user-dropdown a:hover{color:#fff; background:rgba(255,255,255,.05)}
+    .socials{display:flex; gap:14px; align-items:center}
+    .social-link{display:inline-flex; width:24px; height:24px; align-items:center; justify-content:center; color:rgba(255,255,255,.7); text-decoration:none; transition:color .15s}
+    .social-link:hover{color:#fff}
+
+    nav{background:#1a1a1a; position:relative; z-index:9999}
+    .nav-row{display:flex; gap:0; align-items:stretch; min-height:44px; overflow:visible; position:relative}
+    .nav-link{padding:0 14px; color:rgba(255,255,255,.8); display:flex; align-items:center; font-size:14px; border-bottom:2px solid transparent; transition:color .15s}
+    .nav-link:hover{color:#fff; border-bottom-color:var(--accent)}
+    .nav-link--primary{color:var(--accent); font-weight:800; text-transform:uppercase; letter-spacing:.07em; font-size:13px}
+    .dropdown{position:relative; display:flex}
+    .dropdown-toggle{display:flex; align-items:center}
+    .dropdown-toggle::after{content:none !important}
+    .dropdown-menu{
+      position:absolute; top:100%; left:0; min-width:220px; background:#222; border:1px solid #333;
+      box-shadow:none; padding:10px; display:none; z-index:10000; margin-top:0;
+    }
+    .dropdown:hover .dropdown-menu{display:block}
+    .dropdown-grid{display:grid; grid-template-columns:1fr; gap:6px}
+    .dropdown-title{font-size:11px; color:#777; margin:0 0 4px; text-transform:uppercase; letter-spacing:.5px}
+    .dropdown-item{display:block; padding:5px 8px; color:rgba(255,255,255,.75); font-size:13px}
+    .dropdown-item:hover{color:var(--accent)}
+
+    .btn{display:inline-flex; align-items:center; gap:10px; padding:11px 20px; text-decoration:none; color:#fff; background:var(--accent); font-weight:800; font-family:inherit; font-size:12px; text-transform:uppercase; letter-spacing:.1em; border:none; cursor:pointer; transition:background .15s}
+    .btn:hover{background:var(--accent-dark)}
+    .btn--outline{background:transparent; color:var(--accent); border:1px solid var(--accent)}
+    .btn--outline:hover{background:var(--accent); color:#fff}
+
+    footer{background:#1a1a1a; color:rgba(255,255,255,.5); margin-top:48px}
+    .footer-top{padding:32px 0; display:grid; grid-template-columns:2fr 1fr 1fr 1fr; gap:24px}
+    .footer h4{color:#fff; margin:0 0 12px; font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.08em}
+    .footer a{display:block; padding:4px 0; color:rgba(255,255,255,.5); font-size:13px; transition:color .15s}
+    .footer a:hover{color:#fff}
+    .footer p{font-size:13px; line-height:1.5}
+    .footer-bottom{border-top:1px solid rgba(255,255,255,.08); padding:16px 0; font-size:12px; color:rgba(255,255,255,.3)}
+
+    .preorder-main{padding:44px 0 64px}
+    .preorder-page-title{font-size:24px; margin:0; letter-spacing:1px; font-family:'Saira', system-ui, sans-serif; font-weight:800; text-transform:uppercase}
+    .preorder-page-head{display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:space-between; gap:16px; margin-bottom:28px}
+    .preorder-meta{font-size:13px; color:var(--muted); font-weight:400; text-transform:none; margin-top:6px}
+
+    @media(max-width:1024px){
+      .header-row{grid-template-columns:140px 1fr auto}
+      .container{padding:0 24px}
+      .footer-top{grid-template-columns:1fr 1fr}
+    }
+    @media(max-width:768px){.container{padding:0 20px}}
+    @media(max-width:640px){.auth{display:none} .footer-top{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+{% include 'includes/google_tag_manager_body.html' %}
+  <div class="topbar">
+    <div class="container">
+      <div class="topbar-row">
+        <div class="links">
+          <a href="#">Delivery</a>
+          <a href="#">Payment</a>
+          <a href="#">Returns & exchanges</a>
+          <a href="#">Size guide</a>
+          <a href="#">Contacts</a>
+        </div>
+        <a href="#" class="city-select" onclick="return false">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style="vertical-align:-1px; margin-right:4px"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" stroke="currentColor" stroke-width="2" fill="none"/><circle cx="12" cy="9" r="2.5" stroke="currentColor" stroke-width="1.5"/></svg>Tbilisi
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <header>
+    <div class="container">
+      <div class="header-row">
+        <a href="{% url 'shop:index' %}" class="brand" aria-label="Home">
+          <img class="logo" src="{% static 'assets/img/TR Logo 25/TR 25 LOGO HOR RED.svg' %}" alt="TR Shop">
+        </a>
+        {% include 'shop/includes/shop_search_form.html' with search_channel=search_channel %}
+        <nav class="socials" aria-label="Social links">
+          <a class="social-link" href="https://www.instagram.com/tennis_rivals_shop/" target="_blank" rel="noopener" aria-label="Instagram" title="Instagram">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" aria-hidden="true">
+              <rect x="3" y="3" width="18" height="18" rx="0" stroke="currentColor" stroke-width="1.6"/>
+              <circle cx="12" cy="12" r="4.2" stroke="currentColor" stroke-width="1.6"/>
+              <circle cx="17.5" cy="6.5" r="1.2" fill="currentColor"/>
+            </svg>
+          </a>
+          <a class="social-link" href="https://t.me/tennis_rivals_shop_tbilisi" target="_blank" rel="noopener" aria-label="Telegram" title="Telegram">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" aria-hidden="true">
+              <path d="M21 4L3 11l6 2 2 6 3-4 4.5 3L21 4Z" stroke="currentColor" stroke-width="1.6" fill="none" />
+            </svg>
+          </a>
+        </nav>
+        <div class="auth">
+          {% if user.is_authenticated %}
+          <div class="user-menu">
+            <button type="button" class="user-avatar">{{ user.first_name|make_list|first|default:"?" }}{{ user.last_name|make_list|first|default:"?" }}</button>
+            <div class="user-dropdown">
+              <a href="{% url 'persons:account_details' %}">Account</a>
+              <a href="{% url 'account_logout' %}">Log out</a>
+            </div>
+          </div>
+          {% else %}
+          <a href="{% url 'account_login' %}">Sign in</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <nav>
+    <div class="container">
+      <div class="nav-row">{% stock_catalog_nav %}</div>
+    </div>
+  </nav>
+
+  <main class="container preorder-main">
+    <div class="preorder-page-head">
+      <div>
+        <h1 class="preorder-page-title">Search</h1>
+        {% if q %}
+        <p class="preorder-meta">Results for &ldquo;{{ q }}&rdquo;{% if search_channel == 'stock' %} · In stock{% elif search_channel == 'preorder' %} · Preorder{% else %} · All products{% endif %}</p>
+        {% else %}
+        <p class="preorder-meta">Type a product name, brand, or keyword and press Enter.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if q %}
+    <div class="product-grid">
+      {% for p in products %}
+        {% include 'shop/includes/product_tile.html' with p=p browse_mode=tile_browse_mode %}
+      {% empty %}
+        <p style="grid-column:1/-1; color:var(--muted); text-transform:none">No products matched your search.</p>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-top">
+        <div>
+          <h4>Tennis Rivals: The Line for Your Growth.</h4>
+          <p>Catalog UI scaffold. Content will be added later.</p>
+          <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap">
+            <a class="btn btn--outline" href="{% url 'shop:stock' %}">In stock</a>
+            <a class="btn btn--outline" href="{% url 'shop:preorder' %}">Preorder</a>
+          </div>
+        </div>
+        <div>
+          <h4>Catalog</h4>
+          <a href="{% url 'shop:stock' %}?type=RACKET">Rackets</a>
+          <a href="{% url 'shop:stock' %}?type=BAGS">Bags</a>
+          <a href="{% url 'shop:blog_index' %}">Blog</a>
+        </div>
+        <div>
+          <h4>Help</h4>
+          <a href="#">Delivery</a>
+          <a href="#">Payment</a>
+          <a href="#">Contacts</a>
+        </div>
+        <div>
+          <h4>Contacts</h4>
+          <a href="tel:+995591288967">+995 591 288 967</a>
+          <a href="https://t.me/tennis_rivals_shop_tbilisi" target="_blank" rel="noopener">Telegram</a>
+          <a href="https://www.instagram.com/tennis_rivals_shop/" target="_blank" rel="noopener">Instagram</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <div>© {% now "Y" %} TenRivals Shop. All rights reserved.</div>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
