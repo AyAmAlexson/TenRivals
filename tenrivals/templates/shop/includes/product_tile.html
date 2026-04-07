@@ -1,11 +1,11 @@
-{# p, request required. Optional browse_mode: "stock" | "preorder" for catalog; omit on home. #}
+{# p, request required. browse_mode: "stock" | "preorder" | "home" | omit (same as home) #}
 <div class="product-tile">
   {% if user.is_staff %}
-  <a href="{% url 'shop:product_edit' p.pk %}?{% if browse_mode %}channel={{ browse_mode }}&{% endif %}next={{ request.get_full_path|urlencode }}" class="product-tile__edit" title="Edit product" aria-label="Edit product">
+  <a href="{% url 'shop:product_edit' p.pk %}?{% if browse_mode == 'stock' or browse_mode == 'preorder' %}channel={{ browse_mode }}&{% endif %}next={{ request.get_full_path|urlencode }}" class="product-tile__edit" title="Edit product" aria-label="Edit product">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 013 3L8 18l-4 1 1-4L16.5 3.5z"/></svg>
   </a>
   {% endif %}
-  <a class="product-tile__link" href="{% url 'shop:product_detail' p.pk %}{% if browse_mode %}?channel={{ browse_mode }}{% endif %}">
+  <a class="product-tile__link" href="{% url 'shop:product_detail' p.pk %}{% if browse_mode == 'stock' or browse_mode == 'preorder' %}?channel={{ browse_mode }}{% endif %}">
     <div class="product-tile__media">
       {% if p.main_image %}
       <img src="{{ p.main_image.url }}" alt="{{ p.name }}" loading="lazy">
@@ -14,45 +14,52 @@
       {% endif %}
     </div>
     <div class="product-tile__meta">
-      {% if p.brand %}<p class="product-tile__brand">{{ p.brand }}</p>{% endif %}
-      <p class="product-tile__model">{{ p.name }}</p>
-      {% if p.type == 'M_SHOES' or p.type == 'W_SHOES' or p.type == 'J_SHOES' %}
-        {% with s=p.shoe %}
-        {% if s and s.color %}
-      <p class="product-tile__color">{{ s.color }}</p>
-        {% endif %}
-        {% endwith %}
-      {% elif p.short_description %}
-      <p class="product-tile__color">{{ p.short_description }}</p>
-      {% endif %}
-      <p class="product-tile__type">{{ p.get_type_display }}</p>
-      <div class="product-tile__prices">
-        {% if browse_mode == 'preorder' %}
-          {% if p.actual_price %}
-          <span class="product-tile__price-old">{{ p.initial_price }} ₾</span>
-          <span class="product-tile__price">˜{{ p.margin_price }} ₾</span>
-          {% else %}
-          <span class="product-tile__price">˜{{ p.margin_price }} ₾</span>
+      <div class="product-tile__body">
+        {% if p.brand %}<p class="product-tile__brand">{{ p.brand }}</p>{% endif %}
+        <p class="product-tile__model">{{ p.name }}</p>
+        {% if p.type == 'M_SHOES' or p.type == 'W_SHOES' or p.type == 'J_SHOES' %}
+          {% with s=p.shoe %}
+          {% if s and s.color %}
+        <p class="product-tile__color">{{ s.color }}</p>
+          {% elif p.short_description %}
+        <p class="product-tile__color">{{ p.short_description }}</p>
           {% endif %}
-        {% elif browse_mode == 'stock' %}
-          {% if p.stock_listing_qty > 0 %}
+          {% endwith %}
+        {% elif p.short_description %}
+        <p class="product-tile__color">{{ p.short_description }}</p>
+        {% endif %}
+      </div>
+      <div class="product-tile__footer">
+        <p class="product-tile__type">{{ p.get_type_display }}</p>
+        <div class="product-tile__prices">
+          {% if browse_mode == 'preorder' %}
             {% if p.actual_price %}
+            <span class="product-tile__price">˜{{ p.margin_price }} ₾</span>
             <span class="product-tile__price-old">{{ p.initial_price }} ₾</span>
+            {% else %}
+            <span class="product-tile__price">˜{{ p.margin_price }} ₾</span>
+            {% endif %}
+          {% elif browse_mode == 'stock' %}
+            {% if p.stock_listing_qty > 0 %}
+              {% if p.actual_price %}
+              <span class="product-tile__price">{{ p.actual_price }} ₾</span>
+              <span class="product-tile__price-old">{{ p.initial_price }} ₾</span>
+              {% else %}
+              <span class="product-tile__price">{{ p.initial_price }} ₾</span>
+              {% endif %}
+            {% else %}
+              <span class="product-tile__price-muted">Coming soon · Pre-order</span>
+            {% endif %}
+          {% else %}
+            {# home: fixed prices, no tilde; current first, then strikethrough #}
+            {% if p.actual_price %}
             <span class="product-tile__price">{{ p.actual_price }} ₾</span>
+            <span class="product-tile__price-old">{{ p.initial_price }} ₾</span>
             {% else %}
             <span class="product-tile__price">{{ p.initial_price }} ₾</span>
             {% endif %}
-          {% else %}
-            <span class="product-tile__price-muted">Coming soon · Pre-order</span>
           {% endif %}
-        {% else %}
-          {% if p.actual_price %}
-          <span class="product-tile__price-old">{{ p.initial_price }} ₾</span>
-          <span class="product-tile__price">˜{{ p.margin_price }} ₾</span>
-          {% else %}
-          <span class="product-tile__price">˜{{ p.margin_price }} ₾</span>
-          {% endif %}
-        {% endif %}
+        </div>
       </div>
     </div>
   </a>

@@ -1,7 +1,10 @@
 {# Shared catalog + home product tiles #}
 <style>
   .product-grid{display:grid; grid-template-columns:repeat(3, 1fr); gap:28px 24px}
-  .product-tile{position:relative; min-width:0; padding:20px 22px; border-radius:12px; transition:background .15s}
+  .product-grid > .product-tile{height:100%}
+  .product-rail__cell{display:flex; min-width:0}
+  .product-rail__cell > .product-tile{flex:1; width:100%; min-width:0}
+  .product-tile{position:relative; min-width:0; padding:20px 22px; border-radius:12px; transition:background .15s; display:flex; flex-direction:column}
   .product-tile:hover{background:rgba(0,0,0,.02)}
   .product-tile__edit{
     position:absolute; top:12px; right:12px; z-index:3;
@@ -13,10 +16,16 @@
   .product-tile__edit svg{width:15px; height:15px}
   .product-tile__edit:hover{border-color:#9ca3af; color:#6b7280; background:#fff}
   .product-tile__link{
-    display:block; text-decoration:none; color:inherit;
+    display:flex; flex-direction:column; flex:1; min-height:0;
+    text-decoration:none !important; color:inherit;
     transition:opacity .15s;
   }
-  .product-tile__link:hover{opacity:.94}
+  .product-tile__link:hover,
+  .product-tile__link:focus,
+  .product-tile__link:focus-visible{
+    opacity:.94;
+    text-decoration:none !important;
+  }
   .product-tile__link:hover .product-tile__model{color:var(--tile-accent, #B20009)}
   .product-tile__media{
     aspect-ratio:1/1;
@@ -29,7 +38,15 @@
     width:100%; height:100%; object-fit:contain; object-position:center;
     display:block;
   }
-  .product-tile__meta{padding:18px 4px 0; background:transparent}
+  .product-tile__meta{
+    padding:18px 4px 0; background:transparent;
+    display:flex; flex-direction:column; flex:1; min-height:0;
+  }
+  .product-tile__body{flex:1 1 auto; min-height:0}
+  .product-tile__footer{
+    flex-shrink:0; margin-top:auto; padding-top:12px;
+    display:flex; flex-direction:column; gap:8px;
+  }
   .product-tile__brand{
     font-family:'Saira Condensed','Saira',sans-serif;
     font-size:13px; font-weight:400; line-height:1.3;
@@ -51,12 +68,12 @@
   }
   .product-tile__type{
     font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:.07em;
-    color:var(--tile-cat, #94a3b8); margin:0 0 10px;
+    color:var(--tile-cat, #94a3b8); margin:0;
   }
   .product-tile__prices{display:flex; align-items:baseline; flex-wrap:wrap; gap:6px 10px}
-  .product-tile__price{font-size:14px; font-weight:800; color:var(--tile-accent, #B20009); letter-spacing:0}
-  .product-tile__price-old{font-size:13px; color:#94a3b8; text-decoration:line-through}
-  .product-tile__price-muted{font-size:13px; font-weight:400; color:var(--tile-muted, #64748b); text-transform:none}
+  .product-tile__price{font-size:17px; font-weight:800; color:var(--tile-accent, #B20009); letter-spacing:0}
+  .product-tile__price-old{font-size:14px; color:#94a3b8; text-decoration:line-through; font-weight:600}
+  .product-tile__price-muted{font-size:14px; font-weight:400; color:var(--tile-muted, #64748b); text-transform:none}
   @media(max-width:1024px){
     .product-grid{grid-template-columns:repeat(3, 1fr); gap:22px 18px}
     .product-tile{padding:16px 18px}

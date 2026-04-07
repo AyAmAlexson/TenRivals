@@ -149,13 +149,14 @@
     .cat-strip{padding:36px 0 28px; background:linear-gradient(180deg, #fafafa 0%, #fff 100%)}
     .cat-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:14px}
     .cat-tile{
+      text-decoration:none !important;
       display:flex; flex-direction:column; align-items:center; gap:12px;
       padding:22px 10px; background:#fff; text-align:center;
       border:1px solid var(--line); border-radius:14px;
       box-shadow:0 1px 3px rgba(0,0,0,.04);
       transition:border-color .15s, box-shadow .15s, transform .15s;
     }
-    .cat-tile:hover{border-color:rgba(178,0,9,.35); box-shadow:0 6px 20px rgba(0,0,0,.06); transform:translateY(-2px)}
+    .cat-tile:hover{border-color:rgba(178,0,9,.35); box-shadow:0 6px 20px rgba(0,0,0,.06); transform:translateY(-2px); text-decoration:none !important}
     .cat-tile-icon{width:40px; height:40px; display:flex; align-items:center; justify-content:center; color:var(--ink)}
     .cat-tile-icon svg{width:34px; height:34px}
     .cat-tile-label{font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.08em; color:var(--ink)}
@@ -191,9 +192,9 @@
     .story-card{
       display:flex; flex-direction:column; height:100%; min-height:420px;
       background:#fff; border:1px solid var(--line); border-radius:16px; overflow:hidden;
-      text-decoration:none; color:inherit; transition:box-shadow .15s, border-color .15s;
+      text-decoration:none !important; color:inherit; transition:box-shadow .15s, border-color .15s;
     }
-    .story-card:hover{box-shadow:0 12px 36px rgba(0,0,0,.08); border-color:#cbd5e1}
+    .story-card:hover{box-shadow:0 12px 36px rgba(0,0,0,.08); border-color:#cbd5e1; text-decoration:none !important}
     .story-card:hover .story-card__cta{color:var(--accent)}
     .story-card--static{cursor:default}
     .story-card--static:hover{box-shadow:none; border-color:var(--line)}
@@ -458,7 +459,7 @@
         </button>
         <div class="product-rail"><div class="product-rail__track">
           {% for p in featured_products %}
-          <div class="product-rail__cell">{% include 'shop/includes/product_tile.html' with p=p %}</div>
+          <div class="product-rail__cell">{% include 'shop/includes/product_tile.html' with p=p browse_mode='home' %}</div>
           {% endfor %}
         </div></div>
         <button type="button" class="product-rail-nav" aria-label="Scroll featured right" data-rail-next>
@@ -475,7 +476,7 @@
         </button>
         <div class="product-rail"><div class="product-rail__track">
           {% for p in new_arrivals %}
-          <div class="product-rail__cell">{% include 'shop/includes/product_tile.html' with p=p %}</div>
+          <div class="product-rail__cell">{% include 'shop/includes/product_tile.html' with p=p browse_mode='home' %}</div>
           {% endfor %}
         </div></div>
         <button type="button" class="product-rail-nav" aria-label="Scroll new arrivals right" data-rail-next>

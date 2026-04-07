@@ -1,7 +1,6 @@
 from django.contrib import admin
 from .models import (
     BlogPost,
-    HomeBanner,
     HomeFeaturedStory,
     HomeHeroContent,
     HomeHeroSlide,
@@ -83,13 +82,6 @@ class ProductListingAdmin(admin.ModelAdmin):
     list_display = ("id", "product", "channel", "quantity")
     list_filter = ("channel",)
     raw_id_fields = ("product",)
-
-
-@admin.register(HomeBanner)
-class HomeBannerAdmin(admin.ModelAdmin):
-    list_display = ("id", "slot", "archived_at", "link_url", "internal_note", "created_at")
-    list_filter = ("slot", "archived_at")
-    readonly_fields = ("created_at",)
 
 
 @admin.register(HomePromoStripSettings)
