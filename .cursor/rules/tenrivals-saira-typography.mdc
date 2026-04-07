@@ -1,11 +1,16 @@
 ---
-description: Saira typography for TenRivals shop UI
-globs: tenrivals/templates/**/*.html
+description: Saira 800 must always be ALL CAPS site-wide (TenRivals)
+alwaysApply: true
 ---
 
-# Saira font rules (shop)
+# Saira + жирность 800 — только КАПС (весь проект)
 
-- **Saira extrabold (800) or semibold (600+) used as emphasis on labels/UI chrome → always `text-transform: uppercase` + letter-spacing.**
-- **Readable body / product copy / captions (names, descriptions, specs values) → `font-weight: 400`, sentence case (`text-transform: none`).**
-- **Prices** may stay `font-weight: 800` without forcing uppercase (numbers/symbols).
-- **Place names** (e.g. city in header) stay regular weight, not uppercase.
+- **Если используется шрифт Saira с `font-weight: 800` (extrabold), текст с буквами должен быть только в верхнем регистре:** задавай `text-transform: uppercase` и при необходимости `letter-spacing` (как у кнопок и навигации).
+- **Не сочетай Saira 800 с sentence case / Title Case / строчными слоганами** — так плохо читается; для обычного чтения используй **Saira 400** (или 600 и ниже, без 800) и `text-transform: none`.
+- Действует **во всех разделах** (магазин, лига, staff и т.д.), в HTML/CSS и при любых новых блоках.
+- **Исключение по смыслу:** строки **только из цифр и символов** (например цена `159 ₾`) не требуют `uppercase`; если рядом текст буквами — он подчиняется правилу выше.
+
+## При правках кода
+
+- Не добавляй новые стили «Saira 800 + обычный регистр».
+- Если видишь существующее такое сочетание — переведи копию в КАПС или снизь жирность до 400/600 для этого текстового блока.
