@@ -9,6 +9,7 @@ from django.views.generic import RedirectView
 
 # Shop-first: root redirects to shop, but all league routes available for auth/nav
 urlpatterns = [
+    path('admin/', admin.site.urls),
     path('', RedirectView.as_view(pattern_name='shop:index', permanent=False)),
     path('shop/', include('shop.urls')),
     path('accounts/', include('allauth.urls')),
