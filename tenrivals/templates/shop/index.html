@@ -479,7 +479,7 @@
       </div>
     </section>
 
-    {% if featured_stories %}
+    {% if featured_blog_posts %}
     <section class="section featured-stories-block">
       <div class="section-head"><h2>Featured Stories</h2><a href="{% url 'shop:blog_index' %}">View all &rarr;</a></div>
       <div class="product-rail-wrap" data-product-rail>
@@ -487,30 +487,22 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg>
         </button>
         <div class="product-rail"><div class="product-rail__track story-rail__track">
-          {% for story in featured_stories %}
+          {% for post in featured_blog_posts %}
           <div class="product-rail__cell story-rail__cell">
-            {% if story.blog_post %}
-            <a class="story-card" href="{% url 'shop:blog_post' slug=story.blog_post.slug %}">
-            {% elif story.link_url %}
-            <a class="story-card" href="{{ story.link_url|abs_site_href }}"{% if story.link_url|slice:":4" == "http" %} target="_blank" rel="noopener"{% endif %}>
-            {% else %}
-            <div class="story-card story-card--static">
-            {% endif %}
-              {% if story.image %}
+            <a class="story-card" href="{% url 'shop:blog_post' slug=post.slug %}">
+              {% if post.teaser_image %}
               <div class="story-card__media">
-                <img src="{{ story.image.url }}" alt="{{ story.title|default:'Story' }}" loading="lazy">
+                <img src="{{ post.teaser_image.url }}" alt="{{ post.title }}" loading="lazy">
               </div>
               {% else %}
               <div class="story-card__media" style="min-height:160px;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase">Ten Rivals</div>
               {% endif %}
               <div class="story-card__body">
-                {% if story.title %}<h3 class="story-card__title">{{ story.title }}</h3>{% endif %}
-                {% if story.caption %}<p class="story-card__caption">{{ story.caption|striptags|truncatewords:28 }}</p>{% endif %}
-                {% if story.blog_post or story.link_url %}
-                  {% if story.link_label %}<span class="story-card__cta">{{ story.link_label }} →</span>{% endif %}
-                {% endif %}
+                <h3 class="story-card__title">{{ post.title }}</h3>
+                {% if post.lead %}<p class="story-card__caption">{{ post.lead|striptags|truncatewords:28 }}</p>{% endif %}
+                <span class="story-card__cta">{{ post.featured_cta_display }} →</span>
               </div>
-            {% if story.blog_post or story.link_url %}</a>{% else %}</div>{% endif %}
+            </a>
           </div>
           {% endfor %}
         </div></div>
@@ -542,10 +534,7 @@
         <div>
           <h4>Tennis Rivals: The Line for Your Growth.</h4>
           <p>Catalog UI scaffold. Content will be added later.</p>
-          <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap">
-            <a class="btn btn--outline" href="{% url 'shop:blog_index' %}">Blog</a>
-            <a class="btn btn--outline" href="{% url 'shop:preorder' %}">Preorder</a>
-          </div>
+          {% include 'shop/includes/shop_footer_ctas.html' %}
         </div>
         <div>
           <h4>Catalog</h4>

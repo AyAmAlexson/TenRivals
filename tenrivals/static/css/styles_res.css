@@ -18890,3 +18890,13 @@ section {
 .pagination .page-link, .progress {
   border-radius: 0 !important;
 }
+
+.footer .footer-cta-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+.footer .footer-cta-row .btn {
+  padding: 11px 32px;
+}

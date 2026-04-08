@@ -304,15 +304,42 @@ class HomeHeroSlide(models.Model):
 
 
 class BlogPost(models.Model):
-    """Editorial post at /shop/blog/<slug>/ — featured home cards can link here."""
+    """Editorial post at /shop/blog/<slug>/. Featured home carousel uses the same rows."""
 
     slug = models.SlugField(max_length=160, unique=True, db_index=True)
     title = models.CharField(max_length=220)
     lead = models.TextField(blank=True, help_text=_('Short intro under the title (plain text).'))
     body = models.TextField(blank=True, help_text=_('Article body (plain text; line breaks preserved).'))
-    hero_image = models.ImageField(upload_to='shop/blog/', null=True, blank=True)
+    hero_image = models.ImageField(
+        upload_to='shop/blog/',
+        null=True,
+        blank=True,
+        help_text=_('Wide image for the article page header (landscape recommended).'),
+    )
+    card_image = models.ImageField(
+        upload_to='shop/blog/cards/',
+        null=True,
+        blank=True,
+        help_text=_('Portrait image for the home “Featured stories” carousel (3:4 works best). Falls back to hero if empty.'),
+    )
     is_published = models.BooleanField(default=False, db_index=True)
     published_at = models.DateTimeField(null=True, blank=True)
+    is_featured_on_home = models.BooleanField(
+        default=False,
+        db_index=True,
+        help_text=_('Show this post in the Featured stories carousel on the shop home page.'),
+    )
+    featured_sort_order = models.PositiveIntegerField(
+        default=0,
+        db_index=True,
+        help_text=_('Lower numbers appear first in the home carousel.'),
+    )
+    featured_cta_label = models.CharField(
+        max_length=120,
+        blank=True,
+        default='',
+        help_text=_('Button text on the home card (default: Read more).'),
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -324,38 +351,16 @@ class BlogPost(models.Model):
     def __str__(self):
         return self.title
 
-
-class HomeFeaturedStory(models.Model):
-    """Vertical story tiles on the shop home carousel; optional blog post or custom URL."""
-
-    sort_order = models.PositiveIntegerField(default=0, db_index=True)
-    image = models.ImageField(upload_to='shop/featured_stories/', null=True, blank=True)
-    title = models.CharField(max_length=200, blank=True)
-    caption = models.TextField(blank=True)
-    link_label = models.CharField(max_length=120, blank=True, default='Read more')
-    link_url = models.CharField(
-        max_length=500,
-        blank=True,
-        help_text=_('Used when no blog post is selected (e.g. /shop/blog/your-slug/).'),
-    )
-    blog_post = models.ForeignKey(
-        BlogPost,
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        related_name='home_featured_cards',
-    )
-    is_active = models.BooleanField(default=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        ordering = ['sort_order', 'id']
-        verbose_name = 'Home featured story'
-        verbose_name_plural = 'Home featured stories'
+    @property
+    def teaser_image(self):
+        """Portrait card image if set, else hero (listings / fallbacks)."""
+        if self.card_image:
+            return self.card_image
+        return self.hero_image
 
     @property
-    def is_visible(self) -> bool:
-        return self.is_active and bool(self.image or self.title)
+    def featured_cta_display(self) -> str:
+        return (self.featured_cta_label or '').strip() or 'Read more'
 
 
 class ProductListingChannel(models.TextChoices):

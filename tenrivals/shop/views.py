@@ -34,7 +34,6 @@ from .models import (
     CourtSurface,
     Gender,
     BlogPost,
-    HomeFeaturedStory,
     HomeHeroContent,
     HomeHeroSlide,
     Product,
@@ -250,15 +249,18 @@ def _safe_internal_redirect(request, url: str | None):
         return url
     return None
 
+_MAX_HOME_FEATURED_BLOG = 12
+
+
 def index(request):
     hero_content = HomeHeroContent.load()
     hero_slides = list(HomeHeroSlide.objects.all()[:5])
-    featured_stories = list(
-        HomeFeaturedStory.objects.filter(is_active=True)
-        .select_related('blog_post')
-        .order_by('sort_order', 'id')
+    featured_blog_posts = list(
+        BlogPost.objects.filter(
+            is_published=True,
+            is_featured_on_home=True,
+        ).order_by('featured_sort_order', '-published_at', '-id')[:_MAX_HOME_FEATURED_BLOG]
     )
-    featured_stories = [s for s in featured_stories if s.is_visible]
     active_products = Product.objects.filter(is_active=True).select_related(
         *_PRODUCT_SUBCLASS_SELECT,
         'category',
@@ -289,7 +291,7 @@ def index(request):
         {
             'hero_content': hero_content,
             'hero_slides': hero_slides,
-            'featured_stories': featured_stories,
+            'featured_blog_posts': featured_blog_posts,
             'featured_products': featured_products,
             'new_arrivals': new_arrivals,
             'home_catalog_brands': home_catalog_brands,

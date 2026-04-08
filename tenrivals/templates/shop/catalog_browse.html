@@ -374,10 +374,7 @@
         <div>
           <h4>Tennis Rivals: The Line for Your Growth.</h4>
           <p>Catalog UI scaffold. Content will be added later.</p>
-          <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap">
-            <a class="btn btn--outline" href="{% url 'shop:stock' %}">In stock</a>
-            <a class="btn btn--outline" href="{% url 'shop:preorder' %}">Preorder</a>
-          </div>
+          {% include 'shop/includes/shop_footer_ctas.html' %}
         </div>
         <div>
           <h4>Catalog</h4>

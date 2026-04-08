@@ -1,7 +1,6 @@
 from django.contrib import admin
 from .models import (
     BlogPost,
-    HomeFeaturedStory,
     HomeHeroContent,
     HomeHeroSlide,
     HomePromoStripSettings,
@@ -127,20 +126,19 @@ class HomeHeroSlideAdmin(admin.ModelAdmin):
 
 @admin.register(BlogPost)
 class BlogPostAdmin(admin.ModelAdmin):
-    list_display = ("title", "slug", "is_published", "published_at", "updated_at")
-    list_filter = ("is_published",)
+    list_display = (
+        "title",
+        "slug",
+        "is_published",
+        "is_featured_on_home",
+        "featured_sort_order",
+        "published_at",
+        "updated_at",
+    )
+    list_filter = ("is_published", "is_featured_on_home")
     search_fields = ("title", "slug", "lead")
     prepopulated_fields = {"slug": ("title",)}
     ordering = ("-published_at", "-id")
-
-
-@admin.register(HomeFeaturedStory)
-class HomeFeaturedStoryAdmin(admin.ModelAdmin):
-    list_display = ("id", "sort_order", "title", "blog_post", "is_active", "updated_at")
-    list_filter = ("is_active",)
-    list_editable = ("sort_order", "is_active")
-    ordering = ("sort_order", "id")
-    raw_id_fields = ("blog_post",)
 
 
 class ShopOrderItemInline(admin.TabularInline):

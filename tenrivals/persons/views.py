@@ -23,9 +23,10 @@ from django.conf import settings
 from django.contrib import messages
 from django.utils import timezone
 from django.contrib.auth import logout, login
+from django.utils.text import slugify
+
 from shop.models import (
     BlogPost,
-    HomeFeaturedStory,
     HomeHeroContent,
     HomeHeroSlide,
     Product,
@@ -796,6 +797,22 @@ _MAX_HERO_SLIDES = 5
 _MAX_FEATURED_STORIES = 12
 
 
+def _parse_staff_datetime(raw):
+    """Parse HTML datetime-local value into an aware datetime."""
+    from datetime import datetime
+
+    s = (raw or "").strip()
+    if not s:
+        return None
+    try:
+        dt = datetime.fromisoformat(s)
+    except ValueError:
+        return None
+    if timezone.is_naive(dt):
+        dt = timezone.make_aware(dt, timezone.get_current_timezone())
+    return dt
+
+
 @login_required
 @user_passes_test(_superuser_required)
 def staff_home_banners(request):
@@ -854,76 +871,121 @@ def staff_home_banners(request):
             slide.save(update_fields=["image_link_url", "internal_note"])
             messages.success(request, "Slide link and note updated.")
             return redirect("persons:staff_home_banners")
-        if action == "add_featured_story":
-            if HomeFeaturedStory.objects.count() >= _MAX_FEATURED_STORIES:
+        if action == "add_blog_post":
+            title = (request.POST.get("post_title") or "").strip()[:220]
+            if not title:
+                messages.error(request, "Title is required.")
+                return redirect("persons:staff_home_banners")
+            raw_slug = (request.POST.get("post_slug") or "").strip()[:160]
+            base_slug = slugify(raw_slug)[:160] if raw_slug else slugify(title)[:160]
+            if not base_slug:
+                messages.error(request, "Could not build a URL slug from the title.")
+                return redirect("persons:staff_home_banners")
+            slug = base_slug
+            n = 2
+            while BlogPost.objects.filter(slug=slug).exists():
+                suffix = f"-{n}"
+                slug = (base_slug[: 160 - len(suffix)] + suffix)
+                n += 1
+            want_featured = request.POST.get("post_featured_home") == "1"
+            if want_featured and BlogPost.objects.filter(is_featured_on_home=True).count() >= _MAX_FEATURED_STORIES:
                 messages.error(
                     request,
-                    f"You can have at most {_MAX_FEATURED_STORIES} featured story cards.",
+                    f"At most {_MAX_FEATURED_STORIES} posts can be featured on the home page. Uncheck one first.",
                 )
                 return redirect("persons:staff_home_banners")
-            title = (request.POST.get("story_title") or "").strip()[:200]
-            image = request.FILES.get("story_image")
-            if not image and not title:
-                messages.error(request, "Add an image or a title for the new card.")
-                return redirect("persons:staff_home_banners")
-            caption = (request.POST.get("story_caption") or "").strip()
-            link_label = (request.POST.get("story_link_label") or "").strip()[:120] or "Read more"
-            link_url = (request.POST.get("story_link_url") or "").strip()[:500]
-            blog_post_id = (request.POST.get("blog_post_id") or "").strip()
-            blog_post = None
-            if blog_post_id.isdigit():
-                blog_post = BlogPost.objects.filter(pk=int(blog_post_id)).first()
-            next_order = (HomeFeaturedStory.objects.aggregate(m=Max("sort_order"))["m"] or 0) + 1
-            fs = HomeFeaturedStory(
-                sort_order=next_order,
-                title=title,
-                caption=caption,
-                link_label=link_label,
-                link_url="" if blog_post else link_url,
-                blog_post=blog_post,
-                is_active=request.POST.get("story_is_active") == "1",
-            )
-            if image:
-                fs.image = image
-            fs.save()
-            messages.success(request, "Featured story card added.")
-            return redirect("persons:staff_home_banners")
-        if action == "delete_featured_story":
             try:
-                fid = int(request.POST.get("story_id", "0"))
-            except (TypeError, ValueError):
-                messages.error(request, "Invalid story card.")
-                return redirect("persons:staff_home_banners")
-            get_object_or_404(HomeFeaturedStory, pk=fid).delete()
-            messages.success(request, "Featured story card removed.")
-            return redirect("persons:staff_home_banners")
-        if action == "update_featured_story":
-            try:
-                fid = int(request.POST.get("story_id", "0"))
-            except (TypeError, ValueError):
-                messages.error(request, "Invalid story card.")
-                return redirect("persons:staff_home_banners")
-            fs = get_object_or_404(HomeFeaturedStory, pk=fid)
-            fs.title = (request.POST.get("story_title") or "").strip()[:200]
-            fs.caption = (request.POST.get("story_caption") or "").strip()
-            fs.link_label = (request.POST.get("story_link_label") or "").strip()[:120] or "Read more"
-            link_url = (request.POST.get("story_link_url") or "").strip()[:500]
-            blog_post_id = (request.POST.get("blog_post_id") or "").strip()
-            blog_post = None
-            if blog_post_id.isdigit():
-                blog_post = BlogPost.objects.filter(pk=int(blog_post_id)).first()
-            fs.blog_post = blog_post
-            fs.link_url = "" if blog_post else link_url
-            fs.is_active = request.POST.get("story_is_active") == "1"
-            try:
-                fs.sort_order = max(0, int(request.POST.get("sort_order") or 0))
+                f_order = max(0, int(request.POST.get("post_featured_sort") or 0))
             except ValueError:
-                fs.sort_order = 0
-            img = request.FILES.get("story_image")
-            if img:
-                fs.image = img
-            fs.save()
-            messages.success(request, "Featured story card updated.")
+                f_order = 0
+            published = request.POST.get("post_published") == "1"
+            published_at = _parse_staff_datetime(request.POST.get("post_published_at"))
+            if published and not published_at:
+                published_at = timezone.now()
+            bp = BlogPost(
+                slug=slug,
+                title=title,
+                lead=(request.POST.get("post_lead") or "").strip(),
+                body=(request.POST.get("post_body") or "").strip(),
+                is_published=published,
+                published_at=published_at if published else None,
+                is_featured_on_home=want_featured,
+                featured_sort_order=f_order,
+                featured_cta_label=(request.POST.get("post_featured_cta") or "").strip()[:120],
+            )
+            hero = request.FILES.get("post_hero_image")
+            card = request.FILES.get("post_card_image")
+            if hero:
+                bp.hero_image = hero
+            if card:
+                bp.card_image = card
+            bp.save()
+            messages.success(request, "Blog post created.")
+            return redirect("persons:staff_home_banners")
+        if action == "delete_blog_post":
+            try:
+                pid = int(request.POST.get("post_id", "0"))
+            except (TypeError, ValueError):
+                messages.error(request, "Invalid post.")
+                return redirect("persons:staff_home_banners")
+            get_object_or_404(BlogPost, pk=pid).delete()
+            messages.success(request, "Blog post deleted.")
+            return redirect("persons:staff_home_banners")
+        if action == "update_blog_post":
+            try:
+                pid = int(request.POST.get("post_id", "0"))
+            except (TypeError, ValueError):
+                messages.error(request, "Invalid post.")
+                return redirect("persons:staff_home_banners")
+            bp = get_object_or_404(BlogPost, pk=pid)
+            title = (request.POST.get("post_title") or "").strip()[:220]
+            if not title:
+                messages.error(request, "Title is required.")
+                return redirect("persons:staff_home_banners")
+            bp.title = title
+            raw_slug = (request.POST.get("post_slug") or "").strip()[:160]
+            if raw_slug:
+                new_slug = slugify(raw_slug)[:160]
+                if new_slug and new_slug != bp.slug:
+                    candidate = new_slug
+                    n = 2
+                    while BlogPost.objects.filter(slug=candidate).exclude(pk=bp.pk).exists():
+                        suffix = f"-{n}"
+                        candidate = (new_slug[: 160 - len(suffix)] + suffix)
+                        n += 1
+                    bp.slug = candidate
+            bp.lead = (request.POST.get("post_lead") or "").strip()
+            bp.body = (request.POST.get("post_body") or "").strip()
+            published = request.POST.get("post_published") == "1"
+            bp.is_published = published
+            published_at = _parse_staff_datetime(request.POST.get("post_published_at"))
+            if published:
+                bp.published_at = published_at or bp.published_at or timezone.now()
+            else:
+                bp.published_at = None
+            want_featured = request.POST.get("post_featured_home") == "1"
+            if want_featured and not bp.is_featured_on_home:
+                cnt = BlogPost.objects.filter(is_featured_on_home=True).count()
+                if cnt >= _MAX_FEATURED_STORIES:
+                    messages.error(
+                        request,
+                        f"At most {_MAX_FEATURED_STORIES} posts can be featured on the home page.",
+                    )
+                    return redirect("persons:staff_home_banners")
+            bp.is_featured_on_home = want_featured
+            try:
+                bp.featured_sort_order = max(0, int(request.POST.get("post_featured_sort") or 0))
+            except ValueError:
+                bp.featured_sort_order = 0
+            bp.featured_cta_label = (request.POST.get("post_featured_cta") or "").strip()[:120]
+            hero = request.FILES.get("post_hero_image")
+            card = request.FILES.get("post_card_image")
+            if hero:
+                bp.hero_image = hero
+            if card:
+                bp.card_image = card
+            bp.save()
+            messages.success(request, "Blog post updated.")
             return redirect("persons:staff_home_banners")
         messages.error(request, "Unknown action.")
         return redirect("persons:staff_home_banners")
@@ -935,16 +997,13 @@ def staff_home_banners(request):
             "staff_nav_active": "banners",
             "hero_content": HomeHeroContent.load(),
             "hero_slides": HomeHeroSlide.objects.all(),
-            "featured_stories": HomeFeaturedStory.objects.select_related("blog_post").order_by(
-                "sort_order", "id"
-            ),
-            "blog_posts": BlogPost.objects.order_by("-is_published", "title"),
+            "blog_posts": BlogPost.objects.order_by("-id"),
             "max_hero_slides": _MAX_HERO_SLIDES,
             "max_featured_stories": _MAX_FEATURED_STORIES,
-            "page_heading": "Shop home — hero & featured stories",
-            "page_note": "Hero: up to 5 full-width slides (rotation every 7s and arrows). "
-            "One headline and subtext apply to all slides. "
-            "Featured stories: vertical cards in a carousel (Pro:Direct-style); link each to a blog post or a custom URL.",
+            "page_heading": "Shop home — hero & blog",
+            "page_note": "Hero: up to 5 full-width slides. "
+            "Blog posts: create and edit here; check Published and set date for /shop/blog/. "
+            "Check Featured on home for the vertical carousel on the shop homepage (use a portrait Card image; wide Hero image for the article).",
         },
     )
 
