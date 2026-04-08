@@ -1,0 +1,72 @@
+{% extends 'persons/staff_base.html' %}
+{% block title %}{{ page_heading }} — Staff — TR Shop{% endblock %}
+{% block page_heading %}{{ page_heading }}{% endblock %}
+{% block page_note %}<p class="page-note">{{ page_note }}</p>{% endblock %}
+{% block extra_head %}
+<style>
+  .img-preview{max-width:220px;max-height:160px;object-fit:cover;border:1px solid var(--line)}
+</style>
+{% endblock %}
+{% block content %}
+<div class="staff-toolbar">
+  <a class="btn btn--sm btn--outline" href="{% url 'persons:staff_blog_posts' %}">← Back to posts</a>
+</div>
+
+<div class="card">
+  <h2 class="card-title">{% if is_create %}Create blog post{% else %}Edit: {{ post_obj.title }}{% endif %}</h2>
+  <form method="post" enctype="multipart/form-data" action="">
+    {% csrf_token %}
+    <div class="form-grid form-grid--wide">
+      <div class="form-group">
+        <label for="id_title">Title *</label>
+        <input id="id_title" name="title" type="text" class="form-control" maxlength="220" value="{{ post_obj.title|default:'' }}" required>
+      </div>
+      <div class="form-group">
+        <label for="id_slug">Slug (auto from title if empty)</label>
+        <input id="id_slug" name="slug" type="text" class="form-control" maxlength="160" value="{{ post_obj.slug|default:'' }}">
+      </div>
+      <div class="form-group">
+        <label for="id_lead">Lead</label>
+        <textarea id="id_lead" name="lead" rows="3" class="form-control">{{ post_obj.lead|default:'' }}</textarea>
+      </div>
+      <div class="form-group">
+        <label for="id_body">Body</label>
+        <textarea id="id_body" name="body" rows="10" class="form-control">{{ post_obj.body|default:'' }}</textarea>
+      </div>
+      <div class="form-group">
+        <label for="id_hero_image">Hero image (horizontal, article only)</label>
+        <input id="id_hero_image" name="hero_image" type="file" accept="image/*">
+        {% if post_obj and post_obj.hero_image %}<div style="margin-top:8px"><img class="img-preview" src="{{ post_obj.hero_image.url }}" alt=""></div>{% endif %}
+      </div>
+      <div class="form-group">
+        <label for="id_card_image">Card image (vertical, home/blog cards)</label>
+        <input id="id_card_image" name="card_image" type="file" accept="image/*">
+        {% if post_obj and post_obj.card_image %}<div style="margin-top:8px"><img class="img-preview" src="{{ post_obj.card_image.url }}" alt=""></div>{% endif %}
+      </div>
+      <div class="form-group">
+        <label for="id_published_at">Published at</label>
+        <input id="id_published_at" name="published_at" type="datetime-local" class="form-control" style="max-width:280px" value="{% if post_obj and post_obj.published_at %}{{ post_obj.published_at|date:'Y-m-d' }}T{{ post_obj.published_at|date:'H:i' }}{% endif %}">
+      </div>
+      <div class="form-group">
+        <label for="id_featured_sort_order">Featured sort order</label>
+        <input id="id_featured_sort_order" name="featured_sort_order" type="number" min="0" class="form-control" style="max-width:120px" value="{{ post_obj.featured_sort_order|default:0 }}">
+      </div>
+      <div class="form-group">
+        <label for="id_featured_cta_label">Featured CTA label</label>
+        <input id="id_featured_cta_label" name="featured_cta_label" type="text" class="form-control" maxlength="120" value="{{ post_obj.featured_cta_label|default:'' }}" placeholder="Read more">
+      </div>
+      <div class="check-row">
+        <input type="checkbox" id="id_is_published" name="is_published" value="1" {% if post_obj and post_obj.is_published %}checked{% endif %}>
+        <label for="id_is_published">Published</label>
+      </div>
+      <div class="check-row">
+        <input type="checkbox" id="id_is_featured_on_home" name="is_featured_on_home" value="1" {% if post_obj and post_obj.is_featured_on_home %}checked{% endif %}>
+        <label for="id_is_featured_on_home">Featured on home (max {{ max_featured_stories }})</label>
+      </div>
+    </div>
+    <div class="actions">
+      <button type="submit" class="btn">{% if is_create %}Create post{% else %}Save changes{% endif %}</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

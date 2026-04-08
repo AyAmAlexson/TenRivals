@@ -45,6 +45,9 @@ urlpatterns = [
     ),
     path('staff/stock/', views.staff_stock_list, name='staff_stock'),
     path('staff/preorder/', views.staff_preorder_list, name='staff_preorder'),
+    path('staff/blog/', views.staff_blog_posts, name='staff_blog_posts'),
+    path('staff/blog/new/', views.staff_blog_edit, name='staff_blog_new'),
+    path('staff/blog/<int:post_id>/', views.staff_blog_edit, name='staff_blog_edit'),
     path('staff/banners/', views.staff_home_banners, name='staff_home_banners'),
 
     path('superuser/users/', views.redirect_legacy_superuser_users, name='superuser_users'),

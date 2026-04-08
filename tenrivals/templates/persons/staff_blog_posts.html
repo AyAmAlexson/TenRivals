@@ -1,0 +1,80 @@
+{% extends 'persons/staff_base.html' %}
+{% block title %}Blog posts — Staff — TR Shop{% endblock %}
+{% block page_heading %}{{ page_heading }}{% endblock %}
+{% block page_note %}<p class="page-note">{{ page_note }}</p>{% endblock %}
+{% block extra_head %}
+<style>
+  .row-link{display:block; color:inherit; text-decoration:none !important}
+  .row-link:hover{color:var(--accent)}
+  tr.clickable-row{cursor:pointer}
+  tr.clickable-row:hover td{background:#fafafa}
+</style>
+{% endblock %}
+{% block content %}
+<div class="staff-toolbar">
+  <a class="btn btn--sm" href="{% url 'persons:staff_blog_new' %}">+ Add blog post</a>
+</div>
+
+<div class="card">
+  <h2 class="card-title">Posts ({{ blog_posts|length }})</h2>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr class="clickable-row" data-href="{% url 'persons:staff_blog_edit' p.pk %}">
+          <th>Title</th>
+          <th>Slug</th>
+          <th>Date</th>
+          <th>Published</th>
+          <th>Featured</th>
+          <th>Delete</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in blog_posts %}
+        <tr>
+          <td><a class="row-link" href="{% url 'persons:staff_blog_edit' p.pk %}">{{ p.title }}</a></td>
+          <td class="mono"><a class="row-link" href="{% url 'persons:staff_blog_edit' p.pk %}">{{ p.slug }}</a></td>
+          <td>{% if p.published_at %}{{ p.published_at|date:"Y-m-d H:i" }}{% else %}—{% endif %}</td>
+          <td>
+            <form method="post" action="">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="toggle_published">
+              <input type="hidden" name="post_id" value="{{ p.pk }}">
+              <input type="checkbox" {% if p.is_published %}checked{% endif %} onchange="this.form.submit()">
+            </form>
+          </td>
+          <td>
+            <form method="post" action="">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="toggle_featured">
+              <input type="hidden" name="post_id" value="{{ p.pk }}">
+              <input type="checkbox" {% if p.is_featured_on_home %}checked{% endif %} onchange="this.form.submit()">
+            </form>
+          </td>
+          <td>
+            <form method="post" action="" onsubmit="return confirm('Delete this blog post?');">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="delete_post">
+              <input type="hidden" name="post_id" value="{{ p.pk }}">
+              <button type="submit" class="icon-btn icon-btn--danger" title="Delete">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6">No blog posts yet. Use "+ Add blog post".</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+<script>
+  document.querySelectorAll('tr.clickable-row[data-href]').forEach(function(row){
+    row.addEventListener('click', function(e){
+      if (e.target.closest('a,button,input,label,form')) return;
+      window.location.href = row.getAttribute('data-href');
+    });
+  });
+</script>
+{% endblock %}
