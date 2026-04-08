@@ -309,7 +309,15 @@ class BlogPost(models.Model):
     slug = models.SlugField(max_length=160, unique=True, db_index=True)
     title = models.CharField(max_length=220)
     lead = models.TextField(blank=True, help_text=_('Short intro under the title (plain text).'))
-    body = models.TextField(blank=True, help_text=_('Article body (plain text; line breaks preserved).'))
+    body = models.TextField(
+        blank=True,
+        help_text=_('Legacy aggregated body (auto-built from text blocks).'),
+    )
+    body_block_1 = models.TextField(blank=True, help_text=_('Article text block 1/5.'))
+    body_block_2 = models.TextField(blank=True, help_text=_('Article text block 2/5.'))
+    body_block_3 = models.TextField(blank=True, help_text=_('Article text block 3/5.'))
+    body_block_4 = models.TextField(blank=True, help_text=_('Article text block 4/5.'))
+    body_block_5 = models.TextField(blank=True, help_text=_('Article text block 5/5.'))
     hero_image = models.ImageField(
         upload_to='shop/blog/',
         null=True,

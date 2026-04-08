@@ -996,7 +996,25 @@ def staff_blog_edit(request, post_id=None):
         target.title = title
         target.slug = slug
         target.lead = (request.POST.get("lead") or "").strip()
-        target.body = (request.POST.get("body") or "").strip()
+        target.body_block_1 = (request.POST.get("body_block_1") or "").strip()
+        target.body_block_2 = (request.POST.get("body_block_2") or "").strip()
+        target.body_block_3 = (request.POST.get("body_block_3") or "").strip()
+        target.body_block_4 = (request.POST.get("body_block_4") or "").strip()
+        target.body_block_5 = (request.POST.get("body_block_5") or "").strip()
+        # Keep legacy combined field in sync for compatibility/search.
+        target.body = "\n\n".join(
+            [
+                b
+                for b in (
+                    target.body_block_1,
+                    target.body_block_2,
+                    target.body_block_3,
+                    target.body_block_4,
+                    target.body_block_5,
+                )
+                if b
+            ]
+        )
         target.is_published = request.POST.get("is_published") == "1"
         dt = _parse_staff_datetime(request.POST.get("published_at"))
         target.published_at = (dt or target.published_at or timezone.now()) if target.is_published else None

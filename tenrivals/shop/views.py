@@ -591,45 +591,44 @@ def blog_post(request, slug):
     }
     featured_products = [products_by_id[pid] for pid in slot_ids if pid in products_by_id]
 
-    inline_images = [
-        img for img in (post.article_image_1, post.article_image_2, post.article_image_3) if img
+    text_blocks = [
+        (post.body_block_1 or '').strip(),
+        (post.body_block_2 or '').strip(),
+        (post.body_block_3 or '').strip(),
+        (post.body_block_4 or '').strip(),
+        (post.body_block_5 or '').strip(),
     ]
-    body = (post.body or '').strip()
-    paragraphs = [p.strip() for p in body.split('\n\n') if p.strip()]
-    if not paragraphs:
-        paragraphs = []
-
-    injections = {}
-    count = max(1, len(paragraphs))
-
-    def push_after(ratio, block):
-        idx = max(1, min(count, int(round(count * ratio))))
-        injections.setdefault(idx, []).append(block)
-
-    if featured_products:
-        push_after(0.33, {'type': 'products', 'products': featured_products})
-    if post.quote_text.strip():
-        push_after(0.5, {'type': 'quote', 'text': post.quote_text.strip(), 'author': (post.quote_author or '').strip()})
-    for i, img in enumerate(inline_images):
-        push_after(0.4 + (i * 0.2), {'type': 'image', 'image': img})
-    if (post.cta_mid_button_label or '').strip() and (post.cta_mid_button_url or '').strip():
-        push_after(
-            0.66,
-            {
-                'type': 'cta',
-                'text': (post.cta_mid_text or '').strip(),
-                'label': post.cta_mid_button_label.strip(),
-                'url': post.cta_mid_button_url.strip(),
-            },
-        )
+    if not any(text_blocks):
+        fallback = [(post.body or '').strip()]
+        text_blocks = fallback + ["", "", "", ""]
 
     article_sections = []
-    for idx, paragraph in enumerate(paragraphs, start=1):
-        article_sections.append({'type': 'paragraph', 'text': paragraph})
-        article_sections.extend(injections.get(idx, []))
+    for idx, block in enumerate(text_blocks, start=1):
+        if block:
+            article_sections.append({'type': 'paragraph', 'text': block})
 
-    if not paragraphs:
-        article_sections.extend(injections.get(1, []))
+        # Insert rich blocks between text blocks.
+        if idx == 1 and featured_products:
+            article_sections.append({'type': 'products', 'products': featured_products})
+        if idx == 2 and (post.quote_text or '').strip():
+            article_sections.append(
+                {'type': 'quote', 'text': post.quote_text.strip(), 'author': (post.quote_author or '').strip()}
+            )
+        if idx == 3 and post.article_image_1:
+            article_sections.append({'type': 'image', 'image': post.article_image_1})
+        if idx == 3 and (post.cta_mid_button_label or '').strip() and (post.cta_mid_button_url or '').strip():
+            article_sections.append(
+                {
+                    'type': 'cta',
+                    'text': (post.cta_mid_text or '').strip(),
+                    'label': post.cta_mid_button_label.strip(),
+                    'url': post.cta_mid_button_url.strip(),
+                }
+            )
+        if idx == 4 and post.article_image_2:
+            article_sections.append({'type': 'image', 'image': post.article_image_2})
+        if idx == 5 and post.article_image_3:
+            article_sections.append({'type': 'image', 'image': post.article_image_3})
 
     if (post.cta_end_button_label or '').strip() and (post.cta_end_button_url or '').strip():
         article_sections.append(
