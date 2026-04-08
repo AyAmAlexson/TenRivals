@@ -113,7 +113,7 @@
   </style>
   {% block extra_head %}{% endblock %}
 </head>
-<body>
+<body {% block body_tag %}{% endblock %}>
 {% include 'includes/google_tag_manager_body.html' %}
   <div class="topbar">
     <div class="container">
