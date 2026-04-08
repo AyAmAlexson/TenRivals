@@ -4,6 +4,7 @@ from urllib.parse import quote
 from django.conf import settings
 from django.contrib.admin.views.decorators import staff_member_required
 from django.db.models import Q
+from django.http import Http404
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
@@ -649,6 +650,22 @@ def blog_post(request, slug):
         'shop/blog_post.html',
         {'post': post, 'article_sections': article_sections},
     )
+
+
+_INFO_PAGE_TEMPLATES = {
+    'delivery': 'shop/info/delivery.html',
+    'payment': 'shop/info/payment.html',
+    'returns': 'shop/info/returns.html',
+    'size_guide': 'shop/info/size_guide.html',
+    'contacts': 'shop/info/contacts.html',
+}
+
+
+def shop_info_page(request, page_key: str):
+    template = _INFO_PAGE_TEMPLATES.get(page_key)
+    if template is None:
+        raise Http404('Page not found')
+    return render(request, template, {'info_active': page_key})
 
 
 def _product_create_pick_type_qs(return_next: str, channel_raw: str) -> str:

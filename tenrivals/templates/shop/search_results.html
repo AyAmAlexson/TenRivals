@@ -110,11 +110,7 @@
     <div class="container">
       <div class="topbar-row">
         <div class="links">
-          <a href="#">Delivery</a>
-          <a href="#">Payment</a>
-          <a href="#">Returns & exchanges</a>
-          <a href="#">Size guide</a>
-          <a href="#">Contacts</a>
+          {% include 'shop/includes/shop_info_nav_links.html' %}
         </div>
         <a href="#" class="city-select" onclick="return false">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style="vertical-align:-1px; margin-right:4px"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" stroke="currentColor" stroke-width="2" fill="none"/><circle cx="12" cy="9" r="2.5" stroke="currentColor" stroke-width="1.5"/></svg>Tbilisi
@@ -200,16 +196,15 @@
           {% include 'shop/includes/shop_footer_ctas.html' %}
         </div>
         <div>
-          <h4>Catalog</h4>
-          <a href="{% url 'shop:stock' %}?type=RACKET">Rackets</a>
-          <a href="{% url 'shop:stock' %}?type=BAGS">Bags</a>
+          <h4>Explore</h4>
+          <a href="{% url 'shop:index' %}">Shop home</a>
           <a href="{% url 'shop:blog_index' %}">Blog</a>
+          <a href="{% url 'shop:stock' %}">In stock — all</a>
+          {% include 'shop/includes/shop_footer_stock_links.html' %}
         </div>
         <div>
           <h4>Help</h4>
-          <a href="#">Delivery</a>
-          <a href="#">Payment</a>
-          <a href="#">Contacts</a>
+          {% include 'shop/includes/shop_info_nav_links.html' %}
         </div>
         <div>
           <h4>Contacts</h4>

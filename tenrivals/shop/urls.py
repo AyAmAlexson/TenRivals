@@ -12,6 +12,11 @@ urlpatterns = [
     path('stock/', views.stock, name='stock'),
     path('blog/', views.blog_index, name='blog_index'),
     path('blog/<slug:slug>/', views.blog_post, name='blog_post'),
+    path('info/delivery/', views.shop_info_page, {'page_key': 'delivery'}, name='info_delivery'),
+    path('info/payment/', views.shop_info_page, {'page_key': 'payment'}, name='info_payment'),
+    path('info/returns/', views.shop_info_page, {'page_key': 'returns'}, name='info_returns'),
+    path('info/size-guide/', views.shop_info_page, {'page_key': 'size_guide'}, name='info_size_guide'),
+    path('info/contacts/', views.shop_info_page, {'page_key': 'contacts'}, name='info_contacts'),
     path(
         'items_list_for_Laen',
         RedirectView.as_view(
