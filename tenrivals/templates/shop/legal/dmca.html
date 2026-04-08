@@ -1,0 +1,35 @@
+{% extends 'shop/info/layout.html' %}
+{% block title %}Copyright &amp; IP — TR Shop{% endblock %}
+{% block info_main %}
+<header class="info-hero">
+  <h1 class="info-hero__h1">Copyright &amp; intellectual property</h1>
+  <p class="info-hero__lead">We respect copyright and related rights under the <strong>Law of Georgia on Copyright and Related Rights</strong>. If you believe content on this site infringes your rights, contact us with the details below.</p>
+</header>
+
+<div class="info-section">
+  <h2 class="info-h2">Complaints</h2>
+  <p class="info-prose">Send a message in writing (email is fine) that includes:</p>
+  <ul class="info-ul" style="margin-top:12px">
+    <li>Your name and reliable contact details;</li>
+    <li>Identification of the work or right you claim (e.g. photo, text, trademark);</li>
+    <li>The exact URL or location on our site and a short description of the issue;</li>
+    <li>A statement that you believe in good faith the use is not authorised;</li>
+    <li>If you act for the rights holder, your authority to act on their behalf.</li>
+  </ul>
+  <p class="info-prose" style="margin-top:14px">False or misleading claims may have legal consequences. We may forward notices to suppliers or users where appropriate.</p>
+</div>
+
+<div class="info-section">
+  <h2 class="info-h2">Contact for IP notices</h2>
+  <p class="info-prose"><strong>Email:</strong> <a href="mailto:andy.rivals@tenrivals.com">andy.rivals@tenrivals.com</a><br>
+  <strong>Subject:</strong> Copyright / IP notice</p>
+  <p class="info-prose" style="margin-top:12px">Order and product questions should go through <a href="{% url 'shop:info_contacts' %}" style="color:var(--accent);font-weight:600">Contacts</a> so we can respond faster.</p>
+</div>
+
+<div class="info-section">
+  <h2 class="info-h2">Our content &amp; brands</h2>
+  <p class="info-prose">Product names and logos may be trademarks of their owners. Descriptions and photos may combine our original material with assets licensed from brands or distributors. Copying our site design, original text, or photography without permission may infringe our rights or those of third parties.</p>
+</div>
+
+<p class="info-prose" style="margin-top:24px;font-size:14px;color:var(--muted)">Last updated: April 2026.</p>
+{% endblock %}

@@ -1,0 +1,65 @@
+{% extends 'shop/info/layout.html' %}
+{% block title %}Site map — TR Shop{% endblock %}
+{% block info_main %}
+<header class="info-hero">
+  <h1 class="info-hero__h1">Site map</h1>
+  <p class="info-hero__lead">Quick links to main areas of Tennis Rivals Shop. For the full product catalogue, use the navigation bar or <a href="{% url 'shop:stock' %}" style="color:var(--accent);font-weight:600">In stock</a> / <a href="{% url 'shop:preorder' %}" style="color:var(--accent);font-weight:600">Preorder</a>.</p>
+</header>
+
+<div class="info-section">
+  <h2 class="info-h2">Shop</h2>
+  <ul class="info-ul">
+    <li><a href="{% url 'shop:index' %}" style="color:var(--accent);font-weight:600">Shop home</a></li>
+    <li><a href="{% url 'shop:stock' %}" style="color:var(--accent);font-weight:600">In stock</a></li>
+    <li><a href="{% url 'shop:preorder' %}" style="color:var(--accent);font-weight:600">Preorder</a></li>
+    <li><a href="{% url 'shop:blog_index' %}" style="color:var(--accent);font-weight:600">Blog</a></li>
+    <li><a href="{% url 'shop:product_search' %}" style="color:var(--accent);font-weight:600">Search</a></li>
+  </ul>
+</div>
+
+<div class="info-section">
+  <h2 class="info-h2">Popular categories (in stock)</h2>
+  <ul class="info-ul">
+    <li><a href="{% url 'shop:stock' %}?type=RACKET" style="color:var(--accent);font-weight:600">Rackets</a></li>
+    <li><a href="{% url 'shop:stock' %}?type=M_SHOES" style="color:var(--accent);font-weight:600">Men&apos;s shoes</a></li>
+    <li><a href="{% url 'shop:stock' %}?type=W_SHOES" style="color:var(--accent);font-weight:600">Women&apos;s shoes</a></li>
+    <li><a href="{% url 'shop:stock' %}?type=BAGS" style="color:var(--accent);font-weight:600">Bags &amp; covers</a></li>
+    <li><a href="{% url 'shop:stock' %}?type=STRINGS" style="color:var(--accent);font-weight:600">Strings</a></li>
+    <li><a href="{% url 'shop:stock' %}?type=ACCESSORIES" style="color:var(--accent);font-weight:600">Accessories</a></li>
+    <li><a href="{% url 'shop:stock' %}?type=BALLS" style="color:var(--accent);font-weight:600">Balls</a></li>
+  </ul>
+</div>
+
+<div class="info-section">
+  <h2 class="info-h2">Customer service</h2>
+  <ul class="info-ul">
+    <li><a href="{% url 'shop:info_delivery' %}" style="color:var(--accent);font-weight:600">Delivery</a></li>
+    <li><a href="{% url 'shop:info_payment' %}" style="color:var(--accent);font-weight:600">Payment</a></li>
+    <li><a href="{% url 'shop:info_returns' %}" style="color:var(--accent);font-weight:600">Returns &amp; exchanges</a></li>
+    <li><a href="{% url 'shop:info_size_guide' %}" style="color:var(--accent);font-weight:600">Size guide</a></li>
+    <li><a href="{% url 'shop:info_contacts' %}" style="color:var(--accent);font-weight:600">Contacts</a></li>
+  </ul>
+</div>
+
+<div class="info-section">
+  <h2 class="info-h2">Legal &amp; policies</h2>
+  <ul class="info-ul">
+    <li><a href="{% url 'shop:legal_terms' %}" style="color:var(--accent);font-weight:600">Terms &amp; conditions</a></li>
+    <li><a href="{% url 'shop:legal_privacy' %}" style="color:var(--accent);font-weight:600">Privacy policy</a></li>
+    <li><a href="{% url 'shop:legal_cookies' %}" style="color:var(--accent);font-weight:600">Cookie policy</a></li>
+    <li><a href="{% url 'shop:legal_dmca' %}" style="color:var(--accent);font-weight:600">Copyright &amp; IP</a></li>
+    <li><a href="{% url 'shop:legal_company' %}" style="color:var(--accent);font-weight:600">Company information</a></li>
+    <li><a href="{% url 'shop:legal_accessibility' %}" style="color:var(--accent);font-weight:600">Accessibility</a></li>
+    <li><a href="{% url 'shop:legal_sitemap' %}" style="color:var(--accent);font-weight:600">Site map</a> (this page)</li>
+  </ul>
+</div>
+
+<div class="info-section">
+  <h2 class="info-h2">Account</h2>
+  <ul class="info-ul">
+    <li><a href="{% url 'account_login' %}" style="color:var(--accent);font-weight:600">Sign in</a></li>
+    <li><a href="{% url 'account_signup' %}" style="color:var(--accent);font-weight:600">Create account</a></li>
+    <li><a href="{% url 'persons:account_details' %}" style="color:var(--accent);font-weight:600">Account details</a></li>
+  </ul>
+</div>
+{% endblock %}

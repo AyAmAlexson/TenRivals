@@ -652,17 +652,24 @@ def blog_post(request, slug):
     )
 
 
-_INFO_PAGE_TEMPLATES = {
+_SHOP_STATIC_PAGE_TEMPLATES = {
     'delivery': 'shop/info/delivery.html',
     'payment': 'shop/info/payment.html',
     'returns': 'shop/info/returns.html',
     'size_guide': 'shop/info/size_guide.html',
     'contacts': 'shop/info/contacts.html',
+    'terms': 'shop/legal/terms.html',
+    'privacy': 'shop/legal/privacy.html',
+    'dmca': 'shop/legal/dmca.html',
+    'company': 'shop/legal/company.html',
+    'accessibility': 'shop/legal/accessibility.html',
+    'cookies': 'shop/legal/cookies.html',
+    'sitemap': 'shop/legal/sitemap.html',
 }
 
 
 def shop_info_page(request, page_key: str):
-    template = _INFO_PAGE_TEMPLATES.get(page_key)
+    template = _SHOP_STATIC_PAGE_TEMPLATES.get(page_key)
     if template is None:
         raise Http404('Page not found')
     return render(request, template, {})

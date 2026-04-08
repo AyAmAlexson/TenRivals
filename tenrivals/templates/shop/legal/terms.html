@@ -1,0 +1,83 @@
+{% extends 'shop/info/layout.html' %}
+{% block title %}Terms &amp; conditions — TR Shop{% endblock %}
+{% block info_main %}
+<header class="info-hero">
+  <h1 class="info-hero__h1">Terms &amp; conditions</h1>
+  <p class="info-hero__lead">These terms govern use of the Tennis Rivals Shop website and purchases from us. We sell and deliver within <strong>Georgia</strong> only. By placing an order, you accept them. Practical details: <a href="{% url 'shop:info_delivery' %}" style="color:var(--accent);font-weight:600">Delivery</a>, <a href="{% url 'shop:info_payment' %}" style="color:var(--accent);font-weight:600">Payment</a>, <a href="{% url 'shop:info_returns' %}" style="color:var(--accent);font-weight:600">Returns</a>, <a href="{% url 'shop:legal_privacy' %}" style="color:var(--accent);font-weight:600">Privacy</a>, <a href="{% url 'shop:legal_cookies' %}" style="color:var(--accent);font-weight:600">Cookies</a>.</p>
+</header>
+
+<div class="info-callout">
+  For information only; does not replace legal advice. Consumer relations are governed by the <strong>Law of Georgia on Consumer Rights Protection</strong> where it applies to your purchase.
+</div>
+
+<div class="info-section">
+  <h2 class="info-h2">1. Seller</h2>
+  <p class="info-prose">The seller is <strong>IE Andrey Molodenko</strong> (individual entrepreneur), identification code (PN) <strong>100382729</strong>, address: Georgia, Tbilisi, E. Bejanishvili Street 23, apartment 19 (“<strong>we</strong>”, “<strong>us</strong>”, “<strong>Tennis Rivals Shop</strong>”). Contact: <a href="mailto:andy.rivals@tenrivals.com">andy.rivals@tenrivals.com</a>, <a href="tel:+995591288967">+995 591 288 967</a>.</p>
+</div>
+
+<div class="info-section">
+  <h2 class="info-h2">2. Eligibility &amp; territory</h2>
+  <p class="info-prose">You must have capacity to contract under Georgian law. We accept orders for delivery <strong>within Georgia</strong> only. Prices, taxes, and consumer rules refer to Georgia unless we explicitly state otherwise.</p>
+</div>
+
+<div class="info-section">
+  <h2 class="info-h2">3. Products &amp; information</h2>
+  <p class="info-prose">We aim for accurate descriptions, images, and availability. Minor differences (e.g. manufacturer packaging changes) are not defects. If an item is unavailable after you pay or confirm, we will refund that item or the order as applicable and notify you.</p>
+</div>
+
+<div class="info-section">
+  <h2 class="info-h2">4. Prices &amp; taxes</h2>
+  <p class="info-prose">Prices are in <strong>GEL (₾)</strong> and include applicable taxes unless clearly marked otherwise. We may correct obvious errors before or shortly after acceptance; if you were charged incorrectly, we will adjust or refund.</p>
+</div>
+
+<div class="info-section">
+  <h2 class="info-h2">5. Orders &amp; contract</h2>
+  <p class="info-prose">Checkout steps on the site are an offer to buy. The contract is formed when we <strong>confirm acceptance</strong> — typically after successful <strong>payment authorisation</strong> (for online card payment) or when we confirm your order by message, as indicated at checkout. We may refuse or cancel orders for stock, legal, or good-faith fraud-prevention reasons; in that case you will not be charged or we will refund.</p>
+</div>
+
+<div class="info-section">
+  <h2 class="info-h2">6. Payment</h2>
+  <p class="info-prose">You can pay as described on <a href="{% url 'shop:info_payment' %}" style="color:var(--accent);font-weight:600">Payment</a>, including:</p>
+  <ul class="info-ul" style="margin-top:10px">
+    <li><strong>Bank card on the website:</strong> You enter card details in our checkout environment provided by our payment partner. The partner processes the transaction under its licences and security rules (PCI DSS). We receive confirmation and references needed to fulfil the order, not your full card number.</li>
+    <li><strong>Other methods</strong> (e.g. card terminal on delivery, cash on delivery, bank transfer) where we offer them remain subject to the same order total and fiscal documentation rules.</li>
+  </ul>
+</div>
+
+<div class="info-section">
+  <h2 class="info-h2">7. Delivery</h2>
+  <p class="info-prose">Areas, timelines, and fees are on our <a href="{% url 'shop:info_delivery' %}" style="color:var(--accent);font-weight:600">Delivery</a> page. Risk passes to you when goods are delivered to you or a person you designate, unless mandatory law says otherwise.</p>
+</div>
+
+<div class="info-section">
+  <h2 class="info-h2">8. Returns &amp; withdrawal</h2>
+  <p class="info-prose">The <strong>14-day</strong> return/exchange rules and exceptions (e.g. strung rackets, hygiene) are in <a href="{% url 'shop:info_returns' %}" style="color:var(--accent);font-weight:600">Returns &amp; exchanges</a> and form part of these terms. Statutory rights under Georgian consumer law remain in force where applicable.</p>
+</div>
+
+<div class="info-section">
+  <h2 class="info-h2">9. Legal warranty &amp; defects</h2>
+  <p class="info-prose">If goods are defective under applicable law, contact us with your order details and, where useful, photos. Manufacturer warranties are additional and subject to the manufacturer’s terms.</p>
+</div>
+
+<div class="info-section">
+  <h2 class="info-h2">10. Liability</h2>
+  <p class="info-prose">To the extent permitted by Georgian law, we are not liable for indirect or consequential loss. Our aggregate liability for a given order is generally limited to the amount you paid for that order, except where liability cannot be limited (including gross negligence or wilful misconduct, and mandatory consumer protections).</p>
+</div>
+
+<div class="info-section">
+  <h2 class="info-h2">11. Website use</h2>
+  <p class="info-prose">Do not misuse the site (fraud, scraping that harms service, attempts to bypass security). Product pages may be linked for personal use; commercial reuse of our content needs our written permission.</p>
+</div>
+
+<div class="info-section">
+  <h2 class="info-h2">12. Changes</h2>
+  <p class="info-prose">We may update these terms. The version published at the time of your order applies to that order.</p>
+</div>
+
+<div class="info-section">
+  <h2 class="info-h2">13. Law &amp; disputes</h2>
+  <p class="info-prose">These terms are governed by the laws of <strong>Georgia</strong>. Courts of Georgia have jurisdiction over disputes arising from these terms and your purchases, without prejudice to mandatory consumer rights under Georgian law.</p>
+</div>
+
+<p class="info-prose" style="margin-top:24px;font-size:14px;color:var(--muted)">Last updated: April 2026. Questions: <a href="{% url 'shop:info_contacts' %}" style="color:var(--accent);font-weight:600">Contacts</a>.</p>
+{% endblock %}

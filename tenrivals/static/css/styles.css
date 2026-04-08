@@ -21685,3 +21685,23 @@ section {
 .footer .footer-cta-row .btn {
   padding: 11px 32px;
 }
+
+.footer .footer-legal-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  padding: 14px 0 0;
+  margin-top: 8px;
+  border-top: 1px solid rgba(255,255,255,.08);
+}
+.footer .footer-legal-row a {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba(255,255,255,.45);
+  text-decoration: none;
+}
+.footer .footer-legal-row a:hover {
+  color: #fff;
+}

@@ -1,0 +1,45 @@
+{% extends 'shop/info/layout.html' %}
+{% block title %}Cookie policy — TR Shop{% endblock %}
+{% block info_main %}
+<header class="info-hero">
+  <h1 class="info-hero__h1">Cookie policy</h1>
+  <p class="info-hero__lead">How Tennis Rivals Shop uses cookies and similar technologies on this website. This policy should be read together with our <a href="{% url 'shop:legal_privacy' %}" style="color:var(--accent);font-weight:600">Privacy policy</a>.</p>
+</header>
+
+<div class="info-section">
+  <h2 class="info-h2">What are cookies?</h2>
+  <p class="info-prose">Cookies are small text files stored on your device when you visit a site. We also use similar technologies (e.g. local storage) where they help the shop function. Georgian law and good practice require transparency and, for non-essential cookies, appropriate consent where applicable.</p>
+</div>
+
+<div class="info-section">
+  <h2 class="info-h2">Types we use</h2>
+  <ul class="info-ul" style="margin-top:10px">
+    <li><strong>Strictly necessary:</strong> Required for the site to work — e.g. session, security (CSRF), cart or checkout state, cookie consent choice. These are usually exempt from consent under typical interpretations because they are essential to provide the service you request.</li>
+    <li><strong>Functional:</strong> Remember preferences (e.g. language, display options). We only use these if you enable them or if they are low-impact and aligned with our privacy notice.</li>
+    <li><strong>Analytics &amp; performance:</strong> Help us understand traffic and errors (e.g. page views, anonymised usage). Non-essential analytics are used only after <strong>opt-in</strong> through any cookie notice or preference tools we publish, as required by applicable rules.</li>
+    <li><strong>Payment &amp; checkout:</strong> Our payment provider may set its own cookies or storage during card payment on the website. Those are governed by the provider’s policy and are needed to complete a transaction you initiate.</li>
+  </ul>
+</div>
+
+<div class="info-section">
+  <h2 class="info-h2">Managing cookies</h2>
+  <p class="info-prose">You can block or delete cookies in your browser settings. Blocking strictly necessary cookies may break login, cart, or checkout. When we provide a cookie preference control on the site, use it to manage non-essential categories.</p>
+</div>
+
+<div class="info-section">
+  <h2 class="info-h2">Updates</h2>
+  <p class="info-prose">We may update this policy when we change tools or the law requires. Check the date below.</p>
+</div>
+
+<div class="info-section">
+  <h2 class="info-h2">Contact</h2>
+  <p class="info-prose">Questions: <a href="mailto:andy.rivals@tenrivals.com">andy.rivals@tenrivals.com</a>.</p>
+</div>
+
+<div class="info-card" style="margin-top:28px">
+  <p class="info-card__title">ქართული — მოკლე შინაარსი</p>
+  <p class="info-prose">ჩვენ ვიყენებთ ქუქი-ფაილებს საიტის მუშაობისთვის (სესია, უსაფრთხოება, კალათა, გადახდა), ასევე — თქვენი თანხმობით — ანალიტიკისთვის. ქუქი-ფაილების მართვა შეგიძლიათ ბრაუზერის პარამეტრებიდან. დეტალები ზემოთ ინგლისურად; კითხვების შემთხვევაში მოგვწერეთ ელფოსტაზე.</p>
+</div>
+
+<p class="info-prose" style="margin-top:24px;font-size:14px;color:var(--muted)">Last updated: April 2026.</p>
+{% endblock %}

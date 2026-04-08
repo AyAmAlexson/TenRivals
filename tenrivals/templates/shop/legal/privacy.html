@@ -1,0 +1,75 @@
+{% extends 'shop/info/layout.html' %}
+{% block title %}Privacy policy — TR Shop{% endblock %}
+{% block info_main %}
+<header class="info-hero">
+  <h1 class="info-hero__h1">Privacy policy</h1>
+  <p class="info-hero__lead">How Tennis Rivals Shop collects and uses personal data when you use our website, account, or checkout. We target customers in <strong>Georgia</strong> and process data under the <strong>Law of Georgia on Personal Data Protection</strong> and related rules.</p>
+</header>
+
+<div class="info-callout">
+  This page is for transparency. It does not replace individual legal advice. If you need a formal data subject request, use the contact below.
+</div>
+
+<div class="info-section">
+  <h2 class="info-h2">1. Data controller</h2>
+  <p class="info-prose">The controller is <strong>IE Andrey Molodenko</strong> (individual entrepreneur; identification code 100382729), operator of Tennis Rivals Shop, address: Georgia, Tbilisi, E. Bejanishvili Street 23, apt. 19. Contact: <a href="mailto:andy.rivals@tenrivals.com">andy.rivals@tenrivals.com</a> and the channels on our <a href="{% url 'shop:info_contacts' %}" style="color:var(--accent);font-weight:600">Contacts</a> page.</p>
+</div>
+
+<div class="info-section">
+  <h2 class="info-h2">2. What we collect</h2>
+  <p class="info-prose">Depending on how you use the site, we may process:</p>
+  <ul class="info-ul" style="margin-top:10px">
+    <li><strong>Account &amp; identity:</strong> name, email, phone (if provided), login identifiers.</li>
+    <li><strong>Orders &amp; checkout:</strong> delivery address, cart contents, order references. For <strong>card payments on the website</strong>, card data are entered on a secure page or widget operated by our <strong>licensed payment service provider</strong>. We do <strong>not</strong> store full card numbers, CVV, or magnetic-stripe data on our own servers; we may receive a payment status, last digits, and transaction IDs from the provider.</li>
+    <li><strong>Communications:</strong> messages you send us (email, social channels we monitor for support).</li>
+    <li><strong>Technical data:</strong> IP address, device/browser type, pages viewed, timestamps — from server logs and, if enabled, analytics cookies (see our <a href="{% url 'shop:legal_cookies' %}" style="color:var(--accent);font-weight:600">Cookie policy</a>).</li>
+  </ul>
+</div>
+
+<div class="info-section">
+  <h2 class="info-h2">3. Purposes &amp; legal grounds</h2>
+  <p class="info-prose">We use data to: perform our contract with you (take payment, deliver goods, support orders); operate accounts; meet tax, accounting, and other <strong>legal obligations</strong> under Georgian law; secure the site and prevent fraud; and, if you opt in, send marketing. Where the law requires <strong>consent</strong> (for example certain cookies or direct marketing), we will ask for it separately.</p>
+</div>
+
+<div class="info-section">
+  <h2 class="info-h2">4. Sharing</h2>
+  <p class="info-prose">We may share data with: payment processors and banks (to complete card payments); delivery partners; hosting and IT providers; and advisers (e.g. accountants) where required. They may process data only on our instructions or as required by law. We do not sell personal data.</p>
+</div>
+
+<div class="info-section">
+  <h2 class="info-h2">5. Transfers outside Georgia</h2>
+  <p class="info-prose">Our primary operations and customers are in Georgia. Some tools (e.g. payment gateways, email, or hosting) may involve processing in other countries. Where that happens, we rely on appropriate safeguards required by Georgian law and contractual clauses with providers.</p>
+</div>
+
+<div class="info-section">
+  <h2 class="info-h2">6. Retention</h2>
+  <p class="info-prose">We keep data only as long as needed for the purposes above — for example order and fiscal records for periods set by Georgian tax and accounting rules, account data while your account is active, and logs for security for a limited time. When retention ends, we delete or anonymise data where feasible.</p>
+</div>
+
+<div class="info-section">
+  <h2 class="info-h2">7. Your rights (Georgia)</h2>
+  <p class="info-prose">Under the Law of Georgia on Personal Data Protection, you generally have rights to request information about processing, access, rectification, updating, blocking, or deletion of your personal data where the law allows, and to object to processing in prescribed cases. To exercise these rights, email <a href="mailto:andy.rivals@tenrivals.com">andy.rivals@tenrivals.com</a>. You may also contact the <strong>Personal Data Protection Service of Georgia</strong> (<a href="https://personaldata.ge/" target="_blank" rel="noopener">personaldata.ge</a>) with questions or complaints about lawful processing.</p>
+</div>
+
+<div class="info-section">
+  <h2 class="info-h2">8. Cookies</h2>
+  <p class="info-prose">We use cookies and similar technologies as described in our <a href="{% url 'shop:legal_cookies' %}" style="color:var(--accent);font-weight:600">Cookie policy</a>.</p>
+</div>
+
+<div class="info-section">
+  <h2 class="info-h2">9. Security</h2>
+  <p class="info-prose">We apply technical and organisational measures appropriate to the risk (HTTPS, access controls, agreements with processors). Card entry on our checkout is handled by certified payment partners; still, no online system is perfectly secure — use a strong password and protect your devices.</p>
+</div>
+
+<div class="info-section">
+  <h2 class="info-h2">10. Minors</h2>
+  <p class="info-prose">The shop is aimed at adults who can enter into contracts under Georgian law. We do not knowingly collect data from children without parental involvement; if you believe we have, contact us and we will address it.</p>
+</div>
+
+<div class="info-section">
+  <h2 class="info-h2">11. Updates</h2>
+  <p class="info-prose">We may update this policy. The current version is always on this page; material changes will be reflected in the date below.</p>
+</div>
+
+<p class="info-prose" style="margin-top:24px;font-size:14px;color:var(--muted)">Last updated: April 2026.</p>
+{% endblock %}

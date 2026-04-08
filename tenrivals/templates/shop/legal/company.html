@@ -1,0 +1,59 @@
+{% extends 'shop/info/layout.html' %}
+{% block title %}Company information — TR Shop{% endblock %}
+{% block info_main %}
+<header class="info-hero">
+  <h1 class="info-hero__h1">Company information</h1>
+  <p class="info-hero__lead">Legal details of the operator of Tennis Rivals Shop. We sell to customers located in <strong>Georgia</strong> only.</p>
+</header>
+
+<div class="info-section">
+  <div class="info-card">
+    <p class="info-card__title">English</p>
+    <dl class="info-dl">
+      <dt>Legal form</dt>
+      <dd>Individual entrepreneur (sole proprietor)</dd>
+      <dt>Registered name</dt>
+      <dd>IE Andrey Molodenko</dd>
+      <dt>Identification code (PN / Tax ID)</dt>
+      <dd>100382729</dd>
+      <dt>Registered address</dt>
+      <dd>Georgia, Tbilisi, E. Bejanishvili Street 23, apartment 19</dd>
+    </dl>
+    <p class="info-prose" style="margin-top:14px">Tennis Rivals Shop is the retail channel for tennis equipment and related goods offered through this website. We issue official fiscal documentation for purchases in line with Georgian tax rules.</p>
+  </div>
+</div>
+
+<div class="info-section">
+  <div class="info-card">
+    <p class="info-card__title">ქართული</p>
+    <dl class="info-dl">
+      <dt>სამართლებრივი ფორმა</dt>
+      <dd>ინდივიდუალური მეწარმე</dd>
+      <dt>დასახელება</dt>
+      <dd>ანდრეი მოლოდენკო</dd>
+      <dt>საიდენტიფიკაციო კოდი (PN)</dt>
+      <dd>100382729</dd>
+      <dt>რეგისტრაციის მისამართი</dt>
+      <dd>საქართველო, თბილისი, ე. ბეჟანიშვილი 23, ბინა 19</dd>
+    </dl>
+    <p class="info-prose" style="margin-top:14px">Tennis Rivals Shop არის ჩვენი ონლაინ მაღაზია ჩოგბურთის აღჭურვილობისა და დაკავშირებული პროდუქტებისთვის. შეძენებზე ვაწარმოებთ ოფიციალურ ფისკალურ დოკუმენტაციას საქართველოს საგადასახადო წესების შესაბამისად.</p>
+  </div>
+</div>
+
+<div class="info-section">
+  <h2 class="info-h2">Contact</h2>
+  <dl class="info-dl">
+    <dt>Phone / WhatsApp</dt>
+    <dd><a href="tel:+995591288967">+995 591 288 967</a></dd>
+    <dt>Email</dt>
+    <dd><a href="mailto:andy.rivals@tenrivals.com">andy.rivals@tenrivals.com</a></dd>
+    <dt>Social</dt>
+    <dd><a href="https://www.instagram.com/tennis_rivals_shop/" target="_blank" rel="noopener">Instagram — @tennis_rivals_shop</a></dd>
+    <dt>Telegram</dt>
+    <dd><a href="https://t.me/tennis_rivals_shop_tbilisi" target="_blank" rel="noopener">@tennis_rivals_shop_tbilisi</a></dd>
+  </dl>
+  <p class="info-prose" style="margin-top:14px">We are <strong>online-first</strong>. Pickup and hand delivery are described on <a href="{% url 'shop:info_delivery' %}" style="color:var(--accent);font-weight:600">Delivery</a> and <a href="{% url 'shop:info_contacts' %}" style="color:var(--accent);font-weight:600">Contacts</a>.</p>
+</div>
+
+<p class="info-prose" style="margin-top:24px;font-size:14px;color:var(--muted)">Last updated: April 2026.</p>
+{% endblock %}
