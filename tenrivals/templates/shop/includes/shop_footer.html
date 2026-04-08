@@ -1,0 +1,31 @@
+{# Single shop footer — include on every shop page #}
+<footer class="footer">
+  <div class="container">
+    <div class="footer-top">
+      <div>
+        <h4>Tennis Rivals: The Line for Your Growth.</h4>
+        <p>Equipment and stories for players who want more from the game.</p>
+        {% include 'shop/includes/shop_footer_ctas.html' %}
+      </div>
+      <div>
+        <h4>Explore</h4>
+        {% include 'shop/includes/shop_footer_explore.html' %}
+      </div>
+      <div>
+        <h4>Help</h4>
+        {% include 'shop/includes/shop_info_nav_links.html' %}
+      </div>
+      <div>
+        <h4>Contacts</h4>
+        <a href="tel:+995591288967">+995 591 288 967</a>
+        <a href="https://wa.me/995591288967" target="_blank" rel="noopener">WhatsApp</a>
+        <a href="https://t.me/tennis_rivals_shop_tbilisi" target="_blank" rel="noopener">Telegram</a>
+        <a href="https://www.instagram.com/tennis_rivals_shop/" target="_blank" rel="noopener">Instagram</a>
+        <a href="mailto:andy.rivals@tenrivals.com">andy.rivals@tenrivals.com</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div>© {% now "Y" %} TenRivals Shop. All rights reserved.</div>
+    </div>
+  </div>
+</footer>
