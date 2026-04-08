@@ -665,7 +665,7 @@ def shop_info_page(request, page_key: str):
     template = _INFO_PAGE_TEMPLATES.get(page_key)
     if template is None:
         raise Http404('Page not found')
-    return render(request, template, {'info_active': page_key})
+    return render(request, template, {})
 
 
 def _product_create_pick_type_qs(return_next: str, channel_raw: str) -> str:
