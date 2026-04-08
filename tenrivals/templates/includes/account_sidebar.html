@@ -8,9 +8,6 @@
     <a href="{% url 'persons:shop_order_history' %}" class="{% if active_nav == 'orders' %}active{% endif %}">Order history</a>
     <a href="{% url 'account_change_password' %}">Change Password</a>
     <a href="{% url 'persons:change_email' %}">Change Email</a>
-    {% if user.is_superuser %}
-    <a href="{% url 'persons:staff_users' %}">Staff</a>
-    {% endif %}
     <a href="{% url 'shop:index' %}">Back to Shop</a>
   </nav>
 </aside>

@@ -13,6 +13,7 @@ urlpatterns = [
     path('', RedirectView.as_view(pattern_name='shop:index', permanent=False)),
     path('shop/', include('shop.urls')),
     path('accounts/', include('allauth.urls')),
+    path('administration/', include(('persons.administration_urls', 'administration'), namespace='administration')),
     path('persons/', include('persons.urls')),
     path('league/', include('rivals.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

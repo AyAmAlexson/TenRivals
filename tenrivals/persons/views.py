@@ -614,19 +614,19 @@ def _sync_primary_email_address(user):
 @login_required
 @user_passes_test(_superuser_required)
 def redirect_legacy_superuser_users(request):
-    return redirect("persons:staff_users")
+    return redirect("administration:staff_users")
 
 
 @login_required
 @user_passes_test(_superuser_required)
 def redirect_legacy_superuser_send_verification(request, user_id):
-    return redirect("persons:superuser_send_email_verification", user_id=user_id)
+    return redirect("administration:superuser_send_email_verification", user_id=user_id)
 
 
 @login_required
 @user_passes_test(_superuser_required)
 def redirect_legacy_superuser_user_edit(request, user_id):
-    return redirect("persons:superuser_user_edit", user_id=user_id)
+    return redirect("administration:superuser_user_edit", user_id=user_id)
 
 
 @login_required
@@ -636,7 +636,7 @@ def superuser_send_email_verification(request, user_id):
     target = get_object_or_404(CustomUser, pk=user_id)
     if target.is_primary_email_verified:
         messages.info(request, f"{target.email} is already verified.")
-        return redirect("persons:staff_users")
+        return redirect("administration:staff_users")
     try:
         send_email_confirmation(request, target, signup=False)
         messages.success(
@@ -649,7 +649,7 @@ def superuser_send_email_verification(request, user_id):
             request,
             "Could not send verification email. Check SMTP or logs.",
         )
-    return redirect("persons:staff_users")
+    return redirect("administration:staff_users")
 
 
 @login_required
@@ -695,7 +695,7 @@ def superuser_user_edit(request, user_id):
                 )
             else:
                 messages.success(request, f"User {user.email} (ID {user.pk}) updated.")
-                return redirect("persons:staff_users")
+                return redirect("administration:staff_users")
     else:
         form = SuperuserUserEditForm(instance=target, editor=request.user)
 
@@ -711,7 +711,7 @@ def superuser_user_edit(request, user_id):
 
 
 def _staff_listings_page(request, channel: str, nav_key: str):
-    redirect_name = "persons:staff_stock" if nav_key == "stock" else "persons:staff_preorder"
+    redirect_name = "administration:staff_stock" if nav_key == "stock" else "administration:staff_preorder"
     if request.method == "POST":
         action = request.POST.get("action")
         if action == "remove_listing":
@@ -830,15 +830,15 @@ def staff_home_banners(request):
             h.secondary_link_url = (request.POST.get("secondary_link_url") or "").strip()[:500]
             h.save()
             messages.success(request, "Hero headline, text, and links saved.")
-            return redirect("persons:staff_home_banners")
+            return redirect("administration:staff_home_banners")
         if action == "add_hero_slide":
             if HomeHeroSlide.objects.count() >= _MAX_HERO_SLIDES:
                 messages.error(request, "You can have at most 5 hero slides.")
-                return redirect("persons:staff_home_banners")
+                return redirect("administration:staff_home_banners")
             image = request.FILES.get("image")
             if not image:
                 messages.error(request, "Choose an image file for the new slide.")
-                return redirect("persons:staff_home_banners")
+                return redirect("administration:staff_home_banners")
             link = (request.POST.get("image_link_url") or "").strip()[:500]
             note = (request.POST.get("internal_note") or "").strip()[:200]
             next_order = (HomeHeroSlide.objects.aggregate(m=Max("sort_order"))["m"] or 0) + 1
@@ -849,30 +849,30 @@ def staff_home_banners(request):
                 internal_note=note,
             )
             messages.success(request, "Hero slide added.")
-            return redirect("persons:staff_home_banners")
+            return redirect("administration:staff_home_banners")
         if action == "delete_hero_slide":
             try:
                 sid = int(request.POST.get("slide_id", "0"))
             except (TypeError, ValueError):
                 messages.error(request, "Invalid slide.")
-                return redirect("persons:staff_home_banners")
+                return redirect("administration:staff_home_banners")
             get_object_or_404(HomeHeroSlide, pk=sid).delete()
             messages.success(request, "Hero slide removed.")
-            return redirect("persons:staff_home_banners")
+            return redirect("administration:staff_home_banners")
         if action == "update_hero_slide":
             try:
                 sid = int(request.POST.get("slide_id", "0"))
             except (TypeError, ValueError):
                 messages.error(request, "Invalid slide.")
-                return redirect("persons:staff_home_banners")
+                return redirect("administration:staff_home_banners")
             slide = get_object_or_404(HomeHeroSlide, pk=sid)
             slide.image_link_url = (request.POST.get("image_link_url") or "").strip()[:500]
             slide.internal_note = (request.POST.get("internal_note") or "").strip()[:200]
             slide.save(update_fields=["image_link_url", "internal_note"])
             messages.success(request, "Slide link and note updated.")
-            return redirect("persons:staff_home_banners")
+            return redirect("administration:staff_home_banners")
         messages.error(request, "Unknown action.")
-        return redirect("persons:staff_home_banners")
+        return redirect("administration:staff_home_banners")
 
     return render(
         request,
@@ -930,7 +930,7 @@ def staff_blog_posts(request):
             if not post.is_published:
                 post.published_at = None
             post.save(update_fields=["is_published", "published_at", "updated_at"])
-            return redirect("persons:staff_blog_posts")
+            return redirect("administration:staff_blog_posts")
 
         if action == "toggle_featured" and post:
             turning_on = not post.is_featured_on_home
@@ -939,18 +939,18 @@ def staff_blog_posts(request):
                     request,
                     f"At most {_MAX_FEATURED_STORIES} posts can be featured on home.",
                 )
-                return redirect("persons:staff_blog_posts")
+                return redirect("administration:staff_blog_posts")
             post.is_featured_on_home = turning_on
             post.save(update_fields=["is_featured_on_home", "updated_at"])
-            return redirect("persons:staff_blog_posts")
+            return redirect("administration:staff_blog_posts")
 
         if action == "delete_post" and post:
             post.delete()
             messages.success(request, "Blog post deleted.")
-            return redirect("persons:staff_blog_posts")
+            return redirect("administration:staff_blog_posts")
 
         messages.error(request, "Unknown action.")
-        return redirect("persons:staff_blog_posts")
+        return redirect("administration:staff_blog_posts")
 
     posts = BlogPost.objects.order_by("-published_at", "-id")
     return render(
@@ -974,8 +974,8 @@ def staff_blog_edit(request, post_id=None):
 
     def _back_to_edit():
         if is_create:
-            return redirect("persons:staff_blog_new")
-        return redirect("persons:staff_blog_edit", post_id=post_id)
+            return redirect("administration:staff_blog_new")
+        return redirect("administration:staff_blog_edit", post_id=post_id)
 
     if request.method == "POST":
         title = (request.POST.get("title") or "").strip()[:220]
@@ -1020,7 +1020,7 @@ def staff_blog_edit(request, post_id=None):
             target.card_image = card
         target.save()
         messages.success(request, "Blog post saved.")
-        return redirect("persons:staff_blog_edit", post_id=target.pk)
+        return redirect("administration:staff_blog_edit", post_id=target.pk)
 
     return render(
         request,
@@ -1049,21 +1049,21 @@ def staff_users(request):
                 target_id = int(request.POST.get("user_id", "0"))
             except (TypeError, ValueError):
                 messages.error(request, "Invalid user.")
-                return redirect("persons:staff_users")
+                return redirect("administration:staff_users")
             if target_id == request.user.pk:
                 messages.error(request, "You cannot delete your own account here.")
-                return redirect("persons:staff_users")
+                return redirect("administration:staff_users")
             target = get_object_or_404(CustomUser, pk=target_id)
             if target.is_superuser:
                 messages.error(
                     request,
                     "Superuser accounts cannot be removed from this page. Use Django admin if needed.",
                 )
-                return redirect("persons:staff_users")
+                return redirect("administration:staff_users")
             email = target.email
             target.delete()
             messages.success(request, f"User {email} has been deleted.")
-            return redirect("persons:staff_users")
+            return redirect("administration:staff_users")
 
         if action == "create":
             form = SuperuserCreateUserForm(request.POST)
@@ -1110,7 +1110,7 @@ def staff_users(request):
                     request,
                     f"User {user.email} created.",
                 )
-                return redirect("persons:staff_users")
+                return redirect("administration:staff_users")
         else:
             form = SuperuserCreateUserForm()
     else:

@@ -1,6 +1,6 @@
 from django.urls import path
 from . import views
-from django.views.generic import TemplateView
+from django.views.generic import TemplateView, RedirectView
 
 app_name = 'persons'
 
@@ -32,23 +32,21 @@ urlpatterns = [
         name='account_password_request_tg'
     ),
 
-    path('staff/users/', views.staff_users, name='staff_users'),
+    path('staff/users/', RedirectView.as_view(pattern_name='administration:staff_users', permanent=False)),
     path(
         'staff/users/<int:user_id>/send-email-verification/',
-        views.superuser_send_email_verification,
-        name='superuser_send_email_verification',
+        RedirectView.as_view(pattern_name='administration:superuser_send_email_verification', permanent=False),
     ),
     path(
         'staff/users/<int:user_id>/edit/',
-        views.superuser_user_edit,
-        name='superuser_user_edit',
+        RedirectView.as_view(pattern_name='administration:superuser_user_edit', permanent=False),
     ),
-    path('staff/stock/', views.staff_stock_list, name='staff_stock'),
-    path('staff/preorder/', views.staff_preorder_list, name='staff_preorder'),
-    path('staff/blog/', views.staff_blog_posts, name='staff_blog_posts'),
-    path('staff/blog/new/', views.staff_blog_edit, name='staff_blog_new'),
-    path('staff/blog/<int:post_id>/', views.staff_blog_edit, name='staff_blog_edit'),
-    path('staff/banners/', views.staff_home_banners, name='staff_home_banners'),
+    path('staff/stock/', RedirectView.as_view(pattern_name='administration:staff_stock', permanent=False)),
+    path('staff/preorder/', RedirectView.as_view(pattern_name='administration:staff_preorder', permanent=False)),
+    path('staff/blog/', RedirectView.as_view(pattern_name='administration:staff_blog_posts', permanent=False)),
+    path('staff/blog/new/', RedirectView.as_view(pattern_name='administration:staff_blog_new', permanent=False)),
+    path('staff/blog/<int:post_id>/', RedirectView.as_view(pattern_name='administration:staff_blog_edit', permanent=False)),
+    path('staff/banners/', RedirectView.as_view(pattern_name='administration:staff_home_banners', permanent=False)),
 
     path('superuser/users/', views.redirect_legacy_superuser_users, name='superuser_users'),
     path(

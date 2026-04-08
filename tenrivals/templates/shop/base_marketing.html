@@ -145,6 +145,7 @@
         </nav>
         <div class="auth">
           {% if user.is_authenticated %}
+          {% if user.is_superuser %}<a href="{% url 'administration:staff_users' %}" style="margin-right:12px">Staff</a>{% endif %}
           <div class="user-menu">
             <button type="button" class="user-avatar">{{ user.first_name|make_list|first|default:"?" }}{{ user.last_name|make_list|first|default:"?" }}</button>
             <div class="user-dropdown">

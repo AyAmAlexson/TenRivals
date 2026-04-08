@@ -1,11 +1,11 @@
 {% extends 'persons/staff_base.html' %}
-{% block title %}User administration — Staff — TR Shop{% endblock %}
-{% block page_heading %}User administration{% endblock %}
+{% block title %}Shop Administration — Staff — TR Shop{% endblock %}
+{% block page_heading %}Shop Administration{% endblock %}
 {% block page_note %}<p class="page-note">Superuser only. You cannot delete your own account or other superusers here.</p>{% endblock %}
 {% block content %}
       <div class="card">
         <h2 class="card-title">Create user</h2>
-        <form method="post" action="{% url 'persons:staff_users' %}">
+        <form method="post" action="{% url 'administration:staff_users' %}">
           {% csrf_token %}
           <input type="hidden" name="action" value="create">
           <div class="form-row">
@@ -92,7 +92,7 @@
                 <td>
                   <div class="action-icons">
                     {% if not u.is_primary_email_verified %}
-                    <form method="post" action="{% url 'persons:superuser_send_email_verification' u.pk %}" style="display:inline">
+                    <form method="post" action="{% url 'administration:superuser_send_email_verification' u.pk %}" style="display:inline">
                       {% csrf_token %}
                       <button type="submit" class="icon-btn" title="Send email verification" aria-label="Send email verification">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22 6 12 13 2 6"/></svg>
@@ -119,11 +119,11 @@
                 </td>
                 <td>
                   <div class="action-icons">
-                    <a class="icon-btn" href="{% url 'persons:superuser_user_edit' u.pk %}" title="Edit user" aria-label="Edit user">
+                    <a class="icon-btn" href="{% url 'administration:superuser_user_edit' u.pk %}" title="Edit user" aria-label="Edit user">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
                     </a>
                     {% if u.pk != request.user.pk and not u.is_superuser %}
-                    <form method="post" action="{% url 'persons:staff_users' %}" style="display:inline" onsubmit="return confirm('Delete user {{ u.email|escapejs }}? This cannot be undone.');">
+                    <form method="post" action="{% url 'administration:staff_users' %}" style="display:inline" onsubmit="return confirm('Delete user {{ u.email|escapejs }}? This cannot be undone.');">
                       {% csrf_token %}
                       <input type="hidden" name="action" value="delete">
                       <input type="hidden" name="user_id" value="{{ u.pk }}">

@@ -20,7 +20,7 @@
 
 <div class="card" style="margin-bottom:28px">
   <h2 class="card-title">Hero — headline & text (same for all slides)</h2>
-  <form method="post" action="{% url 'persons:staff_home_banners' %}">
+  <form method="post" action="{% url 'administration:staff_home_banners' %}">
     {% csrf_token %}
     <input type="hidden" name="action" value="save_hero_content">
     <div class="form-grid form-grid--wide">
@@ -66,7 +66,7 @@
     <span class="muted">—</span>
     {% endif %}
     <div>
-      <form method="post" action="{% url 'persons:staff_home_banners' %}" class="form-grid" style="max-width:100%">
+      <form method="post" action="{% url 'administration:staff_home_banners' %}" class="form-grid" style="max-width:100%">
         {% csrf_token %}
         <input type="hidden" name="action" value="update_hero_slide">
         <input type="hidden" name="slide_id" value="{{ slide.pk }}">
@@ -81,7 +81,7 @@
         <button type="submit" class="btn btn--sm">Update link & note</button>
       </form>
     </div>
-    <form method="post" action="{% url 'persons:staff_home_banners' %}" onsubmit="return confirm('Remove this slide from the home hero?');">
+    <form method="post" action="{% url 'administration:staff_home_banners' %}" onsubmit="return confirm('Remove this slide from the home hero?');">
       {% csrf_token %}
       <input type="hidden" name="action" value="delete_hero_slide">
       <input type="hidden" name="slide_id" value="{{ slide.pk }}">
@@ -95,7 +95,7 @@
   {% if hero_slides|length < max_hero_slides %}
   <div style="margin-top:20px;padding-top:20px;border-top:1px dashed var(--line)">
     <h3 class="card-title" style="font-size:15px;margin-bottom:12px">Add slide (+)</h3>
-    <form method="post" enctype="multipart/form-data" action="{% url 'persons:staff_home_banners' %}">
+    <form method="post" enctype="multipart/form-data" action="{% url 'administration:staff_home_banners' %}">
       {% csrf_token %}
       <input type="hidden" name="action" value="add_hero_slide">
       <div class="form-grid">
@@ -124,7 +124,7 @@
     Use the <strong>Blog</strong> tab to create/edit posts, toggle <strong>Published</strong> and
     <strong>Featured</strong>, and manage hero/card images.
   </p>
-  <a class="btn btn--sm" href="{% url 'persons:staff_blog_posts' %}">Open blog management</a>
+  <a class="btn btn--sm" href="{% url 'administration:staff_blog_posts' %}">Open blog management</a>
 </div>
 
 {% endblock %}

@@ -12,7 +12,7 @@
 {% endblock %}
 {% block content %}
 <div class="staff-toolbar">
-  <a class="btn btn--sm" href="{% url 'persons:staff_blog_new' %}">+ Add blog post</a>
+  <a class="btn btn--sm" href="{% url 'administration:staff_blog_new' %}">+ Add blog post</a>
 </div>
 
 <div class="card">
@@ -20,7 +20,7 @@
   <div class="table-wrap">
     <table>
       <thead>
-        <tr class="clickable-row" data-href="{% url 'persons:staff_blog_edit' p.pk %}">
+        <tr class="clickable-row" data-href="{% url 'administration:staff_blog_edit' p.pk %}">
           <th>Title</th>
           <th>Slug</th>
           <th>Date</th>
@@ -32,8 +32,8 @@
       <tbody>
         {% for p in blog_posts %}
         <tr>
-          <td><a class="row-link" href="{% url 'persons:staff_blog_edit' p.pk %}">{{ p.title }}</a></td>
-          <td class="mono"><a class="row-link" href="{% url 'persons:staff_blog_edit' p.pk %}">{{ p.slug }}</a></td>
+          <td><a class="row-link" href="{% url 'administration:staff_blog_edit' p.pk %}">{{ p.title }}</a></td>
+          <td class="mono"><a class="row-link" href="{% url 'administration:staff_blog_edit' p.pk %}">{{ p.slug }}</a></td>
           <td>{% if p.published_at %}{{ p.published_at|date:"Y-m-d H:i" }}{% else %}—{% endif %}</td>
           <td>
             <form method="post" action="">

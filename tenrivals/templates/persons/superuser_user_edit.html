@@ -4,7 +4,7 @@
 {% block page_note %}<p class="page-meta">ID {{ edit_user.pk }} · joined {{ edit_user.date_joined|date:"Y-m-d H:i" }}</p>{% endblock %}
 {% block content %}
 <div class="staff-narrow">
-  <form method="post" action="{% url 'persons:superuser_user_edit' edit_user.pk %}">
+  <form method="post" action="{% url 'administration:superuser_user_edit' edit_user.pk %}">
     {% csrf_token %}
 
     <div class="card">
@@ -91,7 +91,7 @@
     {% endif %}
 
     <div class="actions">
-      <a class="btn btn--outline" href="{% url 'persons:staff_users' %}">Cancel</a>
+      <a class="btn btn--outline" href="{% url 'administration:staff_users' %}">Cancel</a>
       <button type="submit" class="btn">Save changes</button>
     </div>
   </form>
