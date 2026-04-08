@@ -313,11 +313,10 @@ class BlogPost(models.Model):
         blank=True,
         help_text=_('Legacy aggregated body (auto-built from text blocks).'),
     )
-    body_block_1 = models.TextField(blank=True, help_text=_('Article text block 1/5.'))
-    body_block_2 = models.TextField(blank=True, help_text=_('Article text block 2/5.'))
-    body_block_3 = models.TextField(blank=True, help_text=_('Article text block 3/5.'))
-    body_block_4 = models.TextField(blank=True, help_text=_('Article text block 4/5.'))
-    body_block_5 = models.TextField(blank=True, help_text=_('Article text block 5/5.'))
+    body_block_1 = models.TextField(blank=True, help_text=_('Article text block 1/4 (before quote).'))
+    body_block_2 = models.TextField(blank=True, help_text=_('Article text block 2/4 (after quote, before mid CTA).'))
+    body_block_3 = models.TextField(blank=True, help_text=_('Article text block 3/4 (after mid CTA, before product rail).'))
+    body_block_4 = models.TextField(blank=True, help_text=_('Article text block 4/4 (after product rail, before end CTA).'))
     hero_image = models.ImageField(
         upload_to='shop/blog/',
         null=True,

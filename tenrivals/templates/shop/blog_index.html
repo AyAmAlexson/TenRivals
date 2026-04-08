@@ -1,6 +1,11 @@
 {% extends 'shop/base_marketing.html' %}
 {% block title %}Blog — TR Shop{% endblock %}
+{% block extra_css %}
+    .blog-stories-page{margin:0 -32px;padding:8px 32px 40px;background:linear-gradient(180deg,#f8fafc 0%,#fff 100%)}
+    @media(max-width:640px){.blog-stories-page{margin:0 -20px;padding:8px 20px 36px}}
+{% endblock %}
 {% block content %}
+<div class="blog-stories-page">
 <div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:32px">
   <div>
     <h1 class="blog-page-title">Stories</h1>
@@ -29,6 +34,7 @@
   {% endfor %}
 </div>
 {% else %}
-<p style="color:var(--muted);font-size:15px;line-height:1.6;max-width:520px;text-transform:none">No published articles yet. Add posts in Staff → Shop home (blog section) or Django admin, then mark them as published.</p>
+<p style="color:var(--muted);font-size:15px;line-height:1.6;max-width:520px;text-transform:none">No published articles yet. Add posts under Shop Administration → Blog, then mark them as published.</p>
 {% endif %}
+</div>
 {% endblock %}

@@ -591,54 +591,58 @@ def blog_post(request, slug):
     }
     featured_products = [products_by_id[pid] for pid in slot_ids if pid in products_by_id]
 
-    text_blocks = [
-        (post.body_block_1 or '').strip(),
-        (post.body_block_2 or '').strip(),
-        (post.body_block_3 or '').strip(),
-        (post.body_block_4 or '').strip(),
-        (post.body_block_5 or '').strip(),
-    ]
-    if not any(text_blocks):
-        fallback = [(post.body or '').strip()]
-        text_blocks = fallback + ["", "", "", ""]
+    def _p(text: str) -> str:
+        return (text or '').strip()
+
+    def _add_paragraph(sections, text: str):
+        t = _p(text)
+        if t:
+            sections.append({'type': 'paragraph', 'text': t})
 
     article_sections = []
-    for idx, block in enumerate(text_blocks, start=1):
-        if block:
-            article_sections.append({'type': 'paragraph', 'text': block})
+    # Order: text 1 → quote → text 2 → CTA middle → text 3 → products → text 4 → CTA end
+    _add_paragraph(article_sections, post.body_block_1)
 
-        # Insert rich blocks between text blocks.
-        if idx == 1 and featured_products:
-            article_sections.append({'type': 'products', 'products': featured_products})
-        if idx == 2 and (post.quote_text or '').strip():
-            article_sections.append(
-                {'type': 'quote', 'text': post.quote_text.strip(), 'author': (post.quote_author or '').strip()}
-            )
-        if idx == 3 and post.article_image_1:
-            article_sections.append({'type': 'image', 'image': post.article_image_1})
-        if idx == 3 and (post.cta_mid_button_label or '').strip() and (post.cta_mid_button_url or '').strip():
-            article_sections.append(
-                {
-                    'type': 'cta',
-                    'text': (post.cta_mid_text or '').strip(),
-                    'label': post.cta_mid_button_label.strip(),
-                    'url': post.cta_mid_button_url.strip(),
-                }
-            )
-        if idx == 4 and post.article_image_2:
-            article_sections.append({'type': 'image', 'image': post.article_image_2})
-        if idx == 5 and post.article_image_3:
-            article_sections.append({'type': 'image', 'image': post.article_image_3})
+    if _p(post.quote_text):
+        article_sections.append(
+            {
+                'type': 'quote',
+                'text': post.quote_text.strip(),
+                'author': _p(post.quote_author),
+            }
+        )
 
-    if (post.cta_end_button_label or '').strip() and (post.cta_end_button_url or '').strip():
+    _add_paragraph(article_sections, post.body_block_2)
+
+    if _p(post.cta_mid_button_label) and _p(post.cta_mid_button_url):
         article_sections.append(
             {
                 'type': 'cta',
-                'text': (post.cta_end_text or '').strip(),
+                'text': _p(post.cta_mid_text),
+                'label': post.cta_mid_button_label.strip(),
+                'url': post.cta_mid_button_url.strip(),
+            }
+        )
+
+    _add_paragraph(article_sections, post.body_block_3)
+
+    if featured_products:
+        article_sections.append({'type': 'products', 'products': featured_products})
+
+    _add_paragraph(article_sections, post.body_block_4)
+
+    if _p(post.cta_end_button_label) and _p(post.cta_end_button_url):
+        article_sections.append(
+            {
+                'type': 'cta',
+                'text': _p(post.cta_end_text),
                 'label': post.cta_end_button_label.strip(),
                 'url': post.cta_end_button_url.strip(),
             }
         )
+
+    if not article_sections and _p(post.body):
+        article_sections.append({'type': 'paragraph', 'text': post.body.strip()})
 
     return render(
         request,

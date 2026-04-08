@@ -30,26 +30,6 @@
         <textarea id="id_lead" name="lead" rows="3" class="form-control">{{ post_obj.lead|default:'' }}</textarea>
       </div>
       <div class="form-group">
-        <label for="id_body_block_1">Text block 1</label>
-        <textarea id="id_body_block_1" name="body_block_1" rows="6" class="form-control">{{ post_obj.body_block_1|default:'' }}</textarea>
-      </div>
-      <div class="form-group">
-        <label for="id_body_block_2">Text block 2</label>
-        <textarea id="id_body_block_2" name="body_block_2" rows="6" class="form-control">{{ post_obj.body_block_2|default:'' }}</textarea>
-      </div>
-      <div class="form-group">
-        <label for="id_body_block_3">Text block 3</label>
-        <textarea id="id_body_block_3" name="body_block_3" rows="6" class="form-control">{{ post_obj.body_block_3|default:'' }}</textarea>
-      </div>
-      <div class="form-group">
-        <label for="id_body_block_4">Text block 4</label>
-        <textarea id="id_body_block_4" name="body_block_4" rows="6" class="form-control">{{ post_obj.body_block_4|default:'' }}</textarea>
-      </div>
-      <div class="form-group">
-        <label for="id_body_block_5">Text block 5</label>
-        <textarea id="id_body_block_5" name="body_block_5" rows="6" class="form-control">{{ post_obj.body_block_5|default:'' }}</textarea>
-      </div>
-      <div class="form-group">
         <label for="id_hero_image">Hero image (horizontal, article only)</label>
         <input id="id_hero_image" name="hero_image" type="file" accept="image/*">
         {% if post_obj and post_obj.hero_image %}<div style="margin-top:8px"><img class="img-preview" src="{{ post_obj.hero_image.url }}" alt=""></div>{% endif %}
@@ -60,22 +40,11 @@
         {% if post_obj and post_obj.card_image %}<div style="margin-top:8px"><img class="img-preview" src="{{ post_obj.card_image.url }}" alt=""></div>{% endif %}
       </div>
       <div class="form-group">
-        <label for="id_article_image_1">Article image 1 (inline)</label>
-        <input id="id_article_image_1" name="article_image_1" type="file" accept="image/*">
-        {% if post_obj and post_obj.article_image_1 %}<div style="margin-top:8px"><img class="img-preview" src="{{ post_obj.article_image_1.url }}" alt=""></div>{% endif %}
+        <label for="id_body_block_1">Text block 1 <span style="font-weight:400;color:var(--muted)">(before quote)</span></label>
+        <textarea id="id_body_block_1" name="body_block_1" rows="6" class="form-control">{{ post_obj.body_block_1|default:'' }}</textarea>
       </div>
       <div class="form-group">
-        <label for="id_article_image_2">Article image 2 (inline)</label>
-        <input id="id_article_image_2" name="article_image_2" type="file" accept="image/*">
-        {% if post_obj and post_obj.article_image_2 %}<div style="margin-top:8px"><img class="img-preview" src="{{ post_obj.article_image_2.url }}" alt=""></div>{% endif %}
-      </div>
-      <div class="form-group">
-        <label for="id_article_image_3">Article image 3 (inline)</label>
-        <input id="id_article_image_3" name="article_image_3" type="file" accept="image/*">
-        {% if post_obj and post_obj.article_image_3 %}<div style="margin-top:8px"><img class="img-preview" src="{{ post_obj.article_image_3.url }}" alt=""></div>{% endif %}
-      </div>
-      <div class="form-group">
-        <label for="id_quote_text">Quote block (large highlight)</label>
+        <label for="id_quote_text">Quote</label>
         <textarea id="id_quote_text" name="quote_text" rows="3" class="form-control">{{ post_obj.quote_text|default:'' }}</textarea>
       </div>
       <div class="form-group">
@@ -83,7 +52,27 @@
         <input id="id_quote_author" name="quote_author" type="text" class="form-control" maxlength="160" value="{{ post_obj.quote_author|default:'' }}">
       </div>
       <div class="form-group">
-        <label for="id_featured_product_1">Featured product #1</label>
+        <label for="id_body_block_2">Text block 2 <span style="font-weight:400;color:var(--muted)">(after quote, before mid CTA)</span></label>
+        <textarea id="id_body_block_2" name="body_block_2" rows="6" class="form-control">{{ post_obj.body_block_2|default:'' }}</textarea>
+      </div>
+      <div class="form-group">
+        <label for="id_cta_mid_text">CTA middle — supporting text</label>
+        <input id="id_cta_mid_text" name="cta_mid_text" type="text" class="form-control" maxlength="240" value="{{ post_obj.cta_mid_text|default:'' }}">
+      </div>
+      <div class="form-group">
+        <label for="id_cta_mid_button_label">CTA middle — button label</label>
+        <input id="id_cta_mid_button_label" name="cta_mid_button_label" type="text" class="form-control" maxlength="120" value="{{ post_obj.cta_mid_button_label|default:'' }}">
+      </div>
+      <div class="form-group">
+        <label for="id_cta_mid_button_url">CTA middle — button URL</label>
+        <input id="id_cta_mid_button_url" name="cta_mid_button_url" type="text" class="form-control" maxlength="500" value="{{ post_obj.cta_mid_button_url|default:'' }}">
+      </div>
+      <div class="form-group">
+        <label for="id_body_block_3">Text block 3 <span style="font-weight:400;color:var(--muted)">(before featured products)</span></label>
+        <textarea id="id_body_block_3" name="body_block_3" rows="6" class="form-control">{{ post_obj.body_block_3|default:'' }}</textarea>
+      </div>
+      <div class="form-group">
+        <label for="id_featured_product_1">Featured products (carousel, max 5) — #1</label>
         <select id="id_featured_product_1" name="featured_product_1" class="form-control">
           <option value="">— none —</option>
           {% for p in active_products %}
@@ -128,28 +117,35 @@
         </select>
       </div>
       <div class="form-group">
-        <label for="id_cta_mid_text">CTA middle text</label>
-        <input id="id_cta_mid_text" name="cta_mid_text" type="text" class="form-control" maxlength="240" value="{{ post_obj.cta_mid_text|default:'' }}">
+        <label for="id_body_block_4">Text block 4 <span style="font-weight:400;color:var(--muted)">(after featured products, before end CTA)</span></label>
+        <textarea id="id_body_block_4" name="body_block_4" rows="6" class="form-control">{{ post_obj.body_block_4|default:'' }}</textarea>
       </div>
       <div class="form-group">
-        <label for="id_cta_mid_button_label">CTA middle button label</label>
-        <input id="id_cta_mid_button_label" name="cta_mid_button_label" type="text" class="form-control" maxlength="120" value="{{ post_obj.cta_mid_button_label|default:'' }}">
-      </div>
-      <div class="form-group">
-        <label for="id_cta_mid_button_url">CTA middle button URL</label>
-        <input id="id_cta_mid_button_url" name="cta_mid_button_url" type="text" class="form-control" maxlength="500" value="{{ post_obj.cta_mid_button_url|default:'' }}">
-      </div>
-      <div class="form-group">
-        <label for="id_cta_end_text">CTA end text</label>
+        <label for="id_cta_end_text">CTA end — supporting text</label>
         <input id="id_cta_end_text" name="cta_end_text" type="text" class="form-control" maxlength="240" value="{{ post_obj.cta_end_text|default:'' }}">
       </div>
       <div class="form-group">
-        <label for="id_cta_end_button_label">CTA end button label</label>
+        <label for="id_cta_end_button_label">CTA end — button label</label>
         <input id="id_cta_end_button_label" name="cta_end_button_label" type="text" class="form-control" maxlength="120" value="{{ post_obj.cta_end_button_label|default:'' }}">
       </div>
       <div class="form-group">
-        <label for="id_cta_end_button_url">CTA end button URL</label>
+        <label for="id_cta_end_button_url">CTA end — button URL</label>
         <input id="id_cta_end_button_url" name="cta_end_button_url" type="text" class="form-control" maxlength="500" value="{{ post_obj.cta_end_button_url|default:'' }}">
+      </div>
+      <div class="form-group">
+        <label for="id_article_image_1">Article image 1 <span style="font-weight:400;color:var(--muted)">(not shown in current layout)</span></label>
+        <input id="id_article_image_1" name="article_image_1" type="file" accept="image/*">
+        {% if post_obj and post_obj.article_image_1 %}<div style="margin-top:8px"><img class="img-preview" src="{{ post_obj.article_image_1.url }}" alt=""></div>{% endif %}
+      </div>
+      <div class="form-group">
+        <label for="id_article_image_2">Article image 2 <span style="font-weight:400;color:var(--muted)">(not shown)</span></label>
+        <input id="id_article_image_2" name="article_image_2" type="file" accept="image/*">
+        {% if post_obj and post_obj.article_image_2 %}<div style="margin-top:8px"><img class="img-preview" src="{{ post_obj.article_image_2.url }}" alt=""></div>{% endif %}
+      </div>
+      <div class="form-group">
+        <label for="id_article_image_3">Article image 3 <span style="font-weight:400;color:var(--muted)">(not shown)</span></label>
+        <input id="id_article_image_3" name="article_image_3" type="file" accept="image/*">
+        {% if post_obj and post_obj.article_image_3 %}<div style="margin-top:8px"><img class="img-preview" src="{{ post_obj.article_image_3.url }}" alt=""></div>{% endif %}
       </div>
       <div class="form-group">
         <label for="id_published_at">Published at</label>

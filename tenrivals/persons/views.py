@@ -1000,7 +1000,6 @@ def staff_blog_edit(request, post_id=None):
         target.body_block_2 = (request.POST.get("body_block_2") or "").strip()
         target.body_block_3 = (request.POST.get("body_block_3") or "").strip()
         target.body_block_4 = (request.POST.get("body_block_4") or "").strip()
-        target.body_block_5 = (request.POST.get("body_block_5") or "").strip()
         # Keep legacy combined field in sync for compatibility/search.
         target.body = "\n\n".join(
             [
@@ -1010,7 +1009,6 @@ def staff_blog_edit(request, post_id=None):
                     target.body_block_2,
                     target.body_block_3,
                     target.body_block_4,
-                    target.body_block_5,
                 )
                 if b
             ]
@@ -1075,7 +1073,7 @@ def staff_blog_edit(request, post_id=None):
             "is_create": is_create,
             "max_featured_stories": _MAX_FEATURED_STORIES,
             "page_heading": "New blog post" if is_create else "Edit blog post",
-            "page_note": "Hero image is used only on article page. Card image is used on home featured cards and blog list.",
+            "page_note": "Article order on the site: text 1 → quote → text 2 → mid CTA → text 3 → featured products (carousel) → text 4 → end CTA. Hero image: article page only. Card image: home carousel & blog list. Inline article images are stored but not shown in this layout.",
         },
     )
 
