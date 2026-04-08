@@ -1011,23 +1011,49 @@ def staff_blog_edit(request, post_id=None):
         except ValueError:
             target.featured_sort_order = 0
         target.featured_cta_label = (request.POST.get("featured_cta_label") or "").strip()[:120]
+        target.quote_text = (request.POST.get("quote_text") or "").strip()
+        target.quote_author = (request.POST.get("quote_author") or "").strip()[:160]
+        target.cta_mid_text = (request.POST.get("cta_mid_text") or "").strip()[:240]
+        target.cta_mid_button_label = (request.POST.get("cta_mid_button_label") or "").strip()[:120]
+        target.cta_mid_button_url = (request.POST.get("cta_mid_button_url") or "").strip()[:500]
+        target.cta_end_text = (request.POST.get("cta_end_text") or "").strip()[:240]
+        target.cta_end_button_label = (request.POST.get("cta_end_button_label") or "").strip()[:120]
+        target.cta_end_button_url = (request.POST.get("cta_end_button_url") or "").strip()[:500]
+
+        selected_products = []
+        for i in range(1, 6):
+            raw = (request.POST.get(f"featured_product_{i}") or "").strip()
+            selected_products.append(int(raw) if raw.isdigit() else None)
+        for i, pid in enumerate(selected_products, start=1):
+            setattr(target, f"featured_product_{i}_id", pid)
 
         hero = request.FILES.get("hero_image")
         card = request.FILES.get("card_image")
+        img1 = request.FILES.get("article_image_1")
+        img2 = request.FILES.get("article_image_2")
+        img3 = request.FILES.get("article_image_3")
         if hero:
             target.hero_image = hero
         if card:
             target.card_image = card
+        if img1:
+            target.article_image_1 = img1
+        if img2:
+            target.article_image_2 = img2
+        if img3:
+            target.article_image_3 = img3
         target.save()
         messages.success(request, "Blog post saved.")
         return redirect("administration:staff_blog_edit", post_id=target.pk)
 
+    active_products = Product.objects.filter(is_active=True).order_by("name", "id")
     return render(
         request,
         "persons/staff_blog_edit.html",
         {
             "staff_nav_active": "blog",
             "post_obj": post,
+            "active_products": active_products,
             "is_create": is_create,
             "max_featured_stories": _MAX_FEATURED_STORIES,
             "page_heading": "New blog post" if is_create else "Edit blog post",

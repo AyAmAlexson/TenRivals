@@ -44,6 +44,98 @@
         {% if post_obj and post_obj.card_image %}<div style="margin-top:8px"><img class="img-preview" src="{{ post_obj.card_image.url }}" alt=""></div>{% endif %}
       </div>
       <div class="form-group">
+        <label for="id_article_image_1">Article image 1 (inline)</label>
+        <input id="id_article_image_1" name="article_image_1" type="file" accept="image/*">
+        {% if post_obj and post_obj.article_image_1 %}<div style="margin-top:8px"><img class="img-preview" src="{{ post_obj.article_image_1.url }}" alt=""></div>{% endif %}
+      </div>
+      <div class="form-group">
+        <label for="id_article_image_2">Article image 2 (inline)</label>
+        <input id="id_article_image_2" name="article_image_2" type="file" accept="image/*">
+        {% if post_obj and post_obj.article_image_2 %}<div style="margin-top:8px"><img class="img-preview" src="{{ post_obj.article_image_2.url }}" alt=""></div>{% endif %}
+      </div>
+      <div class="form-group">
+        <label for="id_article_image_3">Article image 3 (inline)</label>
+        <input id="id_article_image_3" name="article_image_3" type="file" accept="image/*">
+        {% if post_obj and post_obj.article_image_3 %}<div style="margin-top:8px"><img class="img-preview" src="{{ post_obj.article_image_3.url }}" alt=""></div>{% endif %}
+      </div>
+      <div class="form-group">
+        <label for="id_quote_text">Quote block (large highlight)</label>
+        <textarea id="id_quote_text" name="quote_text" rows="3" class="form-control">{{ post_obj.quote_text|default:'' }}</textarea>
+      </div>
+      <div class="form-group">
+        <label for="id_quote_author">Quote author (optional)</label>
+        <input id="id_quote_author" name="quote_author" type="text" class="form-control" maxlength="160" value="{{ post_obj.quote_author|default:'' }}">
+      </div>
+      <div class="form-group">
+        <label for="id_featured_product_1">Featured product #1</label>
+        <select id="id_featured_product_1" name="featured_product_1" class="form-control">
+          <option value="">— none —</option>
+          {% for p in active_products %}
+          <option value="{{ p.pk }}" {% if post_obj and post_obj.featured_product_1_id == p.pk %}selected{% endif %}>{{ p.name }} ({{ p.brand }})</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="id_featured_product_2">Featured product #2</label>
+        <select id="id_featured_product_2" name="featured_product_2" class="form-control">
+          <option value="">— none —</option>
+          {% for p in active_products %}
+          <option value="{{ p.pk }}" {% if post_obj and post_obj.featured_product_2_id == p.pk %}selected{% endif %}>{{ p.name }} ({{ p.brand }})</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="id_featured_product_3">Featured product #3</label>
+        <select id="id_featured_product_3" name="featured_product_3" class="form-control">
+          <option value="">— none —</option>
+          {% for p in active_products %}
+          <option value="{{ p.pk }}" {% if post_obj and post_obj.featured_product_3_id == p.pk %}selected{% endif %}>{{ p.name }} ({{ p.brand }})</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="id_featured_product_4">Featured product #4</label>
+        <select id="id_featured_product_4" name="featured_product_4" class="form-control">
+          <option value="">— none —</option>
+          {% for p in active_products %}
+          <option value="{{ p.pk }}" {% if post_obj and post_obj.featured_product_4_id == p.pk %}selected{% endif %}>{{ p.name }} ({{ p.brand }})</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="id_featured_product_5">Featured product #5</label>
+        <select id="id_featured_product_5" name="featured_product_5" class="form-control">
+          <option value="">— none —</option>
+          {% for p in active_products %}
+          <option value="{{ p.pk }}" {% if post_obj and post_obj.featured_product_5_id == p.pk %}selected{% endif %}>{{ p.name }} ({{ p.brand }})</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="id_cta_mid_text">CTA middle text</label>
+        <input id="id_cta_mid_text" name="cta_mid_text" type="text" class="form-control" maxlength="240" value="{{ post_obj.cta_mid_text|default:'' }}">
+      </div>
+      <div class="form-group">
+        <label for="id_cta_mid_button_label">CTA middle button label</label>
+        <input id="id_cta_mid_button_label" name="cta_mid_button_label" type="text" class="form-control" maxlength="120" value="{{ post_obj.cta_mid_button_label|default:'' }}">
+      </div>
+      <div class="form-group">
+        <label for="id_cta_mid_button_url">CTA middle button URL</label>
+        <input id="id_cta_mid_button_url" name="cta_mid_button_url" type="text" class="form-control" maxlength="500" value="{{ post_obj.cta_mid_button_url|default:'' }}">
+      </div>
+      <div class="form-group">
+        <label for="id_cta_end_text">CTA end text</label>
+        <input id="id_cta_end_text" name="cta_end_text" type="text" class="form-control" maxlength="240" value="{{ post_obj.cta_end_text|default:'' }}">
+      </div>
+      <div class="form-group">
+        <label for="id_cta_end_button_label">CTA end button label</label>
+        <input id="id_cta_end_button_label" name="cta_end_button_label" type="text" class="form-control" maxlength="120" value="{{ post_obj.cta_end_button_label|default:'' }}">
+      </div>
+      <div class="form-group">
+        <label for="id_cta_end_button_url">CTA end button URL</label>
+        <input id="id_cta_end_button_url" name="cta_end_button_url" type="text" class="form-control" maxlength="500" value="{{ post_obj.cta_end_button_url|default:'' }}">
+      </div>
+      <div class="form-group">
         <label for="id_published_at">Published at</label>
         <input id="id_published_at" name="published_at" type="datetime-local" class="form-control" style="max-width:280px" value="{% if post_obj and post_obj.published_at %}{{ post_obj.published_at|date:'Y-m-d' }}T{{ post_obj.published_at|date:'H:i' }}{% endif %}">
       </div>

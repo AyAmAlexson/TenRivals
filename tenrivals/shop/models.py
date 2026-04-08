@@ -322,6 +322,82 @@ class BlogPost(models.Model):
         blank=True,
         help_text=_('Portrait image for the home “Featured stories” carousel (3:4 works best). Falls back to hero if empty.'),
     )
+    article_image_1 = models.ImageField(
+        upload_to='shop/blog/inline/',
+        null=True,
+        blank=True,
+        help_text=_('Optional extra image for the body (1/3).'),
+    )
+    article_image_2 = models.ImageField(
+        upload_to='shop/blog/inline/',
+        null=True,
+        blank=True,
+        help_text=_('Optional extra image for the body (2/3).'),
+    )
+    article_image_3 = models.ImageField(
+        upload_to='shop/blog/inline/',
+        null=True,
+        blank=True,
+        help_text=_('Optional extra image for the body (3/3).'),
+    )
+    quote_text = models.TextField(
+        blank=True,
+        help_text=_('Highlighted quote block shown mid-article.'),
+    )
+    quote_author = models.CharField(
+        max_length=160,
+        blank=True,
+        help_text=_('Optional quote author/signature.'),
+    )
+    cta_mid_text = models.CharField(
+        max_length=240,
+        blank=True,
+        help_text=_('Middle CTA heading text.'),
+    )
+    cta_mid_button_label = models.CharField(max_length=120, blank=True)
+    cta_mid_button_url = models.CharField(max_length=500, blank=True)
+    cta_end_text = models.CharField(
+        max_length=240,
+        blank=True,
+        help_text=_('Ending CTA heading text.'),
+    )
+    cta_end_button_label = models.CharField(max_length=120, blank=True)
+    cta_end_button_url = models.CharField(max_length=500, blank=True)
+    featured_product_1 = models.ForeignKey(
+        'Product',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='blog_featured_slot_1',
+    )
+    featured_product_2 = models.ForeignKey(
+        'Product',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='blog_featured_slot_2',
+    )
+    featured_product_3 = models.ForeignKey(
+        'Product',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='blog_featured_slot_3',
+    )
+    featured_product_4 = models.ForeignKey(
+        'Product',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='blog_featured_slot_4',
+    )
+    featured_product_5 = models.ForeignKey(
+        'Product',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='blog_featured_slot_5',
+    )
     is_published = models.BooleanField(default=False, db_index=True)
     published_at = models.DateTimeField(null=True, blank=True)
     is_featured_on_home = models.BooleanField(

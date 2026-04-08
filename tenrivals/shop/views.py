@@ -574,10 +574,77 @@ def blog_post(request, slug):
         slug=slug,
         is_published=True,
     )
+    product_slots = [
+        post.featured_product_1_id,
+        post.featured_product_2_id,
+        post.featured_product_3_id,
+        post.featured_product_4_id,
+        post.featured_product_5_id,
+    ]
+    slot_ids = [pid for pid in product_slots if pid]
+    products_by_id = {
+        p.id: p
+        for p in Product.objects.filter(id__in=slot_ids, is_active=True).select_related(
+            *_PRODUCT_SUBCLASS_SELECT,
+            'category',
+        )
+    }
+    featured_products = [products_by_id[pid] for pid in slot_ids if pid in products_by_id]
+
+    inline_images = [
+        img for img in (post.article_image_1, post.article_image_2, post.article_image_3) if img
+    ]
+    body = (post.body or '').strip()
+    paragraphs = [p.strip() for p in body.split('\n\n') if p.strip()]
+    if not paragraphs:
+        paragraphs = []
+
+    injections = {}
+    count = max(1, len(paragraphs))
+
+    def push_after(ratio, block):
+        idx = max(1, min(count, int(round(count * ratio))))
+        injections.setdefault(idx, []).append(block)
+
+    if featured_products:
+        push_after(0.33, {'type': 'products', 'products': featured_products})
+    if post.quote_text.strip():
+        push_after(0.5, {'type': 'quote', 'text': post.quote_text.strip(), 'author': (post.quote_author or '').strip()})
+    for i, img in enumerate(inline_images):
+        push_after(0.4 + (i * 0.2), {'type': 'image', 'image': img})
+    if (post.cta_mid_button_label or '').strip() and (post.cta_mid_button_url or '').strip():
+        push_after(
+            0.66,
+            {
+                'type': 'cta',
+                'text': (post.cta_mid_text or '').strip(),
+                'label': post.cta_mid_button_label.strip(),
+                'url': post.cta_mid_button_url.strip(),
+            },
+        )
+
+    article_sections = []
+    for idx, paragraph in enumerate(paragraphs, start=1):
+        article_sections.append({'type': 'paragraph', 'text': paragraph})
+        article_sections.extend(injections.get(idx, []))
+
+    if not paragraphs:
+        article_sections.extend(injections.get(1, []))
+
+    if (post.cta_end_button_label or '').strip() and (post.cta_end_button_url or '').strip():
+        article_sections.append(
+            {
+                'type': 'cta',
+                'text': (post.cta_end_text or '').strip(),
+                'label': post.cta_end_button_label.strip(),
+                'url': post.cta_end_button_url.strip(),
+            }
+        )
+
     return render(
         request,
         'shop/blog_post.html',
-        {'post': post},
+        {'post': post, 'article_sections': article_sections},
     )
 
 
