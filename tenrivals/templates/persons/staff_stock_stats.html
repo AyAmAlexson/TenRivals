@@ -23,6 +23,9 @@
   .matrix-table th:first-child,.matrix-table td:first-child{text-align:left;font-weight:700;white-space:nowrap}
   .matrix-table tr:last-child td{border-bottom:none}
   .matrix-table td:last-child,.matrix-table th:last-child{border-right:none}
+  .racket-matrix{min-width:460px;table-layout:fixed}
+  .racket-matrix th,.racket-matrix td{padding:5px 6px}
+  .racket-matrix th:first-child,.racket-matrix td:first-child{width:52px}
   .racket-split{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px}
   @media(max-width:900px){.racket-split{grid-template-columns:1fr}}
 </style>
@@ -49,13 +52,13 @@
 </div>
 
 <div class="card">
-  <h2 class="card-title">By category</h2>
+  <h2 class="card-title">By product type</h2>
   <p class="matrix-note">Absolute units and stock value (₾); percentages of totals.</p>
   <div class="table-wrap">
     <table>
       <thead>
         <tr>
-          <th>Category</th>
+          <th>Product type</th>
           <th>Units</th>
           <th>Units %</th>
           <th>Value (₾)</th>
@@ -63,7 +66,7 @@
         </tr>
       </thead>
       <tbody>
-        {% for row in category_rows %}
+        {% for row in type_rows %}
         <tr>
           <td>{{ row.name }}</td>
           <td class="mono">{{ row.units }}</td>
@@ -72,7 +75,7 @@
           <td class="mono">{{ row.value_pct }}%</td>
         </tr>
         {% empty %}
-        <tr><td colspan="5">No categorized stock rows.</td></tr>
+        <tr><td colspan="5">No in-stock rows.</td></tr>
         {% endfor %}
       </tbody>
     </table>
@@ -81,7 +84,7 @@
 
 <div class="card">
   <h2 class="card-title">Shoes — size × surface (pairs)</h2>
-  <p class="matrix-note">Rows: US sizes. 🔴 in adult sizes (US ≥ {{ adult_us_size_min }}) marks zero — junior sizes show 0. Unisex SKUs fill both men’s and women’s columns.</p>
+  <p class="matrix-note">Rows: US sizes. 🔴 marks zero only in hot adult ranges: Men 8.5–12 US and Women 7.5–11 US. Other zeros show as 0. Unisex SKUs fill both men’s and women’s columns.</p>
   <div class="matrix-wrap">
     <table class="matrix-table">
       <thead>
@@ -113,7 +116,7 @@
     <div>
       <h3 class="card-title" style="font-size:12px;margin-bottom:10px">≤600 ₾</h3>
       <div class="matrix-wrap">
-        <table class="matrix-table">
+        <table class="matrix-table racket-matrix">
           <thead>
             <tr>
               <th>Grip</th>
@@ -138,7 +141,7 @@
     <div>
       <h3 class="card-title" style="font-size:12px;margin-bottom:10px">601+ ₾</h3>
       <div class="matrix-wrap">
-        <table class="matrix-table">
+        <table class="matrix-table racket-matrix">
           <thead>
             <tr>
               <th>Grip</th>

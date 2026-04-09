@@ -9,11 +9,14 @@ from decimal import Decimal
 from typing import Any
 
 from .catalog_utils import annotate_stock_listing_quantity, stock_catalog_base_queryset
-from .models import CourtSurface, Gender, Product, ProductListingChannel, ProductType, Racket, Shoe
+from .models import CourtSurface, Gender, Product, ProductType, Racket, Shoe
 from .size_inventory import normalize_sizes_to_qty_map, us_shoe_size_labels
 
-# Adult shoe sizes: show 🔴 for zero stock (attention). Below = show plain 0.
-ADULT_US_SIZE_MIN = Decimal('5')
+# Hot adult ranges: highlight 0 with 🔴 only in these US size windows.
+MEN_HOT_MIN = Decimal('8.5')
+MEN_HOT_MAX = Decimal('12')
+WOMEN_HOT_MIN = Decimal('7.5')
+WOMEN_HOT_MAX = Decimal('11')
 
 
 def _unit_price_stock(p: Product) -> Decimal:
@@ -55,24 +58,24 @@ def build_stock_stats() -> dict[str, Any]:
         q = _stock_qty(p)
         total_value += _unit_price_stock(p) * q
 
-    # Category breakdown (by Product.category)
-    cat_units: dict[str, int] = defaultdict(int)
-    cat_value: dict[str, Decimal] = defaultdict(lambda: Decimal('0'))
+    # Product-type breakdown
+    type_units_table: dict[str, int] = defaultdict(int)
+    type_value_table: dict[str, Decimal] = defaultdict(lambda: Decimal('0'))
     for p in products:
-        name = p.category.name if p.category else 'Uncategorized'
+        name = p.get_type_display()
         q = _stock_qty(p)
         u = _unit_price_stock(p)
-        cat_units[name] += q
-        cat_value[name] += u * q
+        type_units_table[name] += q
+        type_value_table[name] += u * q
 
-    total_units = sum(cat_units.values()) or 1
-    total_val = sum(cat_value.values(), Decimal('0')) or Decimal('1')
+    total_units = sum(type_units_table.values()) or 1
+    total_val = sum(type_value_table.values(), Decimal('0')) or Decimal('1')
 
-    category_rows = []
-    for name in sorted(cat_units.keys(), key=lambda k: (-cat_units[k], k)):
-        u = cat_units[name]
-        v = cat_value[name]
-        category_rows.append(
+    type_rows = []
+    for name in sorted(type_units_table.keys(), key=lambda k: (-type_units_table[k], k)):
+        u = type_units_table[name]
+        v = type_value_table[name]
+        type_rows.append(
             {
                 'name': name,
                 'units': u,
@@ -138,6 +141,13 @@ def build_stock_stats() -> dict[str, Any]:
                 if women_ac:
                     shoe_matrix['women_ac'][size_label] += n
 
+    def _hot_zero_for_col(col_key: str, us_num: Decimal) -> bool:
+        if col_key.startswith('men_'):
+            return MEN_HOT_MIN <= us_num <= MEN_HOT_MAX
+        if col_key.startswith('women_'):
+            return WOMEN_HOT_MIN <= us_num <= WOMEN_HOT_MAX
+        return False
+
     shoe_rows_out = []
     for lab in us_labels:
         rest = lab.replace('US', '', 1).strip()
@@ -145,17 +155,16 @@ def build_stock_stats() -> dict[str, Any]:
             us_num = Decimal(rest)
         except Exception:
             us_num = Decimal('0')
-        is_adult_row = us_num >= ADULT_US_SIZE_MIN
         cells = []
         for c in shoe_cols:
             v = shoe_matrix[c][lab]
             cells.append(
                 {
                     'value': v,
-                    'display': v if v > 0 else ('🔴' if is_adult_row else '0'),
+                    'display': v if v > 0 else ('🔴' if _hot_zero_for_col(c, us_num) else '0'),
                 }
             )
-        shoe_rows_out.append({'label': lab, 'cells': cells, 'is_adult': is_adult_row})
+        shoe_rows_out.append({'label': lab, 'cells': cells})
 
     # Racket matrices: grip L1–L5 × weight buckets; split by unit price ≤600 vs >600
     grip_row_keys = [f'L{i}' for i in range(1, 6)]
@@ -290,8 +299,7 @@ def build_stock_stats() -> dict[str, Any]:
         'positions': positions,
         'total_units': total_units,
         'total_value': total_value,
-        'adult_us_size_min': ADULT_US_SIZE_MIN,
-        'category_rows': category_rows,
+        'type_rows': type_rows,
         'shoe_col_labels': shoe_col_labels,
         'shoe_rows': shoe_rows_out,
         'racket_weight_col_labels': weight_col_labels,
