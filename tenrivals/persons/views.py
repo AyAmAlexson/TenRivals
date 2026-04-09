@@ -34,6 +34,7 @@ from shop.models import (
     ProductListingChannel,
     ShopOrder,
 )
+from shop.staff_stock_stats import build_stock_stats
 import hashlib
 import hmac
 from django.utils.encoding import force_str
@@ -785,6 +786,25 @@ def _staff_listings_page(request, channel: str, nav_key: str):
 @user_passes_test(_superuser_required)
 def staff_stock_list(request):
     return _staff_listings_page(request, ProductListingChannel.STOCK, "stock")
+
+
+@login_required
+@user_passes_test(_superuser_required)
+def staff_stock_stats(request):
+    ctx = build_stock_stats()
+    ctx.update(
+        {
+            "staff_nav_active": "stock_stats",
+            "page_heading": "Stock stats",
+            "page_note": (
+                "In-stock catalog only: products with Stock channel quantity greater than zero. "
+                "Stock value uses quantity × min(actual price, initial price) per SKU. "
+                "Shoe matrix includes men's and women's shoes; unisex models count in both men's and women's columns. "
+                "Junior shoe catalog type is excluded from the shoe matrix."
+            ),
+        }
+    )
+    return render(request, "persons/staff_stock_stats.html", ctx)
 
 
 @login_required

@@ -17,6 +17,7 @@ urlpatterns = [
         name="superuser_user_edit",
     ),
     path("stock/", views.staff_stock_list, name="staff_stock"),
+    path("stock/stats/", views.staff_stock_stats, name="staff_stock_stats"),
     path("preorder/", views.staff_preorder_list, name="staff_preorder"),
     path("blog/", views.staff_blog_posts, name="staff_blog_posts"),
     path("blog/new/", views.staff_blog_edit, name="staff_blog_new"),

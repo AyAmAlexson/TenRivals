@@ -1,0 +1,268 @@
+{% extends 'persons/staff_base.html' %}
+{% block title %}{{ page_heading }} — Staff — TR Shop{% endblock %}
+{% block page_heading %}{{ page_heading }}{% endblock %}
+{% block page_note %}<p class="page-note">{{ page_note }}</p>{% endblock %}
+
+{% block extra_head %}
+<style>
+  .stats-kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;margin-bottom:20px}
+  .stat-kpi{background:#fff;border:1px solid var(--line);padding:20px 22px}
+  .stat-kpi__label{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin:0 0 10px}
+  .stat-kpi__value{font-size:clamp(28px,4vw,40px);font-weight:800;line-height:1.1;color:var(--ink);letter-spacing:.02em}
+  .stat-kpi__hint{font-size:12px;color:var(--muted);margin-top:10px;line-height:1.4;font-weight:400;text-transform:none}
+  .stats-tiles-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr));gap:16px;margin-bottom:24px}
+  .chart-card{background:#fff;border:1px solid var(--line);padding:18px 20px 12px}
+  .chart-card__title{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--ink);margin:0 0 6px}
+  .chart-card__cap{font-size:12px;color:var(--muted);margin:0 0 14px;line-height:1.45;font-weight:400;text-transform:none}
+  .chart-card__canvas{position:relative;height:240px}
+  .matrix-note{font-size:12px;color:var(--muted);margin:0 0 12px;line-height:1.45;font-weight:400;text-transform:none}
+  .matrix-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line);background:#fff}
+  .matrix-table{border-collapse:collapse;font-size:11px;min-width:720px;width:100%}
+  .matrix-table th,.matrix-table td{padding:6px 8px;text-align:center;border-bottom:1px solid var(--line);border-right:1px solid var(--line);font-weight:400;text-transform:none}
+  .matrix-table th{background:#f9fafb;font-weight:800;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+  .matrix-table th:first-child,.matrix-table td:first-child{text-align:left;font-weight:700;white-space:nowrap}
+  .matrix-table tr:last-child td{border-bottom:none}
+  .matrix-table td:last-child,.matrix-table th:last-child{border-right:none}
+  .racket-split{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px}
+  @media(max-width:900px){.racket-split{grid-template-columns:1fr}}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="stats-kpi-grid">
+  <div class="stat-kpi">
+    <p class="stat-kpi__label">Stock SKUs (positions)</p>
+    <p class="stat-kpi__value">{{ positions }}</p>
+    <p class="stat-kpi__hint">Distinct products with Stock qty &gt; 0</p>
+  </div>
+  <div class="stat-kpi">
+    <p class="stat-kpi__label">Stock value (expected)</p>
+    <p class="stat-kpi__value">{{ total_value|floatformat:0 }}&nbsp;₾</p>
+    <p class="stat-kpi__hint">Σ qty × min(actual, initial)</p>
+  </div>
+  <div class="stat-kpi">
+    <p class="stat-kpi__label">Total units on hand</p>
+    <p class="stat-kpi__value">{{ total_units }}</p>
+    <p class="stat-kpi__hint">Sum of listing quantities</p>
+  </div>
+</div>
+
+<div class="card">
+  <h2 class="card-title">By category</h2>
+  <p class="matrix-note">Absolute units and stock value (₾); percentages of totals.</p>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Category</th>
+          <th>Units</th>
+          <th>Units %</th>
+          <th>Value (₾)</th>
+          <th>Value %</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in category_rows %}
+        <tr>
+          <td>{{ row.name }}</td>
+          <td class="mono">{{ row.units }}</td>
+          <td class="mono">{{ row.units_pct }}%</td>
+          <td class="mono">{{ row.value|floatformat:2 }}</td>
+          <td class="mono">{{ row.value_pct }}%</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5">No categorized stock rows.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card">
+  <h2 class="card-title">Shoes — size × surface (pairs)</h2>
+  <p class="matrix-note">Rows: US sizes. 🔴 in adult sizes (US ≥ {{ adult_us_size_min }}) marks zero — junior sizes show 0. Unisex SKUs fill both men’s and women’s columns.</p>
+  <div class="matrix-wrap">
+    <table class="matrix-table">
+      <thead>
+        <tr>
+          <th>Size</th>
+          {% for lab in shoe_col_labels %}
+          <th>{{ lab }}</th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in shoe_rows %}
+        <tr>
+          <td>{{ row.label }}</td>
+          {% for c in row.cells %}
+          <td>{{ c.display }}</td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card">
+  <h2 class="card-title">Rackets — grip × weight (units)</h2>
+  <p class="matrix-note">Split by retail unit price: ≤600 ₾ vs 601+ ₾ (min of actual vs initial). Counts use per-grip quantities from racket inventory.</p>
+  <div class="racket-split">
+    <div>
+      <h3 class="card-title" style="font-size:12px;margin-bottom:10px">≤600 ₾</h3>
+      <div class="matrix-wrap">
+        <table class="matrix-table">
+          <thead>
+            <tr>
+              <th>Grip</th>
+              {% for lab in racket_weight_col_labels %}
+              <th>{{ lab }}</th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in racket_table_low %}
+            <tr>
+              <td>{{ row.grip }}</td>
+              {% for c in row.cells %}
+              <td>{{ c.display }}</td>
+              {% endfor %}
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div>
+      <h3 class="card-title" style="font-size:12px;margin-bottom:10px">601+ ₾</h3>
+      <div class="matrix-wrap">
+        <table class="matrix-table">
+          <thead>
+            <tr>
+              <th>Grip</th>
+              {% for lab in racket_weight_col_labels %}
+              <th>{{ lab }}</th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in racket_table_high %}
+            <tr>
+              <td>{{ row.grip }}</td>
+              {% for c in row.cells %}
+              <td>{{ c.display }}</td>
+              {% endfor %}
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+{{ charts|json_script:"stock-stats-charts" }}
+
+<div class="stats-tiles-grid">
+  <div class="chart-card">
+    <p class="chart-card__title">Brand capital</p>
+    <p class="chart-card__cap">{{ chart_captions.0 }}</p>
+    <div class="chart-card__canvas"><canvas id="chartBrands" aria-label="Stock value by brand"></canvas></div>
+  </div>
+  <div class="chart-card">
+    <p class="chart-card__title">Type mix</p>
+    <p class="chart-card__cap">{{ chart_captions.1 }}</p>
+    <div class="chart-card__canvas"><canvas id="chartTypes" aria-label="Units by product type"></canvas></div>
+  </div>
+  <div class="chart-card">
+    <p class="chart-card__title">Price ladder</p>
+    <p class="chart-card__cap">{{ chart_captions.2 }}</p>
+    <div class="chart-card__canvas"><canvas id="chartPrice" aria-label="Units by price bucket"></canvas></div>
+  </div>
+  <div class="chart-card">
+    <p class="chart-card__title">Intake timeline</p>
+    <p class="chart-card__cap">{{ chart_captions.3 }}</p>
+    <div class="chart-card__canvas"><canvas id="chartMonths" aria-label="Units by catalog month"></canvas></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+  var el = document.getElementById('stock-stats-charts');
+  if (!el || typeof Chart === 'undefined') return;
+  var C = JSON.parse(el.textContent);
+  var accent = '#B20009';
+  var muted = ['#94a3b8', '#cbd5e1', '#64748b', '#475569', '#1e293b', '#B20009', '#8E0007', '#fca5a5', '#fecaca', '#f87171', '#dc2626', '#991b1b'];
+
+  Chart.defaults.font.family = "'Saira', system-ui, sans-serif";
+  Chart.defaults.color = '#475569';
+
+  new Chart(document.getElementById('chartBrands'), {
+    type: 'bar',
+    data: {
+      labels: C.brandsTop.labels,
+      datasets: [{ label: '₾', data: C.brandsTop.values, backgroundColor: accent, borderRadius: 0 }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { x: { grid: { color: '#e5e7eb' } }, y: { grid: { display: false } } }
+    }
+  });
+
+  new Chart(document.getElementById('chartTypes'), {
+    type: 'doughnut',
+    data: {
+      labels: C.typesPie.labels,
+      datasets: [{ data: C.typesPie.values, backgroundColor: muted, borderWidth: 1, borderColor: '#fff' }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 11 } } } }
+    }
+  });
+
+  new Chart(document.getElementById('chartPrice'), {
+    type: 'bar',
+    data: {
+      labels: C.priceBuckets.labels,
+      datasets: [{ label: 'Units', data: C.priceBuckets.values, backgroundColor: accent, borderRadius: 0 }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true, grid: { color: '#e5e7eb' } }, x: { grid: { display: false } } }
+    }
+  });
+
+  new Chart(document.getElementById('chartMonths'), {
+    type: 'line',
+    data: {
+      labels: C.arrivalMonths.labels,
+      datasets: [{
+        label: 'Units',
+        data: C.arrivalMonths.values,
+        borderColor: accent,
+        backgroundColor: 'rgba(178,0,9,0.08)',
+        fill: true,
+        tension: 0.25,
+        pointRadius: 3
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true, grid: { color: '#e5e7eb' } }, x: { grid: { display: false } } }
+    }
+  });
+})();
+</script>
+{% endblock %}

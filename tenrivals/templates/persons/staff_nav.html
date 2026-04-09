@@ -1,6 +1,7 @@
 <nav class="staff-tabs" aria-label="Staff navigation">
   <a href="{% url 'administration:staff_users' %}" class="staff-tab {% if staff_nav_active == 'users' %}is-active{% endif %}">Users</a>
   <a href="{% url 'administration:staff_stock' %}" class="staff-tab {% if staff_nav_active == 'stock' %}is-active{% endif %}">In stock</a>
+  <a href="{% url 'administration:staff_stock_stats' %}" class="staff-tab {% if staff_nav_active == 'stock_stats' %}is-active{% endif %}">Stock stats</a>
   <a href="{% url 'administration:staff_preorder' %}" class="staff-tab {% if staff_nav_active == 'preorder' %}is-active{% endif %}">Preorder</a>
   <a href="{% url 'administration:staff_blog_posts' %}" class="staff-tab {% if staff_nav_active == 'blog' %}is-active{% endif %}">Blog</a>
   <a href="{% url 'administration:staff_home_banners' %}" class="staff-tab {% if staff_nav_active == 'banners' %}is-active{% endif %}">Shop home</a>
