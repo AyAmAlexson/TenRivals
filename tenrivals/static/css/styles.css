@@ -21705,3 +21705,13 @@ section {
 .footer .footer-legal-row a:hover {
   color: #fff;
 }
+.footer .footer-legal-row--inline {
+  margin-top: 12px;
+  padding-top: 10px;
+  gap: 6px 14px;
+}
+.footer .footer-legal-row--inline a {
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  opacity: 0.92;
+}
