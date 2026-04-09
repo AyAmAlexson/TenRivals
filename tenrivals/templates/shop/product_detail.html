@@ -300,7 +300,16 @@
         <h1 class="pdp-title">{{ product.name }}</h1>
         <div class="pdp-color">
           {% if product.type == 'M_SHOES' or product.type == 'W_SHOES' or product.type == 'J_SHOES' %}
-            {% with s=product.shoe %}{% if s %}{{ s.color|default:"—" }}{% else %}—{% endif %}{% endwith %}
+            {% with s=product.shoe %}
+              {% if s and s.color %}
+              <div>{{ s.color }}</div>
+              {% endif %}
+              {% if product.short_description %}
+              <div>{{ product.short_description }}</div>
+              {% elif not s or not s.color %}
+              <div>—</div>
+              {% endif %}
+            {% endwith %}
           {% else %}
             {{ product.short_description|default:"—" }}
           {% endif %}

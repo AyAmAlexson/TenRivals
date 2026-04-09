@@ -96,9 +96,16 @@
         {% endif %}
 
         <div class="check-row">
-          <input type="checkbox" value="true" id="id_terms" name="terms_accepted" required>
-          <label for="id_terms">{% trans "I accept the" %} <a href="#">{% trans "Terms and Conditions" %}</a></label>
+          {{ form.terms_accepted }}
+          <label for="{{ form.terms_accepted.id_for_label }}">
+            {% trans "By submitting, I agree to the" %}
+            <a href="{% url 'shop:legal_terms' %}" target="_blank" rel="noopener">{% trans "Terms & Conditions" %}</a>,
+            <a href="{% url 'shop:legal_privacy' %}" target="_blank" rel="noopener">{% trans "Privacy Policy" %}</a>
+            {% trans "and" %}
+            <a href="{% url 'shop:legal_cookies' %}" target="_blank" rel="noopener">{% trans "Cookie Policy" %}</a>.
+          </label>
         </div>
+        {% if form.terms_accepted.errors %}<div class="field-error" style="margin-top:-6px;margin-bottom:10px">{{ form.terms_accepted.errors }}</div>{% endif %}
 
         <div class="check-row">
           <input type="checkbox" value="true" checked id="id_newsletter" name="newsletter_opt_in">

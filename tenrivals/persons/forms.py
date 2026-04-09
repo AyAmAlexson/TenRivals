@@ -73,6 +73,14 @@ class CustomSignupForm(SignupForm):
         self.fields['password1'].label = 'Password'
         self.fields['password2'].label = 'Confirm Password'
 
+    def clean_terms_accepted(self):
+        accepted = self.cleaned_data.get('terms_accepted')
+        if not accepted:
+            raise forms.ValidationError(
+                _('You must agree to the Terms, Privacy Policy, and Cookie Policy to continue.')
+            )
+        return accepted
+
     def save(self, request):
         user = super(CustomSignupForm, self).save(request)
         user.newsletter_opt_in = self.cleaned_data.get('newsletter_opt_in', False)

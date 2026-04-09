@@ -21,7 +21,8 @@
           {% with s=p.shoe %}
           {% if s and s.color %}
         <p class="product-tile__color">{{ s.color }}</p>
-          {% elif p.short_description %}
+          {% endif %}
+          {% if p.short_description %}
         <p class="product-tile__color">{{ p.short_description }}</p>
           {% endif %}
           {% endwith %}
