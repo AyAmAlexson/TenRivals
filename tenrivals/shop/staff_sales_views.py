@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-import io
 import json
-import logging
 from datetime import date
 from decimal import Decimal
 from django.templatetags.static import static
@@ -12,10 +10,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.db import transaction
 from django.db.models import Prefetch, Q
-from django.http import FileResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from django.template.loader import render_to_string
-from django.urls import reverse
 from django.views.decorators.http import require_POST
 
 from .models import Customer, Product, SalesOrder, SalesOrderLine
@@ -29,8 +24,6 @@ from .sales_order_utils import (
     stock_products_for_select,
 )
 from .staff_sales_forms import CustomerForm, SalesOrderForm, SalesOrderLineFormSet
-
-logger = logging.getLogger(__name__)
 
 
 def _staff_ok(user):
@@ -51,32 +44,6 @@ def _sales_order_lines_prefetch():
             'product__accessory',
         ).order_by('id'),
     )
-
-
-def _invoice_pdf_bytes(request, order: SalesOrder) -> bytes:
-    ctx = _invoice_context(order, request=request)
-    ctx['embed_mode'] = True
-    ctx['print_mode'] = False
-    html = render_to_string(
-        'shop/staff/sales_invoice.html',
-        ctx,
-        request=request,
-    )
-    try:
-        from weasyprint import HTML
-    except ImportError as e:
-        raise RuntimeError(
-            'WeasyPrint is not installed. Add weasyprint to requirements and reinstall.'
-        ) from e
-    base_url = request.build_absolute_uri('/')[:-1]
-    try:
-        return HTML(string=html, base_url=base_url).write_pdf()
-    except Exception as e:
-        logger.exception('WeasyPrint PDF generation failed')
-        raise RuntimeError(
-            'PDF could not be generated. Check server logs; WeasyPrint may need '
-            'system libraries (Cairo, Pango), or the invoice template failed to render.'
-        ) from e
 
 
 def _invoice_context(order: SalesOrder, request=None) -> dict:
@@ -418,26 +385,3 @@ def staff_sales_order_invoice(request, pk):
     ctx['print_mode'] = request.GET.get('print') == '1'
     ctx['embed_mode'] = False
     return render(request, 'shop/staff/sales_invoice.html', ctx)
-
-
-@login_required
-@user_passes_test(_staff_ok)
-def staff_sales_order_invoice_pdf(request, pk):
-    order = get_object_or_404(
-        SalesOrder.objects.select_related('customer').prefetch_related(
-            _sales_order_lines_prefetch()
-        ),
-        pk=pk,
-    )
-    try:
-        pdf = _invoice_pdf_bytes(request, order)
-    except (RuntimeError, OSError, ValueError) as e:
-        messages.error(request, str(e))
-        return redirect(reverse('administration:staff_sales_order_invoice', kwargs={'pk': pk}))
-    resp = FileResponse(
-        io.BytesIO(pdf),
-        as_attachment=True,
-        filename=order.invoice_pdf_filename,
-        content_type='application/pdf',
-    )
-    return resp

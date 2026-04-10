@@ -809,15 +809,6 @@ class SalesOrder(models.Model):
     def __str__(self):
         return self.invoice_number
 
-    @property
-    def invoice_pdf_filename(self) -> str:
-        """Suggested download name: Invoice_{number}_{date}.pdf (spaces → _)."""
-        safe = (self.invoice_number or '').replace(' ', '_')
-        for ch in '\\/:*?"<>|':
-            safe = safe.replace(ch, '_')
-        d = self.order_date.isoformat() if self.order_date else ''
-        return f'Invoice_{safe}_{d}.pdf'
-
 
 class SalesOrderLine(models.Model):
     order = models.ForeignKey(

@@ -39,7 +39,6 @@
   .order-actions-menu__link:hover{background:#f3f4f6}
   .order-actions-menu__link--accent{font-weight:600;color:var(--accent)}
   .order-actions-menu__link--danger{color:#b91c1c}
-  .order-actions-menu__link:disabled{opacity:.55;cursor:wait}
   .order-actions-menu__form{margin:0;padding:0}
   .orders-table .order-status-form{margin:0}
   .orders-table .order-status-form select{
@@ -109,8 +108,7 @@
               <summary class="icon-btn order-actions-menu__trigger" title="Actions" aria-label="Order actions">⋮</summary>
               <div class="order-actions-menu__panel">
                 <a href="{% url 'administration:staff_sales_order_invoice' o.pk %}" class="order-actions-menu__link">View invoice</a>
-                <a href="{% url 'administration:staff_sales_order_invoice' o.pk %}?print=1" class="order-actions-menu__link" target="_blank" rel="noopener">Print invoice</a>
-                <button type="button" class="order-actions-menu__link order-actions-menu__link--accent staff-order-pdf-btn" data-pdf-url="{% url 'administration:staff_sales_order_invoice_pdf' o.pk %}" data-filename="{{ o.invoice_pdf_filename }}">Download PDF</button>
+                <a href="{% url 'administration:staff_sales_order_invoice' o.pk %}?print=1" class="order-actions-menu__link order-actions-menu__link--accent" target="_blank" rel="noopener">Print / Save as PDF</a>
                 <a href="{% url 'administration:staff_sales_order_edit' o.pk %}" class="order-actions-menu__link">Edit</a>
                 <form method="post" action="{% url 'administration:staff_sales_order_delete' o.pk %}" class="order-actions-menu__form" onsubmit="return confirm('Delete order {{ o.invoice_number }}?');">
                   {% csrf_token %}
@@ -198,41 +196,6 @@
   window.addEventListener('resize', function () {
     menus.forEach(function (d) {
       if (d.open) placePanel(d);
-    });
-  });
-
-  document.querySelectorAll('.staff-order-pdf-btn').forEach(function (btn) {
-    btn.addEventListener('click', function (e) {
-      e.preventDefault();
-      e.stopPropagation();
-      var url = btn.getAttribute('data-pdf-url');
-      var filename = btn.getAttribute('data-filename') || 'invoice.pdf';
-      if (!url) return;
-      btn.disabled = true;
-      fetch(url, { credentials: 'same-origin' })
-        .then(function (r) {
-          if (!r.ok) throw new Error('fail');
-          return r.blob();
-        })
-        .then(function (blob) {
-          var href = URL.createObjectURL(blob);
-          var a = document.createElement('a');
-          a.href = href;
-          a.download = filename;
-          a.rel = 'noopener';
-          document.body.appendChild(a);
-          a.click();
-          a.remove();
-          URL.revokeObjectURL(href);
-          var d = btn.closest('details');
-          if (d) d.open = false;
-        })
-        .catch(function () {
-          window.alert('Could not download PDF.');
-        })
-        .finally(function () {
-          btn.disabled = false;
-        });
     });
   });
 })();

@@ -58,9 +58,4 @@ urlpatterns = [
         staff_sales_views.staff_sales_order_invoice,
         name="staff_sales_order_invoice",
     ),
-    path(
-        "orders/<int:pk>/invoice.pdf",
-        staff_sales_views.staff_sales_order_invoice_pdf,
-        name="staff_sales_order_invoice_pdf",
-    ),
 ]
