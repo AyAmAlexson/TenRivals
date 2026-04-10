@@ -1,7 +1,7 @@
 """Shared catalog queries for shop (stock/preorder lists and nav)."""
 
 from django.db import models
-from django.db.models import OuterRef, Subquery, Value
+from django.db.models import OuterRef, Subquery, Sum, Value
 from django.db.models.functions import Coalesce
 
 from .models import Product, ProductListing, ProductListingChannel
@@ -39,6 +39,20 @@ def stock_catalog_base_queryset():
         Product.objects.filter(is_active=True),
         ProductListingChannel.STOCK,
     )
+
+
+def top_stock_brands_by_listing_quantity(limit: int = 7) -> list[str]:
+    """Brands with the highest total STOCK listing quantity (only qty > 0)."""
+    qs = annotate_stock_listing_quantity(stock_catalog_base_queryset())
+    qs = qs.exclude(brand__isnull=True).exclude(brand__exact='').filter(
+        stock_listing_qty__gt=0
+    )
+    rows = (
+        qs.values('brand')
+        .annotate(total_qty=Sum('stock_listing_qty'))
+        .order_by('-total_qty', 'brand')[:limit]
+    )
+    return [r['brand'] for r in rows]
 
 
 def distinct_brands_for_type(stock_qs, type_code: str):

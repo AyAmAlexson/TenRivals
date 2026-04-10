@@ -15,6 +15,7 @@ from .catalog_utils import (
     filter_products_by_listing_channel,
     order_products_by_effective_price,
     stock_catalog_base_queryset,
+    top_stock_brands_by_listing_quantity,
 )
 from .forms import (
     AccessoryForm,
@@ -288,14 +289,7 @@ def index(request):
             )[:1],
         )
     )
-    home_catalog_brands = list(
-        stock_catalog_base_queryset()
-        .exclude(brand__isnull=True)
-        .exclude(brand__exact='')
-        .values_list('brand', flat=True)
-        .distinct()
-        .order_by('brand')[:7]
-    )
+    home_catalog_brands = top_stock_brands_by_listing_quantity(7)
     return render(
         request,
         'shop/index.html',
