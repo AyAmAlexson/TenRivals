@@ -14,6 +14,15 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
 from .models import Customer, Product, SalesOrder, SalesOrderLine
+from .sales_order_stock import (
+    get_variant_qty_map,
+    order_status_reserves_stock,
+    product_requires_variant,
+    release_lines_to_stock,
+    snapshot_old_lines,
+    take_lines_from_stock,
+    validate_order_line_demands,
+)
 from .sales_order_utils import (
     allocate_invoice_number,
     compute_order_totals,
@@ -55,7 +64,7 @@ def _invoice_context(order: SalesOrder, request=None) -> dict:
             any_disc = True
         lines.append(
             {
-                'name': line.product.invoice_line_label(),
+                'name': line.invoice_display_label(),
                 'qty': line.quantity,
                 'disc': d,
                 'unit': line.unit_price_gross,
@@ -270,12 +279,16 @@ def staff_sales_order_edit(request, pk=None):
 
     if request.method == 'POST':
         form = SalesOrderForm(request.POST, instance=instance)
-        parent = instance or SalesOrder()
-        formset = SalesOrderLineFormSet(request.POST, instance=parent)
+        services_raw = request.POST.get('services_json', '[]')
+        if form.is_valid():
+            parent = form.save(commit=False)
+            formset = SalesOrderLineFormSet(request.POST, instance=parent)
+        else:
+            parent = instance or SalesOrder()
+            formset = SalesOrderLineFormSet(request.POST, instance=parent)
         for f in formset.forms:
             if hasattr(f, 'fields') and 'product' in f.fields:
                 f.fields['product'].queryset = stock_qs
-        services_raw = request.POST.get('services_json', '[]')
         if form.is_valid() and formset.is_valid():
             gross, vat, net, ser_out, line_specs = _rebuild_order_from_formset(
                 form, formset, services_raw
@@ -285,7 +298,13 @@ def staff_sales_order_edit(request, pk=None):
             else:
                 try:
                     with transaction.atomic():
-                        order = form.save(commit=False)
+                        if instance and instance.pk:
+                            locked = SalesOrder.objects.select_for_update().get(pk=instance.pk)
+                            old_lines = snapshot_old_lines(locked)
+                            if order_status_reserves_stock(locked.status):
+                                release_lines_to_stock(old_lines)
+
+                        order = parent
                         if instance is None:
                             order.invoice_number = allocate_invoice_number(
                                 order.order_date.year
@@ -298,9 +317,11 @@ def staff_sales_order_edit(request, pk=None):
                         order.lines.all().delete()
                         for spec in line_specs:
                             cd = spec['cleaned']
+                            vl = (cd.get('variant_label') or '').strip()
                             SalesOrderLine.objects.create(
                                 order=order,
                                 product=cd['product'],
+                                variant_label=vl,
                                 quantity=cd['quantity'],
                                 unit_price_gross=cd['unit_price_gross'],
                                 discount_percent=cd['discount_percent'] or Decimal('0'),
@@ -308,6 +329,15 @@ def staff_sales_order_edit(request, pk=None):
                                 line_vat=spec['lv'],
                                 line_net=spec['ln'],
                             )
+                        if order_status_reserves_stock(order.status):
+                            new_lines = list(
+                                order.lines.select_related(
+                                    'product',
+                                    'product__racket',
+                                    'product__shoe',
+                                ).all()
+                            )
+                            take_lines_from_stock(new_lines)
                     messages.success(request, 'Order saved.')
                     return redirect('administration:staff_sales_orders')
                 except Exception as e:
@@ -328,6 +358,14 @@ def staff_sales_order_edit(request, pk=None):
         if hasattr(f, 'fields') and 'product' in f.fields:
             f.fields['product'].queryset = stock_qs
 
+    catalog_variants = {}
+    for p in stock_qs:
+        pid = str(p.pk)
+        if product_requires_variant(p):
+            catalog_variants[pid] = get_variant_qty_map(p)
+        else:
+            catalog_variants[pid] = {}
+
     return render(
         request,
         'shop/staff/sales_order_form.html',
@@ -336,6 +374,7 @@ def staff_sales_order_edit(request, pk=None):
             'formset': formset,
             'order': instance,
             'product_prices': product_prices,
+            'product_variants_json': json.dumps(catalog_variants),
             'services_json_initial': services_for_js,
             'staff_nav_active': 'sales_orders',
             'page_heading': ('Edit order ' + instance.invoice_number)
@@ -351,7 +390,16 @@ def staff_sales_order_edit(request, pk=None):
 def staff_sales_order_delete(request, pk):
     order = get_object_or_404(SalesOrder, pk=pk)
     inv = order.invoice_number
-    order.delete()
+    try:
+        with transaction.atomic():
+            locked = SalesOrder.objects.select_for_update().get(pk=order.pk)
+            lines = snapshot_old_lines(locked)
+            if order_status_reserves_stock(locked.status):
+                release_lines_to_stock(lines)
+            locked.delete()
+    except Exception as e:
+        messages.error(request, f'Could not delete order: {e}')
+        return redirect('administration:staff_sales_orders')
     messages.success(request, f'Deleted order {inv}.')
     return redirect('administration:staff_sales_orders')
 
@@ -363,12 +411,42 @@ def staff_sales_order_set_status(request, pk):
     order = get_object_or_404(SalesOrder, pk=pk)
     raw = (request.POST.get('status') or '').strip()
     valid = {c[0] for c in SalesOrder.Status.choices}
-    if raw in valid:
-        order.status = raw
-        order.save(update_fields=['status', 'updated_at'])
-        messages.success(request, 'Status updated.')
-    else:
+    if raw not in valid:
         messages.error(request, 'Invalid status.')
+        return redirect('administration:staff_sales_orders')
+    try:
+        with transaction.atomic():
+            locked = SalesOrder.objects.select_for_update().get(pk=order.pk)
+            old = locked.status
+            lines = snapshot_old_lines(locked)
+            old_res = order_status_reserves_stock(old)
+            new_res = order_status_reserves_stock(raw)
+            if old_res and not new_res:
+                release_lines_to_stock(lines)
+            elif not old_res and new_res:
+                demands = [
+                    (
+                        ln.product,
+                        (ln.variant_label or '').strip(),
+                        int(ln.quantity),
+                    )
+                    for ln in lines
+                ]
+                v_errs = validate_order_line_demands(
+                    demands,
+                    order_pk=locked.pk,
+                    old_status=old,
+                    old_lines=lines,
+                )
+                if v_errs:
+                    raise ValueError('; '.join(v_errs))
+                take_lines_from_stock(lines)
+            locked.status = raw
+            locked.save(update_fields=['status', 'updated_at'])
+    except Exception as e:
+        messages.error(request, f'Could not update status: {e}')
+        return redirect('administration:staff_sales_orders')
+    messages.success(request, 'Status updated.')
     return redirect('administration:staff_sales_orders')
 
 

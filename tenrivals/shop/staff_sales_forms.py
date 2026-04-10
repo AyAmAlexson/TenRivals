@@ -1,17 +1,19 @@
-from collections import defaultdict
-
 from django import forms
 from django.core.exceptions import ValidationError
 from django.forms import BaseInlineFormSet, inlineformset_factory
 
 from .models import Customer, SalesOrder, SalesOrderLine
-from .sales_order_utils import stock_listing_quantity
+from .sales_order_stock import (
+    product_requires_variant,
+    snapshot_old_lines,
+    validate_order_line_demands,
+)
 
 
 def _product_choice_label(obj) -> str:
-    b = (obj.brand or '').strip()
-    n = (obj.name or '').strip()
-    return f'{b} — {n}' if b else (n or f'#{obj.pk}')
+    from .sales_order_stock import staff_order_product_option_label
+
+    return staff_order_product_option_label(obj)
 
 
 class CustomerForm(forms.ModelForm):
@@ -68,20 +70,65 @@ class SalesOrderForm(forms.ModelForm):
 
 
 class SalesOrderLineForm(forms.ModelForm):
+    variant_label = forms.CharField(
+        required=False,
+        max_length=48,
+        widget=forms.Select(
+            attrs={'class': 'sales-line-variant', 'data-variant-select': '1'}
+        ),
+    )
+
     class Meta:
         model = SalesOrderLine
-        fields = ['product', 'quantity', 'unit_price_gross', 'discount_percent']
+        fields = ['product', 'variant_label', 'quantity', 'unit_price_gross', 'discount_percent']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if 'product' in self.fields:
             self.fields['product'].label_from_instance = _product_choice_label
+        vf = self.fields['variant_label']
+        vf.label = 'Size / grip'
+        vf.widget.choices = [('', '—')]
+        if self.instance and getattr(self.instance, 'pk', None) and self.instance.product_id:
+            self._set_variant_choices_for_product(self.instance.product)
+
+    def _set_variant_choices_for_product(self, product):
+        from .sales_order_stock import get_variant_qty_map, product_requires_variant
+
+        vf = self.fields['variant_label']
+        if not product_requires_variant(product):
+            vf.widget.choices = [('', '—')]
+            vf.required = False
+            return
+        m = get_variant_qty_map(product)
+        opts = [('', '—')]
+        for k in sorted(m.keys()):
+            q = int(m.get(k, 0) or 0)
+            opts.append((k, f'{k} (×{q})'))
+        vf.widget.choices = opts
+
+    def clean(self):
+        cd = super().clean()
+        if cd.get('DELETE'):
+            return cd
+        product = cd.get('product')
+        variant = (cd.get('variant_label') or '').strip()
+        if product and product_requires_variant(product) and not variant:
+            raise ValidationError('Select size / grip for this product.')
+        if product and not product_requires_variant(product) and variant:
+            cd['variant_label'] = ''
+        return cd
 
 
 class BaseSalesOrderLineFormSet(BaseInlineFormSet):
     def clean(self):
         super().clean()
-        totals = defaultdict(int)
+        old_lines = []
+        if self.instance.pk:
+            old_lines = snapshot_old_lines(self.instance)
+        old_status = self.instance.status if self.instance.pk else None
+
+        demands = []
         for form in self.forms:
             if not hasattr(form, 'cleaned_data'):
                 continue
@@ -91,22 +138,17 @@ class BaseSalesOrderLineFormSet(BaseInlineFormSet):
             p = cd.get('product')
             q = cd.get('quantity')
             if p is not None and q is not None:
-                totals[p.pk] += int(q)
-        released = defaultdict(int)
-        order = self.instance
-        if order.pk:
-            for line in order.lines.all():
-                released[line.product_id] += int(line.quantity)
+                var = (cd.get('variant_label') or '').strip()
+                demands.append((p, var, int(q)))
 
-        errors = []
-        for pid, need in sorted(totals.items()):
-            avail = stock_listing_quantity(pid) + released.get(pid, 0)
-            if need > avail:
-                errors.append(
-                    f'Not enough stock for product ID {pid}: need {need}, available {avail}.'
-                )
-        if errors:
-            raise ValidationError(errors)
+        errs = validate_order_line_demands(
+            demands,
+            order_pk=self.instance.pk,
+            old_status=old_status,
+            old_lines=old_lines,
+        )
+        if errs:
+            raise ValidationError(errs)
 
 
 SalesOrderLineFormSet = inlineformset_factory(

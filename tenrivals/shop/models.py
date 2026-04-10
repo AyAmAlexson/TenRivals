@@ -832,6 +832,11 @@ class SalesOrderLine(models.Model):
         decimal_places=2,
         default=Decimal('0.00'),
     )
+    variant_label = models.CharField(
+        max_length=48,
+        blank=True,
+        help_text=_('Grip (e.g. L2) or shoe US size when the SKU uses a size grid.'),
+    )
     line_gross = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
     line_vat = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
     line_net = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
@@ -843,5 +848,15 @@ class SalesOrderLine(models.Model):
         return f'{self.product.name} ×{self.quantity}'
 
     def staff_order_item_summary(self) -> str:
-        """One line for orders list: qty× brand model."""
-        return f'{self.quantity}× {self.product.invoice_line_title()}'
+        """One line for orders list: qty× brand model (+ variant)."""
+        base = self.product.invoice_line_title()
+        if (self.variant_label or '').strip():
+            base = f'{base} ({self.variant_label})'
+        return f'{self.quantity}× {base}'
+
+    def invoice_display_label(self) -> str:
+        """Line text for PDF / invoice table."""
+        base = self.product.invoice_line_label()
+        if (self.variant_label or '').strip():
+            return f'{base} / {self.variant_label}'
+        return base
