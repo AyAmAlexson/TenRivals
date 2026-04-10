@@ -26,6 +26,12 @@
     background:#fff;border:1px solid var(--line);padding:6px 0;z-index:80;
     box-shadow:0 8px 24px rgba(15,23,42,.12);
   }
+  .order-actions-menu__panel.is-floating{
+    position:fixed;
+    z-index:10050;
+    right:auto;
+    margin:0;
+  }
   .order-actions-menu__link{
     display:block;width:100%;text-align:left;padding:10px 16px;font-size:14px;
     color:var(--ink);text-decoration:none;border:none;background:none;cursor:pointer;font-family:inherit;
@@ -33,6 +39,7 @@
   .order-actions-menu__link:hover{background:#f3f4f6}
   .order-actions-menu__link--accent{font-weight:600;color:var(--accent)}
   .order-actions-menu__link--danger{color:#b91c1c}
+  .order-actions-menu__link:disabled{opacity:.55;cursor:wait}
   .order-actions-menu__form{margin:0;padding:0}
   .orders-table .order-status-form{margin:0}
   .orders-table .order-status-form select{
@@ -103,7 +110,7 @@
               <div class="order-actions-menu__panel">
                 <a href="{% url 'administration:staff_sales_order_invoice' o.pk %}" class="order-actions-menu__link">View invoice</a>
                 <a href="{% url 'administration:staff_sales_order_invoice' o.pk %}?print=1" class="order-actions-menu__link" target="_blank" rel="noopener">Print invoice</a>
-                <a href="{% url 'administration:staff_sales_order_invoice_pdf' o.pk %}" class="order-actions-menu__link order-actions-menu__link--accent">Download PDF</a>
+                <button type="button" class="order-actions-menu__link order-actions-menu__link--accent staff-order-pdf-btn" data-pdf-url="{% url 'administration:staff_sales_order_invoice_pdf' o.pk %}" data-filename="{{ o.invoice_pdf_filename }}">Download PDF</button>
                 <a href="{% url 'administration:staff_sales_order_edit' o.pk %}" class="order-actions-menu__link">Edit</a>
                 <form method="post" action="{% url 'administration:staff_sales_order_delete' o.pk %}" class="order-actions-menu__form" onsubmit="return confirm('Delete order {{ o.invoice_number }}?');">
                   {% csrf_token %}
@@ -121,4 +128,113 @@
   </div>
 </div>
 <style>.num{text-align:right}</style>
+<script>
+(function () {
+  var menus = document.querySelectorAll('.order-actions-menu');
+  function closeAll(except) {
+    menus.forEach(function (d) {
+      if (d !== except) {
+        d.open = false;
+        var p = d.querySelector('.order-actions-menu__panel');
+        if (p) p.classList.remove('is-floating');
+      }
+    });
+  }
+  function placePanel(details) {
+    var panel = details.querySelector('.order-actions-menu__panel');
+    var summary = details.querySelector('summary');
+    if (!panel || !summary) return;
+    panel.classList.add('is-floating');
+    var sr = summary.getBoundingClientRect();
+    var pw = panel.offsetWidth || 208;
+    var pad = 8;
+    var left = sr.right - pw;
+    left = Math.max(pad, Math.min(left, window.innerWidth - pw - pad));
+    panel.style.left = left + 'px';
+    panel.style.top = (sr.bottom + 4) + 'px';
+  }
+  menus.forEach(function (details) {
+    details.addEventListener('toggle', function () {
+      if (details.open) {
+        closeAll(details);
+        var panel = details.querySelector('.order-actions-menu__panel');
+        var summary = details.querySelector('summary');
+        if (panel && summary) {
+          panel.classList.add('is-floating');
+          var sr0 = summary.getBoundingClientRect();
+          var pw0 = 208;
+          var pad0 = 8;
+          var left0 = sr0.right - pw0;
+          left0 = Math.max(pad0, Math.min(left0, window.innerWidth - pw0 - pad0));
+          panel.style.left = left0 + 'px';
+          panel.style.top = (sr0.bottom + 4) + 'px';
+        }
+        requestAnimationFrame(function () {
+          placePanel(details);
+        });
+      } else {
+        var p = details.querySelector('.order-actions-menu__panel');
+        if (p) {
+          p.classList.remove('is-floating');
+          p.style.left = '';
+          p.style.top = '';
+        }
+      }
+    });
+  });
+  document.addEventListener('click', function (e) {
+    menus.forEach(function (d) {
+      if (!d.open) return;
+      if (d.contains(e.target)) return;
+      d.open = false;
+    });
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closeAll();
+  });
+  window.addEventListener('scroll', function () {
+    closeAll();
+  }, true);
+  window.addEventListener('resize', function () {
+    menus.forEach(function (d) {
+      if (d.open) placePanel(d);
+    });
+  });
+
+  document.querySelectorAll('.staff-order-pdf-btn').forEach(function (btn) {
+    btn.addEventListener('click', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      var url = btn.getAttribute('data-pdf-url');
+      var filename = btn.getAttribute('data-filename') || 'invoice.pdf';
+      if (!url) return;
+      btn.disabled = true;
+      fetch(url, { credentials: 'same-origin' })
+        .then(function (r) {
+          if (!r.ok) throw new Error('fail');
+          return r.blob();
+        })
+        .then(function (blob) {
+          var href = URL.createObjectURL(blob);
+          var a = document.createElement('a');
+          a.href = href;
+          a.download = filename;
+          a.rel = 'noopener';
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          URL.revokeObjectURL(href);
+          var d = btn.closest('details');
+          if (d) d.open = false;
+        })
+        .catch(function () {
+          window.alert('Could not download PDF.');
+        })
+        .finally(function () {
+          btn.disabled = false;
+        });
+    });
+  });
+})();
+</script>
 {% endblock %}

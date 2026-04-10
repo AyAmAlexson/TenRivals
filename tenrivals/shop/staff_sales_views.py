@@ -7,9 +7,6 @@ import json
 import logging
 from datetime import date
 from decimal import Decimal
-from pathlib import Path
-
-from django.conf import settings
 from django.templatetags.static import static
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -143,24 +140,6 @@ def _invoice_context(order: SalesOrder, request=None) -> dict:
         'doc_date_display': order.order_date.strftime('%d.%m.%Y'),
         'invoice_logo_abs_url': logo_abs,
     }
-
-
-def _save_invoice_pdf_to_media(request, order: SalesOrder) -> Path:
-    pdf = _invoice_pdf_bytes(request, order)
-    out_dir = Path(settings.MEDIA_ROOT) / 'staff_invoices'
-    out_dir.mkdir(parents=True, exist_ok=True)
-    safe_num = order.invoice_number.replace(' ', '_')
-    fn = f'Invoice_{safe_num}_{order.order_date.isoformat()}.pdf'
-    path = out_dir / fn
-    path.write_bytes(pdf)
-    return path
-
-
-def _media_relative(path: Path) -> str:
-    try:
-        return str(path.relative_to(settings.MEDIA_ROOT))
-    except ValueError:
-        return str(path)
 
 
 def _rebuild_order_from_formset(
@@ -455,13 +434,10 @@ def staff_sales_order_invoice_pdf(request, pk):
     except (RuntimeError, OSError, ValueError) as e:
         messages.error(request, str(e))
         return redirect(reverse('administration:staff_sales_order_invoice', kwargs={'pk': pk}))
-    path = _save_invoice_pdf_to_media(request, order)
-    messages.info(request, f'PDF also saved to {_media_relative(path)}')
-    fn = path.name
     resp = FileResponse(
         io.BytesIO(pdf),
         as_attachment=True,
-        filename=fn,
+        filename=order.invoice_pdf_filename,
         content_type='application/pdf',
     )
     return resp

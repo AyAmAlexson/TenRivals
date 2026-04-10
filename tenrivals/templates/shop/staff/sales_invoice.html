@@ -49,7 +49,7 @@
   @media print{ .controls{ display:none!important; } .wrap{ margin:0; border:0; width:auto; padding:12mm 14mm; } }
   .header .header-row--primary { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 16px; }
   .header .header-row--secondary { display: flex; justify-content: space-between; gap: 24px; margin-top: 14px; flex-wrap:wrap; }
-  .header .logo .logo-img { height: 48px; width: auto; max-width: 220px; display:block; object-fit:contain; }
+  .header .logo .logo-img { height: 96px; width: auto; max-width: 440px; display:block; object-fit:contain; }
   .header h1 { margin: 0 0 6px 0; font-size: 20px; line-height: 1.15; font-weight:700; }
   .header .receipt .row { margin-bottom:6px; }
   .header .receipt .row .value { font-size: 20px; font-weight: 800; white-space: nowrap; }
@@ -106,7 +106,7 @@
   <div class="controls">
     <a class="btn" href="{% url 'administration:staff_sales_orders' %}">Back to orders</a>
     <button type="button" class="btn" onclick="window.print()">Print</button>
-    <a class="btn" href="{% url 'administration:staff_sales_order_invoice_pdf' order.pk %}">Download PDF</a>
+    <button type="button" class="btn js-staff-invoice-pdf" data-pdf-url="{% url 'administration:staff_sales_order_invoice_pdf' order.pk %}" data-filename="{{ order.invoice_pdf_filename }}">Download PDF</button>
     <span class="small muted">VAT 18% inclusive (extracted below).</span>
   </div>
 {% endif %}
@@ -249,5 +249,41 @@
 {% if print_mode %}
 <script>window.addEventListener('load',function(){ window.print(); });</script>
 {% endif %}
+{% if not embed_mode %}{% if not print_mode %}
+<script>
+(function () {
+  var btn = document.querySelector('.js-staff-invoice-pdf');
+  if (!btn) return;
+  btn.addEventListener('click', function () {
+    var url = btn.getAttribute('data-pdf-url');
+    var filename = btn.getAttribute('data-filename') || 'invoice.pdf';
+    if (!url) return;
+    btn.disabled = true;
+    fetch(url, { credentials: 'same-origin' })
+      .then(function (r) {
+        if (!r.ok) throw new Error('Download failed');
+        return r.blob();
+      })
+      .then(function (blob) {
+        var href = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = href;
+        a.download = filename;
+        a.rel = 'noopener';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(href);
+      })
+      .catch(function () {
+        window.alert('Could not download PDF. Try again or use a direct link from the orders list.');
+      })
+      .finally(function () {
+        btn.disabled = false;
+      });
+  });
+})();
+</script>
+{% endif %}{% endif %}
 </body>
 </html>
