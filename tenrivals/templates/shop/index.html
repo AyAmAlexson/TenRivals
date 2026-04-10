@@ -62,17 +62,35 @@
     .social-link{display:inline-flex; width:24px; height:24px; align-items:center; justify-content:center; color:rgba(255,255,255,.7); text-decoration:none; transition:color .15s}
     .social-link:hover{color:#fff}
 
-    /* Nav */
-    nav{background:#1a1a1a; position:relative; z-index:9999}
-    .nav-row{display:flex; gap:0; align-items:stretch; min-height:44px; overflow:visible; position:relative}
-    .nav-link{padding:0 14px; color:rgba(255,255,255,.8); display:flex; align-items:center; font-size:14px; border-bottom:2px solid transparent; transition:color .15s}
-    .nav-link:hover{color:#fff; border-bottom-color:var(--accent)}
-    .nav-link--primary{color:var(--accent); font-weight:800; text-transform:uppercase; letter-spacing:.07em; font-size:13px}
+    /* Nav — full viewport width, compact row */
+    .shop-main-nav{background:#1a1a1a; position:relative; z-index:9999; width:100%}
+    .shop-main-nav__inner{width:100%; max-width:none; padding:0 clamp(14px,2.5vw,28px)}
+    .shop-main-nav .nav-row{
+      display:flex; flex-wrap:wrap; align-items:stretch;
+      min-height:34px; width:100%; overflow:visible; position:relative;
+      justify-content:flex-start; gap:0;
+    }
+    .shop-main-nav .nav-link{
+      padding:0 11px; min-height:34px;
+      color:rgba(255,255,255,.82); display:inline-flex; align-items:center;
+      font-size:12px; font-weight:600; text-transform:none; letter-spacing:0;
+      border-bottom:2px solid transparent; transition:color .15s, border-color .15s;
+    }
+    .shop-main-nav .nav-link:hover{color:#fff; border-bottom-color:var(--accent)}
+    .shop-main-nav .nav-link--primary{
+      color:var(--accent); font-weight:800; text-transform:uppercase; letter-spacing:.06em; font-size:11px;
+      margin-left:auto;
+    }
+    .shop-main-nav .dropdown > .nav-link{font-size:12px}
 
     /* Dropdowns */
-    .dropdown{position:relative; display:flex}
-    .dropdown-toggle{display:flex; align-items:center}
-    .dropdown-toggle::after{content:none !important}
+    .shop-main-nav .dropdown{position:relative; display:flex}
+    .dropdown-toggle{display:flex; align-items:center; gap:5px}
+    .shop-main-nav .dropdown-toggle::after{
+      content:''; width:0; height:0; border-left:4px solid transparent; border-right:4px solid transparent;
+      border-top:4px solid rgba(255,255,255,.45); flex-shrink:0; margin-top:1px;
+    }
+    .shop-main-nav .dropdown:hover .dropdown-toggle::after{border-top-color:rgba(255,255,255,.75)}
     .dropdown-menu{
       position:absolute; top:100%; left:0; min-width:220px; background:#222; border:1px solid #333;
       box-shadow:none; padding:10px; display:none; z-index:10000; margin-top:0;
@@ -142,26 +160,33 @@
     .hero-nav--next{right:clamp(8px,2vw,20px)}
     .hero-nav svg{width:22px; height:22px}
 
-    /* Announcement bar */
-    .announce-bar{background:var(--accent); color:#fff; text-align:center; padding:10px 20px; font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.12em}
+    /* Mid page (between hero & footer): tonal bands, no hero/footer changes */
+    .shop-home-mid{background:#e8e8eb}
+    .announce-bar{background:var(--accent); color:#fff; text-align:center; padding:9px 20px; font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.12em}
 
     /* Category strip */
-    .cat-strip{padding:36px 0 28px; background:linear-gradient(180deg, #fafafa 0%, #fff 100%)}
-    .cat-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:14px}
+    .cat-strip{padding:28px 0 24px; background:#dfe0e4; border-bottom:1px solid #d0d1d6}
+    .cat-grid{display:grid; grid-template-columns:repeat(6,1fr); gap:12px}
     .cat-tile{
       text-decoration:none !important;
-      display:flex; flex-direction:column; align-items:center; gap:12px;
-      padding:22px 10px; background:#fff; text-align:center;
-      border:1px solid var(--line);
-      box-shadow:0 1px 3px rgba(0,0,0,.04);
-      transition:border-color .15s, box-shadow .15s, transform .15s;
+      display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px;
+      min-height:104px;
+      padding:14px 8px; background:#fff; text-align:center;
+      border:1px solid #d1d2d7;
+      transition:border-color .15s, background-color .15s;
     }
-    .cat-tile:hover{border-color:rgba(178,0,9,.35); box-shadow:0 6px 20px rgba(0,0,0,.06); transform:translateY(-2px); text-decoration:none !important}
-    .cat-tile-icon{width:40px; height:40px; display:flex; align-items:center; justify-content:center; color:var(--ink)}
-    .cat-tile-icon svg{width:34px; height:34px}
-    .cat-tile-label{font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.08em; color:var(--ink)}
+    .cat-tile:hover{border-color:var(--accent); background:#fafafa; text-decoration:none !important}
+    .cat-tile-icon{width:32px; height:32px; display:flex; align-items:center; justify-content:center; color:var(--ink)}
+    .cat-tile-icon svg{width:28px; height:28px; stroke-width:1.35}
+    .cat-tile-label{font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.07em; color:var(--ink); line-height:1.25; max-width:100%}
 
-    /* Sections */
+    /* Product & stories rails on soft panel */
+    .shop-home-main{background:#e8e8eb; padding:6px 0 36px}
+    .shop-home-main__inner{padding-top:8px; padding-bottom:8px}
+    .shop-home-main .section{padding:32px 0}
+    .shop-home-main .section + .section{border-top:1px solid #d8d9dd; padding-top:36px; margin-top:4px}
+
+    /* Sections (legacy spacing when outside main — unused on home) */
     .section{padding:40px 0}
     .section-head{display:flex; align-items:center; justify-content:space-between; margin:0 0 20px; gap:16px}
     .section-head h2{margin:0; font-size:18px; letter-spacing:.06em}
@@ -192,12 +217,12 @@
     .story-card{
       display:flex; flex-direction:column; height:100%; min-height:420px;
       background:#fff; border:1px solid var(--line); overflow:hidden;
-      text-decoration:none !important; color:inherit; transition:box-shadow .15s, border-color .15s;
+      text-decoration:none !important; color:inherit; transition:border-color .15s;
     }
-    .story-card:hover{box-shadow:0 12px 36px rgba(0,0,0,.08); border-color:#cbd5e1; text-decoration:none !important}
+    .story-card:hover{border-color:#94a3b8; text-decoration:none !important}
     .story-card:hover .story-card__cta{color:var(--accent)}
     .story-card--static{cursor:default}
-    .story-card--static:hover{box-shadow:none; border-color:var(--line)}
+    .story-card--static:hover{border-color:var(--line)}
     .story-card__media{
       flex-shrink:0; aspect-ratio:3/4; background:#f3f4f6; overflow:hidden;
     }
@@ -215,7 +240,7 @@
     .story-card__cta{margin-top:16px; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.1em; color:var(--ink)}
 
     /* Brands strip */
-    .brands-strip{background:#f3f4f6; padding:36px 0}
+    .shop-home-mid .brands-strip{background:#dedfe3; border-top:1px solid #d0d1d6; padding:32px 0 40px}
     .brands-strip .section-head{margin-bottom:24px}
     .brands-row{display:flex; align-items:center; justify-content:space-between; gap:16px}
     .brand-name{font-family:'Saira Condensed','Saira',sans-serif; font-size:24px; font-weight:400; text-transform:uppercase; letter-spacing:1px; color:#94a3b8; transition:color .15s; text-decoration:none}
@@ -235,12 +260,13 @@
 
     /* Responsive */
     @media(max-width:1024px){
-      .cat-grid{grid-template-columns:repeat(4,1fr)}
+      .cat-grid{grid-template-columns:repeat(3,1fr)}
       .header-row{grid-template-columns:140px 1fr auto; grid-auto-flow:row}
       .brands-row{flex-wrap:wrap; justify-content:center; gap:24px}
     }
     @media(max-width:640px){
-      .cat-grid{grid-template-columns:repeat(3,1fr)}
+      .cat-grid{grid-template-columns:repeat(2,1fr); gap:10px}
+      .cat-tile{min-height:96px; padding:12px 6px}
       .footer-top{grid-template-columns:1fr 1fr}
       .auth{display:none}
       .hero-nav{width:38px; height:38px}
@@ -314,9 +340,9 @@
     </div>
   </header>
 
-  <!-- Main navigation -->
-  <nav>
-    <div class="container">
+  <!-- Main navigation (full width; compact row) -->
+  <nav class="shop-main-nav" aria-label="Shop catalog">
+    <div class="shop-main-nav__inner">
       <div class="nav-row">
         {% stock_catalog_nav %}
       </div>
@@ -365,6 +391,7 @@
     {% endif %}
   </section>
 
+  <div class="shop-home-mid">
   <!-- Announcement banner -->
   <div class="announce-bar">Free delivery in Tbilisi &nbsp;|&nbsp; Pre-order from US & EU with official customs clearance</div>
 
@@ -433,7 +460,8 @@
     </div>
   </div>
 
-  <main class="container">
+  <main class="shop-home-main">
+    <div class="container shop-home-main__inner">
     <section class="section">
       <div class="section-head"><h2>Featured Products</h2><a href="{% url 'shop:preorder' %}">View all &rarr;</a></div>
       <div class="product-rail-wrap" data-product-rail>
@@ -502,6 +530,7 @@
     </section>
     {% endif %}
 
+    </div>
   </main>
 
   <section class="brands-strip">
@@ -516,6 +545,7 @@
       </div>
     </div>
   </section>
+  </div>
 
   {% include 'shop/includes/shop_footer.html' %}
   <script>

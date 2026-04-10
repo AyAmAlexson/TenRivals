@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import io
 import json
+import logging
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
@@ -31,9 +32,43 @@ from .sales_order_utils import (
 )
 from .staff_sales_forms import CustomerForm, SalesOrderForm, SalesOrderLineFormSet
 
+logger = logging.getLogger(__name__)
+
 
 def _staff_ok(user):
     return bool(user.is_authenticated and user.is_superuser)
+
+
+def _invoice_logo_file_uri() -> str | None:
+    p = (
+        Path(settings.BASE_DIR)
+        / 'static'
+        / 'assets'
+        / 'img'
+        / 'invoice_logo_frame114.svg'
+    )
+    try:
+        if p.is_file():
+            return p.resolve().as_uri()
+    except OSError:
+        pass
+    return None
+
+
+def _sales_order_lines_prefetch():
+    return Prefetch(
+        'lines',
+        queryset=SalesOrderLine.objects.select_related(
+            'product',
+            'product__racket',
+            'product__shoe',
+            'product__apparel',
+            'product__string',
+            'product__bag',
+            'product__balls',
+            'product__accessory',
+        ).order_by('id'),
+    )
 
 
 def _invoice_pdf_bytes(request, order: SalesOrder) -> bytes:
@@ -52,19 +87,26 @@ def _invoice_pdf_bytes(request, order: SalesOrder) -> bytes:
             'WeasyPrint is not installed. Add weasyprint to requirements and reinstall.'
         ) from e
     base_url = request.build_absolute_uri('/')[:-1]
-    return HTML(string=html, base_url=base_url).write_pdf()
+    try:
+        return HTML(string=html, base_url=base_url).write_pdf()
+    except Exception as e:
+        logger.exception('WeasyPrint PDF generation failed')
+        raise RuntimeError(
+            'PDF could not be generated. Check server logs; WeasyPrint may need '
+            'system libraries (Cairo, Pango), or the invoice template failed to render.'
+        ) from e
 
 
 def _invoice_context(order: SalesOrder) -> dict:
     lines = []
     any_disc = False
-    for line in order.lines.select_related('product').all():
+    for line in order.lines.all():
         d = line.discount_percent or Decimal('0')
         if d > 0:
             any_disc = True
         lines.append(
             {
-                'name': line.product.name,
+                'name': line.product.invoice_line_label(),
                 'qty': line.quantity,
                 'disc': d,
                 'unit': line.unit_price_gross,
@@ -106,6 +148,7 @@ def _invoice_context(order: SalesOrder) -> dict:
         'embed_mode': False,
         'print_mode': False,
         'doc_date_display': order.order_date.strftime('%d.%m.%Y'),
+        'invoice_logo_uri': _invoice_logo_file_uri(),
     }
 
 
@@ -118,6 +161,13 @@ def _save_invoice_pdf_to_media(request, order: SalesOrder) -> Path:
     path = out_dir / fn
     path.write_bytes(pdf)
     return path
+
+
+def _media_relative(path: Path) -> str:
+    try:
+        return str(path.relative_to(settings.MEDIA_ROOT))
+    except ValueError:
+        return str(path)
 
 
 def _rebuild_order_from_formset(
@@ -163,7 +213,15 @@ def _product_queryset_for_order(instance: SalesOrder | None):
         all_ids = set(base_ids) | set(line_ids)
         return (
             Product.objects.filter(pk__in=all_ids)
-            .select_related('shoe', 'racket', 'apparel')
+            .select_related(
+                'shoe',
+                'racket',
+                'apparel',
+                'string',
+                'bag',
+                'balls',
+                'accessory',
+            )
             .order_by('brand', 'name')
         )
     return base
@@ -239,9 +297,7 @@ def staff_sales_orders(request):
     q = (request.GET.get('q') or '').strip()
     qs = (
         SalesOrder.objects.select_related('customer')
-        .prefetch_related(
-            Prefetch('lines', queryset=SalesOrderLine.objects.select_related('product'))
-        )
+        .prefetch_related(_sales_order_lines_prefetch())
         .order_by('-invoice_number')
     )
     if q:
@@ -259,6 +315,7 @@ def staff_sales_orders(request):
         {
             'orders': qs[:500],
             'search_q': q,
+            'order_status_choices': SalesOrder.Status.choices,
             'staff_nav_active': 'sales_orders',
             'page_heading': 'Orders',
         },
@@ -362,10 +419,26 @@ def staff_sales_order_delete(request, pk):
 
 @login_required
 @user_passes_test(_staff_ok)
+@require_POST
+def staff_sales_order_set_status(request, pk):
+    order = get_object_or_404(SalesOrder, pk=pk)
+    raw = (request.POST.get('status') or '').strip()
+    valid = {c[0] for c in SalesOrder.Status.choices}
+    if raw in valid:
+        order.status = raw
+        order.save(update_fields=['status', 'updated_at'])
+        messages.success(request, 'Status updated.')
+    else:
+        messages.error(request, 'Invalid status.')
+    return redirect('administration:staff_sales_orders')
+
+
+@login_required
+@user_passes_test(_staff_ok)
 def staff_sales_order_invoice(request, pk):
     order = get_object_or_404(
         SalesOrder.objects.select_related('customer').prefetch_related(
-            Prefetch('lines', queryset=SalesOrderLine.objects.select_related('product'))
+            _sales_order_lines_prefetch()
         ),
         pk=pk,
     )
@@ -380,17 +453,17 @@ def staff_sales_order_invoice(request, pk):
 def staff_sales_order_invoice_pdf(request, pk):
     order = get_object_or_404(
         SalesOrder.objects.select_related('customer').prefetch_related(
-            Prefetch('lines', queryset=SalesOrderLine.objects.select_related('product'))
+            _sales_order_lines_prefetch()
         ),
         pk=pk,
     )
     try:
         pdf = _invoice_pdf_bytes(request, order)
-    except RuntimeError as e:
+    except (RuntimeError, OSError, ValueError) as e:
         messages.error(request, str(e))
         return redirect(reverse('administration:staff_sales_order_invoice', kwargs={'pk': pk}))
     path = _save_invoice_pdf_to_media(request, order)
-    messages.info(request, f'PDF also saved to {path.relative_to(settings.MEDIA_ROOT)}')
+    messages.info(request, f'PDF also saved to {_media_relative(path)}')
     fn = path.name
     resp = FileResponse(
         io.BytesIO(pdf),

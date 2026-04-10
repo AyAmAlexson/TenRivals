@@ -44,6 +44,11 @@ urlpatterns = [
     ),
     path("orders/", staff_sales_views.staff_sales_orders, name="staff_sales_orders"),
     path(
+        "orders/<int:pk>/status/",
+        staff_sales_views.staff_sales_order_set_status,
+        name="staff_sales_order_set_status",
+    ),
+    path(
         "orders/<int:pk>/delete/",
         staff_sales_views.staff_sales_order_delete,
         name="staff_sales_order_delete",

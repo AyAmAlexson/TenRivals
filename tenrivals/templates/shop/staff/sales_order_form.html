@@ -3,6 +3,11 @@
 {% block page_heading %}{{ page_heading }}{% endblock %}
 {% block extra_head %}
 {{ product_prices|json_script:"product-prices-data" }}
+<style>
+  @media(min-width:900px){
+    .sales-order-top-row.form-row{grid-template-columns:1.2fr 1fr 1fr}
+  }
+</style>
 {% endblock %}
 {% block content %}
 <div class="card">
@@ -13,7 +18,7 @@
     {% if form.non_field_errors %}<div class="field-errors" style="margin-bottom:12px">{{ form.non_field_errors }}</div>{% endif %}
     {% if formset.non_form_errors %}<div class="field-errors" style="margin-bottom:12px">{{ formset.non_form_errors }}</div>{% endif %}
 
-    <div class="form-row">
+    <div class="form-row sales-order-top-row">
       <div class="form-group">
         <label for="{{ form.customer.id_for_label }}">Customer</label>
         {{ form.customer }}
@@ -22,6 +27,10 @@
       <div class="form-group">
         <label for="{{ form.order_date.id_for_label }}">Date</label>
         {{ form.order_date }}
+      </div>
+      <div class="form-group">
+        <label for="{{ form.status.id_for_label }}">Status</label>
+        {{ form.status }}
       </div>
     </div>
     <div class="form-row">
@@ -41,6 +50,7 @@
     {% endif %}
 
     <h3 class="card-title" style="margin-top:8px;font-size:14px">Line items (stock)</h3>
+    <p class="page-meta" style="margin-bottom:10px;font-size:12px">Product list shows <strong>brand — model</strong>. Check <strong>Remove</strong> on a row to delete that line when you save (Django formset).</p>
     {{ formset.management_form }}
     <div class="table-wrap" style="margin-bottom:16px">
       <table id="lines-table" style="min-width:720px">
@@ -53,7 +63,7 @@
             <th class="num">Line gross</th>
             <th class="num">VAT</th>
             <th class="num">Net</th>
-            <th>Del</th>
+            <th title="Remove this line when you save the order">Remove</th>
           </tr>
         </thead>
         <tbody id="lines-tbody">
@@ -76,10 +86,10 @@
     <button type="button" class="btn btn--sm btn--outline" id="btn-add-line" style="margin-bottom:20px">+ Add line</button>
 
     <h3 class="card-title" style="font-size:14px">Services (optional)</h3>
-    <div class="table-wrap" style="margin-bottom:12px;max-width:560px">
-      <table id="services-table">
+    <div class="table-wrap order-services-wrap" style="margin-bottom:12px;width:100%">
+      <table id="services-table" style="width:100%;table-layout:fixed">
         <thead>
-          <tr><th>Service name</th><th class="num">Gross ₾</th><th></th></tr>
+          <tr><th style="width:65%">Service name</th><th class="num" style="width:28%">Gross ₾</th><th style="width:7%"></th></tr>
         </thead>
         <tbody id="services-tbody"></tbody>
       </table>
@@ -127,7 +137,12 @@
 </tr>
 </tbody></table>
 
-<style>.num{text-align:right}#lines-table input,#lines-table select{width:100%;min-width:0;font-size:13px;padding:6px 8px;border:1px solid var(--line);font-family:inherit}</style>
+<style>
+  .num{text-align:right}
+  #lines-table input,#lines-table select{width:100%;min-width:0;font-size:13px;padding:6px 8px;border:1px solid var(--line);font-family:inherit}
+  #lines-table input[type="checkbox"]{width:auto!important;min-width:auto}
+  .order-services-wrap table input{width:100%;box-sizing:border-box;font-size:13px;padding:6px 8px;border:1px solid var(--line);font-family:inherit}
+</style>
 <script>
 (function(){
   const VAT_DIV = 1.18;

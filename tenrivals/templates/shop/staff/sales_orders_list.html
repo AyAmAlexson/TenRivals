@@ -2,6 +2,32 @@
 {% block title %}Orders — Staff — TR Shop{% endblock %}
 {% block page_heading %}{{ page_heading }}{% endblock %}
 {% block page_note %}<p class="page-note">Retail invoices (VAT-inclusive ₾). Invoice numbers are never reused after deletion.</p>{% endblock %}
+{% block extra_head %}
+<style>
+  .orders-table{min-width:1080px}
+  .orders-table .col-items{max-width:280px;min-width:200px;vertical-align:top}
+  .orders-table .item-line{
+    display:block;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    max-width:280px;
+    font-size:12px;
+    line-height:1.45;
+    padding:2px 0;
+  }
+  .orders-table .col-actions{white-space:nowrap;width:1%}
+  .orders-table .col-actions .action-icons{flex-wrap:nowrap}
+  .orders-table .order-status-form{margin:0}
+  .orders-table .order-status-form select{
+    max-width:160px;
+    padding:6px 8px;
+    font-size:12px;
+    font-family:inherit;
+    border:1px solid var(--line);
+  }
+</style>
+{% endblock %}
 {% block content %}
 <div class="staff-toolbar">
   <a href="{% url 'administration:staff_sales_order_new' %}" class="btn">New order</a>
@@ -13,19 +39,20 @@
 <div class="card">
   <h2 class="card-title">Orders (up to 500)</h2>
   <div class="table-wrap">
-    <table>
+    <table class="orders-table">
       <thead>
         <tr>
           <th>Invoice #</th>
           <th>Fiscal receipt #</th>
           <th>Date</th>
+          <th>Status</th>
           <th class="num">Gross</th>
           <th class="num">VAT</th>
           <th class="num">Net</th>
           <th>Payment</th>
           <th>Customer</th>
-          <th>Items</th>
-          <th>Actions</th>
+          <th class="col-items">Items</th>
+          <th class="col-actions">Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -34,17 +61,27 @@
           <td class="mono">{{ o.invoice_number }}</td>
           <td class="mono">{{ o.fiscal_receipt|default:"—" }}</td>
           <td class="mono">{{ o.order_date|date:"Y-m-d" }}</td>
+          <td>
+            <form method="post" action="{% url 'administration:staff_sales_order_set_status' o.pk %}" class="order-status-form">
+              {% csrf_token %}
+              <select name="status" aria-label="Order status" onchange="this.form.submit()">
+                {% for val, label in order_status_choices %}
+                <option value="{{ val }}" {% if o.status == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+            </form>
+          </td>
           <td class="mono num">{{ o.gross_total }}</td>
           <td class="mono num">{{ o.vat_total }}</td>
           <td class="mono num">{{ o.net_total }}</td>
           <td>{{ o.payment_method|default:"—"|truncatechars:24 }}</td>
           <td>{{ o.customer.display_name }}</td>
-          <td style="max-width:220px;font-size:12px">
+          <td class="col-items">
             {% for line in o.lines.all %}
-              {{ line.product.name }} ×{{ line.quantity }}{% if not forloop.last %}; {% endif %}
+              <span class="item-line" title="{{ line.staff_order_item_summary }}">{{ line.staff_order_item_summary }}</span>
             {% empty %}—{% endfor %}
           </td>
-          <td>
+          <td class="col-actions">
             <div class="action-icons">
               <a href="{% url 'administration:staff_sales_order_invoice' o.pk %}" class="icon-btn" title="View invoice" aria-label="View invoice">⌕</a>
               <a href="{% url 'administration:staff_sales_order_invoice' o.pk %}?print=1" class="icon-btn" target="_blank" rel="noopener" title="Print invoice" aria-label="Print invoice">⎙</a>
@@ -58,7 +95,7 @@
           </td>
         </tr>
         {% empty %}
-        <tr><td colspan="10" style="color:var(--muted)">No orders yet.</td></tr>
+        <tr><td colspan="11" style="color:var(--muted)">No orders yet.</td></tr>
         {% endfor %}
       </tbody>
     </table>

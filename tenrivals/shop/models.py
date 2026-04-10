@@ -1,6 +1,7 @@
 from decimal import Decimal
 
 from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -146,6 +147,42 @@ class Product(models.Model):
         tens = (base / Decimal('10')).to_integral_value(rounding=ROUND_CEILING) * Decimal('10')
         return tens
 
+    def invoice_line_title(self) -> str:
+        """Brand + model name for invoices and staff lists."""
+        b = (self.brand or '').strip()
+        n = (self.name or '').strip()
+        if b and n:
+            return f'{b} {n}'
+        return n or b or ''
+
+    def invoice_line_specs_slash(self) -> str:
+        """Type-specific details joined with ' / ' (racket: weight, head, grips; etc.)."""
+        for rel in (
+            'racket',
+            'shoe',
+            'apparel',
+            'string',
+            'bag',
+            'balls',
+            'accessory',
+        ):
+            try:
+                sub = getattr(self, rel)
+            except ObjectDoesNotExist:
+                continue
+            fn = getattr(sub, 'invoice_specs_slash', None)
+            if callable(fn):
+                return fn()
+        return ''
+
+    def invoice_line_label(self) -> str:
+        """Full item description for invoice table (title + specs)."""
+        title = self.invoice_line_title()
+        specs = (self.invoice_line_specs_slash() or '').strip()
+        if specs:
+            return f'{title} / {specs}'
+        return title
+
 
 class Racket(Product):
     # Tennis racket specific fields
@@ -161,6 +198,18 @@ class Racket(Product):
     class Meta:
         verbose_name = 'Racket'
         verbose_name_plural = 'Rackets'
+
+    def invoice_specs_slash(self) -> str:
+        parts = []
+        if self.weight_grams:
+            parts.append(f'{self.weight_grams} g')
+        if self.head_size_sq_in:
+            parts.append(f'{self.head_size_sq_in} sq in')
+        if self.grip_sizes and isinstance(self.grip_sizes, list):
+            grips = [str(x) for x in self.grip_sizes if x is not None and str(x).strip()]
+            if grips:
+                parts.append(', '.join(grips))
+        return ' / '.join(parts)
 
 
 class Shoe(Product):
@@ -180,6 +229,24 @@ class Shoe(Product):
         verbose_name = 'Shoe'
         verbose_name_plural = 'Shoes'
 
+    def invoice_specs_slash(self) -> str:
+        parts = []
+        if self.color:
+            parts.append(self.color)
+        if self.surface:
+            parts.append(str(self.get_surface_display()))
+        if self.width:
+            parts.append(self.width)
+        if self.sizes and isinstance(self.sizes, dict):
+            pairs = [f'{k}×{v}' for k, v in self.sizes.items() if v]
+            if pairs:
+                parts.append(', '.join(pairs))
+        elif self.sizes and isinstance(self.sizes, list) and self.sizes:
+            parts.append(', '.join(str(x) for x in self.sizes))
+        if self.gender:
+            parts.append(str(self.get_gender_display()))
+        return ' / '.join(parts)
+
 
 class Apparel(Product):
     # Apparel common fields (men/women/junior via gender)
@@ -190,6 +257,20 @@ class Apparel(Product):
     class Meta:
         verbose_name = 'Apparel'
         verbose_name_plural = 'Apparel'
+
+    def invoice_specs_slash(self) -> str:
+        parts = []
+        if self.gender:
+            parts.append(str(self.get_gender_display()))
+        if self.material:
+            parts.append(self.material)
+        if self.sizes and isinstance(self.sizes, dict):
+            pairs = [f'{k}×{v}' for k, v in self.sizes.items() if v]
+            if pairs:
+                parts.append(', '.join(pairs))
+        elif self.sizes and isinstance(self.sizes, list) and self.sizes:
+            parts.append(', '.join(str(x) for x in self.sizes))
+        return ' / '.join(parts)
 
 
 class String(Product):
@@ -202,6 +283,16 @@ class String(Product):
         verbose_name = 'String'
         verbose_name_plural = 'Strings'
 
+    def invoice_specs_slash(self) -> str:
+        parts = []
+        if self.gauge_mm is not None:
+            parts.append(f'{self.gauge_mm} mm')
+        if self.material:
+            parts.append(self.material)
+        if self.length_m:
+            parts.append(f'{self.length_m} m')
+        return ' / '.join(parts)
+
 
 class Bag(Product):
     capacity_rackets = models.PositiveIntegerField(null=True, blank=True)  # e.g. 6, 9, 12
@@ -209,6 +300,11 @@ class Bag(Product):
     class Meta:
         verbose_name = 'Bag'
         verbose_name_plural = 'Bags'
+
+    def invoice_specs_slash(self) -> str:
+        if self.capacity_rackets:
+            return f'{self.capacity_rackets} rackets'
+        return ''
 
 
 class Balls(Product):
@@ -219,12 +315,23 @@ class Balls(Product):
         verbose_name = 'Balls'
         verbose_name_plural = 'Balls'
 
+    def invoice_specs_slash(self) -> str:
+        parts = []
+        if self.balls_per_can:
+            parts.append(f'{self.balls_per_can} pcs/can')
+        if self.surface:
+            parts.append(str(self.get_surface_display()))
+        return ' / '.join(parts)
+
 
 class Accessory(Product):
     # Generic catch-all for grips and accessories
     class Meta:
         verbose_name = 'Accessory'
         verbose_name_plural = 'Accessories'
+
+    def invoice_specs_slash(self) -> str:
+        return ''
 
 
 class HomePromoStripSettings(models.Model):
@@ -678,6 +785,21 @@ class SalesOrder(models.Model):
         help_text=_('List of {"name": str, "gross": str|number} — VAT-inclusive amounts.'),
     )
     notes = models.TextField(blank=True)
+
+    class Status(models.TextChoices):
+        PENDING = 'PENDING', _('Pending payment')
+        PAID = 'PAID', _('Paid')
+        AWAITING_PICKUP = 'AWAITING_PICKUP', _('Awaiting pickup')
+        COMPLETED = 'COMPLETED', _('Completed')
+        CANCELLED = 'CANCELLED', _('Cancelled')
+        REFUNDED = 'REFUNDED', _('Refunded')
+
+    status = models.CharField(
+        max_length=24,
+        choices=Status.choices,
+        default=Status.PAID,
+        db_index=True,
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -719,3 +841,7 @@ class SalesOrderLine(models.Model):
 
     def __str__(self):
         return f'{self.product.name} ×{self.quantity}'
+
+    def staff_order_item_summary(self) -> str:
+        """One line for orders list: qty× brand model."""
+        return f'{self.quantity}× {self.product.invoice_line_title()}'

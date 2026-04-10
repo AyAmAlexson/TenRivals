@@ -8,6 +8,12 @@ from .models import Customer, SalesOrder, SalesOrderLine
 from .sales_order_utils import stock_listing_quantity
 
 
+def _product_choice_label(obj) -> str:
+    b = (obj.brand or '').strip()
+    n = (obj.name or '').strip()
+    return f'{b} — {n}' if b else (n or f'#{obj.pk}')
+
+
 class CustomerForm(forms.ModelForm):
     class Meta:
         model = Customer
@@ -42,6 +48,7 @@ class SalesOrderForm(forms.ModelForm):
         fields = [
             'customer',
             'order_date',
+            'status',
             'delivery_gross',
             'fiscal_receipt',
             'payment_method',
@@ -64,6 +71,11 @@ class SalesOrderLineForm(forms.ModelForm):
     class Meta:
         model = SalesOrderLine
         fields = ['product', 'quantity', 'unit_price_gross', 'discount_percent']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if 'product' in self.fields:
+            self.fields['product'].label_from_instance = _product_choice_label
 
 
 class BaseSalesOrderLineFormSet(BaseInlineFormSet):
