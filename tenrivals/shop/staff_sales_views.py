@@ -10,6 +10,7 @@ from decimal import Decimal
 from pathlib import Path
 
 from django.conf import settings
+from django.templatetags.static import static
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.db import transaction
@@ -39,22 +40,6 @@ def _staff_ok(user):
     return bool(user.is_authenticated and user.is_superuser)
 
 
-def _invoice_logo_file_uri() -> str | None:
-    p = (
-        Path(settings.BASE_DIR)
-        / 'static'
-        / 'assets'
-        / 'img'
-        / 'invoice_logo_frame114.svg'
-    )
-    try:
-        if p.is_file():
-            return p.resolve().as_uri()
-    except OSError:
-        pass
-    return None
-
-
 def _sales_order_lines_prefetch():
     return Prefetch(
         'lines',
@@ -72,7 +57,7 @@ def _sales_order_lines_prefetch():
 
 
 def _invoice_pdf_bytes(request, order: SalesOrder) -> bytes:
-    ctx = _invoice_context(order)
+    ctx = _invoice_context(order, request=request)
     ctx['embed_mode'] = True
     ctx['print_mode'] = False
     html = render_to_string(
@@ -97,7 +82,7 @@ def _invoice_pdf_bytes(request, order: SalesOrder) -> bytes:
         ) from e
 
 
-def _invoice_context(order: SalesOrder) -> dict:
+def _invoice_context(order: SalesOrder, request=None) -> dict:
     lines = []
     any_disc = False
     for line in order.lines.all():
@@ -136,6 +121,14 @@ def _invoice_context(order: SalesOrder) -> dict:
     delivery_net = delivery_vat = Decimal('0')
     if delivery_gross > 0:
         delivery_net, delivery_vat = gross_split_vat_net(delivery_gross)
+    logo_rel = static('assets/img/invoice_logo_frame114.svg')
+    logo_abs = None
+    if request is not None:
+        logo_abs = (
+            logo_rel
+            if logo_rel.startswith('http://') or logo_rel.startswith('https://')
+            else request.build_absolute_uri(logo_rel)
+        )
     return {
         'order': order,
         'lines': lines,
@@ -148,7 +141,7 @@ def _invoice_context(order: SalesOrder) -> dict:
         'embed_mode': False,
         'print_mode': False,
         'doc_date_display': order.order_date.strftime('%d.%m.%Y'),
-        'invoice_logo_uri': _invoice_logo_file_uri(),
+        'invoice_logo_abs_url': logo_abs,
     }
 
 
@@ -442,7 +435,7 @@ def staff_sales_order_invoice(request, pk):
         ),
         pk=pk,
     )
-    ctx = _invoice_context(order)
+    ctx = _invoice_context(order, request=request)
     ctx['print_mode'] = request.GET.get('print') == '1'
     ctx['embed_mode'] = False
     return render(request, 'shop/staff/sales_invoice.html', ctx)

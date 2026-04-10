@@ -62,26 +62,42 @@
     .social-link{display:inline-flex; width:24px; height:24px; align-items:center; justify-content:center; color:rgba(255,255,255,.7); text-decoration:none; transition:color .15s}
     .social-link:hover{color:#fff}
 
-    /* Nav — full viewport width, compact row */
-    .shop-main-nav{background:#1a1a1a; position:relative; z-index:9999; width:100%}
-    .shop-main-nav__inner{width:100%; max-width:none; padding:0 clamp(14px,2.5vw,28px)}
+    /* Nav — full width, accent rail, retail energy (Saira 800 = CAPS) */
+    .shop-main-nav{
+      background:#1a1a1a; position:relative; z-index:9999; width:100%;
+      border-top:3px solid var(--accent);
+    }
     .shop-main-nav .nav-row{
       display:flex; flex-wrap:wrap; align-items:stretch;
-      min-height:34px; width:100%; overflow:visible; position:relative;
-      justify-content:flex-start; gap:0;
+      min-height:40px; width:100%; overflow:visible; position:relative;
+      justify-content:flex-start; gap:2px;
     }
     .shop-main-nav .nav-link{
-      padding:0 11px; min-height:34px;
-      color:rgba(255,255,255,.82); display:inline-flex; align-items:center;
-      font-size:12px; font-weight:600; text-transform:none; letter-spacing:0;
-      border-bottom:2px solid transparent; transition:color .15s, border-color .15s;
+      padding:0 14px; min-height:40px;
+      color:rgba(255,255,255,.9); display:inline-flex; align-items:center; justify-content:center;
+      font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.1em;
+      border-bottom:3px solid transparent;
+      transition:color .15s, background-color .15s, border-color .15s;
     }
-    .shop-main-nav .nav-link:hover{color:#fff; border-bottom-color:var(--accent)}
+    .shop-main-nav .nav-link:hover{
+      color:#fff;
+      background:rgba(255,255,255,.1);
+      border-bottom-color:rgba(255,255,255,.35);
+    }
     .shop-main-nav .nav-link--primary{
-      color:var(--accent); font-weight:800; text-transform:uppercase; letter-spacing:.06em; font-size:11px;
+      color:#fff; background:rgba(178,0,9,.35);
+      border-bottom-color:var(--accent);
+      letter-spacing:.12em; font-size:11px;
       margin-left:auto;
     }
-    .shop-main-nav .dropdown > .nav-link{font-size:12px}
+    .shop-main-nav .nav-link--primary:hover{
+      background:var(--accent);
+      border-bottom-color:#fff;
+    }
+    .shop-main-nav .dropdown:hover > .nav-link{
+      background:rgba(255,255,255,.08);
+      border-bottom-color:var(--accent);
+    }
 
     /* Dropdowns */
     .shop-main-nav .dropdown{position:relative; display:flex}
@@ -160,31 +176,46 @@
     .hero-nav--next{right:clamp(8px,2vw,20px)}
     .hero-nav svg{width:22px; height:22px}
 
-    /* Mid page (between hero & footer): tonal bands, no hero/footer changes */
-    .shop-home-mid{background:#e8e8eb}
-    .announce-bar{background:var(--accent); color:#fff; text-align:center; padding:9px 20px; font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.12em}
+    /* Mid page — white, structure via lines only */
+    .shop-home-mid{background:#fff}
+    .announce-bar{background:var(--accent); color:#fff; text-align:center; padding:10px 20px; font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.12em}
 
-    /* Category strip */
-    .cat-strip{padding:28px 0 24px; background:#dfe0e4; border-bottom:1px solid #d0d1d6}
-    .cat-grid{display:grid; grid-template-columns:repeat(6,1fr); gap:12px}
+    /* Category strip — tiles under red bar: accent hit, no gray page fill */
+    .cat-strip{padding:32px 0 28px; background:#fff; border-bottom:1px solid var(--line)}
+    .cat-grid{display:grid; grid-template-columns:repeat(6,1fr); gap:14px}
     .cat-tile{
       text-decoration:none !important;
-      display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px;
-      min-height:104px;
-      padding:14px 8px; background:#fff; text-align:center;
-      border:1px solid #d1d2d7;
-      transition:border-color .15s, background-color .15s;
+      position:relative;
+      display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;
+      min-height:112px;
+      padding:18px 10px 16px; background:#fff; text-align:center;
+      border:1px solid var(--line);
+      transition:border-color .2s, color .2s, background-color .2s;
     }
-    .cat-tile:hover{border-color:var(--accent); background:#fafafa; text-decoration:none !important}
-    .cat-tile-icon{width:32px; height:32px; display:flex; align-items:center; justify-content:center; color:var(--ink)}
-    .cat-tile-icon svg{width:28px; height:28px; stroke-width:1.35}
-    .cat-tile-label{font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.07em; color:var(--ink); line-height:1.25; max-width:100%}
+    .cat-tile::before{
+      content:''; position:absolute; top:0; left:0; right:0; height:3px;
+      background:var(--line); transition:background .2s;
+    }
+    .cat-tile:hover{
+      border-color:var(--accent);
+      background:#fffaf9;
+      text-decoration:none !important;
+    }
+    .cat-tile:hover::before{background:var(--accent)}
+    .cat-tile:hover .cat-tile-icon{color:var(--accent)}
+    .cat-tile:hover .cat-tile-label{color:var(--accent-dark)}
+    .cat-tile-icon{width:36px; height:36px; display:flex; align-items:center; justify-content:center; color:var(--ink); transition:color .2s}
+    .cat-tile-icon svg{width:30px; height:30px; stroke-width:1.4}
+    .cat-tile-label{
+      font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.1em;
+      color:var(--ink); line-height:1.3; max-width:100%; transition:color .2s;
+    }
 
-    /* Product & stories rails on soft panel */
-    .shop-home-main{background:#e8e8eb; padding:6px 0 36px}
-    .shop-home-main__inner{padding-top:8px; padding-bottom:8px}
-    .shop-home-main .section{padding:32px 0}
-    .shop-home-main .section + .section{border-top:1px solid #d8d9dd; padding-top:36px; margin-top:4px}
+    /* Product & stories rails */
+    .shop-home-main{background:#fff; padding:8px 0 44px}
+    .shop-home-main__inner{padding-top:12px; padding-bottom:8px}
+    .shop-home-main .section{padding:36px 0}
+    .shop-home-main .section + .section{border-top:1px solid var(--line); padding-top:40px; margin-top:0}
 
     /* Sections (legacy spacing when outside main — unused on home) */
     .section{padding:40px 0}
@@ -240,7 +271,7 @@
     .story-card__cta{margin-top:16px; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.1em; color:var(--ink)}
 
     /* Brands strip */
-    .shop-home-mid .brands-strip{background:#dedfe3; border-top:1px solid #d0d1d6; padding:32px 0 40px}
+    .shop-home-mid .brands-strip{background:#fff; border-top:1px solid var(--line); padding:36px 0 44px}
     .brands-strip .section-head{margin-bottom:24px}
     .brands-row{display:flex; align-items:center; justify-content:space-between; gap:16px}
     .brand-name{font-family:'Saira Condensed','Saira',sans-serif; font-size:24px; font-weight:400; text-transform:uppercase; letter-spacing:1px; color:#94a3b8; transition:color .15s; text-decoration:none}
@@ -340,9 +371,9 @@
     </div>
   </header>
 
-  <!-- Main navigation (full width; compact row) -->
+  <!-- Main navigation (accent rail full width; links aligned with page content) -->
   <nav class="shop-main-nav" aria-label="Shop catalog">
-    <div class="shop-main-nav__inner">
+    <div class="container">
       <div class="nav-row">
         {% stock_catalog_nav %}
       </div>

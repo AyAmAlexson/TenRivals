@@ -16,8 +16,24 @@
     line-height:1.45;
     padding:2px 0;
   }
-  .orders-table .col-actions{white-space:nowrap;width:1%}
-  .orders-table .col-actions .action-icons{flex-wrap:nowrap}
+  .orders-table .col-actions{white-space:nowrap;width:1%;vertical-align:middle}
+  .order-actions-menu{position:relative;display:inline-block;text-align:left}
+  .order-actions-menu > summary{list-style:none;cursor:pointer}
+  .order-actions-menu > summary::-webkit-details-marker{display:none}
+  .order-actions-menu[open] > summary{background:#f9fafb}
+  .order-actions-menu__panel{
+    position:absolute;right:0;top:calc(100% + 4px);min-width:208px;
+    background:#fff;border:1px solid var(--line);padding:6px 0;z-index:80;
+    box-shadow:0 8px 24px rgba(15,23,42,.12);
+  }
+  .order-actions-menu__link{
+    display:block;width:100%;text-align:left;padding:10px 16px;font-size:14px;
+    color:var(--ink);text-decoration:none;border:none;background:none;cursor:pointer;font-family:inherit;
+  }
+  .order-actions-menu__link:hover{background:#f3f4f6}
+  .order-actions-menu__link--accent{font-weight:600;color:var(--accent)}
+  .order-actions-menu__link--danger{color:#b91c1c}
+  .order-actions-menu__form{margin:0;padding:0}
   .orders-table .order-status-form{margin:0}
   .orders-table .order-status-form select{
     max-width:160px;
@@ -82,16 +98,19 @@
             {% empty %}—{% endfor %}
           </td>
           <td class="col-actions">
-            <div class="action-icons">
-              <a href="{% url 'administration:staff_sales_order_invoice' o.pk %}" class="icon-btn" title="View invoice" aria-label="View invoice">⌕</a>
-              <a href="{% url 'administration:staff_sales_order_invoice' o.pk %}?print=1" class="icon-btn" target="_blank" rel="noopener" title="Print invoice" aria-label="Print invoice">⎙</a>
-              <a href="{% url 'administration:staff_sales_order_invoice_pdf' o.pk %}" class="icon-btn icon-btn--accent" title="Download PDF" aria-label="Download PDF">↓</a>
-              <a href="{% url 'administration:staff_sales_order_edit' o.pk %}" class="icon-btn" title="Edit" aria-label="Edit">✎</a>
-              <form method="post" action="{% url 'administration:staff_sales_order_delete' o.pk %}" style="display:inline" onsubmit="return confirm('Delete order {{ o.invoice_number }}?');">
-                {% csrf_token %}
-                <button type="submit" class="icon-btn icon-btn--danger" title="Delete" aria-label="Delete">×</button>
-              </form>
-            </div>
+            <details class="order-actions-menu">
+              <summary class="icon-btn order-actions-menu__trigger" title="Actions" aria-label="Order actions">⋮</summary>
+              <div class="order-actions-menu__panel">
+                <a href="{% url 'administration:staff_sales_order_invoice' o.pk %}" class="order-actions-menu__link">View invoice</a>
+                <a href="{% url 'administration:staff_sales_order_invoice' o.pk %}?print=1" class="order-actions-menu__link" target="_blank" rel="noopener">Print invoice</a>
+                <a href="{% url 'administration:staff_sales_order_invoice_pdf' o.pk %}" class="order-actions-menu__link order-actions-menu__link--accent">Download PDF</a>
+                <a href="{% url 'administration:staff_sales_order_edit' o.pk %}" class="order-actions-menu__link">Edit</a>
+                <form method="post" action="{% url 'administration:staff_sales_order_delete' o.pk %}" class="order-actions-menu__form" onsubmit="return confirm('Delete order {{ o.invoice_number }}?');">
+                  {% csrf_token %}
+                  <button type="submit" class="order-actions-menu__link order-actions-menu__link--danger">Delete</button>
+                </form>
+              </div>
+            </details>
           </td>
         </tr>
         {% empty %}

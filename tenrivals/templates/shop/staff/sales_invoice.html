@@ -89,7 +89,7 @@
   .disc-print{ font-weight:600; }
   .amt-block{ font-size:10px; margin-top:4px; }
   .amt-line{ display:flex; justify-content:space-between; gap:10px; margin:3px 0; }
-  .amt-line.total{ font-weight:700; margin-top:6px; padding-top:4px; border-top:1px dashed #ccc; }
+  .amt-line--grand{ font-weight:700; margin-top:6px; padding-top:6px; border-top:1px dashed #ccc; }
   .totals{ margin-top:var(--section-gap); padding-top:var(--section-gap); border-top:1px solid var(--border); }
   .totals .box{ background:#f7f7f7; padding:14px 16px; border:1px solid var(--border); }
   .totals .line{ display:flex; justify-content:space-between; margin:6px 0; }
@@ -116,11 +116,7 @@
     <div class="header">
       <div class="header-row header-row--primary">
         <div class="logo">
-          {% if invoice_logo_uri %}
-          <img src="{{ invoice_logo_uri }}" alt="Tennis Rivals" class="logo-img">
-          {% else %}
-          <img src="{% static 'assets/img/TR Logo 3/tr_logo3_inline_black.svg' %}" alt="Tennis Rivals" class="logo-img">
-          {% endif %}
+          <img src="{% if invoice_logo_abs_url %}{{ invoice_logo_abs_url }}{% else %}{% static 'assets/img/invoice_logo_frame114.svg' %}{% endif %}" alt="Tennis Rivals" class="logo-img">
         </div>
         <div class="org">
           <h1>საქონლის ჩეკი</h1>
@@ -142,7 +138,6 @@
         </div>
         <div class="facts">
           <div class="row"><span class="label">თარიღი / Date</span> &nbsp;<span class="value mono">{{ doc_date_display }}</span></div>
-          <div class="row"><span class="label">სტატუსი / Status</span> &nbsp;<span class="value">{{ order.get_status_display }}</span></div>
           <div class="row">
             <div class="label" style="margin-top:10px;">გადახდის გზა / Payment</div>
             <div class="value" style="white-space:normal;margin-top:6px;">
@@ -185,9 +180,9 @@
           <td class="num col-price mono">{{ row.unit|floatformat:2 }}</td>
           <td class="num col-amt amount">
             <div class="amt-block">
-              <div class="amt-line total"><span>საბოლოო / Total</span><span class="mono">{{ row.gross|floatformat:2 }}&nbsp;₾</span></div>
               <div class="amt-line"><span>სულ (დღგ-მდე) / Net</span><span class="mono">{{ row.net|floatformat:2 }}&nbsp;₾</span></div>
               <div class="amt-line"><span>დღგ 18% / VAT</span><span class="mono">{{ row.vat|floatformat:2 }}&nbsp;₾</span></div>
+              <div class="amt-line amt-line--grand"><span>საბოლოო / Total</span><span class="mono">{{ row.gross|floatformat:2 }}&nbsp;₾</span></div>
             </div>
           </td>
         </tr>
@@ -200,9 +195,9 @@
           <td class="num col-price mono">{{ row.gross|floatformat:2 }}</td>
           <td class="num col-amt amount">
             <div class="amt-block">
-              <div class="amt-line total"><span>საბოლოო / Total</span><span class="mono">{{ row.gross|floatformat:2 }}&nbsp;₾</span></div>
               <div class="amt-line"><span>სულ (დღგ-მდე) / Net</span><span class="mono">{{ row.net|floatformat:2 }}&nbsp;₾</span></div>
               <div class="amt-line"><span>დღგ 18% / VAT</span><span class="mono">{{ row.vat|floatformat:2 }}&nbsp;₾</span></div>
+              <div class="amt-line amt-line--grand"><span>საბოლოო / Total</span><span class="mono">{{ row.gross|floatformat:2 }}&nbsp;₾</span></div>
             </div>
           </td>
         </tr>
@@ -215,9 +210,9 @@
           <td class="num col-price mono">{{ delivery_gross|floatformat:2 }}</td>
           <td class="num col-amt amount">
             <div class="amt-block">
-              <div class="amt-line total"><span>საბოლოო / Total</span><span class="mono">{{ delivery_gross|floatformat:2 }}&nbsp;₾</span></div>
               <div class="amt-line"><span>სულ (დღგ-მდე) / Net</span><span class="mono">{{ delivery_net|floatformat:2 }}&nbsp;₾</span></div>
               <div class="amt-line"><span>დღგ 18% / VAT</span><span class="mono">{{ delivery_vat|floatformat:2 }}&nbsp;₾</span></div>
+              <div class="amt-line amt-line--grand"><span>საბოლოო / Total</span><span class="mono">{{ delivery_gross|floatformat:2 }}&nbsp;₾</span></div>
             </div>
           </td>
         </tr>
