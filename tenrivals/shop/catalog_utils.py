@@ -50,3 +50,5 @@ def distinct_brands_for_type(stock_qs, type_code: str):
         .distinct()
         .order_by('brand')
     )
+
+

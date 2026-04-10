@@ -72,6 +72,16 @@ _APPAREL_TYPES = frozenset(
 )
 _ACCESSORY_TYPES = frozenset({ProductType.GRIPS, ProductType.ACCESSORIES})
 
+# Virtual catalog filter: accessories + grips + strings (separate ProductTypes in DB).
+CATALOG_ACCESSORIES_EQUIPMENT_TYPE = 'ACC_GEAR'
+_CATALOG_ACCESSORIES_EQUIPMENT_TYPES = frozenset(
+    {
+        ProductType.ACCESSORIES,
+        ProductType.GRIPS,
+        ProductType.STRINGS,
+    }
+)
+
 
 def _form_class_for_product_type(type_code: str | None):
     if not type_code:
@@ -358,6 +368,9 @@ def _catalog_browse_context(request, browse_mode: str):
     if category_slug:
         products = products.filter(category__slug=category_slug)
         active_tab = f'cat:{category_slug}'
+    elif type_code == CATALOG_ACCESSORIES_EQUIPMENT_TYPE:
+        products = products.filter(type__in=_CATALOG_ACCESSORIES_EQUIPMENT_TYPES)
+        active_tab = f'type:{CATALOG_ACCESSORIES_EQUIPMENT_TYPE}'
     elif type_code:
         products = products.filter(type=type_code)
         active_tab = f'type:{type_code}'

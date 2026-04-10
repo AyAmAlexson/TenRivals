@@ -248,9 +248,10 @@
           <div class="preorder-tabs" role="group" aria-labelledby="preorder-filter-type">
             {% if browse_mode == 'stock' %}
             <a class="preorder-tab {% if active_tab == 'all' or active_tab|slice:':7' == 'cbrand:' %}active{% endif %}" href="?{% if catalog_brand %}cbrand={{ catalog_brand|urlencode }}{% endif %}">All in stock</a>
+            <a class="preorder-tab {% if active_tab == 'type:ACC_GEAR' %}active{% endif %}" href="?type=ACC_GEAR{{ cbrand_qs }}">Accessories & equipment</a>
             {% endif %}
             {% for code, label in type_tabs %}
-              {% if code != 'OTHER' %}
+              {% if code != 'OTHER' and code != 'ACCESSORIES' and code != 'GRIPS' and code != 'STRINGS' %}
                 {% if browse_mode == 'stock' %}
                 <a class="preorder-tab {% if active_tab == 'type:'|add:code %}active{% endif %}" href="?type={{ code }}{{ cbrand_qs }}">{{ label }}</a>
                 {% elif code == 'RACKET' or code == 'M_SHOES' or code == 'W_SHOES' %}
