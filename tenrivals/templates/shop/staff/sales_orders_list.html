@@ -1,0 +1,68 @@
+{% extends 'persons/staff_base.html' %}
+{% block title %}Orders — Staff — TR Shop{% endblock %}
+{% block page_heading %}{{ page_heading }}{% endblock %}
+{% block page_note %}<p class="page-note">Retail invoices (VAT-inclusive ₾). Invoice numbers are never reused after deletion.</p>{% endblock %}
+{% block content %}
+<div class="staff-toolbar">
+  <a href="{% url 'administration:staff_sales_order_new' %}" class="btn">New order</a>
+  <form method="get" action="{% url 'administration:staff_sales_orders' %}" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+    <input type="search" name="q" value="{{ search_q }}" placeholder="Invoice, fiscal, customer…" style="min-width:220px;padding:9px 12px;border:1px solid var(--line);font-family:inherit;font-size:14px">
+    <button type="submit" class="btn btn--sm">Search</button>
+  </form>
+</div>
+<div class="card">
+  <h2 class="card-title">Orders (up to 500)</h2>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Invoice #</th>
+          <th>Fiscal receipt #</th>
+          <th>Date</th>
+          <th class="num">Gross</th>
+          <th class="num">VAT</th>
+          <th class="num">Net</th>
+          <th>Payment</th>
+          <th>Customer</th>
+          <th>Items</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for o in orders %}
+        <tr>
+          <td class="mono">{{ o.invoice_number }}</td>
+          <td class="mono">{{ o.fiscal_receipt|default:"—" }}</td>
+          <td class="mono">{{ o.order_date|date:"Y-m-d" }}</td>
+          <td class="mono num">{{ o.gross_total }}</td>
+          <td class="mono num">{{ o.vat_total }}</td>
+          <td class="mono num">{{ o.net_total }}</td>
+          <td>{{ o.payment_method|default:"—"|truncatechars:24 }}</td>
+          <td>{{ o.customer.display_name }}</td>
+          <td style="max-width:220px;font-size:12px">
+            {% for line in o.lines.all %}
+              {{ line.product.name }} ×{{ line.quantity }}{% if not forloop.last %}; {% endif %}
+            {% empty %}—{% endfor %}
+          </td>
+          <td>
+            <div class="action-icons">
+              <a href="{% url 'administration:staff_sales_order_invoice' o.pk %}" class="icon-btn" title="View invoice" aria-label="View invoice">⌕</a>
+              <a href="{% url 'administration:staff_sales_order_invoice' o.pk %}?print=1" class="icon-btn" target="_blank" rel="noopener" title="Print invoice" aria-label="Print invoice">⎙</a>
+              <a href="{% url 'administration:staff_sales_order_invoice_pdf' o.pk %}" class="icon-btn icon-btn--accent" title="Download PDF" aria-label="Download PDF">↓</a>
+              <a href="{% url 'administration:staff_sales_order_edit' o.pk %}" class="icon-btn" title="Edit" aria-label="Edit">✎</a>
+              <form method="post" action="{% url 'administration:staff_sales_order_delete' o.pk %}" style="display:inline" onsubmit="return confirm('Delete order {{ o.invoice_number }}?');">
+                {% csrf_token %}
+                <button type="submit" class="icon-btn icon-btn--danger" title="Delete" aria-label="Delete">×</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="10" style="color:var(--muted)">No orders yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+<style>.num{text-align:right}</style>
+{% endblock %}

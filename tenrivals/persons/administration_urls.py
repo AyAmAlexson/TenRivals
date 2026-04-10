@@ -1,6 +1,7 @@
 from django.urls import path
 
 from . import views
+from shop import staff_sales_views
 
 app_name = "administration"
 
@@ -23,4 +24,38 @@ urlpatterns = [
     path("blog/new/", views.staff_blog_edit, name="staff_blog_new"),
     path("blog/<int:post_id>/", views.staff_blog_edit, name="staff_blog_edit"),
     path("shop-home/", views.staff_home_banners, name="staff_home_banners"),
+    path("customers/new/", staff_sales_views.staff_customer_edit, name="staff_customer_new"),
+    path(
+        "customers/<int:pk>/edit/",
+        staff_sales_views.staff_customer_edit,
+        name="staff_customer_edit",
+    ),
+    path("customers/", staff_sales_views.staff_customers, name="staff_customers"),
+    path(
+        "customers/<int:pk>/delete/",
+        staff_sales_views.staff_customer_delete,
+        name="staff_customer_delete",
+    ),
+    path("orders/new/", staff_sales_views.staff_sales_order_edit, name="staff_sales_order_new"),
+    path(
+        "orders/<int:pk>/edit/",
+        staff_sales_views.staff_sales_order_edit,
+        name="staff_sales_order_edit",
+    ),
+    path("orders/", staff_sales_views.staff_sales_orders, name="staff_sales_orders"),
+    path(
+        "orders/<int:pk>/delete/",
+        staff_sales_views.staff_sales_order_delete,
+        name="staff_sales_order_delete",
+    ),
+    path(
+        "orders/<int:pk>/invoice/",
+        staff_sales_views.staff_sales_order_invoice,
+        name="staff_sales_order_invoice",
+    ),
+    path(
+        "orders/<int:pk>/invoice.pdf",
+        staff_sales_views.staff_sales_order_invoice_pdf,
+        name="staff_sales_order_invoice_pdf",
+    ),
 ]

@@ -569,3 +569,127 @@ class ShopOrderItem(models.Model):
         order = self.order
         order.recalculate_total()
         order.save(update_fields=['total_amount', 'updated_at'])
+
+
+# --- Staff retail: customers & sales orders (POS-style invoices, separate from ShopOrder) ---
+
+
+class Customer(models.Model):
+    """Walk-in / registered buyer. Optional link to CustomUser when they sign up on the site."""
+
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='retail_customer',
+    )
+    first_name = models.CharField(max_length=120)
+    last_name = models.CharField(max_length=120, blank=True)
+    phone = models.CharField(max_length=32, blank=True)
+    email = models.EmailField(blank=True)
+    newsletter_opt_in = models.BooleanField(default=False)
+    address = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['last_name', 'first_name', 'id']
+        indexes = [
+            models.Index(fields=['phone']),
+            models.Index(fields=['email']),
+        ]
+
+    def __str__(self):
+        parts = [self.first_name, self.last_name]
+        return ' '.join(p for p in parts if p).strip() or f'Customer #{self.pk}'
+
+    def display_name(self) -> str:
+        return str(self)
+
+
+class SalesInvoiceYearSequence(models.Model):
+    """
+    Per calendar year sequence for invoice numbers YYYY-XXXXXX.
+    Deleted orders do not reuse numbers — last_seq only increases.
+    First number in a year is ...000039 (i.e. last_seq starts at 38).
+    """
+
+    year = models.PositiveIntegerField(unique=True, db_index=True)
+    last_seq = models.PositiveIntegerField(default=38)
+
+    class Meta:
+        verbose_name = 'Sales invoice sequence (year)'
+
+    def __str__(self):
+        return f'{self.year} → {self.last_seq}'
+
+
+class SalesOrder(models.Model):
+    """Staff-issued retail invoice (VAT-inclusive GEL)."""
+
+    invoice_number = models.CharField(max_length=16, unique=True, db_index=True)
+    customer = models.ForeignKey(
+        Customer,
+        on_delete=models.PROTECT,
+        related_name='sales_orders',
+    )
+    order_date = models.DateField(db_index=True)
+    gross_total = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
+    vat_total = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
+    net_total = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
+    delivery_gross = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        help_text=_('Delivery / extra charge, VAT-inclusive (₾).'),
+    )
+    fiscal_receipt = models.CharField(max_length=64, blank=True)
+    payment_method = models.CharField(max_length=200, blank=True)
+    services = models.JSONField(
+        default=list,
+        blank=True,
+        help_text=_('List of {"name": str, "gross": str|number} — VAT-inclusive amounts.'),
+    )
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-order_date', '-id']
+
+    def __str__(self):
+        return self.invoice_number
+
+
+class SalesOrderLine(models.Model):
+    order = models.ForeignKey(
+        SalesOrder,
+        on_delete=models.CASCADE,
+        related_name='lines',
+    )
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.PROTECT,
+        related_name='sales_order_lines',
+    )
+    quantity = models.PositiveIntegerField()
+    unit_price_gross = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        help_text=_('Unit price including VAT (₾).'),
+    )
+    discount_percent = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=Decimal('0.00'),
+    )
+    line_gross = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
+    line_vat = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
+    line_net = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
+
+    class Meta:
+        ordering = ['id']
+
+    def __str__(self):
+        return f'{self.product.name} ×{self.quantity}'

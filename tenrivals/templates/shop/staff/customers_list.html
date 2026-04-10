@@ -1,0 +1,56 @@
+{% extends 'persons/staff_base.html' %}
+{% block title %}Customers — Staff — TR Shop{% endblock %}
+{% block page_heading %}{{ page_heading }}{% endblock %}
+{% block page_note %}<p class="page-note">Retail customers (POS). Registered site users get a linked customer record automatically.</p>{% endblock %}
+{% block content %}
+<div class="staff-toolbar">
+  <a href="{% url 'administration:staff_customer_new' %}" class="btn">New customer</a>
+  <form method="get" action="{% url 'administration:staff_customers' %}" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+    <input type="search" name="q" value="{{ search_q }}" placeholder="Search name, phone, email" style="min-width:220px;padding:9px 12px;border:1px solid var(--line);font-family:inherit;font-size:14px">
+    <button type="submit" class="btn btn--sm">Search</button>
+  </form>
+</div>
+<div class="card">
+  <h2 class="card-title">All customers (showing up to 500)</h2>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>First name</th>
+          <th>Last name</th>
+          <th>Phone</th>
+          <th>Email</th>
+          <th>Newsletter</th>
+          <th>Address</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in customers %}
+        <tr>
+          <td class="mono">{{ c.pk }}</td>
+          <td>{{ c.first_name }}</td>
+          <td>{{ c.last_name|default:"—" }}</td>
+          <td class="mono">{{ c.phone|default:"—" }}</td>
+          <td>{{ c.email|default:"—" }}</td>
+          <td>{% if c.newsletter_opt_in %}<span class="badge badge--yes">Yes</span>{% else %}<span class="badge badge--no">No</span>{% endif %}</td>
+          <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="{{ c.address }}">{{ c.address|default:"—"|truncatechars:40 }}</td>
+          <td>
+            <div class="action-icons">
+              <a href="{% url 'administration:staff_customer_edit' c.pk %}" class="icon-btn" title="Edit" aria-label="Edit">✎</a>
+              <form method="post" action="{% url 'administration:staff_customer_delete' c.pk %}" style="display:inline" onsubmit="return confirm('Delete this customer?');">
+                {% csrf_token %}
+                <button type="submit" class="icon-btn icon-btn--danger" title="Delete" aria-label="Delete">×</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="8" style="color:var(--muted)">No customers found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

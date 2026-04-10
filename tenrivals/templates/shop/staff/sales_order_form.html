@@ -1,0 +1,299 @@
+{% extends 'persons/staff_base.html' %}
+{% block title %}{{ page_heading }} — Staff — TR Shop{% endblock %}
+{% block page_heading %}{{ page_heading }}{% endblock %}
+{% block extra_head %}
+{{ product_prices|json_script:"product-prices-data" }}
+{% endblock %}
+{% block content %}
+<div class="card">
+  <form method="post" id="sales-order-form" novalidate>
+    {% csrf_token %}
+    <input type="hidden" name="services_json" id="id_services_json" value="{{ services_json_initial|escape }}">
+
+    {% if form.non_field_errors %}<div class="field-errors" style="margin-bottom:12px">{{ form.non_field_errors }}</div>{% endif %}
+    {% if formset.non_form_errors %}<div class="field-errors" style="margin-bottom:12px">{{ formset.non_form_errors }}</div>{% endif %}
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="{{ form.customer.id_for_label }}">Customer</label>
+        {{ form.customer }}
+        {% if form.customer.errors %}<div class="field-errors">{{ form.customer.errors }}</div>{% endif %}
+      </div>
+      <div class="form-group">
+        <label for="{{ form.order_date.id_for_label }}">Date</label>
+        {{ form.order_date }}
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="{{ form.fiscal_receipt.id_for_label }}">Fiscal receipt #</label>
+        {{ form.fiscal_receipt }}
+      </div>
+      <div class="form-group">
+        <label for="{{ form.payment_method.id_for_label }}">Payment method</label>
+        {{ form.payment_method }}
+      </div>
+    </div>
+    {% if order %}
+    <p class="page-meta" style="margin-bottom:16px">Invoice # <span class="mono">{{ order.invoice_number }}</span> (read-only)</p>
+    {% else %}
+    <p class="page-meta" style="margin-bottom:16px">Invoice # is assigned automatically on save.</p>
+    {% endif %}
+
+    <h3 class="card-title" style="margin-top:8px;font-size:14px">Line items (stock)</h3>
+    {{ formset.management_form }}
+    <div class="table-wrap" style="margin-bottom:16px">
+      <table id="lines-table" style="min-width:720px">
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th class="num">Qty</th>
+            <th class="num">Unit (₾ gross)</th>
+            <th class="num">Disc %</th>
+            <th class="num">Line gross</th>
+            <th class="num">VAT</th>
+            <th class="num">Net</th>
+            <th>Del</th>
+          </tr>
+        </thead>
+        <tbody id="lines-tbody">
+          {% for f in formset %}
+          <tr class="line-row" data-form-index="{{ forloop.counter0 }}">
+            {% for hidden in f.hidden_fields %}{{ hidden }}{% endfor %}
+            <td>{{ f.product.errors }}{{ f.product }}</td>
+            <td class="num">{{ f.quantity }}</td>
+            <td class="num">{{ f.unit_price_gross }}</td>
+            <td class="num">{{ f.discount_percent }}</td>
+            <td class="num line-gross mono">—</td>
+            <td class="num line-vat mono">—</td>
+            <td class="num line-net mono">—</td>
+            <td style="text-align:center">{% if f.DELETE %}{{ f.DELETE }}{% endif %}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <button type="button" class="btn btn--sm btn--outline" id="btn-add-line" style="margin-bottom:20px">+ Add line</button>
+
+    <h3 class="card-title" style="font-size:14px">Services (optional)</h3>
+    <div class="table-wrap" style="margin-bottom:12px;max-width:560px">
+      <table id="services-table">
+        <thead>
+          <tr><th>Service name</th><th class="num">Gross ₾</th><th></th></tr>
+        </thead>
+        <tbody id="services-tbody"></tbody>
+      </table>
+    </div>
+    <button type="button" class="btn btn--sm btn--outline" id="btn-add-service" style="margin-bottom:20px">+ Add service</button>
+
+    <div class="form-group">
+      <label for="{{ form.delivery_gross.id_for_label }}">Delivery (gross ₾, VAT incl.)</label>
+      {{ form.delivery_gross }}
+    </div>
+    <div class="form-group">
+      <label for="{{ form.notes.id_for_label }}">Notes</label>
+      {{ form.notes }}
+    </div>
+
+    <div class="card" style="background:#f9fafb;margin-bottom:20px;max-width:400px">
+      <div class="form-group" style="margin:0;display:flex;justify-content:space-between;gap:12px"><span>Total gross</span><span class="mono" id="sum-gross">0.00</span></div>
+      <div class="form-group" style="margin:0;display:flex;justify-content:space-between;gap:12px"><span>Total VAT</span><span class="mono" id="sum-vat">0.00</span></div>
+      <div class="form-group" style="margin:0;display:flex;justify-content:space-between;gap:12px;font-weight:700"><span>Total net</span><span class="mono" id="sum-net">0.00</span></div>
+    </div>
+
+    <div class="actions">
+      <button type="submit" class="btn">Save order</button>
+      <a href="{% url 'administration:staff_sales_orders' %}" class="btn btn--outline">Cancel</a>
+      {% if order %}
+      <a href="{% url 'administration:staff_sales_order_invoice' order.pk %}" class="btn btn--outline">View invoice</a>
+      {% endif %}
+    </div>
+  </form>
+</div>
+
+<table style="display:none"><tbody id="empty-line-template">
+<tr class="line-row">
+  {% with f=formset.empty_form %}
+  {% for hidden in f.hidden_fields %}{{ hidden }}{% endfor %}
+  <td>{{ f.product }}</td>
+  <td class="num">{{ f.quantity }}</td>
+  <td class="num">{{ f.unit_price_gross }}</td>
+  <td class="num">{{ f.discount_percent }}</td>
+  <td class="num line-gross mono">—</td>
+  <td class="num line-vat mono">—</td>
+  <td class="num line-net mono">—</td>
+  <td style="text-align:center">{{ f.DELETE }}</td>
+  {% endwith %}
+</tr>
+</tbody></table>
+
+<style>.num{text-align:right}#lines-table input,#lines-table select{width:100%;min-width:0;font-size:13px;padding:6px 8px;border:1px solid var(--line);font-family:inherit}</style>
+<script>
+(function(){
+  const VAT_DIV = 1.18;
+  const prefix = "{{ formset.prefix|escapejs }}";
+  const prices = JSON.parse(document.getElementById('product-prices-data').textContent);
+  const totalInput = document.getElementById('id_' + prefix + '-TOTAL_FORMS');
+  const servicesHidden = document.getElementById('id_services_json');
+  const tbody = document.getElementById('lines-tbody');
+  const servicesBody = document.getElementById('services-tbody');
+  const deliveryEl = document.getElementById('id_delivery_gross');
+
+  function parseNum(v){
+    if(v==null||v==='') return 0;
+    const n = parseFloat(String(v).replace(',','.'));
+    return isNaN(n)?0:n;
+  }
+  function fmt(n){
+    return (Math.round(n*100)/100).toFixed(2);
+  }
+  function splitVatNet(gross){
+    const g = Math.round(gross*100)/100;
+    const net = Math.round((g/VAT_DIV)*100)/100;
+    const vat = Math.round((g-net)*100)/100;
+    return { gross:g, vat, net };
+  }
+  function lineCalc(row){
+    const sel = row.querySelector('select[name$="-product"]');
+    const qty = parseNum(row.querySelector('input[name$="-quantity"]') && row.querySelector('input[name$="-quantity"]').value);
+    const unit = parseNum(row.querySelector('input[name$="-unit_price_gross"]') && row.querySelector('input[name$="-unit_price_gross"]').value);
+    const disc = parseNum(row.querySelector('input[name$="-discount_percent"]') && row.querySelector('input[name$="-discount_percent"]').value);
+    const del = row.querySelector('input[name$="-DELETE"]');
+    if(del && del.checked) return null;
+    if(!sel || !sel.value) return null;
+    const base = qty*unit;
+    const pct = Math.max(0, Math.min(100, disc));
+    const g = base * (1 - pct/100);
+    return splitVatNet(g);
+  }
+  function recalcRow(row){
+    const gEl = row.querySelector('.line-gross');
+    const vEl = row.querySelector('.line-vat');
+    const nEl = row.querySelector('.line-net');
+    const r = lineCalc(row);
+    if(!r || !gEl){ if(gEl){ gEl.textContent='—'; vEl.textContent='—'; nEl.textContent='—'; } return; }
+    gEl.textContent = fmt(r.gross);
+    vEl.textContent = fmt(r.vat);
+    nEl.textContent = fmt(r.net);
+  }
+  function collectServicesGross(){
+    let s = 0;
+    servicesBody.querySelectorAll('tr').forEach(function(tr){
+      const inp = tr.querySelector('.svc-gross');
+      s += parseNum(inp && inp.value);
+    });
+    return s;
+  }
+  function syncServicesJson(){
+    const arr = [];
+    servicesBody.querySelectorAll('tr').forEach(function(tr){
+      const nm = (tr.querySelector('.svc-name') && tr.querySelector('.svc-name').value || '').trim();
+      const g = parseNum(tr.querySelector('.svc-gross') && tr.querySelector('.svc-gross').value);
+      if(nm && g>0) arr.push({ name: nm, gross: fmt(g) });
+    });
+    servicesHidden.value = JSON.stringify(arr);
+  }
+  function recalcTotals(){
+    let sumG = 0;
+    tbody.querySelectorAll('.line-row').forEach(function(row){
+      const r = lineCalc(row);
+      if(r) sumG += r.gross;
+    });
+    sumG += collectServicesGross();
+    sumG += parseNum(deliveryEl && deliveryEl.value);
+    const t = splitVatNet(sumG);
+    document.getElementById('sum-gross').textContent = fmt(t.gross);
+    document.getElementById('sum-vat').textContent = fmt(t.vat);
+    document.getElementById('sum-net').textContent = fmt(t.net);
+    syncServicesJson();
+  }
+  function onProductChange(row){
+    const sel = row.querySelector('select[name$="-product"]');
+    if(!sel || !sel.value) return;
+    const p = prices[String(sel.value)];
+    if(p!=null){
+      const u = row.querySelector('input[name$="-unit_price_gross"]');
+      if(u) u.value = p;
+    }
+    recalcRow(row);
+    recalcTotals();
+  }
+  function bindRow(row){
+    row.querySelectorAll('input,select').forEach(function(el){
+      el.addEventListener('change', function(){
+        if(el.name && el.name.indexOf('-product')!==-1) onProductChange(row);
+        else { recalcRow(row); recalcTotals(); }
+      });
+      el.addEventListener('input', function(){
+        recalcRow(row); recalcTotals();
+      });
+    });
+    recalcRow(row);
+  }
+  tbody.querySelectorAll('.line-row').forEach(bindRow);
+
+  document.getElementById('btn-add-line').addEventListener('click', function(){
+    const idx = parseInt(totalInput.value, 10);
+    const tmpl = document.getElementById('empty-line-template').querySelector('tr');
+    const clone = tmpl.cloneNode(true);
+    clone.querySelectorAll('[name]').forEach(function(el){
+      el.name = (el.name||'').replace('__prefix__', String(idx));
+      if(el.id) el.id = el.id.replace('__prefix__', String(idx));
+    });
+    clone.querySelectorAll('label[for]').forEach(function(lb){
+      const f = lb.getAttribute('for');
+      if(f) lb.setAttribute('for', f.replace('__prefix__', String(idx)));
+    });
+    tbody.appendChild(clone);
+    totalInput.value = String(idx+1);
+    bindRow(clone);
+    recalcTotals();
+  });
+
+  function addServiceRow(name, gross){
+    const tr = document.createElement('tr');
+    const tdN = document.createElement('td');
+    const inpN = document.createElement('input');
+    inpN.type = 'text';
+    inpN.className = 'svc-name';
+    inpN.style.cssText = 'width:100%;padding:6px 8px;border:1px solid var(--line);font:inherit';
+    inpN.value = name || '';
+    tdN.appendChild(inpN);
+    const tdG = document.createElement('td');
+    tdG.className = 'num';
+    const inpG = document.createElement('input');
+    inpG.type = 'text';
+    inpG.className = 'svc-gross';
+    inpG.style.cssText = 'width:100%;padding:6px 8px;border:1px solid var(--line);font:inherit;text-align:right';
+    if(gross!=null && gross!=='') inpG.value = String(gross);
+    tdG.appendChild(inpG);
+    const tdX = document.createElement('td');
+    const rm = document.createElement('button');
+    rm.type = 'button';
+    rm.className = 'btn btn--sm btn--outline svc-remove';
+    rm.textContent = '−';
+    rm.addEventListener('click', function(){ tr.remove(); recalcTotals(); });
+    tdX.appendChild(rm);
+    tr.appendChild(tdN);
+    tr.appendChild(tdG);
+    tr.appendChild(tdX);
+    inpN.addEventListener('input', recalcTotals);
+    inpG.addEventListener('input', recalcTotals);
+    servicesBody.appendChild(tr);
+  }
+  document.getElementById('btn-add-service').addEventListener('click', function(){ addServiceRow('', ''); recalcTotals(); });
+
+  try{
+    const initial = JSON.parse(servicesHidden.value || '[]');
+    if(Array.isArray(initial)){
+      initial.forEach(function(x){
+        if(x && x.name) addServiceRow(x.name, x.gross!=null?x.gross:'');
+      });
+    }
+  }catch(e){}
+
+  if(deliveryEl) deliveryEl.addEventListener('input', recalcTotals);
+  recalcTotals();
+})();
+</script>
+{% endblock %}

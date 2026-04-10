@@ -1,0 +1,205 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+<meta charset="utf-8" />
+<title>Invoice {{ order.invoice_number }} — Tennis Rivals</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root{ --border:#111; --muted:#444; --pad:16px; --w:190mm; --fs:12px; --lh:1.32; --th-fs:11px; --th-help-fs:9.5px; --cell-pad:6px 4px; }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{ font-family:Arial,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,sans-serif; font-size:var(--fs); line-height:var(--lh); color:#000; -webkit-print-color-adjust:exact; print-color-adjust:exact; font-variant-numeric:tabular-nums; background:#fff; }
+  .wrap{ width:var(--w); margin:14px auto; border:1px solid var(--border); padding:var(--pad); background:#fff; }
+  .muted{ color:var(--muted); } .label{ color:var(--muted); font-size:10px; } .value{ font-weight:600; } .mono{ font-variant-numeric:tabular-nums; }
+  .controls{ display:flex; gap:6px; margin:12px auto; width:var(--w); flex-wrap:wrap; align-items:center; }
+  .btn{ padding:6px 10px; border:1px solid #333; background:#f7f7f7; cursor:pointer; font-size:12px; text-decoration:none; color:#111; display:inline-block; font-family:inherit; }
+  .btn:hover{ background:#eaeaea; }
+  .small{ font-size:10px; color:#222; }
+  @media print{ .controls{ display:none!important; } .wrap{ margin:0; border:0; width:auto; } }
+  .header .header-row--primary { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 8px; }
+  .header .header-row--secondary { display: flex; justify-content: space-between; gap: 16px; margin-top: 6px; flex-wrap:wrap; }
+  .header .logo img { height: 42px; width:auto; display:block; }
+  .header h1 { margin: 0; font-size: 22px; line-height: 1.1; }
+  .header .receipt .row .value { font-size: 22px; font-weight: 800; white-space: nowrap; }
+  .header .receipt .row .label { font-size: 12px; color: #666; }
+  .org h1{ font-size:22px; margin:0 0 4px 0; font-weight:700; max-width:300px} .org .company-name{ font-weight:700; }
+  .facts{ text-align:right; min-width:220px; } .facts .row{ margin:2px 0; }
+  .grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:6px; }
+  @media(max-width:640px){ .grid-2{ grid-template-columns:1fr; } }
+  table{ width:100%; border-collapse:collapse; margin-top:8px; table-layout:fixed; }
+  th,td{ padding:var(--cell-pad); border-bottom:1px dashed var(--border); vertical-align:top; word-break:break-word; }
+  th{ border-bottom:1px solid var(--border); text-align:left; font-size:var(--th-fs); }
+  .th-help{ display:block; color:var(--muted); font-size:var(--th-help-fs); line-height:1.1; }
+  td.num,th.num{ text-align:right; white-space:nowrap; }
+  th.col-name{ width:35%; }
+  th.col-qty{ width:7%; text-align:center; }
+  td.col-qty{ text-align:center; }
+  th.col-disc{ width:10%; text-align:center; }
+  td.col-disc{ text-align:center; }
+  th.col-price{ width:15%; text-align:center; }
+  td.col-price{ text-align:center; }
+  th.col-amt,td.col-amt{ width:30%; }
+  .disc-print{ font-weight:600; }
+  .amt-block{ font-size:10px; } .amt-line{ display:flex; justify-content:space-between; gap:8px; }
+  .amt-line.total{ font-weight:700; }
+  .charges{ margin-top:6px; } .charges .line{ display:flex; justify-content:space-between; gap:8px; }
+  .totals{ margin-top:8px; padding-top:6px; border-top:1px solid var(--border); }
+  .totals .box{ background:#f7f7f7; padding:8px; border:1px solid var(--border); }
+  .totals .line{ display:flex; justify-content:space-between; margin:2px 0; }
+  .totals .grand{ font-weight:700; border-top:1px dashed var(--border); padding-top:4px; margin-top:4px; }
+  .footer{ margin-top:10px; font-size:10px; }
+  .sign{ display:flex; justify-content:space-between; gap:12px; margin-top:10px; border-top:1px solid var(--border); padding-top:6px; flex-wrap:wrap; }
+  .sign .slot{ flex:1; min-width:140px; }
+  @media print{ body:not(.disc-enabled) th.col-disc, body:not(.disc-enabled) td.col-disc{ display:none!important; } }
+</style>
+</head>
+<body class="{% if any_line_discount %}disc-enabled{% endif %}">
+{% if not embed_mode %}
+{% if not print_mode %}
+  <div class="controls">
+    <a class="btn" href="{% url 'administration:staff_sales_orders' %}">Back to orders</a>
+    <button type="button" class="btn" onclick="window.print()">Print</button>
+    <a class="btn" href="{% url 'administration:staff_sales_order_invoice_pdf' order.pk %}">Download PDF</a>
+    <span class="small muted">VAT 18% inclusive (extracted below).</span>
+  </div>
+{% endif %}
+{% endif %}
+
+  <div class="wrap" id="receipt">
+    <div class="header">
+      <div class="header-row header-row--primary">
+        <div class="logo"><img src="{% static 'assets/img/TR Logo 3/tr_logo3_inline_black.svg' %}" alt="Tennis Rivals"></div>
+        <div class="org">
+          <h1>საქონლის ჩეკი</h1>
+          <h1>Goods Receipt</h1>
+        </div>
+        <div class="receipt">
+          <div class="row"><span class="label">ჩეკის ნომერი / Receipt No.</span> &nbsp;<span class="value mono">{{ order.invoice_number }}</span></div>
+          {% if order.fiscal_receipt %}
+          <div class="row"><span class="label">ფისკალური / Fiscal</span> &nbsp;<span class="value mono">{{ order.fiscal_receipt }}</span></div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="header-row header-row--secondary">
+        <div class="org" style="max-width:300px;">
+          <div class="company-name">ი/მ ანდრეი მოლოდენკო</div>
+          <div class="muted">საიდენტიფიკაციო კოდი (PN) / Tax ID: 100382729</div>
+          <div class="muted">მისამართი / Address: საქართველო, თბილისი, ე. ბეჟანიშვილი 23, ბინა 19</div>
+        </div>
+        <div class="facts">
+          <div class="row"><span class="label">თარიღი / Date</span> &nbsp;<span class="value mono">{{ doc_date_display }}</span></div>
+          <div class="row">
+            <div class="label" style="margin-top:8px;">გადახდის გზა / Payment</div>
+            <div class="value" style="white-space:normal;margin-top:4px;">
+              {% if order.payment_method %}{{ order.payment_method }}{% else %}ბარათი • ნაღდი • გადარიცხვა / Card • Cash • Transfer{% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <hr style="margin: 15px 0;">
+    <div class="grid-2">
+      <div>
+        <div class="label">მიმღები (არასავალდებულო) / Customer (optional)</div>
+        <div class="value">{{ customer_name }}</div>
+      </div>
+      <div>
+        <div class="label">დამატებითი ინფორმაცია / Notes (optional)</div>
+        <div class="value">{% if order.notes %}{{ order.notes|linebreaksbr }}{% else %}—{% endif %}</div>
+      </div>
+    </div>
+
+    <table id="items">
+      <thead>
+        <tr>
+          <th class="col-name"><div>დასახელება</div><div class="th-help">Item</div></th>
+          <th class="num col-qty"><div>რაოდ.</div><div class="th-help">Qty</div></th>
+          <th class="col-disc"><div>ფასდაკლ.</div><div class="th-help">Disc %</div></th>
+          <th class="num col-price"><div>ფასი (დ.ღ.გ-ით) ₾</div><div class="th-help">Price (inc. VAT) ₾</div></th>
+          <th class="num col-amt">სრული ღირებულება, ₾<span class="th-help">Total cost, ₾</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in lines %}
+        <tr class="{% if row.disc > 0 %}row-disc{% endif %}">
+          <td class="col-name">{{ row.name }}</td>
+          <td class="num col-qty">{{ row.qty }}</td>
+          <td class="col-disc">
+            {% if row.disc > 0 %}<span class="disc-print">−{{ row.disc|floatformat:2 }}%</span>{% else %}—{% endif %}
+          </td>
+          <td class="num col-price mono">{{ row.unit|floatformat:2 }}</td>
+          <td class="num col-amt amount">
+            <div class="amt-block">
+              <div class="amt-line total"><span>საბოლოო / Total</span><span class="mono">{{ row.gross|floatformat:2 }}&nbsp;₾</span></div>
+              <div class="amt-line"><span>სულ (დღგ-მდე) / Net</span><span class="mono">{{ row.net|floatformat:2 }}&nbsp;₾</span></div>
+              <div class="amt-line"><span>დღგ 18% / VAT</span><span class="mono">{{ row.vat|floatformat:2 }}&nbsp;₾</span></div>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+        {% for row in services %}
+        <tr>
+          <td class="col-name">{{ row.name }}</td>
+          <td class="num col-qty">1</td>
+          <td class="col-disc">—</td>
+          <td class="num col-price mono">{{ row.gross|floatformat:2 }}</td>
+          <td class="num col-amt amount">
+            <div class="amt-block">
+              <div class="amt-line total"><span>საბოლოო / Total</span><span class="mono">{{ row.gross|floatformat:2 }}&nbsp;₾</span></div>
+              <div class="amt-line"><span>სულ (დღგ-მდე) / Net</span><span class="mono">{{ row.net|floatformat:2 }}&nbsp;₾</span></div>
+              <div class="amt-line"><span>დღგ 18% / VAT</span><span class="mono">{{ row.vat|floatformat:2 }}&nbsp;₾</span></div>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+        {% if delivery_gross > 0 %}
+        <tr>
+          <td class="col-name">მიწოდება / Delivery</td>
+          <td class="num col-qty">1</td>
+          <td class="col-disc">—</td>
+          <td class="num col-price mono">{{ delivery_gross|floatformat:2 }}</td>
+          <td class="num col-amt amount">
+            <div class="amt-block">
+              <div class="amt-line total"><span>საბოლოო / Total</span><span class="mono">{{ delivery_gross|floatformat:2 }}&nbsp;₾</span></div>
+              <div class="amt-line"><span>სულ (დღგ-მდე) / Net</span><span class="mono">{{ delivery_net|floatformat:2 }}&nbsp;₾</span></div>
+              <div class="amt-line"><span>დღგ 18% / VAT</span><span class="mono">{{ delivery_vat|floatformat:2 }}&nbsp;₾</span></div>
+            </div>
+          </td>
+        </tr>
+        {% endif %}
+      </tbody>
+    </table>
+
+    <div class="totals">
+      <div class="box">
+        <div class="line"><span>სულ (დღგ-მდე) / Net (excl. VAT)</span><span id="net" class="mono">{{ order.net_total|floatformat:2 }}&nbsp;₾</span></div>
+        <div class="line"><span>დღგ 18% / VAT 18%</span><span id="vat" class="mono">{{ order.vat_total|floatformat:2 }}&nbsp;₾</span></div>
+        <div class="line grand"><span>საბოლოო თანხა / Total (VAT incl.)</span><span id="gross" class="mono">{{ order.gross_total|floatformat:2 }}&nbsp;₾</span></div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div class="muted" style="margin-top:4px;">* ეს ჩეკი არის საინფორმაციო დანართი და ძალაშია მხოლოდ ფისკალურ ჩეკთან ერთად. •</div>
+      <div class="muted" style="margin-top:0px;">* This receipt is informational and valid only together with the fiscal receipt.</div>
+      <div class="sign">
+        <div class="slot" style="margin-top:20px;">
+          საქონელი მივიღე / Received by: __________________________
+          <div class="muted" style="font-size:9px;">(სახელი / Name: {{ customer_name }})</div>
+          <div class="muted" style="font-size:9px; margin-top:4px;">საქონელი მივიღე; გარეგნობასთან პრეტენზია არ მაქვს. •</div>
+          <div class="muted" style="font-size:9px;">Goods received; no claims to external condition.</div>
+        </div>
+        <div class="slot" style="text-align:right; margin-top:20px;">
+          გამყიდველი / Seller: __________________________
+          <div class="muted" style="font-size:9px;">(ხელმოწერა / ი/მ ანდრეი მოლოდენკო)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+{% if print_mode %}
+<script>window.addEventListener('load',function(){ window.print(); });</script>
+{% endif %}
+</body>
+</html>

@@ -5,4 +5,6 @@
   <a href="{% url 'administration:staff_preorder' %}" class="staff-tab {% if staff_nav_active == 'preorder' %}is-active{% endif %}">Preorder</a>
   <a href="{% url 'administration:staff_blog_posts' %}" class="staff-tab {% if staff_nav_active == 'blog' %}is-active{% endif %}">Blog</a>
   <a href="{% url 'administration:staff_home_banners' %}" class="staff-tab {% if staff_nav_active == 'banners' %}is-active{% endif %}">Shop home</a>
+  <a href="{% url 'administration:staff_customers' %}" class="staff-tab {% if staff_nav_active == 'customers' %}is-active{% endif %}">Customers</a>
+  <a href="{% url 'administration:staff_sales_orders' %}" class="staff-tab {% if staff_nav_active == 'sales_orders' %}is-active{% endif %}">Orders</a>
 </nav>
