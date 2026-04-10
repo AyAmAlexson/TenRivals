@@ -18,6 +18,7 @@ def create_retail_customer_for_new_user(sender, instance, created, **kwargs):
         last_name=(instance.last_name or '').strip(),
         phone=(instance.mobile or '').strip(),
         email=(instance.email or '').strip(),
+        tg_account=(getattr(instance, 'telegram', None) or '').strip(),
         newsletter_opt_in=bool(getattr(instance, 'newsletter_opt_in', False)),
         address='',
     )

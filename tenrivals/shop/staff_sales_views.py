@@ -102,7 +102,7 @@ def _invoice_context(order: SalesOrder) -> dict:
         'delivery_vat': delivery_vat,
         'delivery_net': delivery_net,
         'any_line_discount': any_disc,
-        'customer_name': order.customer.display_name(),
+        'customer_name': order.customer.display_name_for_invoice(),
         'embed_mode': False,
         'print_mode': False,
         'doc_date_display': order.order_date.strftime('%d.%m.%Y'),
@@ -178,8 +178,11 @@ def staff_customers(request):
         qs = qs.filter(
             Q(first_name__icontains=q)
             | Q(last_name__icontains=q)
+            | Q(name_local__icontains=q)
+            | Q(surname_local__icontains=q)
             | Q(phone__icontains=q)
             | Q(email__icontains=q)
+            | Q(tg_account__icontains=q)
         )
     return render(
         request,

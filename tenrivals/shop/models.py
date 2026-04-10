@@ -586,9 +586,24 @@ class Customer(models.Model):
     )
     first_name = models.CharField(max_length=120)
     last_name = models.CharField(max_length=120, blank=True)
+    name_local = models.CharField(
+        max_length=120,
+        blank=True,
+        help_text=_('Georgian / local script first name (optional).'),
+    )
+    surname_local = models.CharField(
+        max_length=120,
+        blank=True,
+        help_text=_('Georgian / local script last name (optional).'),
+    )
     phone = models.CharField(max_length=32, blank=True)
     email = models.EmailField(blank=True)
     newsletter_opt_in = models.BooleanField(default=False)
+    tg_account = models.CharField(
+        max_length=64,
+        blank=True,
+        help_text=_('Telegram username or handle (optional).'),
+    )
     address = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -605,6 +620,17 @@ class Customer(models.Model):
         return ' '.join(p for p in parts if p).strip() or f'Customer #{self.pk}'
 
     def display_name(self) -> str:
+        return str(self)
+
+    def display_name_for_invoice(self) -> str:
+        """Prefer Georgian/local name on invoice; fall back to Latin first/last."""
+        parts = [
+            (self.name_local or '').strip(),
+            (self.surname_local or '').strip(),
+        ]
+        local = ' '.join(p for p in parts if p).strip()
+        if local:
+            return local
         return str(self)
 
 

@@ -11,7 +11,17 @@ from .sales_order_utils import stock_listing_quantity
 class CustomerForm(forms.ModelForm):
     class Meta:
         model = Customer
-        fields = ['first_name', 'last_name', 'phone', 'email', 'newsletter_opt_in', 'address']
+        fields = [
+            'first_name',
+            'last_name',
+            'name_local',
+            'surname_local',
+            'phone',
+            'email',
+            'tg_account',
+            'newsletter_opt_in',
+            'address',
+        ]
         widgets = {
             'address': forms.Textarea(
                 attrs={
@@ -19,6 +29,10 @@ class CustomerForm(forms.ModelForm):
                     'style': 'width:100%;padding:9px 12px;border:1px solid #e5e7eb;font-size:14px;font-family:inherit',
                 }
             ),
+            'newsletter_opt_in': forms.CheckboxInput(
+                attrs={'class': 'customer-form-checkbox'}
+            ),
+            'tg_account': forms.TextInput(attrs={'placeholder': '@username'}),
         }
 
 
