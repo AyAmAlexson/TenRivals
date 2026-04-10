@@ -39,7 +39,6 @@
   .order-actions-menu__link:hover{background:#f3f4f6}
   .order-actions-menu__link--accent{font-weight:600;color:var(--accent)}
   .order-actions-menu__link--danger{color:#b91c1c}
-  .order-actions-menu__form{margin:0;padding:0}
   .orders-table .order-status-form{margin:0}
   .orders-table .order-status-form select{
     max-width:160px;
@@ -110,10 +109,7 @@
                 <a href="{% url 'administration:staff_sales_order_invoice' o.pk %}" class="order-actions-menu__link">View invoice</a>
                 <a href="{% url 'administration:staff_sales_order_invoice' o.pk %}?print=1" class="order-actions-menu__link order-actions-menu__link--accent" target="_blank" rel="noopener">Print / Save as PDF</a>
                 <a href="{% url 'administration:staff_sales_order_edit' o.pk %}" class="order-actions-menu__link">Edit</a>
-                <form method="post" action="{% url 'administration:staff_sales_order_delete' o.pk %}" class="order-actions-menu__form" onsubmit="return confirm('Delete order {{ o.invoice_number }}?');">
-                  {% csrf_token %}
-                  <button type="submit" class="order-actions-menu__link order-actions-menu__link--danger">Delete</button>
-                </form>
+                <button type="submit" form="delete-order-{{ o.pk }}" class="order-actions-menu__link order-actions-menu__link--danger" data-delete-invoice="{{ o.invoice_number|escape }}">Delete</button>
               </div>
             </details>
           </td>
@@ -124,8 +120,11 @@
       </tbody>
     </table>
   </div>
+  {% for o in orders %}
+  <form id="delete-order-{{ o.pk }}" method="post" action="{% url 'administration:staff_sales_order_delete' o.pk %}" class="visually-hidden" aria-hidden="true">{% csrf_token %}</form>
+  {% endfor %}
 </div>
-<style>.num{text-align:right}</style>
+<style>.num{text-align:right}.visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}</style>
 <script>
 (function () {
   var menus = document.querySelectorAll('.order-actions-menu');
@@ -180,11 +179,27 @@
       }
     });
   });
+  menus.forEach(function (d) {
+    var panel = d.querySelector('.order-actions-menu__panel');
+    if (panel) {
+      panel.addEventListener('click', function (e) {
+        e.stopPropagation();
+      });
+    }
+  });
   document.addEventListener('click', function (e) {
     menus.forEach(function (d) {
       if (!d.open) return;
       if (d.contains(e.target)) return;
       d.open = false;
+    });
+  });
+  document.querySelectorAll('button[form^="delete-order-"]').forEach(function (btn) {
+    btn.addEventListener('click', function (e) {
+      var inv = btn.getAttribute('data-delete-invoice') || 'this order';
+      if (!window.confirm('Delete order ' + inv + '?')) {
+        e.preventDefault();
+      }
     });
   });
   document.addEventListener('keydown', function (e) {

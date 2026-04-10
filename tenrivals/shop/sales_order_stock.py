@@ -218,6 +218,9 @@ def validate_order_line_demands(
         avail = available_qty_for_demand(p, vk, order_pk=order_pk, old_status=old_status, old_lines=old_lines)
         if need > avail:
             label = p.invoice_line_title()
+            col = (p.color or '').strip()
+            if col:
+                label = f'{label} — {col}'
             if product_requires_variant(p) and vk:
                 label = f'{label} ({vk})'
             errors.append(

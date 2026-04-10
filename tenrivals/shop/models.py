@@ -81,6 +81,7 @@ class Product(models.Model):
     category = models.ForeignKey(Category, null=True, blank=True, on_delete=models.SET_NULL, related_name='products')
 
     # Misc
+    color = models.CharField(max_length=80, blank=True, null=True)
     short_description = models.CharField(max_length=255, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
 
@@ -156,7 +157,8 @@ class Product(models.Model):
         return n or b or ''
 
     def invoice_line_specs_slash(self) -> str:
-        """Type-specific details joined with ' / ' (racket: weight, head, grips; etc.)."""
+        """Color (if set) plus type-specific details, joined with ' / '."""
+        type_part = ''
         for rel in (
             'racket',
             'shoe',
@@ -172,8 +174,16 @@ class Product(models.Model):
                 continue
             fn = getattr(sub, 'invoice_specs_slash', None)
             if callable(fn):
-                return fn()
-        return ''
+                type_part = fn()
+                break
+        parts: list[str] = []
+        c = (self.color or '').strip()
+        if c:
+            parts.append(c)
+        tp = (type_part or '').strip()
+        if tp:
+            parts.append(tp)
+        return ' / '.join(parts)
 
     def invoice_line_label(self) -> str:
         """Full item description for invoice table (title + specs)."""
@@ -223,7 +233,6 @@ class Shoe(Product):
         null=True,
         help_text=_('Width / last (e.g. D, 2E, Wide).'),
     )
-    color = models.CharField(max_length=80, blank=True, null=True)
 
     class Meta:
         verbose_name = 'Shoe'
@@ -231,8 +240,6 @@ class Shoe(Product):
 
     def invoice_specs_slash(self) -> str:
         parts = []
-        if self.color:
-            parts.append(self.color)
         if self.surface:
             parts.append(str(self.get_surface_display()))
         if self.width:
@@ -848,10 +855,16 @@ class SalesOrderLine(models.Model):
         return f'{self.product.name} ×{self.quantity}'
 
     def staff_order_item_summary(self) -> str:
-        """One line for orders list: qty× brand model (+ variant)."""
+        """One line for orders list: qty× brand model (+ color, variant)."""
         base = self.product.invoice_line_title()
-        if (self.variant_label or '').strip():
-            base = f'{base} ({self.variant_label})'
+        c = (self.product.color or '').strip()
+        v = (self.variant_label or '').strip()
+        if c and v:
+            base = f'{base} — {c} ({v})'
+        elif v:
+            base = f'{base} ({v})'
+        elif c:
+            base = f'{base} — {c}'
         return f'{self.quantity}× {base}'
 
     def invoice_display_label(self) -> str:

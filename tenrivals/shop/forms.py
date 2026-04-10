@@ -42,6 +42,7 @@ class ProductForm(forms.ModelForm):
         fields = [
             'brand',
             'name',
+            'color',
             'type',
             'sku',
             'initial_price',
@@ -129,7 +130,7 @@ def _clean_qty_map_field(raw, *, error_label: str) -> dict[str, int]:
 class ShoeForm(ProductForm):
     class Meta(ProductForm.Meta):
         model = Shoe
-        fields = ProductForm.Meta.fields + ['gender', 'surface', 'sizes', 'color', 'width']
+        fields = ProductForm.Meta.fields + ['gender', 'surface', 'sizes', 'width']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

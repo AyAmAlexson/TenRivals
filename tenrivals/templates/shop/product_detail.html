@@ -299,20 +299,9 @@
         <div class="pdp-brand">{{ product.brand|default:"—" }}</div>
         <h1 class="pdp-title">{{ product.name }}</h1>
         <div class="pdp-color">
-          {% if product.type == 'M_SHOES' or product.type == 'W_SHOES' or product.type == 'J_SHOES' %}
-            {% with s=product.shoe %}
-              {% if s and s.color %}
-              <div>{{ s.color }}</div>
-              {% endif %}
-              {% if product.short_description %}
-              <div>{{ product.short_description }}</div>
-              {% elif not s or not s.color %}
-              <div>—</div>
-              {% endif %}
-            {% endwith %}
-          {% else %}
-            {{ product.short_description|default:"—" }}
-          {% endif %}
+          {% if product.color %}<div>{{ product.color }}</div>{% endif %}
+          {% if product.short_description %}<div>{{ product.short_description }}</div>{% endif %}
+          {% if not product.color and not product.short_description %}<div>—</div>{% endif %}
         </div>
 
         {% if pdp_mode == 'stock' %}

@@ -99,7 +99,8 @@
     .article-product-card__brand{
       font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 6px;
     }
-    .article-product-card__name{font-size:14px;line-height:1.35;margin:0 0 8px;font-weight:600;text-transform:none}
+    .article-product-card__name{font-size:14px;line-height:1.35;margin:0 0 4px;font-weight:600;text-transform:none}
+    .article-product-card__color{font-size:12px;line-height:1.35;margin:0 0 8px;font-weight:400;color:var(--muted);text-transform:none}
     .article-product-card__price{font-size:15px;font-weight:800;color:var(--accent);margin:0}
     .article-cta{
       margin:36px 0;display:flex;align-items:center;justify-content:flex-start;gap:18px;flex-wrap:nowrap;
@@ -179,6 +180,7 @@
                   <div class="article-product-card__body">
                     <p class="article-product-card__brand">{{ p.brand }}</p>
                     <p class="article-product-card__name">{{ p.name }}</p>
+                    {% if p.color %}<p class="article-product-card__color">{{ p.color }}</p>{% endif %}
                     {% if p.primary_price %}<p class="article-product-card__price">{{ p.primary_price }} ₾</p>{% endif %}
                   </div>
                 </a>

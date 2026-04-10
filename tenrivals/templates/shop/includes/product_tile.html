@@ -17,17 +17,11 @@
       <div class="product-tile__body">
         {% if p.brand %}<p class="product-tile__brand">{{ p.brand }}</p>{% endif %}
         <p class="product-tile__model">{{ p.name }}</p>
-        {% if p.type == 'M_SHOES' or p.type == 'W_SHOES' or p.type == 'J_SHOES' %}
-          {% with s=p.shoe %}
-          {% if s and s.color %}
-        <p class="product-tile__color">{{ s.color }}</p>
-          {% endif %}
-          {% if p.short_description %}
-        <p class="product-tile__color">{{ p.short_description }}</p>
-          {% endif %}
-          {% endwith %}
-        {% elif p.short_description %}
-        <p class="product-tile__color">{{ p.short_description }}</p>
+        {% if p.color %}
+        <p class="product-tile__color">{{ p.color }}</p>
+        {% endif %}
+        {% if p.short_description %}
+        <p class="product-tile__short">{{ p.short_description }}</p>
         {% endif %}
       </div>
       <div class="product-tile__footer">

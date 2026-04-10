@@ -167,6 +167,9 @@
           <div class="col"><div class="field">{{ form.name.label_tag }}{{ form.name }}{% if form.name.errors %}<ul class="errorlist">{% for e in form.name.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}</div></div>
         </div>
         <div class="row">
+          <div class="col"><div class="field">{{ form.color.label_tag }}{{ form.color }}{% if form.color.errors %}<ul class="errorlist">{% for e in form.color.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}</div></div>
+        </div>
+        <div class="row">
           {% if is_edit %}
           <div class="col"><div class="field">{{ form.type.label_tag }}{{ form.type }}{% if form.type.errors %}<ul class="errorlist">{% for e in form.type.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}</div></div>
           {% else %}
@@ -198,13 +201,12 @@
         </div>
       </div>
 
-      {% if 'color' in form.fields %}
+      {% if 'width' in form.fields %}
       <div class="form-card">
         <h3>Shoes</h3>
         <div class="row">
           <div class="col"><div class="field">{{ form.gender.label_tag }}{{ form.gender }}{% if form.gender.errors %}<ul class="errorlist">{% for e in form.gender.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}</div></div>
           <div class="col"><div class="field">{{ form.surface.label_tag }}{{ form.surface }}{% if form.surface.errors %}<ul class="errorlist">{% for e in form.surface.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}</div></div>
-          <div class="col"><div class="field">{{ form.color.label_tag }}{{ form.color }}{% if form.color.errors %}<ul class="errorlist">{% for e in form.color.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}</div></div>
           <div class="col"><div class="field">{{ form.width.label_tag }}{{ form.width }}{% if form.width.help_text %}<p class="hint">{{ form.width.help_text }}</p>{% endif %}{% if form.width.errors %}<ul class="errorlist">{% for e in form.width.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}</div></div>
         </div>
         <div class="field">
