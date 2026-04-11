@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
+import calendar
 import json
 from datetime import date
 from decimal import Decimal
+
+from django.db.models import Sum
+from django.urls import reverse
 from django.templatetags.static import static
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -28,8 +32,12 @@ from .sales_order_utils import (
     compute_order_totals,
     gross_split_vat_net,
     line_amounts,
+    max_issued_invoice_seq_for_year,
+    parse_invoice_number,
     parse_services_payload,
+    peek_next_invoice_number,
     product_unit_gross_price,
+    set_next_invoice_number,
     stock_products_for_select,
 )
 from .staff_sales_forms import CustomerForm, SalesOrderForm, SalesOrderLineFormSet
@@ -243,6 +251,13 @@ def staff_customer_delete(request, pk):
 @user_passes_test(_staff_ok)
 def staff_sales_orders(request):
     q = (request.GET.get('q') or '').strip()
+    today_y = date.today().year
+    try:
+        seq_year = int(request.GET.get('seq_year', today_y))
+    except (TypeError, ValueError):
+        seq_year = today_y
+    if seq_year < 1990 or seq_year > 2100:
+        seq_year = today_y
     qs = (
         SalesOrder.objects.select_related('customer')
         .prefetch_related(_sales_order_lines_prefetch())
@@ -257,6 +272,9 @@ def staff_sales_orders(request):
             | Q(customer__phone__icontains=q)
             | Q(customer__email__icontains=q)
         )
+    seq_year_options = list(range(today_y - 4, today_y + 7))
+    max_seq = max_issued_invoice_seq_for_year(seq_year)
+    month_choices = [(m, calendar.month_name[m]) for m in range(1, 13)]
     return render(
         request,
         'shop/staff/sales_orders_list.html',
@@ -266,6 +284,86 @@ def staff_sales_orders(request):
             'order_status_choices': SalesOrder.Status.choices,
             'staff_nav_active': 'sales_orders',
             'page_heading': 'Orders',
+            'seq_year': seq_year,
+            'seq_year_options': seq_year_options,
+            'peek_next_invoice': peek_next_invoice_number(seq_year),
+            'max_issued_seq': max_seq,
+            'month_choices': month_choices,
+            'report_year': _safe_int(
+                request.GET.get('report_year'), date.today().year, 1990, 2100
+            ),
+            'report_month': _safe_int(
+                request.GET.get('report_month'), date.today().month, 1, 12
+            ),
+        },
+    )
+
+
+def _safe_int(raw, default: int, lo: int, hi: int) -> int:
+    try:
+        v = int(raw)
+    except (TypeError, ValueError):
+        return default
+    if v < lo or v > hi:
+        return default
+    return v
+
+
+@login_required
+@user_passes_test(_staff_ok)
+@require_POST
+def staff_sales_invoice_sequence_set(request):
+    full = (request.POST.get('next_invoice_full') or '').strip()
+    try:
+        set_next_invoice_number(full)
+    except ValueError as e:
+        messages.error(request, str(e))
+        py = parse_invoice_number(full)
+        redir_year = py[0] if py else date.today().year
+        return redirect(f"{reverse('administration:staff_sales_orders')}?seq_year={redir_year}")
+    messages.success(request, f'Next new order will be assigned invoice number {full.strip()}.')
+    py = parse_invoice_number(full)
+    redir_year = py[0] if py else date.today().year
+    return redirect(f"{reverse('administration:staff_sales_orders')}?seq_year={redir_year}")
+
+
+@login_required
+@user_passes_test(_staff_ok)
+def staff_sales_orders_month_report(request):
+    today = date.today()
+    y = _safe_int(request.GET.get('year'), today.year, 1990, 2100)
+    m = _safe_int(request.GET.get('month'), today.month, 1, 12)
+    qs = (
+        SalesOrder.objects.filter(order_date__year=y, order_date__month=m)
+        .order_by('invoice_number')
+    )
+    agg = qs.aggregate(
+        tg=Sum('gross_total'),
+        tv=Sum('vat_total'),
+        tn=Sum('net_total'),
+    )
+    tg = (agg['tg'] or Decimal('0')).quantize(Decimal('0.01'))
+    tv = (agg['tv'] or Decimal('0')).quantize(Decimal('0.01'))
+    tn = (agg['tn'] or Decimal('0')).quantize(Decimal('0.01'))
+    logo_rel = static('assets/img/invoice_logo_frame114.svg')
+    logo_abs = (
+        request.build_absolute_uri(logo_rel)
+        if not (logo_rel.startswith('http://') or logo_rel.startswith('https://'))
+        else logo_rel
+    )
+    month_title = calendar.month_name[m]
+    return render(
+        request,
+        'shop/staff/sales_orders_month_report.html',
+        {
+            'report_year': y,
+            'report_month': m,
+            'month_title': month_title,
+            'orders': qs,
+            'total_gross': tg,
+            'total_vat': tv,
+            'total_net': tn,
+            'invoice_logo_abs_url': logo_abs,
         },
     )
 

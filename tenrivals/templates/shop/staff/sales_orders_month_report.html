@@ -1,0 +1,120 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Orders {{ month_title }} {{ report_year }} — Tennis Rivals</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root{
+    --border:#111;
+    --muted:#555;
+    --pad:22px;
+    --w:190mm;
+    --fs:12px;
+    --lh:1.45;
+    --th-fs:11px;
+    --th-help-fs:9.5px;
+    --cell-pad:10px 8px;
+    --section-gap:18px;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    font-family:Arial,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,sans-serif;
+    font-size:var(--fs);
+    line-height:var(--lh);
+    color:#000;
+    -webkit-print-color-adjust:exact;
+    print-color-adjust:exact;
+    font-variant-numeric:tabular-nums;
+    background:#fff;
+  }
+  .wrap{
+    width:var(--w);
+    margin:20px auto;
+    border:1px solid var(--border);
+    padding:var(--pad);
+    padding-bottom:28px;
+    background:#fff;
+  }
+  .muted{ color:var(--muted); }
+  .mono{ font-variant-numeric:tabular-nums; }
+  .controls{ display:flex; gap:8px; margin:16px auto; width:var(--w); flex-wrap:wrap; align-items:center; }
+  .btn{ padding:8px 12px; border:1px solid #333; background:#f7f7f7; cursor:pointer; font-size:12px; text-decoration:none; color:#111; display:inline-block; font-family:inherit; }
+  .btn:hover{ background:#eaeaea; }
+  @media print{ .controls{ display:none!important; } .wrap{ margin:0; border:0; width:auto; padding:12mm 14mm; } }
+  .header .header-row--primary{ display:flex; align-items:center; gap:20px; flex-wrap:wrap; margin-bottom:16px; }
+  .header .logo .logo-img{ height:72px; width:auto; max-width:360px; display:block; object-fit:contain; }
+  .header h1{ margin:0; font-size:20px; line-height:1.2; font-weight:700; }
+  table{ width:100%; border-collapse:collapse; margin-top:var(--section-gap); table-layout:fixed; }
+  th,td{ padding:var(--cell-pad); border-bottom:1px dashed var(--border); vertical-align:top; }
+  th{ border-bottom:1px solid var(--border); text-align:left; font-size:var(--th-fs); padding-bottom:10px; }
+  .th-help{ display:block; color:var(--muted); font-size:var(--th-help-fs); line-height:1.15; margin-top:2px; }
+  td.num,th.num{ text-align:right; white-space:nowrap; }
+  .totals{ margin-top:var(--section-gap); padding-top:var(--section-gap); border-top:1px solid var(--border); }
+  .totals .box{ background:#f7f7f7; padding:14px 16px; border:1px solid var(--border); max-width:420px; margin-left:auto; }
+  .totals .line{ display:flex; justify-content:space-between; margin:6px 0; gap:16px; }
+  .totals .grand{ font-weight:700; border-top:1px dashed var(--border); padding-top:8px; margin-top:8px; }
+</style>
+</head>
+<body>
+  <div class="controls">
+    <a class="btn" href="{% url 'administration:staff_sales_orders' %}">Back to orders</a>
+    <button type="button" class="btn" onclick="window.print()">Print / Save as PDF</button>
+  </div>
+
+  <div class="wrap">
+    <div class="header">
+      <div class="header-row header-row--primary">
+        <div class="logo">
+          <img src="{% if invoice_logo_abs_url %}{{ invoice_logo_abs_url }}{% else %}{% static 'assets/img/invoice_logo_frame114.svg' %}{% endif %}" alt="Tennis Rivals" class="logo-img">
+        </div>
+        <div>
+          <h1>Orders — {{ month_title }} {{ report_year }}</h1>
+          <p class="muted" style="margin:8px 0 0;font-size:13px">Retail invoices (VAT-inclusive ₾). Same columns as the orders list (without customer and line items).</p>
+        </div>
+      </div>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th><div>Invoice #</div></th>
+          <th><div>Fiscal receipt #</div></th>
+          <th><div>Date</div></th>
+          <th><div>Status</div></th>
+          <th class="num"><div>Gross</div><div class="th-help">₾ inc. VAT</div></th>
+          <th class="num"><div>VAT</div><div class="th-help">18%</div></th>
+          <th class="num"><div>Net</div></th>
+          <th><div>Payment</div></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for o in orders %}
+        <tr>
+          <td class="mono">{{ o.invoice_number }}</td>
+          <td class="mono">{{ o.fiscal_receipt|default:"—" }}</td>
+          <td class="mono">{{ o.order_date|date:"Y-m-d" }}</td>
+          <td>{{ o.get_status_display }}</td>
+          <td class="mono num">{{ o.gross_total }}</td>
+          <td class="mono num">{{ o.vat_total }}</td>
+          <td class="mono num">{{ o.net_total }}</td>
+          <td>{{ o.payment_method|default:"—"|truncatechars:32 }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="8" class="muted">No orders in this month.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <div class="totals">
+      <div class="box">
+        <div class="line"><span>Total gross (₾)</span><span class="mono">{{ total_gross }}</span></div>
+        <div class="line"><span>Total VAT (₾)</span><span class="mono">{{ total_vat }}</span></div>
+        <div class="line grand"><span>Total net (₾)</span><span class="mono">{{ total_net }}</span></div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from decimal import Decimal
 from typing import Any
 
@@ -12,10 +13,13 @@ from .models import (
     ProductListing,
     ProductListingChannel,
     SalesInvoiceYearSequence,
+    SalesOrder,
 )
 
 
 VAT_GROSS_DIVISOR = Decimal('1.18')
+
+INVOICE_NUMBER_PATTERN = re.compile(r'^(\d{4})-(\d{6})$')
 
 
 def gross_split_vat_net(gross: Decimal) -> tuple[Decimal, Decimal]:
@@ -64,6 +68,64 @@ def stock_products_for_select():
         .order_by('brand', 'name')
         .select_related('shoe', 'racket', 'apparel')
     )
+
+
+def parse_invoice_number(full: str) -> tuple[int, int] | None:
+    """Return (year, seq) if string matches YYYY-NNNNNN, else None."""
+    m = INVOICE_NUMBER_PATTERN.match((full or '').strip())
+    if not m:
+        return None
+    return int(m.group(1)), int(m.group(2))
+
+
+def max_issued_invoice_seq_for_year(year: int) -> int:
+    """Highest numeric suffix among existing orders for that calendar year."""
+    prefix = f'{year}-'
+    max_seq = 0
+    for inv in SalesOrder.objects.filter(invoice_number__startswith=prefix).values_list(
+        'invoice_number', flat=True
+    ):
+        parsed = parse_invoice_number(inv)
+        if parsed and parsed[0] == year:
+            max_seq = max(max_seq, parsed[1])
+    return max_seq
+
+
+def peek_next_invoice_number(year: int) -> str:
+    """Next number that allocate_invoice_number would issue (read-only)."""
+    row, _ = SalesInvoiceYearSequence.objects.get_or_create(
+        year=year,
+        defaults={'last_seq': 38},
+    )
+    return f'{year}-{row.last_seq + 1:06d}'
+
+
+def set_next_invoice_number(full: str) -> None:
+    """
+    Point the per-year counter so the next allocate_invoice_number() returns `full`.
+    full must be unused and strictly above the highest suffix already issued for that year.
+    """
+    parsed = parse_invoice_number(full)
+    if not parsed:
+        raise ValueError('Invoice number must look like YYYY-NNNNNN (e.g. 2026-000040).')
+    year, seq = parsed
+    if seq < 1 or seq > 999999:
+        raise ValueError('Sequence part must be between 000001 and 999999.')
+    full_norm = f'{year}-{seq:06d}'
+    if SalesOrder.objects.filter(invoice_number=full_norm).exists():
+        raise ValueError(f'Invoice number {full_norm} is already used.')
+    max_issued = max_issued_invoice_seq_for_year(year)
+    if seq <= max_issued:
+        raise ValueError(
+            f'Next number must be greater than the highest issued for {year} ({max_issued:06d}).'
+        )
+    with transaction.atomic():
+        row, _ = SalesInvoiceYearSequence.objects.select_for_update().get_or_create(
+            year=year,
+            defaults={'last_seq': 38},
+        )
+        row.last_seq = seq - 1
+        row.save(update_fields=['last_seq'])
 
 
 def allocate_invoice_number(order_year: int) -> str:

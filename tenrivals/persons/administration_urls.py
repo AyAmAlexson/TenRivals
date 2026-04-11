@@ -38,6 +38,16 @@ urlpatterns = [
     ),
     path("orders/new/", staff_sales_views.staff_sales_order_edit, name="staff_sales_order_new"),
     path(
+        "orders/report/",
+        staff_sales_views.staff_sales_orders_month_report,
+        name="staff_sales_orders_month_report",
+    ),
+    path(
+        "orders/sequence/",
+        staff_sales_views.staff_sales_invoice_sequence_set,
+        name="staff_sales_invoice_sequence_set",
+    ),
+    path(
         "orders/<int:pk>/edit/",
         staff_sales_views.staff_sales_order_edit,
         name="staff_sales_order_edit",
