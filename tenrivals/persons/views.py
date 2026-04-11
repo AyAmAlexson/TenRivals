@@ -43,6 +43,8 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods, require_POST
 import json
+from urllib.parse import urlencode
+
 from django.shortcuts import get_object_or_404
 import time
 from .services import generate_verification_code_service
@@ -711,8 +713,17 @@ def superuser_user_edit(request, user_id):
     )
 
 
+def _staff_listings_redirect(request, redirect_name: str):
+    rq = (request.POST.get("return_q") or "").strip()
+    base = reverse(redirect_name)
+    if rq:
+        return redirect(f"{base}?{urlencode({'q': rq})}")
+    return redirect(base)
+
+
 def _staff_listings_page(request, channel: str, nav_key: str):
     redirect_name = "administration:staff_stock" if nav_key == "stock" else "administration:staff_preorder"
+    search_q = (request.GET.get("q") or "").strip()
     if request.method == "POST":
         action = request.POST.get("action")
         if action == "remove_listing":
@@ -720,7 +731,7 @@ def _staff_listings_page(request, channel: str, nav_key: str):
                 lid = int(request.POST.get("listing_id", "0"))
             except (TypeError, ValueError):
                 messages.error(request, "Invalid listing.")
-                return redirect(redirect_name)
+                return _staff_listings_redirect(request, redirect_name)
             deleted, _ = ProductListing.objects.filter(pk=lid, channel=channel).delete()
             if deleted:
                 messages.success(request, "Removed from this catalog channel.")
@@ -744,14 +755,28 @@ def _staff_listings_page(request, channel: str, nav_key: str):
                 request,
                 f"Listings synced: {created} created, {existing} already in this channel.",
             )
-            return redirect(redirect_name)
-        return redirect(redirect_name)
+            return _staff_listings_redirect(request, redirect_name)
+        return _staff_listings_redirect(request, redirect_name)
 
     listings = (
         ProductListing.objects.filter(channel=channel)
-        .select_related("product")
+        .select_related(
+            "product",
+            "product__shoe",
+            "product__racket",
+            "product__apparel",
+        )
         .order_by("product__name", "product__id")
     )
+    if search_q:
+        listings = listings.filter(
+            Q(product__name__icontains=search_q)
+            | Q(product__brand__icontains=search_q)
+            | Q(product__sku__icontains=search_q)
+            | Q(product__short_description__icontains=search_q)
+            | Q(product__color__icontains=search_q)
+            | Q(product__type__icontains=search_q)
+        )
     heading = (
         "In stock"
         if channel == ProductListingChannel.STOCK
@@ -778,6 +803,7 @@ def _staff_listings_page(request, channel: str, nav_key: str):
             "page_heading": heading,
             "page_note": note,
             "catalog_is_implicit": catalog_is_implicit,
+            "search_q": search_q,
         },
     )
 

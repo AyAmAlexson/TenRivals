@@ -129,6 +129,28 @@ class Product(models.Model):
         except Exception:
             return []
 
+    def staff_listing_size_summary(self) -> str:
+        """Grip / shoe / apparel variants with qty > 0 (compact for staff listing tables)."""
+        from .size_inventory import normalize_sizes_to_qty_map
+
+        for rel_name, field in (
+            ('racket', 'grip_sizes'),
+            ('shoe', 'sizes'),
+            ('apparel', 'sizes'),
+        ):
+            try:
+                sub = getattr(self, rel_name)
+            except ObjectDoesNotExist:
+                continue
+            raw = getattr(sub, field, None)
+            if not raw:
+                continue
+            m = normalize_sizes_to_qty_map(raw, fallback_total=0)
+            parts = [f'{k}×{v}' for k, v in sorted(m.items()) if int(v or 0) > 0]
+            if parts:
+                return ', '.join(parts)
+        return ''
+
     @property
     def primary_price(self):
         """Selling price: actual if set, otherwise initial."""

@@ -2,6 +2,11 @@
 {% block title %}{{ page_heading }} — Staff — TR Shop{% endblock %}
 {% block page_heading %}{{ page_heading }}{% endblock %}
 {% block page_note %}<p class="page-note">{{ page_note }}</p>{% endblock %}
+{% block extra_head %}
+<style>
+  .staff-listings .col-sizes{max-width:220px;font-size:12px;line-height:1.35;color:var(--muted);word-break:break-word}
+</style>
+{% endblock %}
 {% block content %}
   {% if catalog_is_implicit %}
   <div class="alert alert-info">
@@ -9,16 +14,24 @@
     Use the button below to create one listing per active product (quantity 0) so this page matches what you can curate.
   </div>
   {% endif %}
-  <div class="staff-toolbar">
+  <div class="staff-toolbar" style="flex-wrap:wrap;gap:10px 14px;align-items:center">
     <a class="btn btn--sm" href="{% url 'shop:product_create' %}?channel={{ listing_channel }}&next={{ request.get_full_path|urlencode }}">Add product</a>
     <form method="post" action="" style="display:inline" onsubmit="return confirm('Create a catalog row (qty 0) for every active product that does not have one in this channel?');">
       {% csrf_token %}
       <input type="hidden" name="action" value="backfill_listings">
+      <input type="hidden" name="return_q" value="{{ search_q }}">
       <button type="submit" class="btn btn--sm btn--outline">Add all active products</button>
+    </form>
+    <form method="get" action="" style="display:inline-flex;gap:8px;align-items:center;margin-left:auto">
+      <input type="search" name="q" value="{{ search_q }}" placeholder="Brand, name, SKU, type, color…" aria-label="Filter listings" style="min-width:200px;max-width:320px;padding:8px 10px;border:1px solid var(--line);font-family:inherit;font-size:14px">
+      <button type="submit" class="btn btn--sm">Search</button>
+      {% if search_q %}
+      <a href="{{ request.path }}" class="btn btn--sm btn--outline">Clear</a>
+      {% endif %}
     </form>
   </div>
 
-  <div class="card">
+  <div class="card staff-listings">
     <h2 class="card-title">Listings ({{ listings|length }})</h2>
     <div class="table-wrap">
       <table>
@@ -27,6 +40,8 @@
             <th>ID</th>
             <th>Brand</th>
             <th>Product</th>
+            <th>Color</th>
+            <th class="col-sizes">Sizes</th>
             <th>SKU</th>
             <th>Type</th>
             <th>Qty</th>
@@ -43,6 +58,8 @@
                 <span class="cell-text">{{ row.product.name }}</span>
               </div>
             </td>
+            <td>{{ row.product.color|default:"—" }}</td>
+            <td class="col-sizes mono">{{ row.product.staff_listing_size_summary|default:"—" }}</td>
             <td class="mono">{{ row.product.sku|default:"—" }}</td>
             <td class="mono">{{ row.product.type }}</td>
             <td>{{ row.quantity }}</td>
@@ -54,6 +71,7 @@
                 <form method="post" action="" style="display:inline" onsubmit="return confirm('Remove this product from this catalog channel? Listing only; product itself is not deleted.');">
                   {% csrf_token %}
                   <input type="hidden" name="action" value="remove_listing">
+                  <input type="hidden" name="return_q" value="{{ search_q }}">
                   <input type="hidden" name="listing_id" value="{{ row.pk }}">
                   <button type="submit" class="icon-btn icon-btn--danger" title="Remove listing" aria-label="Remove listing">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -63,7 +81,7 @@
             </td>
           </tr>
           {% empty %}
-          <tr><td colspan="7">No listings yet. Add a product with this channel, or import from shop admin.</td></tr>
+          <tr><td colspan="9">{% if search_q %}No rows match your search. <a href="{{ request.path }}">Clear filter</a>{% else %}No listings yet. Add a product with this channel, or import from shop admin.{% endif %}</td></tr>
           {% endfor %}
         </tbody>
       </table>

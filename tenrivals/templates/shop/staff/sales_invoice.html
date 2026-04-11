@@ -153,11 +153,11 @@
           <img src="{% if invoice_logo_abs_url %}{{ invoice_logo_abs_url }}{% else %}{% static 'assets/img/invoice_logo_frame114.svg' %}{% endif %}" alt="Tennis Rivals" class="logo-img">
         </div>
         <div class="org">
-          <h1>საქონლის ჩეკი</h1>
-          <h1>Goods Receipt</h1>
+          <h1>ინვოისი</h1>
+          <h1>Invoice</h1>
         </div>
         <div class="receipt">
-          <div class="row row--invoice"><span class="label">ინვოისის ნომერი / Invoice #</span><span class="value mono">{{ order.invoice_number }}</span></div>
+          <div class="row row--invoice"><span class="label">#</span><span class="value mono">{{ order.invoice_number }}</span></div>
           {% if order.fiscal_receipt %}
           <div class="row row--fiscal"><span class="label">ფისკალური ჩეკის ნომერი / Fiscal receipt #</span><span class="value mono">{{ order.fiscal_receipt }}</span></div>
           {% endif %}
