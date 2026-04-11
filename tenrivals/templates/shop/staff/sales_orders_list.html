@@ -47,63 +47,78 @@
     font-family:inherit;
     border:1px solid var(--line);
   }
-  .orders-meta-card .hint{font-size:12px;color:var(--muted);margin:10px 0 0;line-height:1.45}
-  .orders-meta-card .section-div{border-top:1px solid var(--line);padding-top:18px;margin-top:18px}
+  .staff-toolbar--orders{align-items:center;gap:10px 14px}
+  .staff-toolbar--orders .staff-toolbar__search{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .staff-toolbar--orders .staff-toolbar__group{display:inline-flex;flex-wrap:wrap;align-items:center;gap:8px}
+  .staff-toolbar--orders .staff-toolbar__sep{
+    width:1px;min-height:28px;align-self:stretch;background:var(--line);flex-shrink:0;
+    margin:0 2px;
+  }
+  button.staff-toolbar-help{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:22px;height:22px;border-radius:999px;border:1px solid var(--line);
+    color:var(--muted);font-size:12px;font-weight:800;line-height:1;
+    cursor:help;flex-shrink:0;font-family:inherit;background:#fff;
+    padding:0;margin:0;
+  }
+  button.staff-toolbar-help:focus{outline:2px solid var(--accent);outline-offset:2px}
+  .staff-toolbar--orders input[type="text"],
+  .staff-toolbar--orders input[type="search"],
+  .staff-toolbar--orders select{padding:8px 10px;border:1px solid var(--line);font-family:inherit;font-size:13px;background:#fff}
+  .staff-toolbar--orders input[name="next_invoice_full"]{width:11.5em;min-width:0}
+  .visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 </style>
 {% endblock %}
 {% block content %}
-<div class="staff-toolbar">
+<div class="staff-toolbar staff-toolbar--orders">
   <a href="{% url 'administration:staff_sales_order_new' %}" class="btn">New order</a>
-  <form method="get" action="{% url 'administration:staff_sales_orders' %}" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-    <input type="search" name="q" value="{{ search_q }}" placeholder="Invoice, fiscal, customer…" style="min-width:220px;padding:9px 12px;border:1px solid var(--line);font-family:inherit;font-size:14px">
-    <button type="submit" class="btn btn--sm">Search</button>
-  </form>
-</div>
-<div class="card orders-meta-card">
-  <h2 class="card-title">Invoice numbering &amp; reports</h2>
-  <p style="font-size:13px;color:var(--muted);margin:0 0 14px;line-height:1.45">The value below is the next invoice number that will be assigned when you save a <strong>new</strong> order with an order date in that calendar year. Adjust it before creating the order; it must be unique and greater than any number already issued for that year.</p>
-  <form method="get" action="{% url 'administration:staff_sales_orders' %}" style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;margin-bottom:14px">
-    {% if search_q %}<input type="hidden" name="q" value="{{ search_q }}">{% endif %}
+  <form method="get" action="{% url 'administration:staff_sales_orders' %}" class="staff-toolbar__search">
+    <input type="hidden" name="seq_year" value="{{ seq_year }}">
     <input type="hidden" name="report_year" value="{{ report_year }}">
     <input type="hidden" name="report_month" value="{{ report_month }}">
-    <div>
-      <label for="id_seq_year" style="display:block;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px">Preview year</label>
-      <select id="id_seq_year" name="seq_year" onchange="this.form.submit()" style="padding:8px 10px;border:1px solid var(--line);font-family:inherit;font-size:14px">
+    <input type="search" name="q" value="{{ search_q }}" placeholder="Invoice, fiscal, customer…" aria-label="Search orders" style="min-width:180px;max-width:260px">
+    <button type="submit" class="btn btn--sm">Search</button>
+  </form>
+  <span class="staff-toolbar__sep" aria-hidden="true"></span>
+  <div class="staff-toolbar__group">
+    <button type="button" class="staff-toolbar-help" aria-label="Help: next invoice number"
+      title='Next invoice # is the number that will be assigned when you save a new order whose order date falls in the calendar year chosen in the year dropdown. Change the year to preview another year. The value must be unique and greater than the highest number already issued for that year. Apply updates the sequence counter only; it does not create an order.{% if max_issued_seq %} Current highest for {{ seq_year }}: {{ seq_year }}-{{ max_issued_seq|stringformat:"06d" }}.{% else %} No invoices yet for {{ seq_year }}.{% endif %}'>?</button>
+    <form method="get" action="{% url 'administration:staff_sales_orders' %}" style="display:inline-flex;gap:8px;align-items:center;margin:0">
+      {% if search_q %}<input type="hidden" name="q" value="{{ search_q }}">{% endif %}
+      <input type="hidden" name="report_year" value="{{ report_year }}">
+      <input type="hidden" name="report_month" value="{{ report_month }}">
+      <label class="visually-hidden" for="id_seq_year">Year for next invoice preview</label>
+      <select id="id_seq_year" name="seq_year" onchange="this.form.submit()" aria-label="Year for next invoice preview">
         {% for y in seq_year_options %}
         <option value="{{ y }}" {% if y == seq_year %}selected{% endif %}>{{ y }}</option>
         {% endfor %}
       </select>
-    </div>
-  </form>
-  <form method="post" action="{% url 'administration:staff_sales_invoice_sequence_set' %}" style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end">
-    {% csrf_token %}
-    <div style="flex:1;min-width:220px">
-      <label for="id_next_invoice_full" style="display:block;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px">Next invoice #</label>
-      <input type="text" id="id_next_invoice_full" name="next_invoice_full" value="{{ peek_next_invoice }}" pattern="\d{4}-\d{6}" maxlength="11" inputmode="numeric" style="width:100%;max-width:280px;padding:9px 12px;border:1px solid var(--line);font-family:inherit;font-size:14px" autocomplete="off" spellcheck="false">
-    </div>
-    <button type="submit" class="btn btn--sm" style="margin-bottom:1px">Apply</button>
-  </form>
-  <p class="hint">{% if max_issued_seq %}Highest issued for {{ seq_year }}: <span class="mono">{{ seq_year }}-{{ max_issued_seq|stringformat:"06d" }}</span>.{% else %}No invoices yet for {{ seq_year }}.{% endif %} Apply only sets the counter; it does not create an order.</p>
-  <div class="section-div">
-    <p style="font-size:13px;color:var(--muted);margin:0 0 12px">Monthly summary (same columns as the table below, without customer and items).</p>
-    <form method="get" action="{% url 'administration:staff_sales_orders_month_report' %}" style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end">
-      <div>
-        <label for="id_report_month" style="display:block;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px">Month</label>
-        <select id="id_report_month" name="month" style="padding:8px 10px;border:1px solid var(--line);font-family:inherit;font-size:14px">
-          {% for mn, ml in month_choices %}
-          <option value="{{ mn }}" {% if mn == report_month %}selected{% endif %}>{{ ml }}</option>
-          {% endfor %}
-        </select>
-      </div>
-      <div>
-        <label for="id_report_year" style="display:block;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px">Year</label>
-        <select id="id_report_year" name="year" style="padding:8px 10px;border:1px solid var(--line);font-family:inherit;font-size:14px">
-          {% for y in seq_year_options %}
-          <option value="{{ y }}" {% if y == report_year %}selected{% endif %}>{{ y }}</option>
-          {% endfor %}
-        </select>
-      </div>
-      <button type="submit" class="btn">Сформировать отчет</button>
+    </form>
+    <form method="post" action="{% url 'administration:staff_sales_invoice_sequence_set' %}" style="display:inline-flex;gap:8px;align-items:center;margin:0">
+      {% csrf_token %}
+      <label class="visually-hidden" for="id_next_invoice_full">Next invoice number</label>
+      <input type="text" id="id_next_invoice_full" name="next_invoice_full" value="{{ peek_next_invoice }}" pattern="\d{4}-\d{6}" maxlength="11" inputmode="numeric" autocomplete="off" spellcheck="false" aria-label="Next invoice number">
+      <button type="submit" class="btn btn--sm">Apply</button>
+    </form>
+  </div>
+  <span class="staff-toolbar__sep" aria-hidden="true"></span>
+  <div class="staff-toolbar__group">
+    <button type="button" class="staff-toolbar-help" aria-label="Help: monthly report"
+      title="Opens an HTML page with all orders in the selected calendar month (by order date). Columns match the list below except Customer and Items. Gross, VAT, and net totals are shown at the bottom. Use print to save as PDF.">?</button>
+    <form method="get" action="{% url 'administration:staff_sales_orders_month_report' %}" style="display:inline-flex;gap:8px;align-items:center;margin:0;flex-wrap:wrap">
+      <label class="visually-hidden" for="id_report_month">Report month</label>
+      <select id="id_report_month" name="month" aria-label="Report month">
+        {% for mn, ml in month_choices %}
+        <option value="{{ mn }}" {% if mn == report_month %}selected{% endif %}>{{ ml }}</option>
+        {% endfor %}
+      </select>
+      <label class="visually-hidden" for="id_report_year">Report year</label>
+      <select id="id_report_year" name="year" aria-label="Report year">
+        {% for y in seq_year_options %}
+        <option value="{{ y }}" {% if y == report_year %}selected{% endif %}>{{ y }}</option>
+        {% endfor %}
+      </select>
+      <button type="submit" class="btn btn--sm">Сформировать отчет</button>
     </form>
   </div>
 </div>
@@ -174,7 +189,7 @@
   <form id="delete-order-{{ o.pk }}" method="post" action="{% url 'administration:staff_sales_order_delete' o.pk %}" class="visually-hidden" aria-hidden="true">{% csrf_token %}</form>
   {% endfor %}
 </div>
-<style>.num{text-align:right}.visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}</style>
+<style>.num{text-align:right}</style>
 <script>
 (function () {
   var menus = document.querySelectorAll('.order-actions-menu');
