@@ -1,9 +1,24 @@
 {# Single shop footer — include on every shop page #}
+{% load static %}
+<style>
+  .footer-line-brand-mark{margin:0 0 10px;display:block;line-height:0}
+  .footer-line-brand-mark img{
+    height:30px;width:auto;max-width:min(100%,240px);
+    object-fit:contain;object-position:left center;
+    display:block;opacity:.96;
+  }
+  @media(max-width:640px){
+    .footer-line-brand-mark img{height:26px;max-width:min(100%,200px)}
+  }
+</style>
 <footer class="footer">
   <div class="container">
     <div class="footer-top">
       <div>
-        <h4>Tennis Rivals: The Line for Your Growth.</h4>
+        <div class="footer-line-brand-mark" aria-hidden="true">
+          <img src="{% static 'assets/img/tr_footer_line_frame148.svg' %}" alt="" width="240" height="41" decoding="async" loading="lazy">
+        </div>
+        <h4>Tennis Rivals: The Line for Your Growth</h4>
         <p>Equipment and stories for players who want more from the game.</p>
         {% include 'shop/includes/shop_footer_ctas.html' %}
       </div>
