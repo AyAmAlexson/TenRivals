@@ -47,13 +47,15 @@
   .btn:hover{ background:#eaeaea; }
   .small{ font-size:10px; color:#222; }
   @media print{ .controls{ display:none!important; } .wrap{ margin:0; border:0; width:auto; padding:12mm 14mm; } }
-  .header .header-row--primary { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 16px; }
+  .header .header-row--primary { display: grid; grid-template-columns: auto 1fr minmax(160px, 1fr); align-items: center; gap: 16px; }
+  .header .receipt { justify-self: end; width: 100%; max-width: 320px; }
   .header .header-row--secondary { display: flex; justify-content: space-between; gap: 24px; margin-top: 14px; flex-wrap:wrap; }
   .header .logo .logo-img { height: 96px; width: auto; max-width: 440px; display:block; object-fit:contain; }
   .header h1 { margin: 0 0 6px 0; font-size: 20px; line-height: 1.15; font-weight:700; }
   .header .receipt .row { margin-bottom:6px; }
   .header .receipt .row .value { font-size: 20px; font-weight: 800; white-space: nowrap; }
   .header .receipt .row .label { font-size: 12px; color: #666; }
+  .header .receipt .row--fiscal { text-align: right; }
   .org h1{ font-size:20px; margin:0 0 6px 0; font-weight:700; max-width:320px; }
   .org .company-name{ font-weight:700; font-size:14px; margin-bottom:6px; }
   .facts{ text-align:right; min-width:220px; }
@@ -124,7 +126,7 @@
         <div class="receipt">
           <div class="row"><span class="label">ჩეკის ნომერი / Receipt No.</span> &nbsp;<span class="value mono">{{ order.invoice_number }}</span></div>
           {% if order.fiscal_receipt %}
-          <div class="row"><span class="label">ფისკალური / Fiscal</span> &nbsp;<span class="value mono">{{ order.fiscal_receipt }}</span></div>
+          <div class="row row--fiscal"><span class="label">ფისკალური ჩეკის ნომერი / Fiscal receipt #</span> &nbsp;<span class="value mono">{{ order.fiscal_receipt }}</span></div>
           {% endif %}
         </div>
       </div>
