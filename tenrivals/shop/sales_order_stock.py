@@ -156,8 +156,20 @@ def adjust_product_variant_stock(product: Product, variant_key: str, delta: int)
 
 
 def release_lines_to_stock(lines: list) -> None:
+    """Return reserved units to listing / variant JSON. Best-effort if legacy lines lack variant."""
     for line in lines:
-        adjust_product_variant_stock(line.product, line.variant_label or '', line.quantity)
+        try:
+            adjust_product_variant_stock(line.product, line.variant_label or '', line.quantity)
+        except ValueError as exc:
+            # Legacy lines: variant-required SKU but empty variant_label — restore listing total only.
+            if (
+                product_requires_variant(line.product)
+                and not (line.variant_label or '').strip()
+                and 'Select grip or shoe size' in str(exc)
+            ):
+                _apply_listing_delta(line.product.pk, int(line.quantity))
+            else:
+                raise
 
 
 def take_lines_from_stock(lines: list) -> None:

@@ -109,7 +109,7 @@
                 <a href="{% url 'administration:staff_sales_order_invoice' o.pk %}" class="order-actions-menu__link">View invoice</a>
                 <a href="{% url 'administration:staff_sales_order_invoice' o.pk %}?print=1" class="order-actions-menu__link order-actions-menu__link--accent" target="_blank" rel="noopener">Print / Save as PDF</a>
                 <a href="{% url 'administration:staff_sales_order_edit' o.pk %}" class="order-actions-menu__link">Edit</a>
-                <button type="submit" form="delete-order-{{ o.pk }}" class="order-actions-menu__link order-actions-menu__link--danger" data-delete-invoice="{{ o.invoice_number|escape }}">Delete</button>
+                <button type="button" class="order-actions-menu__link order-actions-menu__link--danger js-delete-sales-order" data-delete-form="delete-order-{{ o.pk }}" data-delete-invoice="{{ o.invoice_number|escape }}">Delete</button>
               </div>
             </details>
           </td>
@@ -194,11 +194,18 @@
       d.open = false;
     });
   });
-  document.querySelectorAll('button[form^="delete-order-"]').forEach(function (btn) {
+  document.querySelectorAll('.js-delete-sales-order').forEach(function (btn) {
     btn.addEventListener('click', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
       var inv = btn.getAttribute('data-delete-invoice') || 'this order';
       if (!window.confirm('Delete order ' + inv + '?')) {
-        e.preventDefault();
+        return;
+      }
+      var fid = btn.getAttribute('data-delete-form');
+      var f = fid ? document.getElementById(fid) : null;
+      if (f && f.tagName === 'FORM') {
+        f.submit();
       }
     });
   });
