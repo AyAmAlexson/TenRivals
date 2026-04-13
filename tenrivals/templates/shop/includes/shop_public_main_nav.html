@@ -1,4 +1,5 @@
-{# Catalog nav rail — requires {% load catalog_tags %} in the parent template #}
+{% load catalog_tags %}
+{# Catalog nav rail — self-contained: Django does not inherit {% load %} from parent includes #}
 <nav class="shop-main-nav" aria-label="Shop catalog">
   <div class="container">
     <div class="nav-row">
