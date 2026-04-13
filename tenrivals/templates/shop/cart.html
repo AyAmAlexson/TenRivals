@@ -44,7 +44,12 @@
     .cart-table th{font-size:11px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:var(--muted)}
     .cart-table .num{text-align:right; white-space:nowrap}
     .cart-qty-form{display:flex; align-items:center; gap:8px; flex-wrap:wrap}
-    .cart-remove-form{display:inline}
+    /* Off-DOM cart POST forms: avoids browser HTML parser breaking <form> inside <table> */
+    .cart-table-wrap{position:relative}
+    .cart-hidden-forms{
+      position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+      clip:rect(0,0,0,0);white-space:nowrap;border:0;pointer-events:none
+    }
     .cart-qty-form input[type="number"]{width:56px; padding:6px 8px; border:1px solid var(--line); font-family:inherit; font-size:14px}
     .cart-empty{color:var(--muted); padding:40px 0; font-size:15px}
     .cart-empty-state{
@@ -152,7 +157,21 @@
     </section>
     {% else %}
     <div class="cart-layout">
-      <div>
+      <div class="cart-table-wrap">
+        <div class="cart-hidden-forms" aria-hidden="true">
+          {% for row in cart_rows %}
+          <form id="cart-qty-{{ row.index }}" method="post" action="{% url 'shop:cart_update_line' %}">
+            {% csrf_token %}
+            <input type="hidden" name="line_index" value="{{ row.index }}">
+          </form>
+          <form id="cart-remove-{{ row.index }}" method="post" action="{% url 'shop:cart_remove_line' %}" onsubmit="return confirm('Remove this item?');">
+            {% csrf_token %}
+            <input type="hidden" name="line_index" value="{{ row.index }}">
+            <input type="hidden" name="product_id" value="{{ row.product.pk }}">
+            <input type="hidden" name="variant" value="{{ row.variant_key }}">
+          </form>
+          {% endfor %}
+        </div>
         <table class="cart-table">
           <thead>
             <tr>
@@ -182,22 +201,14 @@
               <td>{{ row.variant_label }}</td>
               <td class="num mono">{{ row.unit_price }} ₾</td>
               <td>
-                <form method="post" action="{% url 'shop:cart_update_line' %}" class="cart-qty-form">
-                  {% csrf_token %}
-                  <input type="hidden" name="line_index" value="{{ row.index }}">
-                  <input type="number" name="qty" value="{{ row.qty }}" min="1" max="{{ row.max_qty }}" aria-label="Quantity">
-                  <button type="submit" class="btn btn--sm">UPDATE</button>
-                </form>
+                <div class="cart-qty-form">
+                  <input type="number" name="qty" form="cart-qty-{{ row.index }}" value="{{ row.qty }}" min="1" max="{{ row.max_qty }}" aria-label="Quantity">
+                  <button type="submit" form="cart-qty-{{ row.index }}" class="btn btn--sm">UPDATE</button>
+                </div>
               </td>
               <td class="num mono">{{ row.line_total }} ₾</td>
               <td>
-                <form method="post" action="{% url 'shop:cart_remove_line' %}" class="cart-remove-form" onsubmit="return confirm('Remove this item?');">
-                  {% csrf_token %}
-                  <input type="hidden" name="line_index" value="{{ row.index }}">
-                  <input type="hidden" name="product_id" value="{{ row.product.pk }}">
-                  <input type="hidden" name="variant" value="{{ row.variant_key }}">
-                  <button type="submit" class="btn btn--outline btn--sm">REMOVE</button>
-                </form>
+                <button type="submit" form="cart-remove-{{ row.index }}" class="btn btn--outline btn--sm">REMOVE</button>
               </td>
             </tr>
             {% endfor %}
