@@ -253,13 +253,27 @@
           {% if form.grip_sizes.errors %}<ul class="errorlist">{% for e in form.grip_sizes.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
         </div>
       </div>
-      {% elif 'gauge_mm' in form.fields %}
+      {% elif 'gauges' in form.fields %}
       <div class="form-card">
         <h3>String specifications</h3>
         <div class="row">
-          <div class="col"><div class="field">{{ form.gauge_mm.label_tag }}{{ form.gauge_mm }}<p class="hint">mm</p></div></div>
+          <div class="col"><div class="field">{{ form.gauge_mm.label_tag }}{{ form.gauge_mm }}<p class="hint">Legacy single thickness (mm) when the per-gauge grid is empty</p></div></div>
           <div class="col"><div class="field">{{ form.material.label_tag }}{{ form.material }}</div></div>
           <div class="col"><div class="field">{{ form.length_m.label_tag }}{{ form.length_m }}<p class="hint">m per set</p></div></div>
+        </div>
+        <div class="field">
+          <span class="size-inv-heading" id="label-string-gauges" style="display:block;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px">Stock by gauge (mm)</span>
+          <p class="hint">Quantity on hand per string diameter. Saved as JSON; total in-stock quantity is the sum of these cells (same as rackets / shoes).</p>
+          <div class="size-inv-board js-size-inventory-grid" role="group" aria-labelledby="label-string-gauges" data-json-input-id="id_gauges">
+            {% for label, qty in form.size_inventory_rows %}
+            <div class="size-inv-row">
+              <span class="size-inv-label">{{ label }}</span>
+              <input type="number" min="0" step="1" class="size-inv-qty" data-size-label="{{ label }}" value="{{ qty }}" aria-label="Quantity {{ label }}">
+            </div>
+            {% endfor %}
+          </div>
+          {{ form.gauges }}
+          {% if form.gauges.errors %}<ul class="errorlist">{% for e in form.gauges.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
         </div>
       </div>
       {% elif 'material' in form.fields and 'gauge_mm' not in form.fields %}

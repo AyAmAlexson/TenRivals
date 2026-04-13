@@ -18,6 +18,7 @@ from .models import (
 from .size_inventory import (
     APPAREL_SIZE_LABELS,
     GRIP_SIZE_LABELS,
+    STRING_GAUGE_MM_LABELS,
     labels_for_size_grid,
     normalize_sizes_to_qty_map,
     us_shoe_size_labels,
@@ -300,7 +301,53 @@ class ApparelForm(ProductForm):
 class StringForm(ProductForm):
     class Meta(ProductForm.Meta):
         model = String
-        fields = ProductForm.Meta.fields + ['gauge_mm', 'material', 'length_m']
+        fields = ProductForm.Meta.fields + ['gauge_mm', 'gauges', 'material', 'length_m']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['gauges'].widget = forms.HiddenInput()
+        self.fields['gauges'].required = False
+        self.fields['listing_quantity'].widget.attrs['readonly'] = True
+        self.fields['listing_quantity'].label = 'Total quantity (auto)'
+        self.fields['listing_quantity'].help_text = (
+            'Auto: sum of per-gauge quantities (you edit quantities below). '
+            'If all gauge cells are 0, use legacy “Gauge (mm)” + quantity only when a single thickness is listed.'
+        )
+        self._init_string_gauge_rows()
+
+    def _init_string_gauge_rows(self):
+        allowed = list(STRING_GAUGE_MM_LABELS)
+        if self.data:
+            raw = self.data.get('gauges', '')
+            try:
+                parsed = json.loads(raw) if raw else {}
+                qty_map = normalize_sizes_to_qty_map(parsed, fallback_total=0)
+            except json.JSONDecodeError:
+                qty_map = {}
+        else:
+            raw_g = self.instance.gauges if self.instance.pk else self.initial.get('gauges')
+            fb = int(self.initial.get('listing_quantity', 0) or 0)
+            if isinstance(raw_g, dict):
+                qty_map = normalize_sizes_to_qty_map(raw_g, fallback_total=0)
+            elif isinstance(raw_g, list):
+                qty_map = normalize_sizes_to_qty_map(raw_g, fallback_total=fb)
+            else:
+                qty_map = {}
+        labels = labels_for_size_grid(allowed, qty_map)
+        self.size_inventory_rows = [(lab, qty_map.get(lab, 0)) for lab in labels]
+
+    def clean_gauges(self):
+        return _clean_qty_map_field(
+            self.cleaned_data.get('gauges'),
+            error_label='string gauge',
+        )
+
+    def clean(self):
+        cd = super().clean()
+        gauges = cd.get('gauges')
+        if isinstance(gauges, dict) and gauges:
+            cd['listing_quantity'] = sum(gauges.values())
+        return cd
 
 
 class BagForm(ProductForm):

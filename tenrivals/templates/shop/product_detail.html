@@ -328,46 +328,49 @@
         <p style="font-size:12px;color:var(--muted);margin:-12px 0 16px">Indicative price (±30 ₾). Final price when you confirm your order.</p>
         {% endif %}
 
-        {% if product.sizes_list %}
+        {% if pdp_cart_enabled and pdp_requires_size_pick and pdp_variant_options %}
         <div class="pdp-variants">
-          {% if pdp_cart_enabled and pdp_requires_size_pick %}
-          <div class="pdp-variants-label">SELECT SIZE</div>
-          <div class="pdp-variant-options" id="pdp-variant-btns" role="radiogroup" aria-label="Size">
+          <div class="pdp-variants-label">
+            {% if product.type == 'RACKET' %}SELECT GRIP SIZE
+            {% elif product.type == 'STRINGS' %}SELECT GAUGE
+            {% else %}SELECT SIZE{% endif %}
+          </div>
+          <div class="pdp-variant-options" id="pdp-variant-btns" role="radiogroup" aria-label="{% if product.type == 'RACKET' %}Grip size{% elif product.type == 'STRINGS' %}Gauge{% else %}Size{% endif %}">
             {% for opt in pdp_variant_options %}
             <button type="button" class="pdp-variant-btn" data-variant="{{ opt.label }}" data-max-qty="{{ opt.qty }}" aria-pressed="false">{{ opt.label }}</button>
             {% endfor %}
           </div>
-          <p class="pdp-cart-hint" id="pdp-size-hint" role="status">Select a size to add to cart.</p>
-          {% else %}
+          <p class="pdp-cart-hint" id="pdp-size-hint" role="status">
+            {% if product.type == 'STRINGS' %}Select a gauge to add to cart.{% else %}Select a size to add to cart.{% endif %}
+          </p>
+        </div>
+        {% elif product.sizes_list %}
+        <div class="pdp-variants">
           <div class="pdp-variants-label">Available sizes</div>
           <div class="pdp-variant-options">
             {% for sz in product.sizes_list %}
             <span class="pdp-variant-btn active" style="cursor:default">{{ sz }}</span>
             {% endfor %}
           </div>
-          {% endif %}
         </div>
-        {% elif product.type == 'RACKET' %}
-          {% if product.grip_sizes_display %}
+        {% elif product.type == 'RACKET' and product.grip_sizes_display %}
         <div class="pdp-variants">
-          {% if pdp_cart_enabled and pdp_requires_size_pick %}
-          <div class="pdp-variants-label">SELECT GRIP SIZE</div>
-          <div class="pdp-variant-options" id="pdp-variant-btns" role="radiogroup" aria-label="Grip size">
-            {% for opt in pdp_variant_options %}
-            <button type="button" class="pdp-variant-btn" data-variant="{{ opt.label }}" data-max-qty="{{ opt.qty }}" aria-pressed="false">{{ opt.label }}</button>
-            {% endfor %}
-          </div>
-          <p class="pdp-cart-hint" id="pdp-size-hint" role="status">Select a grip size to add to cart.</p>
-          {% else %}
           <div class="pdp-variants-label">Grip sizes</div>
           <div class="pdp-variant-options">
             {% for g in product.grip_sizes_display %}
             <span class="pdp-variant-btn active" style="cursor:default">{{ g }}</span>
             {% endfor %}
           </div>
-          {% endif %}
         </div>
-          {% endif %}
+        {% elif product.type == 'STRINGS' and product.string_gauges_display %}
+        <div class="pdp-variants">
+          <div class="pdp-variants-label">Gauges in stock</div>
+          <div class="pdp-variant-options">
+            {% for g in product.string_gauges_display %}
+            <span class="pdp-variant-btn active" style="cursor:default">{{ g }}</span>
+            {% endfor %}
+          </div>
+        </div>
         {% endif %}
 
         <div id="pdp-cart-error" class="pdp-cart-error" role="alert" hidden></div>
@@ -379,6 +382,7 @@
           data-add-url="{% url 'shop:cart_add' %}"
           data-requires-size="{% if pdp_requires_size_pick %}1{% else %}0{% endif %}"
           data-listing-qty="{{ stock_listing_qty }}"
+          data-variant-label="{% if product.type == 'STRINGS' %}Gauge{% else %}Size{% endif %}"
         >
           <div class="pdp-qty" aria-label="Quantity">
             <button type="button" id="pdp-qty-minus" class="pdp-qty-btn" aria-label="Decrease quantity">−</button>
@@ -442,7 +446,7 @@
             {% elif product.type == 'STRINGS' %}
               {% with st=product.string %}
               {% if st %}
-            <tr><td>Gauge</td><td>{% if st.gauge_mm %}{{ st.gauge_mm }} mm{% else %}—{% endif %}</td></tr>
+            <tr><td>Gauge (stock)</td><td>{% if product.staff_listing_size_summary %}{{ product.staff_listing_size_summary }}{% elif st.gauge_mm %}{{ st.gauge_mm }} mm{% else %}—{% endif %}</td></tr>
             <tr><td>Material</td><td>{{ st.material|default:"—" }}</td></tr>
             <tr><td>Length</td><td>{% if st.length_m %}{{ st.length_m }} m{% else %}—{% endif %}</td></tr>
               {% endif %}
@@ -516,6 +520,7 @@
       const productId = parseInt(bundle.getAttribute('data-product-id'), 10);
       const requiresSize = bundle.getAttribute('data-requires-size') === '1';
       const listingQty = parseInt(bundle.getAttribute('data-listing-qty'), 10) || 0;
+      const variantLabelWord = bundle.getAttribute('data-variant-label') || 'Size';
       const variantBtns = document.querySelectorAll('#pdp-variant-btns .pdp-variant-btn');
       const hint = document.getElementById('pdp-size-hint');
       const errEl = document.getElementById('pdp-cart-error');
@@ -572,6 +577,10 @@
         });
       });
 
+      if (requiresSize && variantBtns.length === 1) {
+        variantBtns[0].click();
+      }
+
       if (minusBtn) minusBtn.addEventListener('click', function() {
         if (qty > 1) { qty -= 1; syncQtyControls(); }
       });
@@ -607,7 +616,7 @@
               const a = data.added || {};
               const parts = [];
               if (a.title) parts.push(a.title);
-              if (a.variant && a.variant !== '—') parts.push('Size: ' + a.variant);
+              if (a.variant && a.variant !== '—') parts.push(variantLabelWord + ': ' + a.variant);
               if (a.qty) parts.push('Qty: ' + a.qty);
               if (a.line_total) parts.push('Line: ' + a.line_total + ' ₾');
               modalText.textContent = parts.join(' · ');

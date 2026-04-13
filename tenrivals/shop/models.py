@@ -129,6 +129,24 @@ class Product(models.Model):
         except Exception:
             return []
 
+    @property
+    def string_gauges_display(self):
+        """In-stock string gauges for PDP chips (legacy single gauge_mm if no per-gauge map)."""
+        try:
+            from .size_inventory import sizes_for_pdp_display
+
+            st = self.string
+            raw = st.gauges
+            if raw:
+                out = sizes_for_pdp_display(raw)
+                if out:
+                    return out
+            if st.gauge_mm is not None:
+                return [f'{st.gauge_mm} mm']
+        except Exception:
+            pass
+        return []
+
     def staff_listing_size_summary(self) -> str:
         """Grip / shoe / apparel variants with qty > 0 (compact for staff listing tables)."""
         from .size_inventory import normalize_sizes_to_qty_map
@@ -137,6 +155,7 @@ class Product(models.Model):
             ('racket', 'grip_sizes'),
             ('shoe', 'sizes'),
             ('apparel', 'sizes'),
+            ('string', 'gauges'),
         ):
             try:
                 sub = getattr(self, rel_name)
@@ -304,7 +323,8 @@ class Apparel(Product):
 
 class String(Product):
     # Strings specific fields
-    gauge_mm = models.DecimalField(max_digits=4, decimal_places=2, null=True, blank=True)  # e.g. 1.25
+    gauge_mm = models.DecimalField(max_digits=4, decimal_places=2, null=True, blank=True)  # e.g. 1.25 (legacy / default label)
+    gauges = models.JSONField(default=dict, blank=True)  # e.g. {"1.25 mm": 4, "1.30 mm": 2} — stock by thickness
     material = models.CharField(max_length=80, blank=True, null=True)  # e.g. Polyester, Multifilament, Natural
     length_m = models.PositiveIntegerField(null=True, blank=True)  # e.g. 12
 
@@ -313,8 +333,15 @@ class String(Product):
         verbose_name_plural = 'Strings'
 
     def invoice_specs_slash(self) -> str:
+        from .size_inventory import normalize_sizes_to_qty_map
+
         parts = []
-        if self.gauge_mm is not None:
+        gmap = normalize_sizes_to_qty_map(self.gauges, fallback_total=0)
+        if gmap:
+            pairs = [f'{k}×{v}' for k, v in sorted(gmap.items()) if int(v or 0) > 0]
+            if pairs:
+                parts.append(', '.join(pairs))
+        elif self.gauge_mm is not None:
             parts.append(f'{self.gauge_mm} mm')
         if self.material:
             parts.append(self.material)
@@ -864,7 +891,7 @@ class SalesOrderLine(models.Model):
     variant_label = models.CharField(
         max_length=48,
         blank=True,
-        help_text=_('Grip (e.g. L2) or shoe US size when the SKU uses a size grid.'),
+        help_text=_('Grip size (L2, …) or shoe US size when product uses size grid.'),
     )
     line_gross = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
     line_vat = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))

@@ -15,6 +15,25 @@ from .sales_order_utils import product_unit_gross_price, stock_listing_quantity
 SESSION_CART_KEY = 'shop_cart_v1'
 
 
+def _norm_variant(v) -> str:
+    if v is None:
+        return ''
+    if not isinstance(v, str):
+        v = str(v)
+    return v.strip()
+
+
+def sole_in_stock_variant_key(product: Product) -> str | None:
+    """If exactly one variant has qty > 0, return its key (for PDP / add-to-cart default)."""
+    if not product_requires_variant(product):
+        return None
+    vm = get_variant_qty_map(product)
+    pos = [k for k, v in sorted(vm.items()) if int(v or 0) > 0]
+    if len(pos) == 1:
+        return pos[0]
+    return None
+
+
 def _default_cart() -> dict[str, Any]:
     return {'lines': [], 'promo_code': ''}
 
@@ -78,14 +97,14 @@ def max_qty_allowed_in_cart(
 ) -> int:
     """DB availability minus qty of same product+variant on other cart lines."""
     db_avail = variant_qty_available(product, variant_key)
-    vk = (variant_key or '').strip()
+    vk = _norm_variant(variant_key)
     other = 0
     for i, ln in enumerate(lines):
         if exclude_line_index is not None and i == exclude_line_index:
             continue
         if int(ln.get('product_id') or 0) != product.pk:
             continue
-        if (ln.get('variant') or '').strip() != vk:
+        if _norm_variant(ln.get('variant')) != vk:
             continue
         other += int(ln.get('qty') or 0)
     return max(0, db_avail - other)
@@ -123,13 +142,17 @@ def try_add_to_cart(
     if not product_eligible_for_storefront_cart(product):
         return False, 'This product is not available for purchase online.', None
 
-    vk = (variant or '').strip()
+    vk = _norm_variant(variant)
     if product_requires_variant(product):
         vmap = get_variant_qty_map(product)
         if not vmap or not any(int(x or 0) > 0 for x in vmap.values()):
             return False, 'No sizes in stock for this product.', None
         if not vk:
-            return False, 'Select a size before adding to cart.', None
+            sole = sole_in_stock_variant_key(product)
+            if sole:
+                vk = sole
+            else:
+                return False, 'Select a size before adding to cart.', None
         if int(vmap.get(vk, 0)) <= 0:
             return False, 'This size is out of stock or unavailable.', None
     else:
@@ -142,7 +165,7 @@ def try_add_to_cart(
     for i, ln in enumerate(lines):
         if int(ln.get('product_id') or 0) != product.pk:
             continue
-        if (ln.get('variant') or '').strip() != vk:
+        if _norm_variant(ln.get('variant')) != vk:
             continue
         merge_idx = i
         break
@@ -199,12 +222,10 @@ def prune_and_clamp_cart(request) -> None:
         if pid <= 0 or qty < 1:
             changed = True
             continue
-        vk = (ln.get('variant') or '').strip()
-        if not isinstance(vk, str):
-            vk = str(vk).strip()
+        vk = _norm_variant(ln.get('variant'))
         product = (
             Product.objects.filter(pk=pid, is_active=True)
-            .select_related('shoe', 'racket', 'apparel')
+            .select_related('shoe', 'racket', 'apparel', 'string')
             .first()
         )
         if not product or not product_eligible_for_storefront_cart(product):
@@ -247,11 +268,11 @@ def set_line_qty(request, line_index: int, qty: int) -> tuple[bool, str]:
 
     ln = lines[line_index]
     pid = int(ln['product_id'])
-    vk = (ln.get('variant') or '').strip()
+    vk = _norm_variant(ln.get('variant'))
 
     product = (
         Product.objects.filter(pk=pid, is_active=True)
-        .select_related('shoe', 'racket', 'apparel')
+        .select_related('shoe', 'racket', 'apparel', 'string')
         .first()
     )
     if not product or not product_eligible_for_storefront_cart(product):
@@ -285,7 +306,7 @@ def remove_line_by_product_variant(request, product_id: int, variant_key: str) -
     """Remove the first cart line matching product + variant (stable vs session index drift)."""
     cart = get_cart(request)
     lines = list(cart['lines'])
-    vk = (variant_key or '').strip()
+    vk = _norm_variant(variant_key)
     pid = int(product_id)
     for j, ln in enumerate(lines):
         try:
@@ -294,9 +315,7 @@ def remove_line_by_product_variant(request, product_id: int, variant_key: str) -
             continue
         if lp != pid:
             continue
-        lv = (ln.get('variant') or '').strip()
-        if not isinstance(lv, str):
-            lv = str(lv).strip()
+        lv = _norm_variant(ln.get('variant'))
         if lv != vk:
             continue
         lines.pop(j)
@@ -304,6 +323,28 @@ def remove_line_by_product_variant(request, product_id: int, variant_key: str) -
         save_cart(request, cart)
         return True
     return False
+
+
+def remove_line_at_index_verified(
+    request, line_index: int, product_id: int, variant_key: str
+) -> bool:
+    """Remove line at index only if it matches product_id and variant (avoids wrong-row deletes)."""
+    cart = get_cart(request)
+    lines = list(cart['lines'])
+    if line_index < 0 or line_index >= len(lines):
+        return False
+    ln = lines[line_index]
+    try:
+        if int(ln.get('product_id') or 0) != int(product_id):
+            return False
+    except (TypeError, ValueError):
+        return False
+    if _norm_variant(ln.get('variant')) != _norm_variant(variant_key):
+        return False
+    lines.pop(line_index)
+    cart['lines'] = lines
+    save_cart(request, cart)
+    return True
 
 
 def build_cart_page_rows(request) -> tuple[list[dict[str, Any]], Decimal]:
@@ -317,10 +358,10 @@ def build_cart_page_rows(request) -> tuple[list[dict[str, Any]], Decimal]:
     for i, ln in enumerate(lines):
         pid = int(ln.get('product_id') or 0)
         qty = int(ln.get('qty') or 0)
-        vk = (ln.get('variant') or '').strip()
+        vk = _norm_variant(ln.get('variant'))
         product = (
             Product.objects.filter(pk=pid, is_active=True)
-            .select_related('shoe', 'racket', 'apparel')
+            .select_related('shoe', 'racket', 'apparel', 'string')
             .first()
         )
         if not product or not product_eligible_for_storefront_cart(product):

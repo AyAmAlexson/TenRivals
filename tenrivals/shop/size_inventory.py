@@ -21,6 +21,20 @@ GRIP_SIZE_LABELS = [f"L{i}" for i in range(6)]
 
 APPAREL_SIZE_LABELS = ["XXS", "XS", "S", "M", "L", "XL", "XXL", "3XL"]
 
+# Common tennis string diameters (mm); staff grid can add custom keys via saved JSON.
+STRING_GAUGE_MM_LABELS = [
+    "1.15 mm",
+    "1.20 mm",
+    "1.24 mm",
+    "1.25 mm",
+    "1.26 mm",
+    "1.27 mm",
+    "1.28 mm",
+    "1.30 mm",
+    "1.32 mm",
+    "1.35 mm",
+]
+
 
 def normalize_sizes_to_qty_map(raw: Any, *, fallback_total: int = 0) -> dict[str, int]:
     """

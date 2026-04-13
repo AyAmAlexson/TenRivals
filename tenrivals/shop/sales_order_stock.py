@@ -39,6 +39,8 @@ def product_requires_variant(product: Product) -> bool:
         return True
     if product.type in APPAREL_TYPES:
         return True
+    if product.type == ProductType.STRINGS:
+        return True
     return False
 
 
@@ -63,6 +65,17 @@ def get_variant_qty_map(product: Product) -> dict[str, int]:
         except Exception:
             return {}
         return normalize_sizes_to_qty_map(ap.sizes, fallback_total=listing_total)
+    if product.type == ProductType.STRINGS:
+        try:
+            st = product.string
+        except Exception:
+            return {}
+        m = normalize_sizes_to_qty_map(st.gauges, fallback_total=0)
+        if m:
+            return m
+        if st.gauge_mm is not None and listing_total > 0:
+            return {f'{st.gauge_mm} mm': listing_total}
+        return {}
     return {}
 
 
@@ -128,7 +141,7 @@ def adjust_product_variant_stock(product: Product, variant_key: str, delta: int)
             _apply_listing_delta(product.pk, delta)
             return
         else:
-            raise ValueError('Select grip or shoe size for this product.')
+            raise ValueError('Select grip, shoe size, apparel size, or string gauge for this product.')
 
     if product.type == ProductType.RACKET:
         from .models import Racket
@@ -168,6 +181,28 @@ def adjust_product_variant_stock(product: Product, variant_key: str, delta: int)
         row.save(update_fields=['quantity'])
         return
 
+    if product.type == ProductType.STRINGS:
+        from .models import String
+
+        st = String.objects.select_for_update().get(pk=product.pk)
+        row = _listing_row_for_update(product.pk)
+        if not row:
+            raise ValueError('No STOCK listing for string')
+        d = dict(normalize_sizes_to_qty_map(st.gauges, fallback_total=0))
+        if not d and st.gauge_mm is not None:
+            label = f'{st.gauge_mm} mm'
+            d = {label: int(row.quantity)}
+        cur = int(d.get(vk, 0))
+        new_v = cur + delta
+        if new_v < 0:
+            raise ValueError(f'Insufficient stock for gauge {vk}')
+        d[vk] = new_v
+        st.gauges = d
+        st.save(update_fields=['gauges'])
+        row.quantity = sum(int(x or 0) for x in d.values())
+        row.save(update_fields=['quantity'])
+        return
+
     _apply_listing_delta(product.pk, delta)
 
 
@@ -181,7 +216,10 @@ def release_lines_to_stock(lines: list) -> None:
             if (
                 product_requires_variant(line.product)
                 and not (line.variant_label or '').strip()
-                and 'Select grip or shoe size' in str(exc)
+                and (
+                    'Select grip or shoe size' in str(exc)
+                    or 'Select grip, shoe size' in str(exc)
+                )
             ):
                 _apply_listing_delta(line.product.pk, int(line.quantity))
             else:
@@ -199,6 +237,8 @@ def snapshot_old_lines(order: SalesOrder) -> list:
             'product',
             'product__racket',
             'product__shoe',
+            'product__apparel',
+            'product__string',
         ).all()
     )
 
@@ -239,7 +279,9 @@ def validate_order_line_demands(
     errors = []
     for (pid, vk), need in sorted(grouped.items()):
         try:
-            p = Product.objects.select_related('racket', 'shoe', 'apparel').get(pk=pid)
+            p = Product.objects.select_related(
+                'racket', 'shoe', 'apparel', 'string'
+            ).get(pk=pid)
         except Product.DoesNotExist:
             errors.append(f'Unknown product #{pid}.')
             continue
