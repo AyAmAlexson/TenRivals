@@ -22,7 +22,7 @@ from .cart_session import (
     build_cart_page_rows,
     get_cart,
     product_eligible_for_storefront_cart,
-    remove_line,
+    remove_line_by_product_variant,
     save_cart,
     set_cart_promo,
     set_line_qty,
@@ -906,16 +906,21 @@ def cart_update_line(request):
     return redirect('shop:cart')
 
 
-def cart_remove_line(request, line_index=None):
-    raw_idx = line_index
-    if raw_idx is None:
-        raw_idx = request.POST.get('line_index', '') if request.method == 'POST' else request.GET.get('line_index', '')
+@require_POST
+def cart_remove_line(request):
     try:
-        idx = int(raw_idx)
+        product_id = int(request.POST.get('product_id') or '')
     except (TypeError, ValueError):
+        messages.error(request, 'Invalid item.')
         return redirect('shop:cart')
-    if remove_line(request, idx):
+    variant = request.POST.get('variant') or ''
+    if not isinstance(variant, str):
+        variant = str(variant)
+    variant = variant.strip()
+    if remove_line_by_product_variant(request, product_id, variant):
         messages.info(request, 'Item removed.')
+    else:
+        messages.warning(request, 'Could not remove that item. Try refreshing the page.')
     return redirect('shop:cart')
 
 

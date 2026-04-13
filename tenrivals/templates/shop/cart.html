@@ -73,6 +73,7 @@
     .cart-table th{font-size:11px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:var(--muted)}
     .cart-table .num{text-align:right; white-space:nowrap}
     .cart-qty-form{display:flex; align-items:center; gap:8px; flex-wrap:wrap}
+    .cart-remove-form{display:inline}
     .cart-qty-form input[type="number"]{width:56px; padding:6px 8px; border:1px solid var(--line); font-family:inherit; font-size:14px}
     .cart-empty{color:var(--muted); padding:40px 0; font-size:15px}
     .cart-empty-state{
@@ -217,7 +218,12 @@
               </td>
               <td class="num mono">{{ row.line_total }} ₾</td>
               <td>
-                <a href="{% url 'shop:cart_remove_line_idx' row.index %}" class="btn btn--outline btn--sm" onclick="return confirm('Remove this item?');">REMOVE</a>
+                <form method="post" action="{% url 'shop:cart_remove_line' %}" class="cart-remove-form" onsubmit="return confirm('Remove this item?');">
+                  {% csrf_token %}
+                  <input type="hidden" name="product_id" value="{{ row.product.pk }}">
+                  <input type="hidden" name="variant" value="{{ row.variant_key }}">
+                  <button type="submit" class="btn btn--outline btn--sm">REMOVE</button>
+                </form>
               </td>
             </tr>
             {% endfor %}

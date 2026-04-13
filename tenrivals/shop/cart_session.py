@@ -281,6 +281,31 @@ def remove_line(request, line_index: int) -> bool:
     return True
 
 
+def remove_line_by_product_variant(request, product_id: int, variant_key: str) -> bool:
+    """Remove the first cart line matching product + variant (stable vs session index drift)."""
+    cart = get_cart(request)
+    lines = list(cart['lines'])
+    vk = (variant_key or '').strip()
+    pid = int(product_id)
+    for j, ln in enumerate(lines):
+        try:
+            lp = int(ln.get('product_id') or 0)
+        except (TypeError, ValueError):
+            continue
+        if lp != pid:
+            continue
+        lv = (ln.get('variant') or '').strip()
+        if not isinstance(lv, str):
+            lv = str(lv).strip()
+        if lv != vk:
+            continue
+        lines.pop(j)
+        cart['lines'] = lines
+        save_cart(request, cart)
+        return True
+    return False
+
+
 def build_cart_page_rows(request) -> tuple[list[dict[str, Any]], Decimal]:
     """Rows for template + subtotal (GEL, gross)."""
     prune_and_clamp_cart(request)
@@ -310,6 +335,7 @@ def build_cart_page_rows(request) -> tuple[list[dict[str, Any]], Decimal]:
                 'product': product,
                 'name': product.invoice_line_title(),
                 'variant_label': vk or '—',
+                'variant_key': vk,
                 'qty': qty,
                 'max_qty': max(max_q, qty),
                 'unit_price': unit,
