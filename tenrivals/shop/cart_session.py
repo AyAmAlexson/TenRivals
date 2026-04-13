@@ -190,7 +190,7 @@ def try_add_to_cart(
 
     unit = product_unit_gross_price(product)
     line_total = (Decimal(str(unit)) * Decimal(qty)).quantize(Decimal('0.01'))
-    title = product.invoice_line_title()
+    title = product.storefront_cart_line_title()
     var_label = vk or '—'
     payload = {
         'cart_count': cart_line_count_units(cart),
@@ -374,7 +374,7 @@ def build_cart_page_rows(request) -> tuple[list[dict[str, Any]], Decimal]:
             {
                 'index': i,
                 'product': product,
-                'name': product.invoice_line_title(),
+                'name': product.storefront_cart_line_title(),
                 'variant_label': vk or '—',
                 'variant_key': vk,
                 'qty': qty,

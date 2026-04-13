@@ -197,6 +197,14 @@ class Product(models.Model):
             return f'{b} {n}'
         return n or b or ''
 
+    def storefront_cart_line_title(self) -> str:
+        """Brand + model + colorway for cart, checkout, and add-to-cart modal (variant stays in its own column)."""
+        base = self.invoice_line_title()
+        c = (self.color or '').strip()
+        if c:
+            return f'{base} — {c}'
+        return base
+
     def invoice_line_specs_slash(self) -> str:
         """Color (if set) plus type-specific details, joined with ' / '."""
         type_part = ''
@@ -904,16 +912,11 @@ class SalesOrderLine(models.Model):
         return f'{self.product.name} ×{self.quantity}'
 
     def staff_order_item_summary(self) -> str:
-        """One line for orders list: qty× brand model (+ color, variant)."""
-        base = self.product.invoice_line_title()
-        c = (self.product.color or '').strip()
+        """One line for orders list: qty× brand model + color (+ variant)."""
+        base = self.product.storefront_cart_line_title()
         v = (self.variant_label or '').strip()
-        if c and v:
-            base = f'{base} — {c} ({v})'
-        elif v:
+        if v:
             base = f'{base} ({v})'
-        elif c:
-            base = f'{base} — {c}'
         return f'{self.quantity}× {base}'
 
     def invoice_display_label(self) -> str:
