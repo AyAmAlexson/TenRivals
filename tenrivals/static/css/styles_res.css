@@ -18900,3 +18900,37 @@ section {
 .footer .footer-cta-row .btn {
   padding: 11px 32px;
 }
+.footer .btn.btn--footer-shop-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 22px;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 0;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.footer .btn.btn--footer-shop-cta:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+.footer .footer-legal-row--inline {
+  flex-wrap: nowrap;
+  gap: 6px 12px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 4px;
+}
+.footer .footer-legal-row--inline a {
+  font-size: 9px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}

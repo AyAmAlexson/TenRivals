@@ -27,7 +27,7 @@
     .checkout{padding:26px 0 64px}
     .grid{display:grid;grid-template-columns:1fr 340px;gap:28px;align-items:start}
     @media(max-width:980px){.grid{grid-template-columns:1fr}}
-    .card{border:1px solid var(--line);padding:18px 16px;margin-bottom:14px;background:#fff}
+    .card{border:1px solid var(--line);padding:18px 16px;margin-bottom:14px;background:#fff;box-shadow:none}
     .card h2{font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 0 14px}
     .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
     @media(max-width:640px){.row{grid-template-columns:1fr}}
@@ -74,10 +74,9 @@
     {% csrf_token %}
     <div class="grid">
       <div>
-        {% if not checkout_is_authenticated %}
         <section class="card">
-          <h2>1. Account</h2>
-          {% if show_auth_gate %}
+          <h2>1. Customer{% if checkout_is_authenticated %}. Logged in as {{ user.get_full_name|default:user.email }}{% endif %}</h2>
+          {% if not checkout_is_authenticated and show_auth_gate %}
           <p style="margin-bottom:12px;font-size:14px">Choose how you want to continue checkout.</p>
           <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
             <button class="btn" type="submit" name="action" value="guest_continue">CONTINUE AS GUEST</button>
@@ -96,11 +95,12 @@
             <button class="btn btn--outline" type="submit" name="action" value="login">LOGIN</button>
             <a href="{% url 'account_signup' %}" style="font-size:13px;color:var(--muted)">No account? Register</a>
           </div>
-          {% else %}
+          {% elif not checkout_is_authenticated %}
           <p style="font-size:14px">Guest mode selected. You can still <a href="{% url 'account_login' %}" style="color:var(--accent)">log in</a> or <a href="{% url 'account_signup' %}" style="color:var(--accent)">register</a>.</p>
+          {% else %}
+          <p style="font-size:14px;color:var(--muted)">Your account details are used for the contact step below.</p>
           {% endif %}
         </section>
-        {% endif %}
 
         {% if checkout_is_authenticated or not show_auth_gate %}
         <section class="card">

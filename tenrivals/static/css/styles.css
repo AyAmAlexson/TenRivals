@@ -21685,6 +21685,29 @@ section {
 .footer .footer-cta-row .btn {
   padding: 11px 32px;
 }
+/* Footer CTAs: soft neutral treatment on dark background (no red outline) */
+.footer .btn.btn--footer-shop-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 22px;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 0;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.footer .btn.btn--footer-shop-cta:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.4);
+}
 
 .footer .footer-legal-row {
   display: flex;
@@ -21705,13 +21728,30 @@ section {
 .footer .footer-legal-row a:hover {
   color: #fff;
 }
+/* Legal strip: one row; scroll horizontally on narrow viewports */
 .footer .footer-legal-row--inline {
   margin-top: 12px;
   padding-top: 10px;
-  gap: 6px 14px;
+  padding-bottom: 4px;
+  flex-wrap: nowrap;
+  gap: 6px 12px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,.25) transparent;
+}
+.footer .footer-legal-row--inline::-webkit-scrollbar {
+  height: 4px;
+}
+.footer .footer-legal-row--inline::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,.22);
+  border-radius: 2px;
 }
 .footer .footer-legal-row--inline a {
-  font-size: 10px;
+  font-size: 9px;
   letter-spacing: 0.05em;
   opacity: 0.92;
+  white-space: nowrap;
+  flex-shrink: 0;
 }

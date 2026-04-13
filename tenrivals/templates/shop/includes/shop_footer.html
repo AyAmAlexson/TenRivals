@@ -1,25 +1,52 @@
 {# Single shop footer — include on every shop page #}
 {% load static %}
 <style>
-  .footer-line-brand-mark{margin:0 0 10px;display:block;line-height:0}
+  html,body{height:100%}
+  body{
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+  }
+  body > *{flex-shrink:0}
+  .footer{margin-top:auto}
+  /* Brand column: logo row height tracks section headers (EXPLORE / HELP / …) */
+  .footer-col-brand{display:flex;flex-direction:column}
+  .footer-brand-heading-row{
+    display:flex;align-items:center;min-height:15px;margin:0 0 12px;
+  }
+  .footer-line-brand-mark{margin:0;display:flex;align-items:center;line-height:0}
   .footer-line-brand-mark img{
-    height:30px;width:auto;max-width:min(100%,240px);
+    height:28px;width:auto;max-width:min(100%,240px);
     object-fit:contain;object-position:left center;
     display:block;opacity:.96;
+    transform:translateY(-5px);
+  }
+  .footer-brand-slogan{
+    margin:0 0 10px;
+    font-size:12px;font-weight:600;letter-spacing:.04em;line-height:1.35;
+    color:rgba(255,255,255,.88);text-transform:none;
+  }
+  .footer-brand-lead{
+    margin:0 0 12px;
+    font-size:12px;font-weight:400;line-height:1.55;
+    color:rgba(255,255,255,.52);text-transform:none;
+    max-width:34em;
   }
   @media(max-width:640px){
-    .footer-line-brand-mark img{height:26px;max-width:min(100%,200px)}
+    .footer-line-brand-mark img{height:24px;max-width:min(100%,200px);transform:translateY(-4px)}
   }
 </style>
 <footer class="footer">
   <div class="container">
     <div class="footer-top">
-      <div>
-        <div class="footer-line-brand-mark" aria-hidden="true">
-          <img src="{% static 'assets/img/tr_footer_line_frame148.svg' %}" alt="" width="240" height="41" decoding="async" loading="lazy">
+      <div class="footer-col-brand">
+        <div class="footer-brand-heading-row">
+          <div class="footer-line-brand-mark" aria-hidden="true">
+            <img src="{% static 'assets/img/tr_footer_line_frame148.svg' %}" alt="" width="240" height="41" decoding="async" loading="lazy">
+          </div>
         </div>
-        <h4>Tennis Rivals: The Line for Your Growth</h4>
-        <p>Equipment and stories for players who want more from the game.</p>
+        <p class="footer-brand-slogan">The Line for Your Growth</p>
+        <p class="footer-brand-lead">Equipment and stories for players who want more from the game.</p>
         {% include 'shop/includes/shop_footer_ctas.html' %}
       </div>
       <div>
