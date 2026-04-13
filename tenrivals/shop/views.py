@@ -22,6 +22,7 @@ from .cart_session import (
     build_cart_page_rows,
     get_cart,
     product_eligible_for_storefront_cart,
+    remove_line,
     remove_line_by_product_variant,
     save_cart,
     set_cart_promo,
@@ -906,18 +907,33 @@ def cart_update_line(request):
     return redirect('shop:cart')
 
 
-@require_POST
-def cart_remove_line(request):
-    try:
-        product_id = int(request.POST.get('product_id') or '')
-    except (TypeError, ValueError):
-        messages.error(request, 'Invalid item.')
-        return redirect('shop:cart')
-    variant = request.POST.get('variant') or ''
-    if not isinstance(variant, str):
-        variant = str(variant)
-    variant = variant.strip()
-    if remove_line_by_product_variant(request, product_id, variant):
+def cart_remove_line(request, line_index=None):
+    payload = request.POST if request.method == 'POST' else request.GET
+
+    removed = False
+
+    raw_pid = payload.get('product_id')
+    if raw_pid not in (None, ''):
+        try:
+            product_id = int(raw_pid)
+        except (TypeError, ValueError):
+            product_id = None
+        if product_id is not None:
+            variant = payload.get('variant') or ''
+            if not isinstance(variant, str):
+                variant = str(variant)
+            removed = remove_line_by_product_variant(request, product_id, variant.strip())
+
+    raw_idx = line_index if line_index is not None else payload.get('line_index', '')
+    if not removed:
+        try:
+            idx = int(raw_idx)
+        except (TypeError, ValueError):
+            idx = None
+        if idx is not None:
+            removed = remove_line(request, idx)
+
+    if removed:
         messages.info(request, 'Item removed.')
     else:
         messages.warning(request, 'Could not remove that item. Try refreshing the page.')

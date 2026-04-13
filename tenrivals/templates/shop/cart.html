@@ -220,6 +220,7 @@
               <td>
                 <form method="post" action="{% url 'shop:cart_remove_line' %}" class="cart-remove-form" onsubmit="return confirm('Remove this item?');">
                   {% csrf_token %}
+                  <input type="hidden" name="line_index" value="{{ row.index }}">
                   <input type="hidden" name="product_id" value="{{ row.product.pk }}">
                   <input type="hidden" name="variant" value="{{ row.variant_key }}">
                   <button type="submit" class="btn btn--outline btn--sm">REMOVE</button>

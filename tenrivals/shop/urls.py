@@ -12,6 +12,7 @@ urlpatterns = [
     path('cart/add/', views.cart_add, name='cart_add'),
     path('cart/update-line/', views.cart_update_line, name='cart_update_line'),
     path('cart/remove-line/', views.cart_remove_line, name='cart_remove_line'),
+    path('cart/remove-line/<int:line_index>/', views.cart_remove_line, name='cart_remove_line_idx'),
     path('cart/apply-promo/', views.cart_apply_promo, name='cart_apply_promo'),
     path('checkout/', views.checkout, name='checkout'),
     path('checkout/success/<int:order_id>/', views.checkout_success, name='checkout_success'),
