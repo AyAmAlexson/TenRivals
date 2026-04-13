@@ -38,7 +38,7 @@
 
     /* Header */
     header{background:#1a1a1a}
-    .header-row{display:grid; grid-template-columns:180px 1fr auto auto; align-items:center; gap:20px; padding:14px 0}
+    .header-row{display:grid; grid-template-columns:180px 1fr auto auto auto; align-items:center; gap:20px; padding:14px 0}
     .logo{height:36px}
     .search{display:flex; align-items:center; gap:8px; border:1px solid #333; padding:9px 14px; background:#252525; margin:0}
     .search input{border:0; outline:0; width:100%; font-size:14px; background:transparent; color:#fff; font-family:inherit}
@@ -150,9 +150,6 @@
     .pdp-variant-btn.active{border-color:var(--accent); color:var(--accent)}
     .pdp-variant-btn:hover{border-color:var(--ink)}
 
-    /* Add to cart area */
-    .pdp-cart-row{display:flex; gap:12px; align-items:center; margin-bottom:24px}
-
     /* Shipping info */
     .pdp-shipping{font-size:13px; color:var(--muted); margin-bottom:28px; line-height:1.7}
 
@@ -179,9 +176,34 @@
     .specs-table td:last-child{color:var(--ink); font-weight:400; text-transform:none}
 
     /* Responsive */
+    .header-cart{position:relative; display:inline-flex; align-items:center; justify-content:center; color:rgba(255,255,255,.85); padding:4px}
+    .header-cart:hover{color:#fff}
+    .header-cart__badge{
+      position:absolute; top:-2px; right:-4px; min-width:18px; height:18px; padding:0 5px;
+      background:var(--accent); color:#fff; font-size:10px; font-weight:800; border-radius:999px;
+      display:flex; align-items:center; justify-content:center; letter-spacing:0;
+    }
+    .pdp-variant-btn.is-selected{border-color:var(--accent); color:var(--accent); box-shadow:0 0 0 1px var(--accent)}
+    .pdp-variant-btn:disabled{opacity:.45; cursor:not-allowed}
+    .pdp-cart-hint{font-size:12px; color:var(--muted); margin:8px 0 0; min-height:1.25em}
+    .pdp-add-row{display:flex; flex-wrap:wrap; align-items:center; gap:12px; margin-bottom:12px}
+    .pdp-qty{display:inline-flex; align-items:center; border:1px solid var(--line); background:#fff}
+    .pdp-qty-btn{width:40px; height:40px; border:none; background:transparent; font-size:18px; cursor:pointer; color:var(--ink); font-family:inherit; line-height:1}
+    .pdp-qty-btn:disabled{opacity:.35; cursor:not-allowed}
+    .pdp-qty-val{min-width:28px; text-align:center; font-weight:800; font-size:14px; font-variant-numeric:tabular-nums}
+    .pdp-ask-row{margin-bottom:24px}
+    .btn--ask-tg{padding:8px 16px; font-size:10px; letter-spacing:.08em}
+    .pdp-modal{position:fixed; inset:0; z-index:20000; display:flex; align-items:center; justify-content:center; padding:20px}
+    .pdp-modal[hidden]{display:none!important}
+    .pdp-modal__backdrop{position:absolute; inset:0; background:rgba(15,23,42,.45)}
+    .pdp-modal__panel{position:relative; z-index:1; background:#fff; max-width:420px; width:100%; padding:28px 24px; border:1px solid var(--line); box-shadow:0 20px 50px rgba(0,0,0,.15)}
+    .pdp-modal__title{font-size:14px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; margin:0 0 12px; color:var(--ink)}
+    .pdp-modal__text{font-size:14px; line-height:1.55; color:var(--ink); font-weight:400; text-transform:none; margin:0 0 20px}
+    .pdp-modal__actions{display:flex; flex-wrap:wrap; gap:10px}
+    .pdp-cart-error{margin:0 0 12px; padding:10px 12px; background:#fef2f2; border:1px solid #fecaca; color:#991b1b; font-size:13px; font-weight:400; text-transform:none}
     @media(max-width:1024px){
       .pdp{grid-template-columns:1fr; gap:24px}
-      .header-row{grid-template-columns:140px 1fr auto; grid-auto-flow:row}
+      .header-row{grid-template-columns:140px 1fr auto auto auto; grid-auto-flow:row}
     }
     @media(max-width:640px){
       .footer-top{grid-template-columns:1fr 1fr}
@@ -231,6 +253,7 @@
             </svg>
           </a>
         </nav>
+        {% include 'shop/includes/shop_cart_header_link.html' %}
         <div class="auth">
           {% if user.is_authenticated %}
           {% if user.is_superuser %}<a href="{% url 'administration:staff_users' %}" style="margin-right:12px">Staff</a>{% endif %}
@@ -361,28 +384,66 @@
 
         {% if product.sizes_list %}
         <div class="pdp-variants">
+          {% if pdp_cart_enabled and pdp_requires_size_pick %}
+          <div class="pdp-variants-label">SELECT SIZE</div>
+          <div class="pdp-variant-options" id="pdp-variant-btns" role="radiogroup" aria-label="Size">
+            {% for opt in pdp_variant_options %}
+            <button type="button" class="pdp-variant-btn" data-variant="{{ opt.label }}" data-max-qty="{{ opt.qty }}" aria-pressed="false">{{ opt.label }}</button>
+            {% endfor %}
+          </div>
+          <p class="pdp-cart-hint" id="pdp-size-hint" role="status">Select a size to add to cart.</p>
+          {% else %}
           <div class="pdp-variants-label">Available sizes</div>
           <div class="pdp-variant-options">
             {% for sz in product.sizes_list %}
             <span class="pdp-variant-btn active" style="cursor:default">{{ sz }}</span>
             {% endfor %}
           </div>
+          {% endif %}
         </div>
         {% elif product.type == 'RACKET' %}
           {% if product.grip_sizes_display %}
         <div class="pdp-variants">
+          {% if pdp_cart_enabled and pdp_requires_size_pick %}
+          <div class="pdp-variants-label">SELECT GRIP SIZE</div>
+          <div class="pdp-variant-options" id="pdp-variant-btns" role="radiogroup" aria-label="Grip size">
+            {% for opt in pdp_variant_options %}
+            <button type="button" class="pdp-variant-btn" data-variant="{{ opt.label }}" data-max-qty="{{ opt.qty }}" aria-pressed="false">{{ opt.label }}</button>
+            {% endfor %}
+          </div>
+          <p class="pdp-cart-hint" id="pdp-size-hint" role="status">Select a grip size to add to cart.</p>
+          {% else %}
           <div class="pdp-variants-label">Grip sizes</div>
           <div class="pdp-variant-options">
             {% for g in product.grip_sizes_display %}
             <span class="pdp-variant-btn active" style="cursor:default">{{ g }}</span>
             {% endfor %}
           </div>
+          {% endif %}
         </div>
           {% endif %}
         {% endif %}
 
-        <div class="pdp-cart-row">
-          <a class="btn btn--lg btn--cta-telegram" href="https://t.me/tennis_rivals_shop_tbilisi?direct" target="_blank" rel="noopener">Order via Telegram</a>
+        <div id="pdp-cart-error" class="pdp-cart-error" role="alert" hidden></div>
+        {% if pdp_cart_enabled %}
+        <div
+          class="pdp-add-row"
+          id="pdp-add-bundle"
+          data-product-id="{{ product.pk }}"
+          data-add-url="{% url 'shop:cart_add' %}"
+          data-requires-size="{% if pdp_requires_size_pick %}1{% else %}0{% endif %}"
+          data-listing-qty="{{ stock_listing_qty }}"
+        >
+          <div class="pdp-qty" aria-label="Quantity">
+            <button type="button" id="pdp-qty-minus" class="pdp-qty-btn" aria-label="Decrease quantity">−</button>
+            <span id="pdp-qty-val" class="pdp-qty-val">1</span>
+            <button type="button" id="pdp-qty-plus" class="pdp-qty-btn" aria-label="Increase quantity">+</button>
+          </div>
+          <button type="button" id="pdp-add-cart" class="btn btn--lg" {% if pdp_requires_size_pick %}disabled{% endif %}>ADD TO CART</button>
+        </div>
+        {% endif %}
+        <div class="pdp-ask-row">
+          <a class="btn btn--outline btn--ask-tg" href="https://t.me/tennis_rivals_shop_tbilisi?direct" target="_blank" rel="noopener">ASK A QUESTION</a>
         </div>
 
         <div class="pdp-shipping">
@@ -457,6 +518,18 @@
       </div>
     </div>
 
+    <div id="pdp-cart-modal" class="pdp-modal" hidden>
+      <div class="pdp-modal__backdrop" data-close-modal tabindex="-1"></div>
+      <div class="pdp-modal__panel" role="dialog" aria-modal="true" aria-labelledby="pdp-cart-modal-title">
+        <h2 class="pdp-modal__title" id="pdp-cart-modal-title">ADDED TO CART</h2>
+        <p class="pdp-modal__text" id="pdp-cart-modal-text"></p>
+        <div class="pdp-modal__actions">
+          <button type="button" class="btn btn--outline" data-close-modal>CONTINUE SHOPPING</button>
+          <a class="btn" href="{% url 'shop:cart' %}">VIEW CART</a>
+        </div>
+      </div>
+    </div>
+
     <section class="pdp-desc-section" aria-labelledby="pdp-desc-heading">
       <h2 class="pdp-desc-heading" id="pdp-desc-heading">Description</h2>
       <div class="pdp-desc-body">
@@ -481,6 +554,144 @@
         this.classList.add('active');
       });
     });
+    (function() {
+      function getCookie(name) {
+        const v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
+        return v ? decodeURIComponent(v[2]) : '';
+      }
+      const bundle = document.getElementById('pdp-add-bundle');
+      if (!bundle) return;
+      const addUrl = bundle.getAttribute('data-add-url');
+      const productId = parseInt(bundle.getAttribute('data-product-id'), 10);
+      const requiresSize = bundle.getAttribute('data-requires-size') === '1';
+      const listingQty = parseInt(bundle.getAttribute('data-listing-qty'), 10) || 0;
+      const variantBtns = document.querySelectorAll('#pdp-variant-btns .pdp-variant-btn');
+      const hint = document.getElementById('pdp-size-hint');
+      const errEl = document.getElementById('pdp-cart-error');
+      const addBtn = document.getElementById('pdp-add-cart');
+      const qtyVal = document.getElementById('pdp-qty-val');
+      const minusBtn = document.getElementById('pdp-qty-minus');
+      const plusBtn = document.getElementById('pdp-qty-plus');
+      const modal = document.getElementById('pdp-cart-modal');
+      const modalText = document.getElementById('pdp-cart-modal-text');
+      let selectedVariant = '';
+      let selectedMax = listingQty;
+      let qty = 1;
+
+      function showErr(msg) {
+        if (!errEl) return;
+        errEl.textContent = msg;
+        errEl.hidden = false;
+      }
+      function clearErr() {
+        if (!errEl) return;
+        errEl.hidden = true;
+        errEl.textContent = '';
+      }
+
+      function currentMaxQty() {
+        if (requiresSize) {
+          return selectedVariant ? selectedMax : 1;
+        }
+        return Math.max(1, listingQty);
+      }
+
+      function syncQtyControls() {
+        const maxQ = currentMaxQty();
+        if (qtyVal) qtyVal.textContent = String(qty);
+        if (minusBtn) minusBtn.disabled = qty <= 1;
+        if (plusBtn) plusBtn.disabled = qty >= maxQ;
+      }
+
+      variantBtns.forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          variantBtns.forEach(function(b) {
+            b.classList.remove('is-selected');
+            b.setAttribute('aria-pressed', 'false');
+          });
+          btn.classList.add('is-selected');
+          btn.setAttribute('aria-pressed', 'true');
+          selectedVariant = btn.getAttribute('data-variant') || '';
+          selectedMax = parseInt(btn.getAttribute('data-max-qty'), 10) || 0;
+          if (qty > selectedMax) qty = Math.max(1, selectedMax);
+          if (addBtn) addBtn.disabled = false;
+          if (hint) hint.textContent = '';
+          clearErr();
+          syncQtyControls();
+        });
+      });
+
+      if (minusBtn) minusBtn.addEventListener('click', function() {
+        if (qty > 1) { qty -= 1; syncQtyControls(); }
+      });
+      if (plusBtn) plusBtn.addEventListener('click', function() {
+        const maxQ = currentMaxQty();
+        if (qty < maxQ) { qty += 1; syncQtyControls(); }
+      });
+
+      syncQtyControls();
+
+      if (addBtn) addBtn.addEventListener('click', function() {
+        clearErr();
+        if (requiresSize && !selectedVariant) {
+          if (hint) hint.textContent = 'Select a variant before adding to cart.';
+          return;
+        }
+        const csrftoken = getCookie('csrftoken');
+        addBtn.disabled = true;
+        fetch(addUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken
+          },
+          body: JSON.stringify({
+            product_id: productId,
+            variant: requiresSize ? selectedVariant : '',
+            quantity: qty
+          })
+        }).then(function(r) { return r.json(); }).then(function(data) {
+          if (data.ok) {
+            if (modalText) {
+              const a = data.added || {};
+              const parts = [];
+              if (a.title) parts.push(a.title);
+              if (a.variant && a.variant !== '—') parts.push('Size: ' + a.variant);
+              if (a.qty) parts.push('Qty: ' + a.qty);
+              if (a.line_total) parts.push('Line: ' + a.line_total + ' ₾');
+              modalText.textContent = parts.join(' · ');
+            }
+            if (modal) modal.hidden = false;
+            const badge = document.querySelector('.header-cart__badge');
+            if (data.cart_count != null) {
+              if (badge) badge.textContent = data.cart_count;
+              else {
+                const link = document.querySelector('.header-cart');
+                if (link && data.cart_count > 0) {
+                  const s = document.createElement('span');
+                  s.className = 'header-cart__badge';
+                  s.textContent = data.cart_count;
+                  s.setAttribute('aria-hidden', 'true');
+                  link.appendChild(s);
+                }
+              }
+            }
+          } else {
+            showErr(data.message || 'Could not add to cart.');
+          }
+        }).catch(function() {
+          showErr('Network error. Try again.');
+        }).finally(function() {
+          if (addBtn) addBtn.disabled = requiresSize && !selectedVariant;
+        });
+      });
+
+      if (modal) {
+        modal.querySelectorAll('[data-close-modal]').forEach(function(el) {
+          el.addEventListener('click', function() { modal.hidden = true; });
+        });
+      }
+    })();
   </script>
 </body>
 </html>

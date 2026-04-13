@@ -109,6 +109,7 @@ TEMPLATES = [
                 'rivals.context_processors.test_users',
                 'rivals.context_processors.ticket_form',
                 'persons.context_processors.telegram_settings',
+                'shop.context_processors.shop_cart',
             ],
         },
     },

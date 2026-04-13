@@ -1,0 +1,11 @@
+<a href="{% url 'shop:cart' %}" class="header-cart" aria-label="Shopping cart">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <path d="M6 6h15l-1.5 9h-12z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M6 6 5 3H2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+    <circle cx="9" cy="20" r="1.4" fill="currentColor"/>
+    <circle cx="17" cy="20" r="1.4" fill="currentColor"/>
+  </svg>
+  {% if shop_cart_count %}
+  <span class="header-cart__badge" aria-hidden="true">{{ shop_cart_count }}</span>
+  {% endif %}
+</a>

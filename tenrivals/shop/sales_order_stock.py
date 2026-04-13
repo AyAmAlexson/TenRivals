@@ -15,6 +15,14 @@ SHOE_TYPES = frozenset(
     }
 )
 
+APPAREL_TYPES = frozenset(
+    {
+        ProductType.MENS_APPAREL,
+        ProductType.WOMENS_APPAREL,
+        ProductType.JUNIOR_APPAREL,
+    }
+)
+
 
 def order_status_reserves_stock(status: str) -> bool:
     """Counts against warehouse except cancelled/refunded."""
@@ -29,11 +37,13 @@ def product_requires_variant(product: Product) -> bool:
         return True
     if product.type in SHOE_TYPES:
         return True
+    if product.type in APPAREL_TYPES:
+        return True
     return False
 
 
 def get_variant_qty_map(product: Product) -> dict[str, int]:
-    """Per-grip or per-shoe-size quantities (normalized dict)."""
+    """Per-grip, shoe size, or apparel size quantities (normalized dict)."""
     listing_total = stock_listing_quantity(product.pk)
     if product.type == ProductType.RACKET:
         try:
@@ -47,6 +57,12 @@ def get_variant_qty_map(product: Product) -> dict[str, int]:
         except Exception:
             return {}
         return normalize_sizes_to_qty_map(sh.sizes, fallback_total=listing_total)
+    if product.type in APPAREL_TYPES:
+        try:
+            ap = product.apparel
+        except Exception:
+            return {}
+        return normalize_sizes_to_qty_map(ap.sizes, fallback_total=listing_total)
     return {}
 
 
@@ -223,7 +239,7 @@ def validate_order_line_demands(
     errors = []
     for (pid, vk), need in sorted(grouped.items()):
         try:
-            p = Product.objects.select_related('racket', 'shoe').get(pk=pid)
+            p = Product.objects.select_related('racket', 'shoe', 'apparel').get(pk=pid)
         except Product.DoesNotExist:
             errors.append(f'Unknown product #{pid}.')
             continue

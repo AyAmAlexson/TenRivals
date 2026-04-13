@@ -1,3 +1,5 @@
+import json
+from decimal import Decimal
 from itertools import chain
 from urllib.parse import quote
 
@@ -8,7 +10,18 @@ from django.http import Http404
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
+from django.views.decorators.csrf import ensure_csrf_cookie
+from django.views.decorators.http import require_POST
 
+from .cart_session import (
+    build_cart_page_rows,
+    get_cart,
+    product_eligible_for_storefront_cart,
+    remove_line,
+    set_cart_promo,
+    set_line_qty,
+    try_add_to_cart,
+)
 from .catalog_utils import (
     annotate_stock_listing_quantity,
     distinct_brands_for_type,
@@ -46,6 +59,7 @@ from .models import (
     Shoe,
     String,
 )
+from .sales_order_stock import get_variant_qty_map, product_requires_variant
 
 _PRODUCT_SUBCLASS_SELECT = (
     'shoe',
@@ -304,6 +318,12 @@ def index(request):
     )
 
 
+def _pdp_variant_option_dicts(product: Product):
+    m = get_variant_qty_map(product)
+    return [{'label': k, 'qty': int(v)} for k, v in sorted(m.items()) if int(v or 0) > 0]
+
+
+@ensure_csrf_cookie
 def product_detail(request, pk):
     product = get_object_or_404(
         Product.objects.select_related(
@@ -320,6 +340,16 @@ def product_detail(request, pk):
             gallery.append(f.url)
     pdp_mode = _resolve_pdp_display_mode(request, product)
     stock_listing_qty = _stock_listing_quantity(product)
+    variant_opts = _pdp_variant_option_dicts(product)
+    pdp_cart_enabled = (
+        pdp_mode == 'stock'
+        and stock_listing_qty > 0
+        and product_eligible_for_storefront_cart(product)
+        and (not product_requires_variant(product) or bool(variant_opts))
+    )
+    pdp_requires_size_pick = bool(
+        pdp_cart_enabled and product_requires_variant(product) and variant_opts
+    )
     return render(
         request,
         "shop/product_detail.html",
@@ -329,6 +359,10 @@ def product_detail(request, pk):
             "pdp_mode": pdp_mode,
             "stock_listing_qty": stock_listing_qty,
             "pdp_type_breadcrumb_label": _pdp_breadcrumb_type_label(product),
+            "pdp_cart_enabled": pdp_cart_enabled,
+            "pdp_requires_size_pick": pdp_requires_size_pick,
+            "pdp_variant_options_json": json.dumps(variant_opts),
+            "pdp_variant_options": variant_opts,
         },
     )
 
@@ -803,3 +837,76 @@ def product_edit(request, pk):
             or reverse('shop:stock'),
         },
     )
+
+
+def cart(request):
+    rows, subtotal = build_cart_page_rows(request)
+    cart_data = get_cart(request)
+    return render(
+        request,
+        'shop/cart.html',
+        {
+            'cart_rows': rows,
+            'cart_subtotal': subtotal,
+            'cart_promo_code': cart_data.get('promo_code') or '',
+            'cart_discount': Decimal('0.00'),
+            'cart_total': subtotal,
+        },
+    )
+
+
+@require_POST
+def cart_add(request):
+    try:
+        data = json.loads(request.body.decode() or '{}')
+    except json.JSONDecodeError:
+        return JsonResponse({'ok': False, 'message': 'Invalid request.'}, status=400)
+    try:
+        product_id = int(data.get('product_id'))
+        qty = int(data.get('quantity', 1))
+    except (TypeError, ValueError):
+        return JsonResponse({'ok': False, 'message': 'Invalid product or quantity.'}, status=400)
+    variant = data.get('variant') or ''
+    if not isinstance(variant, str):
+        variant = str(variant)
+    ok, msg, payload = try_add_to_cart(request, product_id=product_id, variant=variant, qty=qty)
+    if not ok:
+        return JsonResponse({'ok': False, 'message': msg})
+    return JsonResponse({'ok': True, 'message': msg, **(payload or {})})
+
+
+@require_POST
+def cart_update_line(request):
+    try:
+        idx = int(request.POST.get('line_index', ''))
+        qty = int(request.POST.get('qty', ''))
+    except (TypeError, ValueError):
+        messages.error(request, 'Invalid quantity.')
+        return redirect('shop:cart')
+    ok, msg = set_line_qty(request, idx, qty)
+    if ok:
+        messages.success(request, msg)
+    else:
+        messages.error(request, msg)
+    return redirect('shop:cart')
+
+
+@require_POST
+def cart_remove_line(request):
+    try:
+        idx = int(request.POST.get('line_index', ''))
+    except (TypeError, ValueError):
+        return redirect('shop:cart')
+    if remove_line(request, idx):
+        messages.info(request, 'Item removed.')
+    return redirect('shop:cart')
+
+
+@require_POST
+def cart_apply_promo(request):
+    code = request.POST.get('promo', '')
+    if not isinstance(code, str):
+        code = str(code)
+    set_cart_promo(request, code)
+    messages.info(request, 'Promo code saved. Discounts will apply when checkout is available.')
+    return redirect('shop:cart')

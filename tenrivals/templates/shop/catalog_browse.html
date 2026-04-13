@@ -41,7 +41,7 @@
     .city-select{display:inline-flex; align-items:center; opacity:1 !important; font-weight:400; cursor:default; text-transform:none}
 
     header{background:#1a1a1a}
-    .header-row{display:grid; grid-template-columns:180px 1fr auto auto; align-items:center; gap:20px; padding:14px 0}
+    .header-row{display:grid; grid-template-columns:180px 1fr auto auto auto; align-items:center; gap:20px; padding:14px 0}
     .logo{height:36px}
     .search{display:flex; align-items:center; gap:8px; border:1px solid #333; padding:9px 14px; background:#252525; margin:0}
     .search input{border:0; outline:0; width:100%; font-size:14px; background:transparent; color:#fff; font-family:inherit}
@@ -58,6 +58,13 @@
     .socials{display:flex; gap:14px; align-items:center}
     .social-link{display:inline-flex; width:24px; height:24px; align-items:center; justify-content:center; color:rgba(255,255,255,.7); text-decoration:none; transition:color .15s}
     .social-link:hover{color:#fff}
+    .header-cart{position:relative; display:inline-flex; align-items:center; justify-content:center; color:rgba(255,255,255,.85); padding:4px}
+    .header-cart:hover{color:#fff}
+    .header-cart__badge{
+      position:absolute; top:-2px; right:-4px; min-width:18px; height:18px; padding:0 5px;
+      background:var(--accent); color:#fff; font-size:10px; font-weight:800; border-radius:999px;
+      display:flex; align-items:center; justify-content:center; letter-spacing:0;
+    }
 
     nav{background:#1a1a1a; position:relative; z-index:9999}
     .nav-row{display:flex; gap:0; align-items:stretch; min-height:44px; overflow:visible; position:relative}
@@ -143,7 +150,7 @@
     .preorder-notice .btn{padding:8px 18px; font-size:11px}
 
     @media(max-width:1024px){
-      .header-row{grid-template-columns:140px 1fr auto}
+      .header-row{grid-template-columns:140px 1fr auto auto auto}
       .container{padding:0 24px}
       .preorder-main{padding:0 0 48px}
       .preorder-layout{gap:32px}
@@ -196,6 +203,7 @@
             </svg>
           </a>
         </nav>
+        {% include 'shop/includes/shop_cart_header_link.html' %}
         <div class="auth">
           {% if user.is_authenticated %}
           {% if user.is_superuser %}<a href="{% url 'administration:staff_users' %}" style="margin-right:12px">Staff</a>{% endif %}
