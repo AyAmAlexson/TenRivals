@@ -27,6 +27,7 @@ ALLOWED_HOSTS = [
 
 CSRF_TRUSTED_ORIGINS = [
     'https://ten-rivals-ee84d08ca066.herokuapp.com',
+    'https://ten-rivals.herokuapp.com',
     'http://localhost:8000',
     'http://127.0.0.1:8000',
     'http://localhost:80',
@@ -35,6 +36,13 @@ CSRF_TRUSTED_ORIGINS = [
     'https://tenrivals.com',
     'https://www.tenrivals.com',
 ]
+
+# Heroku sets HEROKU_APP_NAME; CSRF Referer must match or POST forms return 403 (cart remove, login, etc.).
+_heroku_app = os.environ.get('HEROKU_APP_NAME', '').strip()
+if _heroku_app:
+    _heroku_origin = f'https://{_heroku_app}.herokuapp.com'
+    if _heroku_origin not in CSRF_TRUSTED_ORIGINS:
+        CSRF_TRUSTED_ORIGINS = [*CSRF_TRUSTED_ORIGINS, _heroku_origin]
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
