@@ -75,6 +75,28 @@
     .cart-qty-form{display:flex; align-items:center; gap:8px; flex-wrap:wrap}
     .cart-qty-form input[type="number"]{width:56px; padding:6px 8px; border:1px solid var(--line); font-family:inherit; font-size:14px}
     .cart-empty{color:var(--muted); padding:40px 0; font-size:15px}
+    .cart-empty-state{
+      border:1px solid var(--line);
+      padding:34px 26px;
+      background:#fff;
+      max-width:560px;
+      margin:26px auto 20px;
+      text-align:center;
+    }
+    .cart-empty-state h2{
+      margin:0 0 10px;
+      font-size:16px;
+      font-weight:800;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      color:var(--ink);
+    }
+    .cart-empty-state p{
+      margin:0 0 18px;
+      font-size:14px;
+      line-height:1.55;
+      color:var(--muted);
+    }
     .cart-layout{display:grid; grid-template-columns:1fr minmax(260px, 320px); gap:40px; align-items:start}
     @media(max-width:900px){.cart-layout{grid-template-columns:1fr}}
     .cart-side{border:1px solid var(--line); padding:20px}
@@ -149,7 +171,11 @@
     {% endfor %}
 
     {% if not cart_rows %}
-    <p class="cart-empty">Your cart is empty.</p>
+    <section class="cart-empty-state" aria-labelledby="cart-empty-title">
+      <h2 id="cart-empty-title">Your cart is empty</h2>
+      <p>Add something from our in-stock catalog and come back here to submit your order.</p>
+      <a href="{% url 'shop:stock' %}" class="btn">GO TO STOCK</a>
+    </section>
     {% else %}
     <div class="cart-layout">
       <div>
@@ -191,11 +217,7 @@
               </td>
               <td class="num mono">{{ row.line_total }} ₾</td>
               <td>
-                <form method="post" action="{% url 'shop:cart_remove_line' %}" onsubmit="return confirm('Remove this item?');">
-                  {% csrf_token %}
-                  <input type="hidden" name="line_index" value="{{ row.index }}">
-                  <button type="submit" class="btn btn--outline btn--sm">REMOVE</button>
-                </form>
+                <a href="{% url 'shop:cart_remove_line_idx' row.index %}" class="btn btn--outline btn--sm" onclick="return confirm('Remove this item?');">REMOVE</a>
               </td>
             </tr>
             {% endfor %}

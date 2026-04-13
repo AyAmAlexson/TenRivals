@@ -906,10 +906,12 @@ def cart_update_line(request):
     return redirect('shop:cart')
 
 
-@require_POST
-def cart_remove_line(request):
+def cart_remove_line(request, line_index=None):
+    raw_idx = line_index
+    if raw_idx is None:
+        raw_idx = request.POST.get('line_index', '') if request.method == 'POST' else request.GET.get('line_index', '')
     try:
-        idx = int(request.POST.get('line_index', ''))
+        idx = int(raw_idx)
     except (TypeError, ValueError):
         return redirect('shop:cart')
     if remove_line(request, idx):
