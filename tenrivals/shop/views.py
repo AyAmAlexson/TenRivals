@@ -5,11 +5,15 @@ from urllib.parse import quote
 
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.auth import authenticate, login
 from django.contrib.admin.views.decorators import staff_member_required
+from django.core.mail import send_mail
+from django.db import transaction
 from django.db.models import Q
 from django.http import Http404, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_POST
@@ -19,6 +23,7 @@ from .cart_session import (
     get_cart,
     product_eligible_for_storefront_cart,
     remove_line,
+    save_cart,
     set_cart_promo,
     set_line_qty,
     try_add_to_cart,
@@ -52,15 +57,24 @@ from .models import (
     BlogPost,
     HomeHeroContent,
     HomeHeroSlide,
+    Customer,
     Product,
     ProductListing,
     ProductListingChannel,
     ProductType,
     Racket,
+    SalesOrder,
+    SalesOrderLine,
     Shoe,
     String,
 )
-from .sales_order_stock import get_variant_qty_map, product_requires_variant
+from .sales_order_stock import (
+    get_variant_qty_map,
+    product_requires_variant,
+    take_lines_from_stock,
+    validate_order_line_demands,
+)
+from .sales_order_utils import allocate_invoice_number, line_amounts, product_unit_gross_price
 
 _PRODUCT_SUBCLASS_SELECT = (
     'shoe',
@@ -911,3 +925,332 @@ def cart_apply_promo(request):
     set_cart_promo(request, code)
     messages.info(request, 'Promo code saved. Discounts will apply when checkout is available.')
     return redirect('shop:cart')
+
+
+_CHECKOUT_EMAILS = [
+    'a.molodenko@gmail.com',
+    'mr.alexson.assistant@gmail.com',
+    'andy.rivals@tenrivals.com',
+]
+
+
+def _checkout_initial_contact(request):
+    if request.user.is_authenticated:
+        return {
+            'first_name': (request.user.first_name or '').strip(),
+            'last_name': (request.user.last_name or '').strip(),
+            'phone': (getattr(request.user, 'mobile', '') or '').strip(),
+            'email': (request.user.email or '').strip(),
+            'tg_account': (getattr(request.user, 'telegram', '') or '').strip(),
+        }
+    return {
+        'first_name': '',
+        'last_name': '',
+        'phone': '',
+        'email': '',
+        'tg_account': '',
+    }
+
+
+def _build_checkout_contact(request):
+    base = _checkout_initial_contact(request)
+    if request.method != 'POST':
+        return {
+            **base,
+            'delivery_city': 'TBILISI',
+            'delivery_city_other': '',
+            'delivery_address': '',
+            'comment': '',
+            'payment_method': 'COD',
+        }
+    return {
+        'first_name': (request.POST.get('first_name') or base['first_name']).strip(),
+        'last_name': (request.POST.get('last_name') or base['last_name']).strip(),
+        'phone': (request.POST.get('phone') or base['phone']).strip(),
+        'email': (request.POST.get('email') or base['email']).strip(),
+        'tg_account': (request.POST.get('tg_account') or '').strip(),
+        'delivery_city': (request.POST.get('delivery_city') or 'TBILISI').strip().upper(),
+        'delivery_city_other': (request.POST.get('delivery_city_other') or '').strip(),
+        'delivery_address': (request.POST.get('delivery_address') or '').strip(),
+        'comment': (request.POST.get('comment') or '').strip(),
+        'payment_method': (request.POST.get('payment_method') or 'COD').strip().upper(),
+    }
+
+
+def _validate_checkout_contact(data, *, is_authenticated: bool):
+    errors = []
+    if not (data['first_name'] and data['last_name']):
+        errors.append('First and last name are required.')
+    if not data['phone']:
+        errors.append('Phone is required.')
+    if not data['email'] or '@' not in data['email']:
+        errors.append('Valid email is required.')
+    if not data['delivery_address']:
+        errors.append('Delivery address is required.')
+    if data['delivery_city'] not in {'TBILISI', 'OTHER'}:
+        errors.append('Select delivery city.')
+    if data['delivery_city'] == 'OTHER' and not data['delivery_city_other']:
+        errors.append('Specify city for non-Tbilisi delivery.')
+    if data['payment_method'] not in {'COD', 'TRANSFER'}:
+        errors.append('Select payment method.')
+    if is_authenticated:
+        # Immutable by requirement for logged-in users.
+        pass
+    return errors
+
+
+def _compose_delivery_address(data):
+    city = 'Tbilisi' if data['delivery_city'] == 'TBILISI' else data['delivery_city_other']
+    return f'{city}. {data["delivery_address"]}'.strip()
+
+
+def _checkout_payment_label(code: str) -> str:
+    return {
+        'COD': 'Payment on delivery',
+        'TRANSFER': 'Bank transfer to TBC account',
+    }.get(code, code)
+
+
+def _send_checkout_email(subject: str, body: str):
+    send_mail(
+        subject=subject,
+        message=body,
+        from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', None) or 'no-reply@tenrivals.com',
+        recipient_list=_CHECKOUT_EMAILS,
+        fail_silently=True,
+    )
+
+
+def checkout(request):
+    rows, subtotal = build_cart_page_rows(request)
+    if not rows:
+        messages.error(request, 'Your cart is empty.')
+        return redirect('shop:cart')
+
+    show_auth_gate = bool(
+        not request.user.is_authenticated
+        and request.GET.get('guest') != '1'
+        and request.POST.get('action') not in {'guest_continue', 'login', 'submit_order'}
+    )
+
+    if request.method == 'POST' and request.POST.get('action') == 'login':
+        email = (request.POST.get('login_email') or '').strip()
+        password = request.POST.get('login_password') or ''
+        user = authenticate(request, username=email, password=password)
+        if user is None:
+            messages.error(request, 'Login failed. Check email and password.')
+            show_auth_gate = True
+        else:
+            login(request, user)
+            return redirect('shop:checkout')
+
+    contact = _build_checkout_contact(request)
+    initial_contact = _checkout_initial_contact(request)
+    if request.user.is_authenticated:
+        contact['first_name'] = initial_contact['first_name']
+        contact['last_name'] = initial_contact['last_name']
+        contact['phone'] = initial_contact['phone']
+        contact['email'] = initial_contact['email']
+
+    delivery_note = (
+        'Free delivery in Tbilisi within 48 hours.'
+        if contact['delivery_city'] == 'TBILISI'
+        else 'Delivery cost for other cities is calculated separately.'
+    )
+    total = subtotal
+
+    if request.method == 'POST' and request.POST.get('action') == 'submit_order':
+        errors = _validate_checkout_contact(contact, is_authenticated=request.user.is_authenticated)
+        if errors:
+            for e in errors:
+                messages.error(request, e)
+        else:
+            delivery_address = _compose_delivery_address(contact)
+            payment_label = _checkout_payment_label(contact['payment_method'])
+            is_guest = not request.user.is_authenticated
+            user_flag = 'guest' if is_guest else 'logged-in'
+            cart_lines = []
+            demands = []
+            for r in rows:
+                vk = (r['variant_label'] if r['variant_label'] != '—' else '').strip()
+                demands.append((r['product'], vk, int(r['qty'])))
+                cart_lines.append(
+                    f'- {r["name"]} | variant: {r["variant_label"]} | qty: {r["qty"]} | '
+                    f'unit: {r["unit_price"]} | line: {r["line_total"]}'
+                )
+            raw_body = (
+                f'Checkout type: {user_flag}\n'
+                f'First name: {contact["first_name"]}\n'
+                f'Last name: {contact["last_name"]}\n'
+                f'Phone: {contact["phone"]}\n'
+                f'Email: {contact["email"]}\n'
+                f'Telegram: {contact["tg_account"]}\n'
+                f'Delivery city: {contact["delivery_city"]}\n'
+                f'Delivery city other: {contact["delivery_city_other"]}\n'
+                f'Delivery address: {contact["delivery_address"]}\n'
+                f'Delivery rule: {delivery_note}\n'
+                f'Payment method: {payment_label}\n'
+                f'Comment: {contact["comment"]}\n'
+                f'Promo code: {(get_cart(request).get("promo_code") or "").strip()}\n'
+                f'Cart items:\n' + '\n'.join(cart_lines) + '\n'
+                f'Total GEL: {total}\n'
+            )
+            _send_checkout_email(
+                f'TR - NEW Checkout - {total} GEL',
+                raw_body,
+            )
+            stock_errors = validate_order_line_demands(
+                demands,
+                order_pk=None,
+                old_status=None,
+                old_lines=[],
+            )
+            if stock_errors:
+                for err in stock_errors:
+                    messages.error(request, err)
+            else:
+                try:
+                    with transaction.atomic():
+                        if request.user.is_authenticated:
+                            customer, _ = Customer.objects.get_or_create(
+                                user=request.user,
+                                defaults={
+                                    'first_name': contact['first_name'],
+                                    'last_name': contact['last_name'],
+                                    'phone': contact['phone'],
+                                    'email': contact['email'],
+                                    'tg_account': contact['tg_account'],
+                                    'address': delivery_address,
+                                },
+                            )
+                            customer.tg_account = contact['tg_account']
+                            customer.address = delivery_address
+                            customer.save(update_fields=['tg_account', 'address', 'updated_at'])
+                        else:
+                            customer = Customer.objects.filter(email__iexact=contact['email']).first()
+                            if customer is None:
+                                customer = Customer.objects.create(
+                                    first_name=contact['first_name'],
+                                    last_name=contact['last_name'],
+                                    phone=contact['phone'],
+                                    email=contact['email'],
+                                    tg_account=contact['tg_account'],
+                                    address=delivery_address,
+                                )
+                            else:
+                                customer.first_name = contact['first_name']
+                                customer.last_name = contact['last_name']
+                                customer.phone = contact['phone']
+                                customer.email = contact['email']
+                                customer.tg_account = contact['tg_account']
+                                customer.address = delivery_address
+                                customer.save(
+                                    update_fields=[
+                                        'first_name',
+                                        'last_name',
+                                        'phone',
+                                        'email',
+                                        'tg_account',
+                                        'address',
+                                        'updated_at',
+                                    ]
+                                )
+
+                        order = SalesOrder.objects.create(
+                            invoice_number=allocate_invoice_number(timezone.localdate().year),
+                            customer=customer,
+                            order_date=timezone.localdate(),
+                            gross_total=Decimal('0.00'),
+                            vat_total=Decimal('0.00'),
+                            net_total=Decimal('0.00'),
+                            delivery_gross=Decimal('0.00'),
+                            payment_method=payment_label,
+                            status=SalesOrder.Status.PENDING,
+                            notes=(
+                                f'Checkout source: storefront ({user_flag}).\n'
+                                f'Delivery: {delivery_note}\n'
+                                f'Address: {delivery_address}\n'
+                                f'Telegram: {contact["tg_account"] or "—"}\n'
+                                f'Comment: {contact["comment"] or "—"}'
+                            ),
+                        )
+                        created_lines = []
+                        gross_sum = Decimal('0.00')
+                        vat_sum = Decimal('0.00')
+                        net_sum = Decimal('0.00')
+                        for r in rows:
+                            unit = product_unit_gross_price(r['product'])
+                            qty = int(r['qty'])
+                            vk = (r['variant_label'] if r['variant_label'] != '—' else '').strip()
+                            lg, lv, ln = line_amounts(qty, unit, Decimal('0.00'))
+                            line = SalesOrderLine.objects.create(
+                                order=order,
+                                product=r['product'],
+                                quantity=qty,
+                                unit_price_gross=unit,
+                                discount_percent=Decimal('0.00'),
+                                variant_label=vk,
+                                line_gross=lg,
+                                line_vat=lv,
+                                line_net=ln,
+                            )
+                            created_lines.append(line)
+                            gross_sum += lg
+                            vat_sum += lv
+                            net_sum += ln
+                        order.gross_total = gross_sum.quantize(Decimal('0.01'))
+                        order.vat_total = vat_sum.quantize(Decimal('0.01'))
+                        order.net_total = net_sum.quantize(Decimal('0.01'))
+                        order.save(update_fields=['gross_total', 'vat_total', 'net_total', 'updated_at'])
+                        take_lines_from_stock(created_lines)
+
+                        cart_data = get_cart(request)
+                        cart_data['lines'] = []
+                        cart_data['promo_code'] = ''
+                        save_cart(request, cart_data)
+
+                        staff_path = reverse('administration:staff_sales_order_edit', args=[order.pk])
+                        staff_url = request.build_absolute_uri(staff_path)
+                        _send_checkout_email(
+                            f'TR - NEW Order Submitted - {order.invoice_number} - {order.gross_total} GEL',
+                            (
+                                f'Order: {order.invoice_number}\n'
+                                f'Customer: {customer.display_name()}\n'
+                                f'Total GEL: {order.gross_total}\n'
+                                f'Staff link: {staff_url}\n'
+                            ),
+                        )
+                    return redirect('shop:checkout_success', order_id=order.pk)
+                except Exception as exc:
+                    messages.error(request, f'Could not submit order: {exc}')
+
+    return render(
+        request,
+        'shop/checkout.html',
+        {
+            'checkout_rows': rows,
+            'checkout_subtotal': subtotal,
+            'checkout_total': total,
+            'checkout_contact': contact,
+            'show_auth_gate': show_auth_gate,
+            'delivery_note': delivery_note,
+            'checkout_is_authenticated': request.user.is_authenticated,
+        },
+    )
+
+
+def checkout_success(request, order_id: int):
+    order = get_object_or_404(
+        SalesOrder.objects.select_related('customer').prefetch_related('lines', 'lines__product'),
+        pk=order_id,
+    )
+    return render(
+        request,
+        'shop/checkout_success.html',
+        {
+            'order': order,
+            'payment_method': (order.payment_method or '').strip(),
+            'show_transfer': 'transfer' in (order.payment_method or '').lower(),
+            'show_cod': 'delivery' in (order.payment_method or '').lower(),
+        },
+    )

@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+  {% include 'includes/google_tag_gtag.html' %}
+  <meta charset="utf-8">
+  <title>Checkout — TR Shop</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {% load static %}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Saira:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="icon" href="{% static 'assets/img/favicon.png' %}">
+  <link href="{% static 'css/styles.css' %}" rel="stylesheet">
+  <style>
+    :root{--accent:#B20009;--accent-dark:#8E0007;--ink:#1a1a1a;--muted:#64748b;--line:#e5e7eb}
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Saira',system-ui,sans-serif;color:var(--ink)}
+    a{text-decoration:none;color:inherit}
+    .container{max-width:1200px;margin:0 auto;padding:0 20px}
+    header{background:#1a1a1a}.header-row{display:grid;grid-template-columns:180px 1fr auto auto auto;gap:20px;align-items:center;padding:14px 0}
+    .logo{height:36px}.socials{display:flex;gap:14px}.social-link{color:rgba(255,255,255,.7)}.social-link:hover{color:#fff}
+    .auth a{font-weight:800;color:#fff;font-size:13px;text-transform:uppercase;letter-spacing:.08em}
+    .search{display:flex;align-items:center;gap:8px;border:1px solid #333;padding:9px 14px;background:#252525}
+    .search input{border:0;outline:0;width:100%;background:transparent;color:#fff}
+    .header-cart{position:relative;display:inline-flex;align-items:center;color:rgba(255,255,255,.85);padding:4px}
+    .header-cart__badge{position:absolute;top:-2px;right:-4px;min-width:18px;height:18px;padding:0 5px;background:var(--accent);color:#fff;font-size:10px;font-weight:800;border-radius:999px;display:flex;align-items:center;justify-content:center}
+    .checkout{padding:26px 0 64px}
+    .grid{display:grid;grid-template-columns:1fr 340px;gap:28px;align-items:start}
+    @media(max-width:980px){.grid{grid-template-columns:1fr}}
+    .card{border:1px solid var(--line);padding:18px 16px;margin-bottom:14px;background:#fff}
+    .card h2{font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 0 14px}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    @media(max-width:640px){.row{grid-template-columns:1fr}}
+    label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+    input,select,textarea{width:100%;padding:10px 12px;border:1px solid var(--line);font-family:inherit;font-size:14px}
+    textarea{min-height:88px;resize:vertical}
+    .radio{display:flex;align-items:flex-start;gap:10px;margin:8px 0}
+    .radio input{width:auto;margin-top:2px}
+    .hint{font-size:12px;color:var(--muted);line-height:1.5;margin-top:8px}
+    .btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 20px;background:var(--accent);color:#fff;border:none;cursor:pointer;font-weight:800;font-size:11px;text-transform:uppercase;letter-spacing:.1em}
+    .btn:hover{background:var(--accent-dark)}
+    .btn--outline{background:#fff;color:var(--accent);border:1px solid var(--accent)}
+    .btn--outline:hover{background:var(--accent);color:#fff}
+    .flash{margin:0 0 10px;padding:10px 12px;border:1px solid #fecaca;background:#fef2f2;color:#991b1b;font-size:13px}
+    .summary-line{display:flex;justify-content:space-between;margin:8px 0;font-size:14px}
+    .summary-line--grand{font-weight:800;font-size:16px;margin-top:14px;padding-top:10px;border-top:1px dashed var(--line)}
+    .checkout-item{display:flex;gap:10px;align-items:center;margin:10px 0}
+    .checkout-item__thumb{width:52px;height:52px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center}
+    .checkout-item__thumb img{width:100%;height:100%;object-fit:contain}
+    .checkout-item__meta{font-size:13px}
+  </style>
+</head>
+<body>
+{% include 'includes/google_tag_manager_body.html' %}
+<header>
+  <div class="container">
+    <div class="header-row">
+      <a href="{% url 'shop:index' %}" aria-label="Home"><img class="logo" src="{% static 'assets/img/TR Logo 25/TR 25 LOGO HOR RED.svg' %}" alt="TR Shop"></a>
+      {% include 'shop/includes/shop_search_form.html' with search_channel='stock' %}
+      <nav class="socials" aria-label="Social links">
+        <a class="social-link" href="https://www.instagram.com/tennis_rivals_shop/" target="_blank" rel="noopener">Instagram</a>
+        <a class="social-link" href="https://t.me/tennis_rivals_shop_tbilisi" target="_blank" rel="noopener">Telegram</a>
+      </nav>
+      {% include 'shop/includes/shop_cart_header_link.html' %}
+      <div class="auth">{% if user.is_authenticated %}<a href="{% url 'persons:account_details' %}">Account</a>{% else %}<a href="{% url 'account_login' %}">Sign in</a>{% endif %}</div>
+    </div>
+  </div>
+</header>
+
+<main class="container checkout">
+  <p style="margin-bottom:14px"><a href="{% url 'shop:cart' %}" style="color:var(--muted);font-size:13px">← Back to cart</a></p>
+  {% for message in messages %}<p class="flash">{{ message }}</p>{% endfor %}
+  <form method="post">
+    {% csrf_token %}
+    <div class="grid">
+      <div>
+        {% if not checkout_is_authenticated %}
+        <section class="card">
+          <h2>1. Account</h2>
+          {% if show_auth_gate %}
+          <p style="margin-bottom:12px;font-size:14px">Choose how you want to continue checkout.</p>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+            <button class="btn" type="submit" name="action" value="guest_continue">CONTINUE AS GUEST</button>
+          </div>
+          <div class="row">
+            <div>
+              <label for="id_login_email">Email</label>
+              <input id="id_login_email" type="email" name="login_email" autocomplete="email">
+            </div>
+            <div>
+              <label for="id_login_password">Password</label>
+              <input id="id_login_password" type="password" name="login_password" autocomplete="current-password">
+            </div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px">
+            <button class="btn btn--outline" type="submit" name="action" value="login">LOGIN</button>
+            <a href="{% url 'account_signup' %}" style="font-size:13px;color:var(--muted)">No account? Register</a>
+          </div>
+          {% else %}
+          <p style="font-size:14px">Guest mode selected. You can still <a href="{% url 'account_login' %}" style="color:var(--accent)">log in</a> or <a href="{% url 'account_signup' %}" style="color:var(--accent)">register</a>.</p>
+          {% endif %}
+        </section>
+        {% endif %}
+
+        {% if checkout_is_authenticated or not show_auth_gate %}
+        <section class="card">
+          <h2>2. Contact & Delivery Address</h2>
+          <div class="row">
+            <div><label>First name</label><input name="first_name" value="{{ checkout_contact.first_name }}" {% if checkout_is_authenticated %}readonly{% endif %}></div>
+            <div><label>Last name</label><input name="last_name" value="{{ checkout_contact.last_name }}" {% if checkout_is_authenticated %}readonly{% endif %}></div>
+          </div>
+          <div class="row" style="margin-top:10px">
+            <div><label>Phone</label><input name="phone" value="{{ checkout_contact.phone }}" {% if checkout_is_authenticated %}readonly{% endif %}></div>
+            <div><label>Email</label><input type="email" name="email" value="{{ checkout_contact.email }}" {% if checkout_is_authenticated %}readonly{% endif %}></div>
+          </div>
+          <div class="row" style="margin-top:10px">
+            <div>
+              <label>City</label>
+              <select name="delivery_city" id="id_delivery_city">
+                <option value="TBILISI" {% if checkout_contact.delivery_city == 'TBILISI' %}selected{% endif %}>Tbilisi</option>
+                <option value="OTHER" {% if checkout_contact.delivery_city == 'OTHER' %}selected{% endif %}>Other city</option>
+              </select>
+            </div>
+            <div id="city-other-wrap" {% if checkout_contact.delivery_city != 'OTHER' %}style="display:none"{% endif %}>
+              <label>Specify city</label>
+              <input name="delivery_city_other" value="{{ checkout_contact.delivery_city_other }}">
+            </div>
+          </div>
+          <div style="margin-top:10px">
+            <label>Delivery address</label>
+            <input name="delivery_address" value="{{ checkout_contact.delivery_address }}">
+          </div>
+          <div class="row" style="margin-top:10px">
+            <div><label>Telegram (optional)</label><input name="tg_account" value="{{ checkout_contact.tg_account }}"></div>
+            <div></div>
+          </div>
+          <div style="margin-top:10px">
+            <label>Comment (optional)</label>
+            <textarea name="comment" placeholder="Recipient name and phone, or delivery notes to find the right location.">{{ checkout_contact.comment }}</textarea>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>3. Delivery</h2>
+          <p style="font-size:14px">{{ delivery_note }}</p>
+        </section>
+
+        <section class="card">
+          <h2>4. Payment Method</h2>
+          <label class="radio"><input type="radio" name="payment_method" value="COD" {% if checkout_contact.payment_method == 'COD' %}checked{% endif %}> <span>Payment on delivery</span></label>
+          <label class="radio"><input type="radio" name="payment_method" value="TRANSFER" {% if checkout_contact.payment_method == 'TRANSFER' %}checked{% endif %}> <span>Bank transfer to TBC account</span></label>
+          <label class="radio"><input type="radio" value="CARD" disabled> <span>Online card payment — coming soon</span></label>
+        </section>
+
+        <section class="card">
+          <h2>5. Confirm</h2>
+          <button class="btn" type="submit" name="action" value="submit_order">CHECKOUT</button>
+        </section>
+        {% endif %}
+      </div>
+
+      <aside class="card">
+        <h2>Order summary</h2>
+        {% for row in checkout_rows %}
+        <div class="checkout-item">
+          <div class="checkout-item__thumb">{% if row.product.main_image %}<img src="{{ row.product.main_image.url }}" alt="{{ row.name }}">{% endif %}</div>
+          <div class="checkout-item__meta">
+            <div>{{ row.name }}</div>
+            <div style="color:var(--muted)">Qty {{ row.qty }}{% if row.variant_label != '—' %} · {{ row.variant_label }}{% endif %}</div>
+          </div>
+        </div>
+        {% endfor %}
+        <div class="summary-line"><span>Subtotal</span><span>{{ checkout_subtotal }} ₾</span></div>
+        <div class="summary-line"><span>Discount</span><span>0.00 ₾</span></div>
+        <div class="summary-line summary-line--grand"><span>Total</span><span>{{ checkout_total }} ₾</span></div>
+      </aside>
+    </div>
+  </form>
+</main>
+
+<script>
+  const citySel = document.getElementById('id_delivery_city');
+  const cityOther = document.getElementById('city-other-wrap');
+  if (citySel && cityOther) {
+    citySel.addEventListener('change', function() {
+      cityOther.style.display = citySel.value === 'OTHER' ? '' : 'none';
+    });
+  }
+</script>
+</body>
+</html>
