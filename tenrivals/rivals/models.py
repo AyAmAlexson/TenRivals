@@ -177,8 +177,8 @@ class Award(models.Model):
     amount = models.IntegerField(default=0)
 
     season = models.PositiveIntegerField(default=date.today().year)
-    week = models.PositiveIntegerField(default=current_week())
-    
+    week = models.PositiveIntegerField(default=current_week)
+
     created_at = models.DateTimeField(auto_now_add=True)
     last_modified = models.DateTimeField(auto_now=True)
     
@@ -653,7 +653,7 @@ class PairMatch(models.Model):
 class PlayerSeasonStats(models.Model):
     player = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='season_stats')
     season = models.PositiveIntegerField(default=date.today().year)
-    week = models.PositiveIntegerField(default=current_week())
+    week = models.PositiveIntegerField(default=current_week)
     geo = models.CharField(max_length=2, choices=TR_GEOS)
     season_pts = models.PositiveIntegerField(default=0)
     season_final_NTRP = models.PositiveIntegerField(default=1000)
@@ -735,7 +735,7 @@ class PlayerCurrentStats(models.Model):
 class PairSeasonStats(models.Model):
     pair = models.ForeignKey(Pair, on_delete=models.CASCADE, related_name='season_stats')
     season = models.PositiveIntegerField(default=date.today().year)
-    week = models.PositiveIntegerField(default=current_week())
+    week = models.PositiveIntegerField(default=current_week)
     geo = models.CharField(max_length=2, choices=TR_GEOS, default='GE')
 
     season_pts = models.PositiveIntegerField(default=0)
