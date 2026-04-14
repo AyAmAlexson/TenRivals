@@ -5,9 +5,35 @@
 {% block extra_head %}
 <style>
   .staff-listings .col-sizes{max-width:220px;font-size:12px;line-height:1.35;color:var(--muted);word-break:break-word}
+  .bulk-toolbar{display:inline-flex;align-items:center;gap:8px}
+  .confirm-overlay{
+    position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;
+    align-items:center;justify-content:center;z-index:12060;padding:16px;
+  }
+  .confirm-overlay.is-open{display:flex}
+  .confirm-modal{
+    width:min(420px,100%);background:#fff;border:1px solid var(--line);padding:18px;
+  }
+  .confirm-modal__title{margin:0 0 10px;font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+  .confirm-modal__text{margin:0 0 14px;font-size:14px;color:var(--muted);line-height:1.5}
+  .confirm-modal__actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+  .staff-toast{
+    position:fixed;right:20px;bottom:20px;z-index:12080;min-width:240px;max-width:min(420px,calc(100vw - 40px));
+    padding:12px 14px;border:1px solid #16a34a;background:#f0fdf4;color:#166534;
+    font-size:13px;font-weight:600;line-height:1.4;box-shadow:0 10px 20px rgba(0,0,0,.08);
+    opacity:0;transform:translateY(10px);pointer-events:none;transition:opacity .18s ease, transform .18s ease;
+  }
+  .staff-toast.is-visible{opacity:1;transform:translateY(0)}
 </style>
 {% endblock %}
 {% block content %}
+  {% if messages %}
+    {% for message in messages %}
+      {% if message.level_tag == 'success' and 'Removed ' in message|stringformat:"s" and 'listing(s)' in message|stringformat:"s" %}
+      <div class="staff-toast" id="bulk-delete-toast" role="status" aria-live="polite">{{ message }}</div>
+      {% endif %}
+    {% endfor %}
+  {% endif %}
   {% if catalog_is_implicit %}
   <div class="alert alert-info">
     Implicit catalog: the shop still lists all active products for this channel. This table only shows explicit <code class="mono">ProductListing</code> rows.
@@ -22,6 +48,10 @@
       <input type="hidden" name="return_q" value="{{ search_q }}">
       <button type="submit" class="btn btn--sm btn--outline">Add all active products</button>
     </form>
+    <div class="bulk-toolbar">
+      <button type="button" id="btn-bulk-delete" class="btn btn--sm btn--outline" disabled>Bulk delete</button>
+      <span id="bulk-selected-count" class="page-meta" style="margin:0"></span>
+    </div>
     <form method="get" action="" style="display:inline-flex;gap:8px;align-items:center;margin-left:auto">
       <input type="search" name="q" value="{{ search_q }}" placeholder="Brand, name, SKU, type, color…" aria-label="Filter listings" style="min-width:200px;max-width:320px;padding:8px 10px;border:1px solid var(--line);font-family:inherit;font-size:14px">
       <button type="submit" class="btn btn--sm">Search</button>
@@ -37,6 +67,7 @@
       <table>
         <thead>
           <tr>
+            <th style="width:1%;white-space:nowrap"><input type="checkbox" id="select-all-listings" aria-label="Select all listings"></th>
             <th>ID</th>
             <th>Brand</th>
             <th>Product</th>
@@ -51,6 +82,7 @@
         <tbody>
           {% for row in listings %}
           <tr>
+            <td><input type="checkbox" class="listing-select" value="{{ row.pk }}" aria-label="Select listing {{ row.pk }}"></td>
             <td class="mono">{{ row.pk }}</td>
             <td>{{ row.product.brand|default:"—" }}</td>
             <td>
@@ -68,12 +100,12 @@
                 <a class="icon-btn icon-btn--accent" href="{% url 'shop:product_edit' row.product.pk %}?channel={{ listing_channel }}&next={{ request.get_full_path|urlencode }}" title="Edit product" aria-label="Edit product">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
                 </a>
-                <form method="post" action="" style="display:inline" onsubmit="return confirm('Remove this product from this catalog channel? Listing only; product itself is not deleted.');">
+                <form id="remove-listing-{{ row.pk }}" method="post" action="" style="display:inline">
                   {% csrf_token %}
                   <input type="hidden" name="action" value="remove_listing">
                   <input type="hidden" name="return_q" value="{{ search_q }}">
                   <input type="hidden" name="listing_id" value="{{ row.pk }}">
-                  <button type="submit" class="icon-btn icon-btn--danger" title="Remove listing" aria-label="Remove listing">
+                  <button type="button" class="icon-btn icon-btn--danger js-remove-listing" data-form-id="remove-listing-{{ row.pk }}" title="Remove listing" aria-label="Remove listing">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                   </button>
                 </form>
@@ -81,10 +113,111 @@
             </td>
           </tr>
           {% empty %}
-          <tr><td colspan="9">{% if search_q %}No rows match your search. <a href="{{ request.path }}">Clear filter</a>{% else %}No listings yet. Add a product with this channel, or import from shop admin.{% endif %}</td></tr>
+          <tr><td colspan="10">{% if search_q %}No rows match your search. <a href="{{ request.path }}">Clear filter</a>{% else %}No listings yet. Add a product with this channel, or import from shop admin.{% endif %}</td></tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
   </div>
+  <form id="bulk-delete-form" method="post" action="" style="display:none" aria-hidden="true">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="bulk_remove_listings">
+    <input type="hidden" name="return_q" value="{{ search_q }}">
+    <div id="bulk-delete-inputs"></div>
+  </form>
+  <div class="confirm-overlay" id="listing-delete-confirm" aria-hidden="true">
+    <div class="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="listing-delete-title">
+      <h3 class="confirm-modal__title" id="listing-delete-title">Delete listing</h3>
+      <p class="confirm-modal__text" id="listing-delete-text">Do you really want to delete this listing?</p>
+      <div class="confirm-modal__actions">
+        <button type="button" class="btn btn--sm btn--outline" id="listing-delete-cancel">Cancel</button>
+        <button type="button" class="btn btn--sm" id="listing-delete-submit">Delete</button>
+      </div>
+    </div>
+  </div>
+  <script>
+  (function(){
+    const selectAll = document.getElementById('select-all-listings');
+    const checkboxes = Array.prototype.slice.call(document.querySelectorAll('.listing-select'));
+    const bulkBtn = document.getElementById('btn-bulk-delete');
+    const bulkCount = document.getElementById('bulk-selected-count');
+    const bulkForm = document.getElementById('bulk-delete-form');
+    const bulkInputs = document.getElementById('bulk-delete-inputs');
+
+    const overlay = document.getElementById('listing-delete-confirm');
+    const text = document.getElementById('listing-delete-text');
+    const cancelBtn = document.getElementById('listing-delete-cancel');
+    const submitBtn = document.getElementById('listing-delete-submit');
+    let pendingForm = null;
+
+    function selectedIds(){
+      return checkboxes.filter(function(cb){ return cb.checked; }).map(function(cb){ return cb.value; });
+    }
+    function syncBulkState(){
+      const ids = selectedIds();
+      bulkBtn.disabled = ids.length === 0;
+      bulkCount.textContent = ids.length > 0 ? (ids.length + ' selected') : '';
+      if(selectAll){
+        const allChecked = checkboxes.length > 0 && ids.length === checkboxes.length;
+        selectAll.checked = allChecked;
+        selectAll.indeterminate = ids.length > 0 && !allChecked;
+      }
+    }
+    function closeModal(){
+      pendingForm = null;
+      overlay.classList.remove('is-open');
+      overlay.setAttribute('aria-hidden', 'true');
+    }
+    function openModal(formEl, message){
+      pendingForm = formEl;
+      text.textContent = message;
+      overlay.classList.add('is-open');
+      overlay.setAttribute('aria-hidden', 'false');
+    }
+
+    if(selectAll){
+      selectAll.addEventListener('change', function(){
+        checkboxes.forEach(function(cb){ cb.checked = selectAll.checked; });
+        syncBulkState();
+      });
+    }
+    checkboxes.forEach(function(cb){ cb.addEventListener('change', syncBulkState); });
+    syncBulkState();
+
+    document.querySelectorAll('.js-remove-listing').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        const fid = btn.getAttribute('data-form-id');
+        const formEl = fid ? document.getElementById(fid) : null;
+        if(!formEl) return;
+        openModal(formEl, 'Remove this listing from the current catalog channel?');
+      });
+    });
+
+    bulkBtn.addEventListener('click', function(){
+      const ids = selectedIds();
+      if(!ids.length) return;
+      bulkInputs.innerHTML = '';
+      ids.forEach(function(id){
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'listing_ids';
+        input.value = id;
+        bulkInputs.appendChild(input);
+      });
+      openModal(bulkForm, 'Confirm deletion of ' + ids.length + ' records.');
+    });
+
+    cancelBtn.addEventListener('click', closeModal);
+    overlay.addEventListener('click', function(e){ if(e.target === overlay) closeModal(); });
+    document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && overlay.classList.contains('is-open')) closeModal(); });
+    submitBtn.addEventListener('click', function(){ if(!pendingForm) return; const f = pendingForm; closeModal(); f.submit(); });
+
+    const toast = document.getElementById('bulk-delete-toast');
+    if(toast){
+      requestAnimationFrame(function(){ toast.classList.add('is-visible'); });
+      setTimeout(function(){ toast.classList.remove('is-visible'); }, 2600);
+      setTimeout(function(){ if(toast.parentNode) toast.parentNode.removeChild(toast); }, 3000);
+    }
+  })();
+  </script>
 {% endblock %}

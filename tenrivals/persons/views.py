@@ -742,6 +742,23 @@ def _staff_listings_page(request, channel: str, nav_key: str):
                 messages.success(request, "Removed from this catalog channel.")
             else:
                 messages.warning(request, "Listing not found.")
+        elif action == "bulk_remove_listings":
+            raw_ids = request.POST.getlist("listing_ids")
+            ids: list[int] = []
+            for raw in raw_ids:
+                try:
+                    ids.append(int(raw))
+                except (TypeError, ValueError):
+                    continue
+            ids = sorted(set(x for x in ids if x > 0))
+            if not ids:
+                messages.warning(request, "No listings selected.")
+                return _staff_listings_redirect(request, redirect_name)
+            deleted, _ = ProductListing.objects.filter(pk__in=ids, channel=channel).delete()
+            if deleted:
+                messages.success(request, f"Removed {deleted} listing(s) from this catalog channel.")
+            else:
+                messages.warning(request, "No selected listings were found.")
         elif action == "backfill_listings":
             created = 0
             existing = 0

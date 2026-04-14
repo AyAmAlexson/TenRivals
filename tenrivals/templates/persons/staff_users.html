@@ -2,6 +2,21 @@
 {% block title %}Shop Administration — Staff — TR Shop{% endblock %}
 {% block page_heading %}Shop Administration{% endblock %}
 {% block page_note %}<p class="page-note">Superuser only. You cannot delete your own account or other superusers here.</p>{% endblock %}
+{% block extra_head %}
+<style>
+  .confirm-overlay{
+    position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;
+    align-items:center;justify-content:center;z-index:12060;padding:16px;
+  }
+  .confirm-overlay.is-open{display:flex}
+  .confirm-modal{
+    width:min(420px,100%);background:#fff;border:1px solid var(--line);padding:18px;
+  }
+  .confirm-modal__title{margin:0 0 10px;font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+  .confirm-modal__text{margin:0 0 14px;font-size:14px;color:var(--muted);line-height:1.5}
+  .confirm-modal__actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+</style>
+{% endblock %}
 {% block content %}
       <div class="card">
         <h2 class="card-title">Create user</h2>
@@ -123,11 +138,11 @@
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
                     </a>
                     {% if u.pk != request.user.pk and not u.is_superuser %}
-                    <form method="post" action="{% url 'administration:staff_users' %}" style="display:inline" onsubmit="return confirm('Delete user {{ u.email|escapejs }}? This cannot be undone.');">
+                    <form id="delete-user-{{ u.pk }}" method="post" action="{% url 'administration:staff_users' %}" style="display:inline">
                       {% csrf_token %}
                       <input type="hidden" name="action" value="delete">
                       <input type="hidden" name="user_id" value="{{ u.pk }}">
-                      <button type="submit" class="icon-btn icon-btn--danger" title="Delete user" aria-label="Delete user">
+                      <button type="button" class="icon-btn icon-btn--danger js-delete-user" data-delete-form="delete-user-{{ u.pk }}" data-delete-label="{{ u.email|escape }}" title="Delete user" aria-label="Delete user">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
                       </button>
                     </form>
@@ -142,4 +157,46 @@
           </table>
         </div>
       </div>
+      <div class="confirm-overlay" id="user-delete-confirm" aria-hidden="true">
+        <div class="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="user-delete-title">
+          <h3 class="confirm-modal__title" id="user-delete-title">Delete user</h3>
+          <p class="confirm-modal__text" id="user-delete-text">Do you really want to delete this user?</p>
+          <div class="confirm-modal__actions">
+            <button type="button" class="btn btn--sm btn--outline" id="user-delete-cancel">Cancel</button>
+            <button type="button" class="btn btn--sm" id="user-delete-submit">Delete</button>
+          </div>
+        </div>
+      </div>
+      <script>
+      (function(){
+        const overlay = document.getElementById('user-delete-confirm');
+        const text = document.getElementById('user-delete-text');
+        const cancelBtn = document.getElementById('user-delete-cancel');
+        const submitBtn = document.getElementById('user-delete-submit');
+        let pending = null;
+        function closeModal(){
+          pending = null;
+          overlay.classList.remove('is-open');
+          overlay.setAttribute('aria-hidden','true');
+        }
+        function openModal(formEl, label){
+          pending = formEl;
+          text.textContent = 'Do you really want to delete user ' + label + '?';
+          overlay.classList.add('is-open');
+          overlay.setAttribute('aria-hidden','false');
+        }
+        document.querySelectorAll('.js-delete-user').forEach(function(btn){
+          btn.addEventListener('click', function(){
+            const fid = btn.getAttribute('data-delete-form');
+            const formEl = fid ? document.getElementById(fid) : null;
+            if(!formEl) return;
+            openModal(formEl, btn.getAttribute('data-delete-label') || 'this user');
+          });
+        });
+        cancelBtn.addEventListener('click', closeModal);
+        overlay.addEventListener('click', function(e){ if(e.target === overlay) closeModal(); });
+        document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && overlay.classList.contains('is-open')) closeModal(); });
+        submitBtn.addEventListener('click', function(){ if(!pending) return; const form = pending; closeModal(); form.submit(); });
+      })();
+      </script>
 {% endblock %}
