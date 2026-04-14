@@ -105,6 +105,11 @@ class SalesOrderLineForm(forms.ModelForm):
         for k in sorted(m.keys()):
             q = int(m.get(k, 0) or 0)
             opts.append((k, f'{k} (×{q})'))
+        current_variant = ''
+        if self.instance and getattr(self.instance, 'pk', None):
+            current_variant = (self.instance.variant_label or '').strip()
+        if current_variant and current_variant not in m:
+            opts.append((current_variant, f'{current_variant} (in this order)'))
         vf.widget.choices = opts
 
     def clean(self):

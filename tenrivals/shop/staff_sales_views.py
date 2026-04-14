@@ -456,11 +456,26 @@ def staff_sales_order_edit(request, pk=None):
         if hasattr(f, 'fields') and 'product' in f.fields:
             f.fields['product'].queryset = stock_qs
 
+    old_lines = []
+    old_status = None
+    if instance and instance.pk:
+        old_lines = snapshot_old_lines(instance)
+        old_status = instance.status
+
     catalog_variants = {}
     for p in stock_qs:
         pid = str(p.pk)
         if product_requires_variant(p):
-            catalog_variants[pid] = get_variant_qty_map(p)
+            effective = dict(get_variant_qty_map(p))
+            if instance and instance.pk and order_status_reserves_stock(old_status):
+                for ol in old_lines:
+                    if ol.product_id != p.pk:
+                        continue
+                    vk = (ol.variant_label or '').strip()
+                    if not vk:
+                        continue
+                    effective[vk] = int(effective.get(vk, 0) or 0) + int(ol.quantity or 0)
+            catalog_variants[pid] = effective
         else:
             catalog_variants[pid] = {}
 

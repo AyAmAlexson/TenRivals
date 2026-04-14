@@ -253,6 +253,13 @@
     });
     let ok = false;
     Array.prototype.forEach.call(selV.options, function(op){ if(op.value === cur) ok = true; });
+    if (preserve && cur && !ok) {
+      const oc = document.createElement('option');
+      oc.value = cur;
+      oc.textContent = cur + ' (in this order)';
+      selV.appendChild(oc);
+      ok = true;
+    }
     selV.value = ok ? cur : '';
   }
   function onProductChange(row){
