@@ -7,13 +7,15 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import authenticate, login
 from django.contrib.admin.views.decorators import staff_member_required
-from django.core.mail import send_mail
+from django.core.mail import send_mail, EmailMultiAlternatives
 from django.db import transaction
 from django.db.models import Q
 from django.http import Http404, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
+from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.html import strip_tags
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_POST
@@ -1055,8 +1057,76 @@ def _send_checkout_email(subject: str, body: str):
     )
 
 
+def _send_checkout_customer_submitted_email(
+    request,
+    *,
+    order: SalesOrder,
+    rows: list[dict],
+    contact: dict,
+    payment_label: str,
+    subtotal: Decimal,
+    discount: Decimal,
+    total: Decimal,
+) -> None:
+    recipient = (contact.get('email') or order.customer.email or '').strip()
+    if not recipient:
+        return
+    website = (getattr(settings, 'WEBSITE_URL', '') or '').rstrip('/')
+    history_path = reverse('persons:shop_order_history')
+    history_url = f'{website}{history_path}' if website else request.build_absolute_uri(history_path)
+    initial_subtotal = sum(
+        (Decimal(str(r['product'].initial_price)) * Decimal(int(r['qty'])) for r in rows),
+        Decimal('0.00'),
+    ).quantize(Decimal('0.01'))
+    saving = (initial_subtotal - subtotal).quantize(Decimal('0.01'))
+    if saving < Decimal('0.00'):
+        saving = Decimal('0.00')
+    email_rows = []
+    for r in rows:
+        thumb_url = ''
+        p = r.get('product')
+        if p and getattr(p, 'main_image', None):
+            try:
+                rel = p.main_image.url
+                thumb_url = f'{website}{rel}' if website and rel.startswith('/') else rel
+            except Exception:
+                thumb_url = ''
+        email_rows.append(
+            {
+                'name': r.get('name', ''),
+                'variant_label': r.get('variant_label', '—'),
+                'qty': int(r.get('qty') or 0),
+                'unit_price': r.get('unit_price'),
+                'line_total': r.get('line_total'),
+                'thumb_url': thumb_url,
+            }
+        )
+    ctx = {
+        'order': order,
+        'rows': email_rows,
+        'contact': contact,
+        'payment_label': payment_label,
+        'subtotal': subtotal,
+        'discount': discount,
+        'total': total,
+        'initial_subtotal': initial_subtotal,
+        'saving': saving,
+        'history_url': history_url,
+    }
+    html = render_to_string('shop/emails/order_submitted.html', ctx)
+    msg = EmailMultiAlternatives(
+        subject=f'Tennis Rivals: Thank You for Your Order - {order.invoice_number}',
+        body=strip_tags(html),
+        from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', None) or 'no-reply@tenrivals.com',
+        to=[recipient],
+    )
+    msg.attach_alternative(html, 'text/html')
+    msg.send(fail_silently=True)
+
+
 def checkout(request):
     rows, subtotal = build_cart_page_rows(request)
+    discount = Decimal('0.00')
     if not rows:
         messages.error(request, 'Your cart is empty.')
         return redirect('shop:cart')
@@ -1199,7 +1269,7 @@ def checkout(request):
                             net_total=Decimal('0.00'),
                             delivery_gross=Decimal('0.00'),
                             payment_method=payment_label,
-                            status=SalesOrder.Status.PENDING,
+                            status=SalesOrder.Status.SUBMITTED,
                             notes=(
                                 f'Checkout source: storefront ({user_flag}).\n'
                                 f'Delivery: {delivery_note}\n'
@@ -1253,6 +1323,16 @@ def checkout(request):
                                 f'Total GEL: {order.gross_total}\n'
                                 f'Staff link: {staff_url}\n'
                             ),
+                        )
+                        _send_checkout_customer_submitted_email(
+                            request,
+                            order=order,
+                            rows=rows,
+                            contact=contact,
+                            payment_label=payment_label,
+                            subtotal=subtotal,
+                            discount=discount,
+                            total=total,
                         )
                     return redirect('shop:checkout_success', order_id=order.pk)
                 except Exception as exc:

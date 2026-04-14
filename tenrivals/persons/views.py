@@ -32,7 +32,7 @@ from shop.models import (
     Product,
     ProductListing,
     ProductListingChannel,
-    ShopOrder,
+    SalesOrder,
 )
 from shop.staff_stock_stats import build_stock_stats
 import hashlib
@@ -104,12 +104,17 @@ class AccountDetailView(LoginRequiredMixin, UpdateView):
 
 
 class ShopOrderHistoryView(LoginRequiredMixin, ListView):
-    model = ShopOrder
+    model = SalesOrder
     template_name = 'account_order_history.html'
     context_object_name = 'orders'
 
     def get_queryset(self):
-        return ShopOrder.objects.filter(user=self.request.user).prefetch_related('items')
+        return (
+            SalesOrder.objects.filter(customer__user=self.request.user)
+            .select_related('customer')
+            .prefetch_related('lines', 'lines__product')
+            .order_by('-order_date', '-id')
+        )
 
 def generate_verification_code():
     # Генерация случайного кода верификации

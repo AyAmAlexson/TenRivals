@@ -7,6 +7,8 @@ import json
 from datetime import date
 from decimal import Decimal
 
+from django.conf import settings
+from django.core.mail import EmailMultiAlternatives
 from django.db.models import Sum
 from django.urls import reverse
 from django.templatetags.static import static
@@ -15,6 +17,8 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.db import transaction
 from django.db.models import Prefetch, Q
 from django.shortcuts import get_object_or_404, redirect, render
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
 from django.views.decorators.http import require_POST
 
 from .models import Customer, Product, SalesOrder, SalesOrderLine
@@ -124,6 +128,37 @@ def _invoice_context(order: SalesOrder, request=None) -> dict:
         'doc_date_display': order.order_date.strftime('%d.%m.%Y'),
         'invoice_logo_abs_url': logo_abs,
     }
+
+
+def _send_customer_order_confirmed_email(order: SalesOrder) -> None:
+    recipient = (order.customer.email or '').strip()
+    if not recipient:
+        return
+    website = (getattr(settings, 'WEBSITE_URL', '') or '').rstrip('/')
+    history_path = reverse('persons:shop_order_history')
+    history_url = f'{website}{history_path}' if website else history_path
+    rows = [
+        {
+            'name': line.invoice_display_label(),
+            'qty': int(line.quantity or 0),
+            'line_total': line.line_gross,
+        }
+        for line in order.lines.all()
+    ]
+    ctx = {
+        'order': order,
+        'rows': rows,
+        'history_url': history_url,
+    }
+    html = render_to_string('shop/emails/order_confirmed.html', ctx)
+    msg = EmailMultiAlternatives(
+        subject=f'Tennis Rivals: Order Confirmed - {order.invoice_number}',
+        body=strip_tags(html),
+        from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', None) or 'no-reply@tenrivals.com',
+        to=[recipient],
+    )
+    msg.attach_alternative(html, 'text/html')
+    msg.send(fail_silently=True)
 
 
 def _rebuild_order_from_formset(
@@ -528,6 +563,7 @@ def staff_sales_order_set_status(request, pk):
         messages.error(request, 'Invalid status.')
         return redirect('administration:staff_sales_orders')
     try:
+        send_customer_confirmed = False
         with transaction.atomic():
             locked = SalesOrder.objects.select_for_update().get(pk=order.pk)
             old = locked.status
@@ -556,9 +592,13 @@ def staff_sales_order_set_status(request, pk):
                 take_lines_from_stock(lines)
             locked.status = raw
             locked.save(update_fields=['status', 'updated_at'])
+            if raw == SalesOrder.Status.CONFIRMED and old != SalesOrder.Status.CONFIRMED:
+                send_customer_confirmed = True
     except Exception as e:
         messages.error(request, f'Could not update status: {e}')
         return redirect('administration:staff_sales_orders')
+    if send_customer_confirmed:
+        _send_customer_order_confirmed_email(locked)
     messages.success(request, 'Status updated.')
     return redirect('administration:staff_sales_orders')
 

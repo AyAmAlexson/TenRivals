@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Order confirmed</title>
+</head>
+<body style="margin:0;background:#f4f4f5;color:#1a1a1a;font-family:Arial,Helvetica,sans-serif;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f4f4f5;padding:20px 0;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="640" cellspacing="0" cellpadding="0" style="max-width:640px;width:100%;background:#fff;border:1px solid #e5e7eb;">
+          <tr>
+            <td style="background:#1a1a1a;padding:16px 22px;color:#fff;font-size:18px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;">
+              Tennis Rivals Shop
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:22px;">
+              <h1 style="margin:0 0 10px;font-size:24px;line-height:1.2;text-transform:uppercase;letter-spacing:.06em;">Your Order {{ order.invoice_number }} is confirmed!</h1>
+              <p style="margin:0 0 14px;color:#64748b;font-size:14px;">Our team will contact you soon to confirm the delivery date and time.</p>
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border:1px solid #e5e7eb;margin:0 0 14px;">
+                {% for row in rows %}
+                <tr>
+                  <td style="padding:10px;border-bottom:1px solid #f1f5f9;font-size:13px;">{{ row.name }}</td>
+                  <td style="padding:10px;border-bottom:1px solid #f1f5f9;font-size:13px;text-align:right;">{{ row.qty }} × {{ row.line_total }} ₾</td>
+                </tr>
+                {% endfor %}
+              </table>
+              <p style="margin:0 0 14px;font-size:16px;font-weight:700;">Total: {{ order.gross_total }} ₾</p>
+              <p style="margin:0;">
+                <a href="{{ history_url }}" style="display:inline-block;background:#B20009;color:#fff;text-decoration:none;padding:10px 16px;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;">View order history</a>
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

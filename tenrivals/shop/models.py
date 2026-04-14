@@ -892,17 +892,16 @@ class SalesOrder(models.Model):
     notes = models.TextField(blank=True)
 
     class Status(models.TextChoices):
-        PENDING = 'PENDING', _('Pending payment')
-        PAID = 'PAID', _('Paid')
-        AWAITING_PICKUP = 'AWAITING_PICKUP', _('Awaiting pickup')
-        COMPLETED = 'COMPLETED', _('Completed')
+        SUBMITTED = 'SUBMITTED', _('Submitted')
+        CONFIRMED = 'CONFIRMED', _('Confirmed')
+        SHIPPED = 'SHIPPED', _('Shipped')
         CANCELLED = 'CANCELLED', _('Cancelled')
         REFUNDED = 'REFUNDED', _('Refunded')
 
     status = models.CharField(
         max_length=24,
         choices=Status.choices,
-        default=Status.PAID,
+        default=Status.SUBMITTED,
         db_index=True,
     )
     created_at = models.DateTimeField(auto_now_add=True)

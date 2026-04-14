@@ -63,10 +63,11 @@
     .order-id{font-size:15px; font-weight:600; letter-spacing:.02em; text-transform:none}
     .order-date{font-size:13px; color:var(--muted); font-weight:600}
     .status-badge{font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; padding:4px 10px}
-    .status-PENDING{background:#fef3c7; color:#92400e}
+    .status-SUBMITTED{background:#fef3c7; color:#92400e}
     .status-CONFIRMED{background:#dbeafe; color:#1e40af}
-    .status-FULFILLED{background:#d1fae5; color:#065f46}
+    .status-SHIPPED{background:#d1fae5; color:#065f46}
     .status-CANCELLED{background:#f3f4f6; color:#6b7280}
+    .status-REFUNDED{background:#fee2e2; color:#b91c1c}
     .order-total{font-size:16px; font-weight:800; white-space:nowrap}
     .order-note{font-size:13px; color:var(--ink); margin-top:10px; padding:10px 12px; background:#f8fafc; border:1px solid var(--line)}
     .order-note-label{font-size:11px; font-weight:800; text-transform:uppercase; color:var(--muted); margin-bottom:4px}
@@ -139,16 +140,16 @@
               <div class="order-card">
                 <div class="order-card-head">
                   <div class="order-card-head-left">
-                    <span class="order-id">Order #{{ order.pk }}</span>
-                    <span class="order-date">{{ order.created_at|date:"M j, Y — H:i" }}</span>
+                    <span class="order-id">Order #{{ order.invoice_number }}</span>
+                    <span class="order-date">{{ order.order_date|date:"M j, Y" }}</span>
                     <span class="status-badge status-{{ order.status }}">{{ order.get_status_display }}</span>
                   </div>
-                  <div class="order-total">{{ order.total_amount|floatformat:2 }}&nbsp;₾</div>
+                  <div class="order-total">{{ order.gross_total|floatformat:2 }}&nbsp;₾</div>
                 </div>
-                {% if order.customer_note %}
+                {% if order.notes %}
                 <div class="order-note">
                   <div class="order-note-label">Note</div>
-                  {{ order.customer_note }}
+                  {{ order.notes }}
                 </div>
                 {% endif %}
                 <table class="order-items">
@@ -162,22 +163,28 @@
                     </tr>
                   </thead>
                   <tbody>
-                    {% for line in order.items.all %}
+                    {% for line in order.lines.all %}
                     <tr>
                       <td>
-                        {% if line.brand %}<span style="color:var(--muted); font-size:12px; display:block">{{ line.brand }}</span>{% endif %}
-                        {{ line.product_name }}
+                        {{ line.product.storefront_cart_line_title }}
                       </td>
                       <td>{{ line.variant_label|default:"—" }}</td>
                       <td style="text-align:right">{{ line.quantity }}</td>
-                      <td style="text-align:right">{{ line.unit_price|floatformat:2 }}&nbsp;₾</td>
-                      <td style="text-align:right">{{ line.line_total|floatformat:2 }}&nbsp;₾</td>
+                      <td style="text-align:right">{{ line.unit_price_gross|floatformat:2 }}&nbsp;₾</td>
+                      <td style="text-align:right">{{ line.line_gross|floatformat:2 }}&nbsp;₾</td>
                     </tr>
                     {% endfor %}
                   </tbody>
                 </table>
               </div>
               {% endfor %}
+              <div class="order-note" style="margin-top:16px">
+                <div class="order-note-label">Need help with your order?</div>
+                If you need to change or cancel an order, or if any issue appears, please contact us in Telegram:
+                <a href="https://t.me/andyrivals" target="_blank" rel="noopener" style="color:var(--accent);font-weight:700">@andyrivals</a>
+                or by email:
+                <a href="mailto:anry.rivals@tenrivals.com" style="color:var(--accent);font-weight:700">anry.rivals@tenrivals.com</a>.
+              </div>
             {% else %}
               <div class="order-empty">
                 No orders yet. When you place a preorder, completed orders will appear here.
