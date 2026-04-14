@@ -146,12 +146,6 @@
                   </div>
                   <div class="order-total">{{ order.gross_total|floatformat:2 }}&nbsp;₾</div>
                 </div>
-                {% if order.notes %}
-                <div class="order-note">
-                  <div class="order-note-label">Note</div>
-                  {{ order.notes }}
-                </div>
-                {% endif %}
                 <table class="order-items">
                   <thead>
                     <tr>
@@ -176,6 +170,12 @@
                     {% endfor %}
                   </tbody>
                 </table>
+                {% if order.notes %}
+                <div class="order-note">
+                  <div class="order-note-label">Note</div>
+                  {{ order.notes }}
+                </div>
+                {% endif %}
               </div>
               {% endfor %}
               <div class="order-note" style="margin-top:16px">
