@@ -3,7 +3,6 @@
 <head>
   {% include 'includes/google_tag_gtag.html' %}
   {% load static %}
-  {% load catalog_tags %}
   <meta charset="utf-8">
   <title>Order Submitted — TR Shop</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -11,19 +10,17 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Saira:wght@400;600;800&display=swap" rel="stylesheet">
   <link rel="icon" href="{% static 'assets/img/favicon.png' %}">
-  <link href="{% static 'css/styles.css' %}" rel="stylesheet">
   <style>
     :root{--accent:#B20009;--accent-dark:#8E0007;--ink:#1a1a1a;--muted:#64748b;--line:#e5e7eb;--bg:#fff}
     *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:'Saira',system-ui,sans-serif;color:var(--ink);background:var(--bg)}
+    body{font-family:'Saira',system-ui,sans-serif;color:var(--ink);background:var(--bg);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
     a{text-decoration:none;color:inherit}
-    .container{max-width:1200px;margin:0 auto;padding:0 20px}
-    {% include 'shop/includes/shop_public_header_styles.html' %}
+    .page{width:100%;max-width:900px}
+    .success-logo{height:110px;display:block;margin:0 auto 22px;transform:rotate(-30deg)}
     .btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 18px;background:var(--accent);color:#fff;border:none;cursor:pointer;font-weight:800;font-size:11px;text-transform:uppercase;letter-spacing:.1em}
     .btn:hover{background:var(--accent-dark)}
     .btn--outline{background:#fff;color:var(--accent);border:1px solid var(--accent)}
     .btn--outline:hover{background:var(--accent);color:#fff}
-    .success-wrap{padding:30px 0 64px}
     .success-panel{max-width:860px;margin:0 auto}
     .success-title{font-size:34px;line-height:1.08;font-weight:800;letter-spacing:.08em;text-transform:uppercase;margin:0 0 10px}
     .success-sub{font-size:18px;color:var(--muted);margin:0 0 22px}
@@ -46,34 +43,9 @@
 </head>
 <body>
 {% include 'includes/google_tag_manager_body.html' %}
-  <div class="topbar">
-    <div class="container">
-      <div class="topbar-row">
-        <div class="links">{% include 'shop/includes/shop_info_nav_links.html' %}</div>
-        <span class="city-select">Tbilisi</span>
-      </div>
-    </div>
-  </div>
-  <header>
-    <div class="container">
-      <div class="header-row">
-        <a href="{% url 'shop:index' %}" class="brand" aria-label="Home">
-          <img class="logo" src="{% static 'assets/img/TR Logo 25/TR 25 LOGO HOR RED.svg' %}" alt="TR Shop">
-        </a>
-        {% include 'shop/includes/shop_search_form.html' with search_channel='stock' %}
-        <nav class="socials" aria-label="Social links">
-          <a class="social-link" href="https://www.instagram.com/tennis_rivals_shop/" target="_blank" rel="noopener" aria-label="Instagram">Instagram</a>
-          <a class="social-link" href="https://t.me/tennis_rivals_shop_tbilisi" target="_blank" rel="noopener" aria-label="Telegram">Telegram</a>
-        </nav>
-        {% include 'shop/includes/shop_cart_header_link.html' %}
-        <div class="auth">{% if user.is_authenticated %}<a href="{% url 'persons:account_details' %}">Account</a>{% else %}<a href="{% url 'account_login' %}">Sign in</a>{% endif %}</div>
-      </div>
-    </div>
-  </header>
-  {% include 'shop/includes/shop_public_main_nav.html' %}
-
-  <main class="container success-wrap">
+  <main class="page">
     <section class="success-panel">
+      <img class="success-logo" src="{% static 'assets/img/TR Logo 25/TR Sticker 3.svg' %}" alt="Tennis Rivals">
       <h1 class="success-title">Thank you for your purchase</h1>
       <p class="success-sub">Your order has been submitted successfully.</p>
 
@@ -112,8 +84,6 @@
       </div>
     </section>
   </main>
-
-  {% include 'shop/includes/shop_footer.html' %}
   <script>
     document.querySelectorAll('[data-copy]').forEach(function(btn){
       btn.addEventListener('click', function(){
