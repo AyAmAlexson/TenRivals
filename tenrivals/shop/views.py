@@ -1072,6 +1072,8 @@ def _send_checkout_customer_submitted_email(
     if not recipient:
         return
     website = (getattr(settings, 'WEBSITE_URL', '') or '').rstrip('/')
+    logo_rel = '/static/assets/img/tr_footer_line_frame148.svg'
+    logo_url = f'{website}{logo_rel}' if website else request.build_absolute_uri(logo_rel)
     history_path = reverse('persons:shop_order_history')
     history_url = f'{website}{history_path}' if website else request.build_absolute_uri(history_path)
     initial_subtotal = sum(
@@ -1112,6 +1114,18 @@ def _send_checkout_customer_submitted_email(
         'initial_subtotal': initial_subtotal,
         'saving': saving,
         'history_url': history_url,
+        'logo_url': logo_url,
+        'company_name': 'Tennis Rivals Shop',
+        'contact_tg': 'https://t.me/andyrivals',
+        'contact_email': 'anry.rivals@tenrivals.com',
+        'contact_phone': '+995 591 288 967',
+        'is_bank_transfer': (payment_label or '').strip().lower().startswith('bank transfer'),
+        'bank': {
+            'iban': 'GE52TB7920236010100046',
+            'beneficiary': 'P/E ANDREY MOLODENKO',
+            'bank_name': 'JSC TBC Bank',
+            'bank_code': 'TBCBGE22',
+        },
     }
     html = render_to_string('shop/emails/order_submitted.html', ctx)
     msg = EmailMultiAlternatives(

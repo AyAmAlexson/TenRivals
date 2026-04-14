@@ -135,6 +135,8 @@ def _send_customer_order_confirmed_email(order: SalesOrder) -> None:
     if not recipient:
         return
     website = (getattr(settings, 'WEBSITE_URL', '') or '').rstrip('/')
+    logo_rel = '/static/assets/img/tr_footer_line_frame148.svg'
+    logo_url = f'{website}{logo_rel}' if website else logo_rel
     history_path = reverse('persons:shop_order_history')
     history_url = f'{website}{history_path}' if website else history_path
     rows = [
@@ -149,6 +151,11 @@ def _send_customer_order_confirmed_email(order: SalesOrder) -> None:
         'order': order,
         'rows': rows,
         'history_url': history_url,
+        'logo_url': logo_url,
+        'company_name': 'Tennis Rivals Shop',
+        'contact_tg': 'https://t.me/andyrivals',
+        'contact_email': 'anry.rivals@tenrivals.com',
+        'contact_phone': '+995 591 288 967',
     }
     html = render_to_string('shop/emails/order_confirmed.html', ctx)
     msg = EmailMultiAlternatives(
