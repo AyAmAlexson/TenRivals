@@ -23,15 +23,23 @@ APPAREL_SIZE_LABELS = ["XXS", "XS", "S", "M", "L", "XL", "XXL", "3XL"]
 
 # Common tennis string diameters (mm); staff grid can add custom keys via saved JSON.
 STRING_GAUGE_MM_LABELS = [
+    "1.10 mm",
+    "1.12 mm",
     "1.15 mm",
+    "1.18 mm",
     "1.20 mm",
+    "1.22 mm",
+    "1.23 mm",
     "1.24 mm",
     "1.25 mm",
     "1.26 mm",
     "1.27 mm",
     "1.28 mm",
+    "1.29 mm",
     "1.30 mm",
+    "1.31 mm",
     "1.32 mm",
+    "1.33 mm",
     "1.35 mm",
 ]
 

@@ -301,7 +301,7 @@ class ApparelForm(ProductForm):
 class StringForm(ProductForm):
     class Meta(ProductForm.Meta):
         model = String
-        fields = ProductForm.Meta.fields + ['gauge_mm', 'gauges', 'material', 'length_m']
+        fields = ProductForm.Meta.fields + ['gauges', 'material', 'length_m']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -310,8 +310,7 @@ class StringForm(ProductForm):
         self.fields['listing_quantity'].widget.attrs['readonly'] = True
         self.fields['listing_quantity'].label = 'Total quantity (auto)'
         self.fields['listing_quantity'].help_text = (
-            'Auto: sum of per-gauge quantities (you edit quantities below). '
-            'If all gauge cells are 0, use legacy “Gauge (mm)” + quantity only when a single thickness is listed.'
+            'Auto: sum of per-gauge quantities (you edit quantities below).'
         )
         self._init_string_gauge_rows()
 
