@@ -176,6 +176,9 @@
   <main class="container cart-page">
     <p style="margin-bottom:16px"><a href="{% url 'shop:stock' %}" style="color:var(--muted); font-size:13px">← Back to shop</a></p>
     <h1>Cart</h1>
+    {% if user.is_authenticated %}
+    <p style="margin:0 0 14px; color:var(--muted); font-size:13px">Saved cart is kept for {{ saved_cart_ttl_days }} days since last activity.</p>
+    {% endif %}
 
     {% for message in messages %}
     <p class="cart-flash cart-flash--{{ message.level_tag }}">{{ message }}</p>

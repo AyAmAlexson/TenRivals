@@ -19,6 +19,7 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_POST
 
 from .cart_session import (
+    CART_TTL_DAYS,
     build_cart_page_rows,
     get_cart,
     product_eligible_for_storefront_cart,
@@ -868,6 +869,7 @@ def cart(request):
             'cart_promo_code': cart_data.get('promo_code') or '',
             'cart_discount': Decimal('0.00'),
             'cart_total': subtotal,
+            'saved_cart_ttl_days': CART_TTL_DAYS,
         },
     )
 
@@ -1258,6 +1260,7 @@ def checkout(request):
             'show_auth_gate': show_auth_gate,
             'delivery_note': delivery_note,
             'checkout_is_authenticated': request.user.is_authenticated,
+            'saved_cart_ttl_days': CART_TTL_DAYS,
         },
     )
 

@@ -2,17 +2,20 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
 from decimal import Decimal
 from typing import Any
 
 from django.db.models import Prefetch
+from django.utils import timezone
 
-from .models import Product, ProductListing, ProductListingChannel
+from .models import Product, ProductListing, ProductListingChannel, UserCart, UserCartLine
 from .sales_order_stock import get_variant_qty_map, product_requires_variant, variant_qty_available
 from .sales_order_utils import product_unit_gross_price, stock_listing_quantity
 
 
 SESSION_CART_KEY = 'shop_cart_v1'
+CART_TTL_DAYS = 20
 
 
 def _norm_variant(v) -> str:
@@ -38,11 +41,7 @@ def _default_cart() -> dict[str, Any]:
     return {'lines': [], 'promo_code': ''}
 
 
-def get_cart(request) -> dict[str, Any]:
-    raw = request.session.get(SESSION_CART_KEY)
-    if not isinstance(raw, dict):
-        return _default_cart()
-    lines = raw.get('lines')
+def _clean_lines(lines) -> list[dict[str, Any]]:
     if not isinstance(lines, list):
         lines = []
     cleaned: list[dict[str, Any]] = []
@@ -60,18 +59,128 @@ def get_cart(request) -> dict[str, Any]:
         if not isinstance(var, str):
             var = str(var)
         cleaned.append({'product_id': pid, 'variant': var.strip(), 'qty': qty})
-    promo = raw.get('promo_code')
-    if not isinstance(promo, str):
-        promo = ''
-    return {'lines': cleaned, 'promo_code': promo.strip()}
+    return cleaned
+
+
+def _clean_promo(value: Any) -> str:
+    if not isinstance(value, str):
+        value = str(value or '')
+    return value.strip()
+
+
+def _is_authenticated(request) -> bool:
+    user = getattr(request, 'user', None)
+    return bool(user and getattr(user, 'is_authenticated', False))
+
+
+def _session_payload(request) -> dict[str, Any]:
+    raw = request.session.get(SESSION_CART_KEY)
+    if not isinstance(raw, dict):
+        return _default_cart()
+    cleaned = _clean_lines(raw.get('lines'))
+    return {'lines': cleaned, 'promo_code': _clean_promo(raw.get('promo_code'))}
+
+
+def _save_session_payload(request, cart: dict[str, Any]) -> None:
+    request.session[SESSION_CART_KEY] = {
+        'lines': _clean_lines(cart.get('lines') or []),
+        'promo_code': _clean_promo(cart.get('promo_code') or ''),
+    }
+    request.session.modified = True
+
+
+def _clear_session_payload(request) -> None:
+    request.session.pop(SESSION_CART_KEY, None)
+    request.session.modified = True
+
+
+def _load_user_cart_payload(user, *, create: bool = True) -> dict[str, Any]:
+    cart = UserCart.objects.filter(user=user).first()
+    if cart is None:
+        if not create:
+            return _default_cart()
+        cart = UserCart.objects.create(user=user)
+    if cart.updated_at and cart.updated_at < timezone.now() - timedelta(days=CART_TTL_DAYS):
+        cart.lines.all().delete()
+        cart.promo_code = ''
+        cart.save(update_fields=['promo_code', 'updated_at'])
+    lines = [
+        {'product_id': ln.product_id, 'variant': _norm_variant(ln.variant), 'qty': int(ln.qty or 0)}
+        for ln in cart.lines.order_by('id')
+        if int(ln.qty or 0) > 0
+    ]
+    return {'lines': _clean_lines(lines), 'promo_code': _clean_promo(cart.promo_code)}
+
+
+def _save_user_cart_payload(user, cart: dict[str, Any]) -> None:
+    row, _ = UserCart.objects.get_or_create(user=user)
+    cleaned_lines = _clean_lines(cart.get('lines') or [])
+    row.promo_code = _clean_promo(cart.get('promo_code') or '')
+    row.save(update_fields=['promo_code', 'updated_at'])
+    row.lines.all().delete()
+    if cleaned_lines:
+        UserCartLine.objects.bulk_create(
+            [
+                UserCartLine(
+                    cart=row,
+                    product_id=int(ln['product_id']),
+                    variant=_norm_variant(ln.get('variant')),
+                    qty=int(ln.get('qty') or 0),
+                )
+                for ln in cleaned_lines
+                if int(ln.get('qty') or 0) > 0
+            ]
+        )
+        row.save(update_fields=['updated_at'])
+
+
+def _merge_session_into_user_cart(request) -> None:
+    if not _is_authenticated(request):
+        return
+    session_cart = _session_payload(request)
+    if not session_cart['lines'] and not session_cart['promo_code']:
+        return
+    user = request.user
+    user_cart = _load_user_cart_payload(user, create=True)
+    merged: list[dict[str, Any]] = list(user_cart['lines'])
+    idx_by_key: dict[tuple[int, str], int] = {
+        (int(ln.get('product_id') or 0), _norm_variant(ln.get('variant'))): i
+        for i, ln in enumerate(merged)
+    }
+    for ln in session_cart['lines']:
+        key = (int(ln.get('product_id') or 0), _norm_variant(ln.get('variant')))
+        i = idx_by_key.get(key)
+        if i is None:
+            idx_by_key[key] = len(merged)
+            merged.append({'product_id': key[0], 'variant': key[1], 'qty': int(ln.get('qty') or 0)})
+        else:
+            merged[i]['qty'] = int(merged[i].get('qty') or 0) + int(ln.get('qty') or 0)
+    merged_cart = {
+        'lines': _clean_lines(merged),
+        'promo_code': _clean_promo(session_cart.get('promo_code') or user_cart.get('promo_code') or ''),
+    }
+    _save_user_cart_payload(user, merged_cart)
+    _clear_session_payload(request)
+
+
+def get_cart(request) -> dict[str, Any]:
+    if _is_authenticated(request):
+        _merge_session_into_user_cart(request)
+        return _load_user_cart_payload(request.user, create=True)
+    return _session_payload(request)
 
 
 def save_cart(request, cart: dict[str, Any]) -> None:
-    request.session[SESSION_CART_KEY] = {
-        'lines': cart.get('lines') or [],
-        'promo_code': (cart.get('promo_code') or '').strip(),
-    }
-    request.session.modified = True
+    if _is_authenticated(request):
+        _save_user_cart_payload(request.user, cart)
+        _clear_session_payload(request)
+        return
+    _save_session_payload(request, cart)
+
+
+def _legacy_get_cart_compat(request) -> dict[str, Any]:
+    """Back-compat for old imports/tests if needed."""
+    return get_cart(request)
 
 
 def cart_line_count_units(cart: dict[str, Any]) -> int:

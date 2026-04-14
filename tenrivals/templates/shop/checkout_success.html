@@ -1,58 +1,119 @@
 <!doctype html>
 <html lang="en">
 <head>
+  {% include 'includes/google_tag_gtag.html' %}
   {% load static %}
+  {% load catalog_tags %}
   <meta charset="utf-8">
   <title>Order Submitted — TR Shop</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Saira:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="icon" href="{% static 'assets/img/favicon.png' %}">
   <link href="{% static 'css/styles.css' %}" rel="stylesheet">
   <style>
-    :root{--accent:#B20009;--muted:#64748b;--line:#e5e7eb}
-    *{box-sizing:border-box}
-    body{font-family:'Saira',system-ui,sans-serif;margin:0;color:#1a1a1a}
-    .wrap{max-width:820px;margin:0 auto;padding:28px 20px 52px}
-    h1{font-size:24px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;margin:0 0 10px}
-    .muted{color:var(--muted)}
-    .card{border:1px solid var(--line);padding:18px 16px;margin-top:14px}
-    .btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 16px;border:1px solid var(--accent);color:var(--accent);text-decoration:none;font-weight:800;font-size:11px;letter-spacing:.1em;text-transform:uppercase;background:#fff;cursor:pointer}
-    .btn:hover{background:var(--accent);color:#fff}
-    .kpi{display:flex;gap:16px;flex-wrap:wrap;margin-top:12px}
-    .kpi div{background:#f8fafc;border:1px solid var(--line);padding:10px 12px}
+    :root{--accent:#B20009;--accent-dark:#8E0007;--ink:#1a1a1a;--muted:#64748b;--line:#e5e7eb;--bg:#fff}
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Saira',system-ui,sans-serif;color:var(--ink);background:var(--bg)}
+    a{text-decoration:none;color:inherit}
+    .container{max-width:1200px;margin:0 auto;padding:0 20px}
+    {% include 'shop/includes/shop_public_header_styles.html' %}
+    .btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 18px;background:var(--accent);color:#fff;border:none;cursor:pointer;font-weight:800;font-size:11px;text-transform:uppercase;letter-spacing:.1em}
+    .btn:hover{background:var(--accent-dark)}
+    .btn--outline{background:#fff;color:var(--accent);border:1px solid var(--accent)}
+    .btn--outline:hover{background:var(--accent);color:#fff}
+    .success-wrap{padding:30px 0 64px}
+    .success-panel{max-width:860px;margin:0 auto}
+    .success-title{font-size:34px;line-height:1.08;font-weight:800;letter-spacing:.08em;text-transform:uppercase;margin:0 0 10px}
+    .success-sub{font-size:18px;color:var(--muted);margin:0 0 22px}
+    .success-kpis{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+    .success-kpi{border:1px solid var(--line);padding:14px 16px;min-width:190px;background:#fff}
+    .success-kpi__label{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+    .success-kpi__value{font-size:30px;font-weight:800;line-height:1.05}
+    .success-card{border:1px solid var(--line);padding:18px;background:#fff;margin-top:12px}
+    .success-card h2{font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 12px}
+    .success-card p{font-size:15px;line-height:1.55;margin:0 0 10px}
+    .success-card p:last-child{margin-bottom:0}
+    .actions{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap}
+    @media(max-width:720px){
+      .success-title{font-size:26px}
+      .success-sub{font-size:16px}
+      .success-kpi{flex:1 1 100%}
+      .success-kpi__value{font-size:26px}
+    }
   </style>
 </head>
 <body>
-  <main class="wrap">
-    <h1>Thank you for your purchase</h1>
-    <p class="muted">Your order has been submitted successfully.</p>
-    <div class="kpi">
-      <div>Order: <strong>{{ order.invoice_number }}</strong></div>
-      <div>Total: <strong>{{ order.gross_total }} ₾</strong></div>
+{% include 'includes/google_tag_manager_body.html' %}
+  <div class="topbar">
+    <div class="container">
+      <div class="topbar-row">
+        <div class="links">{% include 'shop/includes/shop_info_nav_links.html' %}</div>
+        <span class="city-select">Tbilisi</span>
+      </div>
     </div>
+  </div>
+  <header>
+    <div class="container">
+      <div class="header-row">
+        <a href="{% url 'shop:index' %}" class="brand" aria-label="Home">
+          <img class="logo" src="{% static 'assets/img/TR Logo 25/TR 25 LOGO HOR RED.svg' %}" alt="TR Shop">
+        </a>
+        {% include 'shop/includes/shop_search_form.html' with search_channel='stock' %}
+        <nav class="socials" aria-label="Social links">
+          <a class="social-link" href="https://www.instagram.com/tennis_rivals_shop/" target="_blank" rel="noopener" aria-label="Instagram">Instagram</a>
+          <a class="social-link" href="https://t.me/tennis_rivals_shop_tbilisi" target="_blank" rel="noopener" aria-label="Telegram">Telegram</a>
+        </nav>
+        {% include 'shop/includes/shop_cart_header_link.html' %}
+        <div class="auth">{% if user.is_authenticated %}<a href="{% url 'persons:account_details' %}">Account</a>{% else %}<a href="{% url 'account_login' %}">Sign in</a>{% endif %}</div>
+      </div>
+    </div>
+  </header>
+  {% include 'shop/includes/shop_public_main_nav.html' %}
 
-    {% if show_transfer %}
-    <section class="card">
-      <h2 style="margin:0 0 12px;font-size:13px;letter-spacing:.08em;text-transform:uppercase">Bank transfer details</h2>
-      <p>Beneficiary’s IBAN: <strong id="iban">GE52TB7920236010100046</strong></p>
-      <p><button type="button" class="btn" data-copy="iban">Copy IBAN</button></p>
-      <p>Name of Beneficiary: <strong id="beneficiary">P/E ANDREY MOLODENKO</strong></p>
-      <p><button type="button" class="btn" data-copy="beneficiary">Copy beneficiary name</button></p>
-      <p>Beneficiary’s Bank: <strong>JSC TBC Bank</strong></p>
-      <p>Bank Code: <strong>TBCBGE22</strong></p>
-      <p>Please send payment confirmation file in Telegram: <a href="https://t.me/AndyRivals" target="_blank" rel="noopener">@AndyRivals</a></p>
-      <p>Thank you for your purchase.</p>
+  <main class="container success-wrap">
+    <section class="success-panel">
+      <h1 class="success-title">Thank you for your purchase</h1>
+      <p class="success-sub">Your order has been submitted successfully.</p>
+
+      <div class="success-kpis">
+        <div class="success-kpi">
+          <div class="success-kpi__label">Order</div>
+          <div class="success-kpi__value">{{ order.invoice_number }}</div>
+        </div>
+        <div class="success-kpi">
+          <div class="success-kpi__label">Total</div>
+          <div class="success-kpi__value">{{ order.gross_total }} ₾</div>
+        </div>
+      </div>
+
+      {% if show_transfer %}
+      <section class="success-card">
+        <h2>Bank transfer details</h2>
+        <p>Beneficiary’s IBAN: <strong id="iban">GE52TB7920236010100046</strong></p>
+        <p><button type="button" class="btn btn--outline" data-copy="iban">Copy IBAN</button></p>
+        <p>Name of Beneficiary: <strong id="beneficiary">P/E ANDREY MOLODENKO</strong></p>
+        <p><button type="button" class="btn btn--outline" data-copy="beneficiary">Copy beneficiary name</button></p>
+        <p>Beneficiary’s Bank: <strong>JSC TBC Bank</strong></p>
+        <p>Bank Code: <strong>TBCBGE22</strong></p>
+        <p>Please send payment confirmation file in Telegram: <a href="https://t.me/AndyRivals" target="_blank" rel="noopener" style="color:var(--accent)">@AndyRivals</a></p>
+      </section>
+      {% endif %}
+
+      {% if show_cod %}
+      <section class="success-card">
+        <p>Thank you for your purchase. We will contact you soon to schedule delivery date and time.</p>
+      </section>
+      {% endif %}
+
+      <div class="actions">
+        <a class="btn" href="{% url 'shop:stock' %}">Continue shopping</a>
+      </div>
     </section>
-    {% endif %}
-
-    {% if show_cod %}
-    <section class="card">
-      <p>Thank you for your purchase. We will contact you soon to schedule delivery date and time.</p>
-    </section>
-    {% endif %}
-
-    <p style="margin-top:18px">
-      <a class="btn" href="{% url 'shop:stock' %}">Continue shopping</a>
-    </p>
   </main>
+
+  {% include 'shop/includes/shop_footer.html' %}
   <script>
     document.querySelectorAll('[data-copy]').forEach(function(btn){
       btn.addEventListener('click', function(){

@@ -642,6 +642,47 @@ class ProductListing(models.Model):
         return f'{self.product_id} {self.channel} ×{self.quantity}'
 
 
+class UserCart(models.Model):
+    """Persistent cart for authenticated users (cross-browser/session)."""
+
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='shop_cart',
+    )
+    promo_code = models.CharField(max_length=64, blank=True, default='')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'User cart'
+        verbose_name_plural = 'User carts'
+
+    def __str__(self):
+        return f'Cart for user #{self.user_id}'
+
+
+class UserCartLine(models.Model):
+    cart = models.ForeignKey(UserCart, on_delete=models.CASCADE, related_name='lines')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='user_cart_lines')
+    variant = models.CharField(max_length=64, blank=True, default='')
+    qty = models.PositiveIntegerField(default=1)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['id']
+        constraints = [
+            models.UniqueConstraint(
+                fields=('cart', 'product', 'variant'),
+                name='shop_user_cart_line_unique_product_variant',
+            ),
+        ]
+
+    def __str__(self):
+        return f'cart#{self.cart_id} product#{self.product_id} {self.variant} ×{self.qty}'
+
+
 class ShopOrder(models.Model):
     """Customer order (created via admin or future checkout)."""
 

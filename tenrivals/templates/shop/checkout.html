@@ -69,6 +69,9 @@
 
 <main class="container checkout">
   <p style="margin-bottom:14px"><a href="{% url 'shop:cart' %}" style="color:var(--muted);font-size:13px">← Back to cart</a></p>
+  {% if user.is_authenticated %}
+  <p style="margin:0 0 12px;color:var(--muted);font-size:13px">Saved cart is kept for {{ saved_cart_ttl_days }} days since last activity.</p>
+  {% endif %}
   {% for message in messages %}<p class="flash">{{ message }}</p>{% endfor %}
   <form method="post">
     {% csrf_token %}
