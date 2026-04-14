@@ -40,6 +40,7 @@ def stock_catalog_nav():
         'w_shoe_brands': b(ProductType.WOMENS_SHOES),
         'j_shoe_brands': b(ProductType.JUNIOR_SHOES),
         'acc_brands': b(ProductType.ACCESSORIES),
+        'damp_brands': b(ProductType.DAMPENERS),
         'string_brands': b(ProductType.STRINGS),
         'grip_brands': b(ProductType.GRIPS),
     }

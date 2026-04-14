@@ -105,7 +105,9 @@ _APPAREL_TYPES = frozenset(
         ProductType.JUNIOR_APPAREL,
     }
 )
-_ACCESSORY_TYPES = frozenset({ProductType.GRIPS, ProductType.ACCESSORIES})
+_ACCESSORY_TYPES = frozenset(
+    {ProductType.GRIPS, ProductType.DAMPENERS, ProductType.ACCESSORIES}
+)
 
 # Virtual catalog filter: accessories + grips + strings (separate ProductTypes in DB).
 CATALOG_ACCESSORIES_EQUIPMENT_TYPE = 'ACC_GEAR'
@@ -113,6 +115,7 @@ _CATALOG_ACCESSORIES_EQUIPMENT_TYPES = frozenset(
     {
         ProductType.ACCESSORIES,
         ProductType.GRIPS,
+        ProductType.DAMPENERS,
         ProductType.STRINGS,
     }
 )
@@ -223,6 +226,7 @@ _PDP_BREADCRUMB_TYPE_LABELS = {
     ProductType.BAGS: 'Bags & covers',
     ProductType.STRINGS: 'Strings',
     ProductType.GRIPS: 'Grips',
+    ProductType.DAMPENERS: 'Dampeners',
     ProductType.BALLS: 'Balls',
     ProductType.ACCESSORIES: 'Accessories',
     ProductType.OTHER: 'Other',

@@ -201,9 +201,13 @@
             {% if browse_mode == 'stock' %}
             <a class="preorder-tab {% if active_tab == 'all' or active_tab|slice:':7' == 'cbrand:' %}active{% endif %}" href="?{% if catalog_brand %}cbrand={{ catalog_brand|urlencode }}{% endif %}">All in stock</a>
             <a class="preorder-tab {% if active_tab == 'type:ACC_GEAR' %}active{% endif %}" href="?type=ACC_GEAR{{ cbrand_qs }}">Accessories & equipment</a>
+            <a class="preorder-tab {% if active_tab == 'type:ACCESSORIES' %}active{% endif %}" href="?type=ACCESSORIES{{ cbrand_qs }}">Accessories</a>
+            <a class="preorder-tab {% if active_tab == 'type:DAMPENERS' %}active{% endif %}" href="?type=DAMPENERS{{ cbrand_qs }}">Dampeners</a>
+            <a class="preorder-tab {% if active_tab == 'type:STRINGS' %}active{% endif %}" href="?type=STRINGS{{ cbrand_qs }}">Strings</a>
+            <a class="preorder-tab {% if active_tab == 'type:GRIPS' %}active{% endif %}" href="?type=GRIPS{{ cbrand_qs }}">Grips</a>
             {% endif %}
             {% for code, label in type_tabs %}
-              {% if code != 'OTHER' and code != 'ACCESSORIES' and code != 'GRIPS' and code != 'STRINGS' %}
+              {% if code != 'OTHER' and code != 'ACCESSORIES' and code != 'GRIPS' and code != 'STRINGS' and code != 'DAMPENERS' %}
                 {% if browse_mode == 'stock' %}
                 <a class="preorder-tab {% if active_tab == 'type:'|add:code %}active{% endif %}" href="?type={{ code }}{{ cbrand_qs }}">{{ label }}</a>
                 {% elif code == 'RACKET' or code == 'M_SHOES' or code == 'W_SHOES' %}
