@@ -202,7 +202,7 @@ class Product(models.Model):
         base = self.invoice_line_title()
         c = (self.color or '').strip()
         if c:
-            return f'{base} — {c}'
+            return f'{base} / {c}'
         return base
 
     def invoice_line_specs_slash(self) -> str:
