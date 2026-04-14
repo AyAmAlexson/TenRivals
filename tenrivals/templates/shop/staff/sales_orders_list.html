@@ -71,6 +71,17 @@
   }
   .staff-toolbar--orders .staff-toolbar-apply svg{width:14px;height:14px;display:block}
   .visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+  .confirm-overlay{
+    position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;
+    align-items:center;justify-content:center;z-index:12060;padding:16px;
+  }
+  .confirm-overlay.is-open{display:flex}
+  .confirm-modal{
+    width:min(420px,100%);background:#fff;border:1px solid var(--line);padding:18px;
+  }
+  .confirm-modal__title{margin:0 0 10px;font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+  .confirm-modal__text{margin:0 0 14px;font-size:14px;color:var(--muted);line-height:1.5}
+  .confirm-modal__actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
 </style>
 {% endblock %}
 {% block content %}
@@ -195,6 +206,16 @@
   <form id="delete-order-{{ o.pk }}" method="post" action="{% url 'administration:staff_sales_order_delete' o.pk %}" class="visually-hidden" aria-hidden="true">{% csrf_token %}</form>
   {% endfor %}
 </div>
+<div class="confirm-overlay" id="order-delete-confirm" aria-hidden="true">
+  <div class="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="order-delete-confirm-title">
+    <h3 class="confirm-modal__title" id="order-delete-confirm-title">Delete order</h3>
+    <p class="confirm-modal__text" id="order-delete-confirm-text">Do you really want to delete this order?</p>
+    <div class="confirm-modal__actions">
+      <button type="button" class="btn btn--sm btn--outline" id="order-delete-cancel">Cancel</button>
+      <button type="button" class="btn btn--sm" id="order-delete-submit">Delete</button>
+    </div>
+  </div>
+</div>
 <style>.num{text-align:right}</style>
 <script>
 (function () {
@@ -265,23 +286,61 @@
       d.open = false;
     });
   });
+  var deleteOverlay = document.getElementById('order-delete-confirm');
+  var deleteText = document.getElementById('order-delete-confirm-text');
+  var deleteCancel = document.getElementById('order-delete-cancel');
+  var deleteSubmit = document.getElementById('order-delete-submit');
+  var pendingDeleteForm = null;
+
+  function closeDeleteConfirm() {
+    pendingDeleteForm = null;
+    if (!deleteOverlay) return;
+    deleteOverlay.classList.remove('is-open');
+    deleteOverlay.setAttribute('aria-hidden', 'true');
+  }
+  function openDeleteConfirm(formEl, invoice) {
+    pendingDeleteForm = formEl;
+    if (deleteText) {
+      deleteText.textContent = 'Do you really want to delete order ' + invoice + '?';
+    }
+    if (!deleteOverlay) return;
+    deleteOverlay.classList.add('is-open');
+    deleteOverlay.setAttribute('aria-hidden', 'false');
+  }
+
   document.querySelectorAll('.js-delete-sales-order').forEach(function (btn) {
     btn.addEventListener('click', function (e) {
       e.preventDefault();
       e.stopPropagation();
       var inv = btn.getAttribute('data-delete-invoice') || 'this order';
-      if (!window.confirm('Delete order ' + inv + '?')) {
-        return;
-      }
       var fid = btn.getAttribute('data-delete-form');
       var f = fid ? document.getElementById(fid) : null;
       if (f && f.tagName === 'FORM') {
-        f.submit();
+        openDeleteConfirm(f, inv);
       }
     });
   });
+  if (deleteCancel) {
+    deleteCancel.addEventListener('click', closeDeleteConfirm);
+  }
+  if (deleteOverlay) {
+    deleteOverlay.addEventListener('click', function (e) {
+      if (e.target === deleteOverlay) closeDeleteConfirm();
+    });
+  }
+  if (deleteSubmit) {
+    deleteSubmit.addEventListener('click', function () {
+      if (!pendingDeleteForm) return;
+      var form = pendingDeleteForm;
+      closeDeleteConfirm();
+      form.submit();
+    });
+  }
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') closeAll();
+    if (e.key === 'Escape') {
+      closeAll();
+      closeDeleteConfirm();
+    }
   });
   window.addEventListener('scroll', function () {
     closeAll();
