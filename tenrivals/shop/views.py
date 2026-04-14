@@ -860,12 +860,21 @@ def product_edit(request, pk):
 def cart(request):
     rows, subtotal = build_cart_page_rows(request)
     cart_data = get_cart(request)
+    initial_subtotal = sum(
+        (Decimal(str(r['product'].initial_price)) * Decimal(int(r['qty'])) for r in rows),
+        Decimal('0.00'),
+    ).quantize(Decimal('0.01'))
+    saving = (initial_subtotal - subtotal).quantize(Decimal('0.01'))
+    if saving < Decimal('0.00'):
+        saving = Decimal('0.00')
     return render(
         request,
         'shop/cart.html',
         {
             'cart_rows': rows,
             'cart_subtotal': subtotal,
+            'cart_initial_subtotal': initial_subtotal,
+            'cart_saving': saving,
             'cart_promo_code': cart_data.get('promo_code') or '',
             'cart_discount': Decimal('0.00'),
             'cart_total': subtotal,

@@ -99,6 +99,8 @@
     .cart-promo{display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap}
     .cart-promo input{flex:1; min-width:140px; padding:10px 12px; border:1px solid var(--line); font-family:inherit; font-size:14px}
     .cart-total-line{display:flex; justify-content:space-between; margin:10px 0; font-size:14px}
+    .cart-total-line--muted{color:#9ca3af; font-size:13px}
+    .cart-total-line--strike .mono{text-decoration:line-through}
     .cart-total-line--grand{font-weight:800; font-size:16px; margin-top:16px; padding-top:14px; border-top:1px dashed var(--line)}
     .mono{font-variant-numeric:tabular-nums}
     .cart-item{display:flex; align-items:center; gap:12px}
@@ -257,6 +259,10 @@
           <input type="text" name="promo" value="{{ cart_promo_code }}" placeholder="Code" maxlength="64" autocomplete="off" aria-label="Promo code">
           <button type="submit" class="btn btn--sm">APPLY</button>
         </form>
+        {% if cart_saving > 0 %}
+        <div class="cart-total-line cart-total-line--muted cart-total-line--strike"><span>Initial price subtotal</span><span class="mono">{{ cart_initial_subtotal }} ₾</span></div>
+        <div class="cart-total-line cart-total-line--muted"><span>Saving</span><span class="mono">{{ cart_saving }} ₾</span></div>
+        {% endif %}
         <div class="cart-total-line"><span>Subtotal</span><span class="mono">{{ cart_subtotal }} ₾</span></div>
         <div class="cart-total-line"><span>Discount</span><span class="mono">{{ cart_discount }} ₾</span></div>
         <div class="cart-total-line cart-total-line--grand"><span>Total</span><span class="mono">{{ cart_total }} ₾</span></div>
