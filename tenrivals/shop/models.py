@@ -893,8 +893,10 @@ class SalesOrder(models.Model):
 
     class Status(models.TextChoices):
         SUBMITTED = 'SUBMITTED', _('Submitted')
+        AWAITING_PAYMENT = 'AWAITING_PAYMENT', _('Awaiting payment')
         CONFIRMED = 'CONFIRMED', _('Confirmed')
         SHIPPED = 'SHIPPED', _('Shipped')
+        COMPLETED = 'COMPLETED', _('Completed')
         CANCELLED = 'CANCELLED', _('Cancelled')
         REFUNDED = 'REFUNDED', _('Refunded')
 
