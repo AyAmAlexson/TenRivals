@@ -2,6 +2,21 @@
 {% block title %}Customers — Staff — TR Shop{% endblock %}
 {% block page_heading %}{{ page_heading }}{% endblock %}
 {% block page_note %}<p class="page-note">Retail customers (POS). Registered site users get a linked customer record automatically.</p>{% endblock %}
+{% block extra_head %}
+<style>
+  .confirm-overlay{
+    position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;
+    align-items:center;justify-content:center;z-index:12060;padding:16px;
+  }
+  .confirm-overlay.is-open{display:flex}
+  .confirm-modal{
+    width:min(420px,100%);background:#fff;border:1px solid var(--line);padding:18px;
+  }
+  .confirm-modal__title{margin:0 0 10px;font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+  .confirm-modal__text{margin:0 0 14px;font-size:14px;color:var(--muted);line-height:1.5}
+  .confirm-modal__actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+</style>
+{% endblock %}
 {% block content %}
 <div class="staff-toolbar">
   <a href="{% url 'administration:staff_customer_new' %}" class="btn">New customer</a>
@@ -43,9 +58,9 @@
           <td>
             <div class="action-icons">
               <a href="{% url 'administration:staff_customer_edit' c.pk %}" class="icon-btn" title="Edit" aria-label="Edit">✎</a>
-              <form method="post" action="{% url 'administration:staff_customer_delete' c.pk %}" style="display:inline" onsubmit="return confirm('Delete this customer?');">
+              <form id="delete-customer-{{ c.pk }}" method="post" action="{% url 'administration:staff_customer_delete' c.pk %}" style="display:inline">
                 {% csrf_token %}
-                <button type="submit" class="icon-btn icon-btn--danger" title="Delete" aria-label="Delete">×</button>
+                <button type="button" class="icon-btn icon-btn--danger js-delete-customer" data-delete-form="delete-customer-{{ c.pk }}" data-customer-name="{{ c.first_name|escape }} {{ c.last_name|default:''|escape }}" title="Delete" aria-label="Delete">×</button>
               </form>
             </div>
           </td>
@@ -57,4 +72,56 @@
     </table>
   </div>
 </div>
+<div class="confirm-overlay" id="customer-delete-confirm" aria-hidden="true">
+  <div class="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="customer-delete-title">
+    <h3 class="confirm-modal__title" id="customer-delete-title">Delete customer</h3>
+    <p class="confirm-modal__text" id="customer-delete-text">Do you really want to delete this customer?</p>
+    <div class="confirm-modal__actions">
+      <button type="button" class="btn btn--sm btn--outline" id="customer-delete-cancel">Cancel</button>
+      <button type="button" class="btn btn--sm" id="customer-delete-submit">Delete</button>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  const overlay = document.getElementById('customer-delete-confirm');
+  const text = document.getElementById('customer-delete-text');
+  const cancelBtn = document.getElementById('customer-delete-cancel');
+  const submitBtn = document.getElementById('customer-delete-submit');
+  let pending = null;
+
+  function closeModal(){
+    pending = null;
+    overlay.classList.remove('is-open');
+    overlay.setAttribute('aria-hidden', 'true');
+  }
+
+  function openModal(formEl, label){
+    pending = formEl;
+    const name = (label || '').trim();
+    text.textContent = name ? ('Delete customer ' + name + '?') : 'Delete this customer?';
+    overlay.classList.add('is-open');
+    overlay.setAttribute('aria-hidden', 'false');
+  }
+
+  document.querySelectorAll('.js-delete-customer').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      const formId = btn.getAttribute('data-delete-form');
+      const formEl = formId ? document.getElementById(formId) : null;
+      if(!formEl) return;
+      openModal(formEl, btn.getAttribute('data-customer-name'));
+    });
+  });
+
+  cancelBtn.addEventListener('click', closeModal);
+  overlay.addEventListener('click', function(e){ if(e.target === overlay) closeModal(); });
+  document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && overlay.classList.contains('is-open')) closeModal(); });
+  submitBtn.addEventListener('click', function(){
+    if(!pending) return;
+    const form = pending;
+    closeModal();
+    form.submit();
+  });
+})();
+</script>
 {% endblock %}
