@@ -29,7 +29,9 @@ from shop.models import (
     BlogPost,
     HomeHeroContent,
     HomeHeroSlide,
+    HomePromoBanner,
     Product,
+    ProductCollection,
     ProductListing,
     ProductListingChannel,
     SalesOrder,
@@ -862,6 +864,7 @@ def staff_preorder_list(request):
 
 
 _MAX_HERO_SLIDES = 5
+_MAX_HOME_PROMO_BANNERS = 5
 _MAX_FEATURED_STORIES = 12
 
 
@@ -939,6 +942,46 @@ def staff_home_banners(request):
             slide.save(update_fields=["image_link_url", "internal_note"])
             messages.success(request, "Slide link and note updated.")
             return redirect("administration:staff_home_banners")
+        if action == "add_promo_banner":
+            if HomePromoBanner.objects.count() >= _MAX_HOME_PROMO_BANNERS:
+                messages.error(request, "You can have at most 5 promo banners.")
+                return redirect("administration:staff_home_banners")
+            image = request.FILES.get("promo_image")
+            if not image:
+                messages.error(request, "Choose an image file for the new promo banner.")
+                return redirect("administration:staff_home_banners")
+            link = (request.POST.get("promo_link_url") or "").strip()[:500]
+            note = (request.POST.get("promo_internal_note") or "").strip()[:200]
+            next_order = (HomePromoBanner.objects.aggregate(m=Max("sort_order"))["m"] or 0) + 1
+            HomePromoBanner.objects.create(
+                image=image,
+                sort_order=next_order,
+                image_link_url=link,
+                internal_note=note,
+            )
+            messages.success(request, "Promo banner added.")
+            return redirect("administration:staff_home_banners")
+        if action == "delete_promo_banner":
+            try:
+                sid = int(request.POST.get("promo_banner_id", "0"))
+            except (TypeError, ValueError):
+                messages.error(request, "Invalid promo banner.")
+                return redirect("administration:staff_home_banners")
+            get_object_or_404(HomePromoBanner, pk=sid).delete()
+            messages.success(request, "Promo banner removed.")
+            return redirect("administration:staff_home_banners")
+        if action == "update_promo_banner":
+            try:
+                sid = int(request.POST.get("promo_banner_id", "0"))
+            except (TypeError, ValueError):
+                messages.error(request, "Invalid promo banner.")
+                return redirect("administration:staff_home_banners")
+            banner = get_object_or_404(HomePromoBanner, pk=sid)
+            banner.image_link_url = (request.POST.get("promo_link_url") or "").strip()[:500]
+            banner.internal_note = (request.POST.get("promo_internal_note") or "").strip()[:200]
+            banner.save(update_fields=["image_link_url", "internal_note"])
+            messages.success(request, "Promo banner updated.")
+            return redirect("administration:staff_home_banners")
         messages.error(request, "Unknown action.")
         return redirect("administration:staff_home_banners")
 
@@ -949,10 +992,148 @@ def staff_home_banners(request):
             "staff_nav_active": "banners",
             "hero_content": HomeHeroContent.load(),
             "hero_slides": HomeHeroSlide.objects.all(),
+            "promo_banners": HomePromoBanner.objects.all(),
             "max_hero_slides": _MAX_HERO_SLIDES,
-            "page_heading": "Shop home — hero",
-            "page_note": "Hero: up to 5 full-width slides. "
+            "max_promo_banners": _MAX_HOME_PROMO_BANNERS,
+            "page_heading": "Shop home",
+            "page_note": "Hero and promo carousel: up to 5 slides each. "
             "Blog management moved to the Blog staff tab.",
+        },
+    )
+
+
+def _unique_collection_slug(raw_slug: str, title: str, exclude_pk: int | None = None) -> str:
+    base = slugify((raw_slug or "").strip())[:180] if raw_slug else slugify((title or "").strip())[:180]
+    if not base:
+        return ""
+    candidate = base
+    n = 2
+    qs = ProductCollection.objects.all()
+    if exclude_pk:
+        qs = qs.exclude(pk=exclude_pk)
+    while qs.filter(slug=candidate).exists():
+        suffix = f"-{n}"
+        candidate = f"{base[: max(1, 180 - len(suffix))]}{suffix}"
+        n += 1
+    return candidate
+
+
+@login_required
+@user_passes_test(_superuser_required)
+def staff_collections(request):
+    if request.method == "POST":
+        action = request.POST.get("action")
+        try:
+            cid = int(request.POST.get("collection_id", "0"))
+        except (TypeError, ValueError):
+            cid = 0
+        collection = get_object_or_404(ProductCollection, pk=cid) if cid else None
+        if action == "archive" and collection:
+            collection.is_archived = not collection.is_archived
+            collection.save(update_fields=["is_archived", "updated_at"])
+            messages.success(
+                request,
+                "Collection archived." if collection.is_archived else "Collection restored.",
+            )
+            return redirect("administration:staff_collections")
+        if action == "delete" and collection:
+            collection.delete()
+            messages.success(request, "Collection deleted.")
+            return redirect("administration:staff_collections")
+        messages.error(request, "Unknown action.")
+        return redirect("administration:staff_collections")
+
+    collections = ProductCollection.objects.prefetch_related("products").order_by("is_archived", "title", "id")
+    return render(
+        request,
+        "persons/staff_collections_list.html",
+        {
+            "collections": collections,
+            "staff_nav_active": "collections",
+            "page_heading": "Collections",
+            "page_note": "Curated storefront collections with optional banner and description.",
+        },
+    )
+
+
+@login_required
+@user_passes_test(_superuser_required)
+def staff_collection_edit(request, collection_id=None):
+    target = get_object_or_404(ProductCollection, pk=collection_id) if collection_id else None
+    if request.method == "POST":
+        title = (request.POST.get("title") or "").strip()[:160]
+        raw_slug = (request.POST.get("slug") or "").strip()[:180]
+        description = (request.POST.get("description") or "").strip()
+        if not title:
+            messages.error(request, "Collection title is required.")
+            return redirect(
+                "administration:staff_collection_edit",
+                collection_id=target.pk,
+            ) if target else redirect("administration:staff_collection_new")
+        slug = _unique_collection_slug(raw_slug, title, target.pk if target else None)
+        if not slug:
+            messages.error(request, "Collection slug could not be generated.")
+            return redirect(
+                "administration:staff_collection_edit",
+                collection_id=target.pk,
+            ) if target else redirect("administration:staff_collection_new")
+        raw_ids = (request.POST.get("product_ids") or "").strip()
+        product_ids: list[int] = []
+        if raw_ids:
+            for part in raw_ids.split(","):
+                try:
+                    pid = int(part.strip())
+                except (TypeError, ValueError):
+                    continue
+                if pid > 0:
+                    product_ids.append(pid)
+        product_ids = sorted(set(product_ids))
+        valid_ids = list(Product.objects.filter(pk__in=product_ids, is_active=True).values_list("pk", flat=True))
+
+        if target is None:
+            target = ProductCollection.objects.create(
+                title=title,
+                slug=slug,
+                description=description,
+                is_archived=request.POST.get("is_archived") == "1",
+                banner_image=request.FILES.get("banner_image"),
+            )
+        else:
+            target.title = title
+            target.slug = slug
+            target.description = description
+            target.is_archived = request.POST.get("is_archived") == "1"
+            new_banner = request.FILES.get("banner_image")
+            if request.POST.get("remove_banner") == "1" and target.banner_image:
+                target.banner_image.delete(save=False)
+                target.banner_image = None
+            if new_banner:
+                target.banner_image = new_banner
+            target.save()
+        target.products.set(valid_ids)
+        messages.success(request, "Collection saved.")
+        return redirect("administration:staff_collections")
+
+    all_products = (
+        Product.objects.filter(is_active=True)
+        .select_related("category")
+        .order_by("brand", "name", "id")
+    )
+    selected_ids = set(target.products.values_list("pk", flat=True)) if target else set()
+    selected_products = [p for p in all_products if p.pk in selected_ids]
+    available_products = [p for p in all_products if p.pk not in selected_ids]
+    return render(
+        request,
+        "persons/staff_collection_form.html",
+        {
+            "collection": target,
+            "selected_products": selected_products,
+            "available_products": available_products,
+            "selected_ids_csv": ",".join(str(pid) for pid in selected_ids),
+            "staff_nav_active": "collections",
+            "page_heading": "Edit collection" if target else "New collection",
+            "page_note": "Recommended banner size: 1600x560 px. "
+            "Add/remove products here without affecting the product database.",
         },
     )
 

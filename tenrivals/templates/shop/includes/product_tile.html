@@ -1,11 +1,11 @@
 {# p, request required. browse_mode: "stock" | "preorder" | "home" | omit (same as home) #}
 <div class="product-tile">
   {% if user.is_staff %}
-  <a href="{% url 'shop:product_edit' p.pk %}?{% if browse_mode == 'stock' or browse_mode == 'preorder' %}channel={{ browse_mode }}&{% endif %}next={{ request.get_full_path|urlencode }}" class="product-tile__edit" title="Edit product" aria-label="Edit product">
+  <a href="{% url 'shop:product_edit' p.pk %}?{% if browse_mode == 'stock' %}channel={% if p.stock_listing_qty > 0 %}stock{% else %}preorder{% endif %}&{% elif browse_mode == 'preorder' %}channel=preorder&{% endif %}next={{ request.get_full_path|urlencode }}" class="product-tile__edit" title="Edit product" aria-label="Edit product">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 013 3L8 18l-4 1 1-4L16.5 3.5z"/></svg>
   </a>
   {% endif %}
-  <a class="product-tile__link" href="{% url 'shop:product_detail' p.pk %}{% if browse_mode == 'stock' or browse_mode == 'preorder' %}?channel={{ browse_mode }}{% endif %}">
+  <a class="product-tile__link" href="{% url 'shop:product_detail' p.pk %}{% if browse_mode == 'stock' %}?channel={% if p.stock_listing_qty > 0 %}stock{% else %}preorder{% endif %}{% elif browse_mode == 'preorder' %}?channel=preorder{% endif %}">
     <div class="product-tile__media">
       {% if p.main_image %}
       <img src="{{ p.main_image.url }}" alt="{{ p.name }}" loading="lazy">

@@ -24,6 +24,13 @@ urlpatterns = [
     path("blog/new/", views.staff_blog_edit, name="staff_blog_new"),
     path("blog/<int:post_id>/", views.staff_blog_edit, name="staff_blog_edit"),
     path("shop-home/", views.staff_home_banners, name="staff_home_banners"),
+    path("collections/", views.staff_collections, name="staff_collections"),
+    path("collections/new/", views.staff_collection_edit, name="staff_collection_new"),
+    path(
+        "collections/<int:collection_id>/",
+        views.staff_collection_edit,
+        name="staff_collection_edit",
+    ),
     path("customers/new/", staff_sales_views.staff_customer_edit, name="staff_customer_new"),
     path(
         "customers/<int:pk>/edit/",

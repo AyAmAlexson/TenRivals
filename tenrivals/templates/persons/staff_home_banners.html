@@ -14,6 +14,14 @@
   .inline-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
   .muted{font-size:12px;color:var(--muted)}
   .story-preview{max-width:240px;max-height:360px;object-fit:cover;border:1px solid var(--line)}
+  .confirm-overlay{
+    position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;align-items:center;justify-content:center;z-index:12060;padding:16px;
+  }
+  .confirm-overlay.is-open{display:flex}
+  .confirm-modal{width:min(420px,100%);background:#fff;border:1px solid var(--line);padding:18px}
+  .confirm-modal__title{margin:0 0 10px;font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+  .confirm-modal__text{margin:0 0 14px;font-size:14px;color:var(--muted);line-height:1.5}
+  .confirm-modal__actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
 </style>
 {% endblock %}
 {% block content %}
@@ -56,7 +64,7 @@
 
 <div class="card" style="margin-bottom:28px">
   <h2 class="card-title">Hero slides (max {{ max_hero_slides }})</h2>
-  <p class="page-note" style="margin-top:-6px">One storefront carousel; multiple images rotate. Arrows appear only if there are 2+ slides.</p>
+  <p class="page-note" style="margin-top:-6px">One storefront carousel; multiple images rotate. Arrows appear only if there are 2+ slides. Recommended size: 1600x900 px.</p>
 
   {% for slide in hero_slides %}
   <div class="hero-slide-row">
@@ -81,11 +89,11 @@
         <button type="submit" class="btn btn--sm">Update link & note</button>
       </form>
     </div>
-    <form method="post" action="{% url 'administration:staff_home_banners' %}" onsubmit="return confirm('Remove this slide from the home hero?');">
+    <form id="delete-hero-slide-{{ slide.pk }}" method="post" action="{% url 'administration:staff_home_banners' %}">
       {% csrf_token %}
       <input type="hidden" name="action" value="delete_hero_slide">
       <input type="hidden" name="slide_id" value="{{ slide.pk }}">
-      <button type="submit" class="btn btn--sm" style="background:#6b7280" title="Remove slide">− Remove</button>
+      <button type="button" class="btn btn--sm js-confirm-delete" data-form-id="delete-hero-slide-{{ slide.pk }}" data-confirm-text="Remove this slide from the home hero?" style="background:#6b7280" title="Remove slide">− Remove</button>
     </form>
   </div>
   {% empty %}
@@ -102,6 +110,7 @@
         <div class="form-group">
           <label for="id_add_image">Image (required)</label>
           <input id="id_add_image" name="image" type="file" accept="image/*" required>
+          <p class="muted">Recommended size: 1600x900 px.</p>
         </div>
         <div class="form-group">
           <label for="id_add_link">Image link URL (optional)</label>
@@ -118,6 +127,71 @@
   {% endif %}
 </div>
 
+<div class="card" style="margin-bottom:28px">
+  <h2 class="card-title">Mid-page promo banners (max {{ max_promo_banners }})</h2>
+  <p class="page-note" style="margin-top:-6px">Wide low-height carousel between Featured Products and New Arrivals. Recommended size: 1600x420 px.</p>
+
+  {% for banner in promo_banners %}
+  <div class="hero-slide-row">
+    {% if banner.image %}
+    <a href="{{ banner.image.url }}" target="_blank" rel="noopener"><img class="hero-slide-thumb" src="{{ banner.image.url }}" alt=""></a>
+    {% else %}
+    <span class="muted">—</span>
+    {% endif %}
+    <div>
+      <form method="post" action="{% url 'administration:staff_home_banners' %}" class="form-grid" style="max-width:100%">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="update_promo_banner">
+        <input type="hidden" name="promo_banner_id" value="{{ banner.pk }}">
+        <div class="form-group" style="margin:0">
+          <label>Banner click URL (optional)</label>
+          <input name="promo_link_url" type="text" class="form-control" value="{{ banner.image_link_url }}" maxlength="500" placeholder="/shop/collections/example or https://…">
+        </div>
+        <div class="form-group" style="margin:0">
+          <label>Staff note (optional)</label>
+          <input name="promo_internal_note" type="text" class="form-control" value="{{ banner.internal_note }}" maxlength="200">
+        </div>
+        <button type="submit" class="btn btn--sm">Update link & note</button>
+      </form>
+    </div>
+    <form id="delete-promo-banner-{{ banner.pk }}" method="post" action="{% url 'administration:staff_home_banners' %}">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="delete_promo_banner">
+      <input type="hidden" name="promo_banner_id" value="{{ banner.pk }}">
+      <button type="button" class="btn btn--sm js-confirm-delete" data-form-id="delete-promo-banner-{{ banner.pk }}" data-confirm-text="Remove this promo banner from the homepage carousel?" style="background:#6b7280" title="Remove banner">− Remove</button>
+    </form>
+  </div>
+  {% empty %}
+  <p class="muted" style="padding:12px 0">No promo banners yet.</p>
+  {% endfor %}
+
+  {% if promo_banners|length < max_promo_banners %}
+  <div style="margin-top:20px;padding-top:20px;border-top:1px dashed var(--line)">
+    <h3 class="card-title" style="font-size:15px;margin-bottom:12px">Add promo banner (+)</h3>
+    <form method="post" enctype="multipart/form-data" action="{% url 'administration:staff_home_banners' %}">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="add_promo_banner">
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="id_add_promo_image">Image (required)</label>
+          <input id="id_add_promo_image" name="promo_image" type="file" accept="image/*" required>
+          <p class="muted">Recommended size: 1600x420 px.</p>
+        </div>
+        <div class="form-group">
+          <label for="id_add_promo_link">Banner link URL (optional)</label>
+          <input id="id_add_promo_link" name="promo_link_url" type="text" class="form-control" maxlength="500" placeholder="/shop/collections/example or https://…">
+        </div>
+        <div class="form-group">
+          <label for="id_add_promo_note">Staff note (optional)</label>
+          <input id="id_add_promo_note" name="promo_internal_note" type="text" class="form-control" maxlength="200">
+        </div>
+      </div>
+      <button type="submit" class="btn">+ Add promo banner</button>
+    </form>
+  </div>
+  {% endif %}
+</div>
+
 <div class="card">
   <h2 class="card-title">Blog moved to separate tab</h2>
   <p class="page-note" style="margin-top:-6px">
@@ -126,5 +200,50 @@
   </p>
   <a class="btn btn--sm" href="{% url 'administration:staff_blog_posts' %}">Open blog management</a>
 </div>
+
+<div class="confirm-overlay" id="home-banner-delete-confirm" aria-hidden="true">
+  <div class="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="home-banner-delete-title">
+    <h3 class="confirm-modal__title" id="home-banner-delete-title">Delete banner</h3>
+    <p class="confirm-modal__text" id="home-banner-delete-text">Do you really want to delete this banner?</p>
+    <div class="confirm-modal__actions">
+      <button type="button" class="btn btn--sm btn--outline" id="home-banner-delete-cancel">Cancel</button>
+      <button type="button" class="btn btn--sm" id="home-banner-delete-submit">Delete</button>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  const overlay = document.getElementById('home-banner-delete-confirm');
+  const text = document.getElementById('home-banner-delete-text');
+  const cancelBtn = document.getElementById('home-banner-delete-cancel');
+  const submitBtn = document.getElementById('home-banner-delete-submit');
+  let pending = null;
+  function closeModal(){
+    pending = null;
+    overlay.classList.remove('is-open');
+    overlay.setAttribute('aria-hidden', 'true');
+  }
+  document.querySelectorAll('.js-confirm-delete').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      const formId = btn.getAttribute('data-form-id');
+      const formEl = formId ? document.getElementById(formId) : null;
+      if(!formEl) return;
+      pending = formEl;
+      text.textContent = btn.getAttribute('data-confirm-text') || 'Do you really want to delete this banner?';
+      overlay.classList.add('is-open');
+      overlay.setAttribute('aria-hidden', 'false');
+    });
+  });
+  cancelBtn.addEventListener('click', closeModal);
+  overlay.addEventListener('click', function(e){ if(e.target === overlay) closeModal(); });
+  document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && overlay.classList.contains('is-open')) closeModal(); });
+  submitBtn.addEventListener('click', function(){
+    if(!pending) return;
+    const form = pending;
+    closeModal();
+    form.submit();
+  });
+})();
+</script>
 
 {% endblock %}

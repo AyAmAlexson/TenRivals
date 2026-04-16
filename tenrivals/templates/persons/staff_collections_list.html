@@ -1,0 +1,112 @@
+{% extends 'persons/staff_base.html' %}
+{% block title %}Collections — Staff — TR Shop{% endblock %}
+{% block page_heading %}{{ page_heading }}{% endblock %}
+{% block page_note %}<p class="page-note">{{ page_note }}</p>{% endblock %}
+{% block extra_head %}
+<style>
+  .confirm-overlay{position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;align-items:center;justify-content:center;z-index:12060;padding:16px}
+  .confirm-overlay.is-open{display:flex}
+  .confirm-modal{width:min(420px,100%);background:#fff;border:1px solid var(--line);padding:18px}
+  .confirm-modal__title{margin:0 0 10px;font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+  .confirm-modal__text{margin:0 0 14px;font-size:14px;color:var(--muted);line-height:1.5}
+  .confirm-modal__actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+</style>
+{% endblock %}
+{% block content %}
+<div class="staff-toolbar">
+  <a href="{% url 'administration:staff_collection_new' %}" class="btn">New collection</a>
+</div>
+
+<div class="card">
+  <h2 class="card-title">All collections</h2>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Title</th>
+          <th>Slug</th>
+          <th>Products</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for coll in collections %}
+        <tr>
+          <td class="mono">{{ coll.pk }}</td>
+          <td>{{ coll.title }}</td>
+          <td class="mono">{{ coll.slug }}</td>
+          <td>{{ coll.products.count }}</td>
+          <td>{% if coll.is_archived %}<span class="badge badge--no">Archived</span>{% else %}<span class="badge badge--yes">Active</span>{% endif %}</td>
+          <td>
+            <div class="action-icons">
+              <a href="{% url 'administration:staff_collection_edit' coll.pk %}" class="icon-btn" title="Edit" aria-label="Edit">✎</a>
+              <form method="post" action="{% url 'administration:staff_collections' %}" style="display:inline">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="archive">
+                <input type="hidden" name="collection_id" value="{{ coll.pk }}">
+                <button type="submit" class="icon-btn" title="{% if coll.is_archived %}Restore{% else %}Archive{% endif %}" aria-label="{% if coll.is_archived %}Restore{% else %}Archive{% endif %}">{% if coll.is_archived %}↺{% else %}⧉{% endif %}</button>
+              </form>
+              <form id="delete-collection-{{ coll.pk }}" method="post" action="{% url 'administration:staff_collections' %}" style="display:inline">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="delete">
+                <input type="hidden" name="collection_id" value="{{ coll.pk }}">
+                <button type="button" class="icon-btn icon-btn--danger js-delete-collection" data-form-id="delete-collection-{{ coll.pk }}" data-collection-label="{{ coll.title|escape }}" title="Delete" aria-label="Delete">×</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" style="color:var(--muted)">No collections yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="confirm-overlay" id="collection-delete-confirm" aria-hidden="true">
+  <div class="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="collection-delete-title">
+    <h3 class="confirm-modal__title" id="collection-delete-title">Delete collection</h3>
+    <p class="confirm-modal__text" id="collection-delete-text">Do you really want to delete this collection?</p>
+    <div class="confirm-modal__actions">
+      <button type="button" class="btn btn--sm btn--outline" id="collection-delete-cancel">Cancel</button>
+      <button type="button" class="btn btn--sm" id="collection-delete-submit">Delete</button>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  const overlay = document.getElementById('collection-delete-confirm');
+  const text = document.getElementById('collection-delete-text');
+  const cancelBtn = document.getElementById('collection-delete-cancel');
+  const submitBtn = document.getElementById('collection-delete-submit');
+  let pending = null;
+  function closeModal(){
+    pending = null;
+    overlay.classList.remove('is-open');
+    overlay.setAttribute('aria-hidden', 'true');
+  }
+  document.querySelectorAll('.js-delete-collection').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      const formId = btn.getAttribute('data-form-id');
+      const formEl = formId ? document.getElementById(formId) : null;
+      if(!formEl) return;
+      pending = formEl;
+      text.textContent = 'Delete collection ' + (btn.getAttribute('data-collection-label') || 'this collection') + '?';
+      overlay.classList.add('is-open');
+      overlay.setAttribute('aria-hidden', 'false');
+    });
+  });
+  cancelBtn.addEventListener('click', closeModal);
+  overlay.addEventListener('click', function(e){ if(e.target === overlay) closeModal(); });
+  document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && overlay.classList.contains('is-open')) closeModal(); });
+  submitBtn.addEventListener('click', function(){
+    if(!pending) return;
+    const form = pending;
+    closeModal();
+    form.submit();
+  });
+})();
+</script>
+{% endblock %}

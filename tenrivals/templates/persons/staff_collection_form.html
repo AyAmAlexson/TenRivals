@@ -1,0 +1,166 @@
+{% extends 'persons/staff_base.html' %}
+{% block title %}{{ page_heading }} — Staff — TR Shop{% endblock %}
+{% block page_heading %}{{ page_heading }}{% endblock %}
+{% block page_note %}<p class="page-note">{{ page_note }}</p>{% endblock %}
+{% block extra_head %}
+<style>
+  .form-control, .form-textarea{width:100%;padding:10px 12px;border:1px solid var(--line);font-size:14px;font-family:inherit}
+  .form-textarea{min-height:140px;resize:vertical}
+  .form-control:focus, .form-textarea:focus{outline:none;border-color:var(--accent)}
+  .collection-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(380px,520px);gap:24px}
+  .picker-card{border:1px solid var(--line);background:#fff;padding:18px}
+  .picker-list{display:grid;gap:8px;max-height:480px;overflow:auto}
+  .picker-item{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:start;border:1px solid var(--line);padding:10px 12px}
+  .picker-item__meta{font-size:12px;color:var(--muted);line-height:1.45}
+  .picker-item__title{font-size:13px;font-weight:700;margin:0 0 4px}
+  .picker-empty{font-size:13px;color:var(--muted)}
+  @media(max-width:960px){.collection-layout{grid-template-columns:1fr}}
+</style>
+{% endblock %}
+{% block content %}
+<form method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+  <div class="card">
+    <h2 class="card-title">Collection details</h2>
+    <div class="form-group">
+      <label for="id_title">Collection title</label>
+      <input id="id_title" name="title" type="text" class="form-control" maxlength="160" required value="{{ collection.title|default:'' }}">
+    </div>
+    <div class="form-group">
+      <label for="id_slug">Collection slug</label>
+      <input id="id_slug" name="slug" type="text" class="form-control" maxlength="180" value="{{ collection.slug|default:'' }}" placeholder="optional-auto-from-title">
+    </div>
+    <div class="form-group">
+      <label for="id_banner_image">Collection banner (optional)</label>
+      <input id="id_banner_image" name="banner_image" type="file" accept="image/*">
+      <p class="page-meta" style="margin:8px 0 0">Recommended size: `1600x560 px`.</p>
+      {% if collection and collection.banner_image %}
+      <div style="margin-top:10px">
+        <a href="{{ collection.banner_image.url }}" target="_blank" rel="noopener"><img src="{{ collection.banner_image.url }}" alt="{{ collection.title }}" style="max-width:280px;border:1px solid var(--line)"></a>
+      </div>
+      <label class="check-row" style="margin-top:8px"><input type="checkbox" name="remove_banner" value="1"> Remove current banner</label>
+      {% endif %}
+    </div>
+    <div class="form-group">
+      <label for="id_description">Collection description (optional)</label>
+      <textarea id="id_description" name="description" class="form-textarea">{{ collection.description|default:'' }}</textarea>
+    </div>
+    <label class="check-row"><input type="checkbox" name="is_archived" value="1" {% if collection and collection.is_archived %}checked{% endif %}> Archive collection</label>
+  </div>
+
+  <div class="collection-layout">
+    <div class="picker-card">
+      <h2 class="card-title" style="margin-bottom:14px">Available products</h2>
+      <div class="form-group">
+        <label for="product-search">Search products</label>
+        <input id="product-search" type="search" class="form-control" placeholder="Brand, model, SKU, color">
+      </div>
+      <div class="picker-list" id="available-products">
+        {% for p in available_products %}
+        <div class="picker-item" data-product-row data-search="{{ p.brand|default:'' }} {{ p.name }} {{ p.sku|default:'' }} {{ p.color|default:'' }}">
+          <div>
+            <p class="picker-item__title">{{ p.brand|default:'' }} {{ p.name }}</p>
+            <p class="picker-item__meta">#{{ p.pk }} · {{ p.get_type_display }}{% if p.color %} · {{ p.color }}{% endif %}{% if p.sku %} · {{ p.sku }}{% endif %}</p>
+          </div>
+          <button type="button" class="icon-btn icon-btn--accent js-add-product" data-product-id="{{ p.pk }}" data-title="{{ p.brand|default:'' }} {{ p.name|escape }}" data-meta="{{ p.get_type_display|escape }}{% if p.color %} · {{ p.color|escape }}{% endif %}{% if p.sku %} · {{ p.sku|escape }}{% endif %}">+</button>
+        </div>
+        {% empty %}
+        <p class="picker-empty">No active products available.</p>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="picker-card">
+      <h2 class="card-title" style="margin-bottom:14px">Products in collection</h2>
+      <input type="hidden" name="product_ids" id="selected-product-ids" value="{{ selected_ids_csv }}">
+      <div class="picker-list" id="selected-products">
+        {% for p in selected_products %}
+        <div class="picker-item" data-selected-id="{{ p.pk }}">
+          <div>
+            <p class="picker-item__title">{{ p.brand|default:'' }} {{ p.name }}</p>
+            <p class="picker-item__meta">{{ p.get_type_display }}{% if p.color %} · {{ p.color }}{% endif %}{% if p.sku %} · {{ p.sku }}{% endif %}</p>
+          </div>
+          <button type="button" class="icon-btn icon-btn--danger js-remove-product" data-product-id="{{ p.pk }}">−</button>
+        </div>
+        {% empty %}
+        <p class="picker-empty" id="selected-products-empty">No products selected yet.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="actions" style="margin-top:24px">
+    <a href="{% url 'administration:staff_collections' %}" class="btn btn--outline">Cancel</a>
+    <button type="submit" class="btn">Save collection</button>
+  </div>
+</form>
+
+<script>
+(function(){
+  const selectedInput = document.getElementById('selected-product-ids');
+  const selectedWrap = document.getElementById('selected-products');
+  const availableWrap = document.getElementById('available-products');
+  const searchInput = document.getElementById('product-search');
+  const emptyId = 'selected-products-empty';
+
+  function selectedIds(){
+    return (selectedInput.value || '').split(',').map(function(v){ return v.trim(); }).filter(Boolean);
+  }
+  function writeSelected(ids){
+    selectedInput.value = ids.join(',');
+  }
+  function ensureEmptyState(){
+    let empty = document.getElementById(emptyId);
+    const hasItems = selectedWrap.querySelector('[data-selected-id]');
+    if(!hasItems && !empty){
+      empty = document.createElement('p');
+      empty.className = 'picker-empty';
+      empty.id = emptyId;
+      empty.textContent = 'No products selected yet.';
+      selectedWrap.appendChild(empty);
+    }
+    if(hasItems && empty){ empty.remove(); }
+  }
+  function addSelectedCard(id, title, meta){
+    const card = document.createElement('div');
+    card.className = 'picker-item';
+    card.setAttribute('data-selected-id', id);
+    card.innerHTML = '<div><p class="picker-item__title"></p><p class="picker-item__meta"></p></div><button type="button" class="icon-btn icon-btn--danger js-remove-product" data-product-id="' + id + '">−</button>';
+    card.querySelector('.picker-item__title').textContent = title;
+    card.querySelector('.picker-item__meta').textContent = meta;
+    selectedWrap.appendChild(card);
+    ensureEmptyState();
+  }
+  availableWrap.addEventListener('click', function(e){
+    const btn = e.target.closest('.js-add-product');
+    if(!btn) return;
+    const id = btn.getAttribute('data-product-id');
+    let ids = selectedIds();
+    if(ids.indexOf(id) !== -1) return;
+    ids.push(id);
+    writeSelected(ids);
+    addSelectedCard(id, btn.getAttribute('data-title') || 'Product', btn.getAttribute('data-meta') || '');
+    btn.closest('[data-product-row]').remove();
+  });
+  selectedWrap.addEventListener('click', function(e){
+    const btn = e.target.closest('.js-remove-product');
+    if(!btn) return;
+    const id = btn.getAttribute('data-product-id');
+    writeSelected(selectedIds().filter(function(v){ return v !== id; }));
+    const row = btn.closest('[data-selected-id]');
+    if(row) row.remove();
+    ensureEmptyState();
+  });
+  if(searchInput){
+    searchInput.addEventListener('input', function(){
+      const q = searchInput.value.trim().toLowerCase();
+      availableWrap.querySelectorAll('[data-product-row]').forEach(function(row){
+        const hay = (row.getAttribute('data-search') || '').toLowerCase();
+        row.style.display = !q || hay.indexOf(q) !== -1 ? '' : 'none';
+      });
+    });
+  }
+  ensureEmptyState();
+})();
+</script>
+{% endblock %}

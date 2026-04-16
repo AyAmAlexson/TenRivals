@@ -162,6 +162,30 @@
     .product-rail__track .product-tile{height:100%}
     /* Featured stories — vertical cards, horizontal carousel */
     .featured-stories-block{margin-top:8px}
+    .promo-band{padding:6px 0 2px}
+    .promo-carousel{
+      position:relative; border:1px solid var(--line); background:#fff; overflow:hidden;
+    }
+    .promo-carousel__viewport{position:relative; aspect-ratio: 1200 / 300; min-height:160px; max-height:260px}
+    .promo-carousel__slide{
+      position:absolute; inset:0; opacity:0; visibility:hidden; transition:opacity .45s ease, visibility .45s ease;
+    }
+    .promo-carousel__slide.is-active{opacity:1; visibility:visible}
+    .promo-carousel__slide a,.promo-carousel__slide img{display:block; width:100%; height:100%}
+    .promo-carousel__slide img{object-fit:cover; object-position:center}
+    .promo-carousel__nav{
+      position:absolute; top:50%; transform:translateY(-50%); width:42px; height:42px; border:1px solid rgba(255,255,255,.45);
+      background:rgba(17,17,17,.22); color:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:2;
+    }
+    .promo-carousel__nav:hover{background:rgba(17,17,17,.4)}
+    .promo-carousel__nav--prev{left:12px}
+    .promo-carousel__nav--next{right:12px}
+    .promo-carousel__nav svg{width:20px; height:20px}
+    .promo-carousel__dots{display:flex; justify-content:center; gap:8px; padding:12px 0 2px}
+    .promo-carousel__dot{
+      width:8px; height:8px; border-radius:50%; border:none; background:#cbd5e1; cursor:pointer; padding:0;
+    }
+    .promo-carousel__dot.is-active{background:var(--accent)}
     .story-rail__cell{flex:0 0 clamp(220px, 24vw, 280px); min-width:220px}
     .story-rail__track{padding-bottom:20px}
     .story-card{
@@ -221,6 +245,7 @@
       .hero-nav{width:38px; height:38px}
       .product-rail__cell{flex-basis:78vw; min-width:78vw}
       .brand-name{font-size:18px}
+      .promo-carousel__viewport{min-height:120px}
     }
 
     /* Buttons */
@@ -422,8 +447,43 @@
       </div>
     </section>
 
+    {% if promo_banners %}
+    <section class="section promo-band">
+      <div class="promo-carousel" data-promo-carousel data-interval="7000">
+        <div class="promo-carousel__viewport">
+          {% for banner in promo_banners %}
+          <div class="promo-carousel__slide{% if forloop.first %} is-active{% endif %}" data-promo-slide>
+            {% if banner.image_link_url %}
+            <a href="{{ banner.image_link_url|abs_site_href }}"{% if banner.image_link_url|slice:":4" == "http" %} target="_blank" rel="noopener"{% endif %}>
+              <img src="{{ banner.image.url }}" alt="{{ banner.internal_note|default:'Promo banner' }}">
+            </a>
+            {% else %}
+            <img src="{{ banner.image.url }}" alt="{{ banner.internal_note|default:'Promo banner' }}">
+            {% endif %}
+          </div>
+          {% endfor %}
+          {% if promo_banners|length > 1 %}
+          <button type="button" class="promo-carousel__nav promo-carousel__nav--prev" aria-label="Previous promo banner" data-promo-prev>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg>
+          </button>
+          <button type="button" class="promo-carousel__nav promo-carousel__nav--next" aria-label="Next promo banner" data-promo-next>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
+          </button>
+          {% endif %}
+        </div>
+        {% if promo_banners|length > 1 %}
+        <div class="promo-carousel__dots" aria-label="Promo banner pagination">
+          {% for banner in promo_banners %}
+          <button type="button" class="promo-carousel__dot{% if forloop.first %} is-active{% endif %}" aria-label="Go to banner {{ forloop.counter }}" data-promo-dot></button>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+    </section>
+    {% endif %}
+
     <section class="section">
-      <div class="section-head"><h2>New Arrivals</h2><a href="{% url 'shop:preorder' %}">View all &rarr;</a></div>
+      <div class="section-head"><h2>New Arrivals</h2><a href="{% url 'shop:stock' %}">View all &rarr;</a></div>
       <div class="product-rail-wrap" data-product-rail>
         <button type="button" class="product-rail-nav" aria-label="Scroll new arrivals left" data-rail-prev>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg>
@@ -532,6 +592,38 @@
       };
       if(prev) prev.addEventListener('click', function(){ step(-1); });
       if(next) next.addEventListener('click', function(){ step(1); });
+    });
+    document.querySelectorAll('[data-promo-carousel]').forEach(function(carousel){
+      var slides = carousel.querySelectorAll('[data-promo-slide]');
+      var dots = carousel.querySelectorAll('[data-promo-dot]');
+      var prev = carousel.querySelector('[data-promo-prev]');
+      var next = carousel.querySelector('[data-promo-next]');
+      var n = slides.length;
+      if(!n) return;
+      var i = 0;
+      var interval = parseInt(carousel.getAttribute('data-interval'), 10) || 7000;
+      function show(idx){
+        i = (idx + n) % n;
+        slides.forEach(function(el, j){ el.classList.toggle('is-active', j === i); });
+        dots.forEach(function(el, j){ el.classList.toggle('is-active', j === i); });
+      }
+      function go(delta){ show(i + delta); resetTimer(); }
+      var timer = null;
+      function resetTimer(){
+        if(n < 2) return;
+        clearInterval(timer);
+        timer = setInterval(function(){ show(i + 1); }, interval);
+      }
+      if(prev) prev.addEventListener('click', function(){ go(-1); });
+      if(next) next.addEventListener('click', function(){ go(1); });
+      dots.forEach(function(dot, idx){
+        dot.addEventListener('click', function(){ show(idx); resetTimer(); });
+      });
+      resetTimer();
+      document.addEventListener('visibilitychange', function(){
+        if(document.hidden) clearInterval(timer);
+        else resetTimer();
+      });
     });
   })();
   </script>

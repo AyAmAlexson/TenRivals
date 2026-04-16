@@ -475,6 +475,57 @@ class HomeHeroSlide(models.Model):
         return f'Hero slide #{self.pk}'
 
 
+class HomePromoBanner(models.Model):
+    """Wide clickable banner carousel placed between featured products and new arrivals."""
+
+    image = models.ImageField(
+        upload_to='shop/home_promo_banners/',
+        help_text=_('Recommended size: 1600x420 px or similar wide landscape ratio.'),
+    )
+    sort_order = models.PositiveSmallIntegerField(default=0, db_index=True)
+    image_link_url = models.CharField(blank=True, max_length=500)
+    internal_note = models.CharField(max_length=200, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['sort_order', 'id']
+        verbose_name = 'Home promo banner'
+        verbose_name_plural = 'Home promo banners'
+
+    def __str__(self):
+        return f'Home promo banner #{self.pk}'
+
+
+class ProductCollection(models.Model):
+    """Curated group of products shown as a storefront collection landing page."""
+
+    title = models.CharField(max_length=160, unique=True)
+    slug = models.SlugField(max_length=180, unique=True, db_index=True)
+    banner_image = models.ImageField(
+        upload_to='shop/collections/',
+        null=True,
+        blank=True,
+        help_text=_('Recommended size: 1600x560 px or similar wide banner ratio.'),
+    )
+    description = models.TextField(blank=True)
+    is_archived = models.BooleanField(default=False, db_index=True)
+    products = models.ManyToManyField(
+        'Product',
+        blank=True,
+        related_name='collections',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['title', 'id']
+        verbose_name = 'Product collection'
+        verbose_name_plural = 'Product collections'
+
+    def __str__(self):
+        return self.title
+
+
 class BlogPost(models.Model):
     """Editorial post at /shop/blog/<slug>/. Featured home carousel uses the same rows."""
 

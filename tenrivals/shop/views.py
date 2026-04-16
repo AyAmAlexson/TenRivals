@@ -64,6 +64,7 @@ from .models import (
     HomeHeroSlide,
     Customer,
     Product,
+    ProductCollection,
     ProductListing,
     ProductListingChannel,
     ProductType,
@@ -72,6 +73,7 @@ from .models import (
     SalesOrderLine,
     Shoe,
     String,
+    HomePromoBanner,
 )
 from .sales_order_stock import (
     get_variant_qty_map,
@@ -305,6 +307,7 @@ _MAX_HOME_FEATURED_BLOG = 12
 def index(request):
     hero_content = HomeHeroContent.load()
     hero_slides = list(HomeHeroSlide.objects.all()[:5])
+    promo_banners = list(HomePromoBanner.objects.all()[:5])
     featured_blog_posts = list(
         BlogPost.objects.filter(
             is_published=True,
@@ -315,14 +318,24 @@ def index(request):
         *_PRODUCT_SUBCLASS_SELECT,
         'category',
     )
+    stock_products = (
+        annotate_stock_listing_quantity(
+            stock_catalog_base_queryset().select_related(
+                *_PRODUCT_SUBCLASS_SELECT,
+                'category',
+            )
+        )
+        .filter(stock_listing_qty__gt=0)
+        .distinct()
+    )
     featured_products = (
         active_products.filter(featured_product=True).order_by('-created_at')[:5]
     )
     new_arrivals = list(
         chain(
-            active_products.filter(type=ProductType.RACKET).order_by('-created_at')[:2],
-            active_products.filter(type=ProductType.MENS_SHOES).order_by('-created_at')[:2],
-            active_products.filter(type=ProductType.WOMENS_SHOES).order_by(
+            stock_products.filter(type=ProductType.RACKET).order_by('-created_at')[:2],
+            stock_products.filter(type=ProductType.MENS_SHOES).order_by('-created_at')[:2],
+            stock_products.filter(type=ProductType.WOMENS_SHOES).order_by(
                 '-created_at'
             )[:1],
         )
@@ -334,6 +347,7 @@ def index(request):
         {
             'hero_content': hero_content,
             'hero_slides': hero_slides,
+            'promo_banners': promo_banners,
             'featured_blog_posts': featured_blog_posts,
             'featured_products': featured_products,
             'new_arrivals': new_arrivals,
@@ -530,6 +544,13 @@ def _catalog_browse_context(request, browse_mode: str):
     type_tabs = [(choice.value, choice.label) for choice in ProductType]
 
     product_count = products.count()
+    storefront_collections = []
+    if browse_mode == 'stock':
+        storefront_collections = list(
+            ProductCollection.objects.filter(is_archived=False)
+            .prefetch_related('products')
+            .order_by('title', 'id')
+        )
 
     return {
         'browse_mode': browse_mode,
@@ -553,6 +574,7 @@ def _catalog_browse_context(request, browse_mode: str):
         'racket_pattern_active': racket_pattern,
         'catalog_brand': catalog_brand,
         'cbrand_qs': f'&cbrand={quote(catalog_brand)}' if catalog_brand else '',
+        'storefront_collections': storefront_collections,
     }
 
 
@@ -605,6 +627,31 @@ def product_search(request):
             'products': products,
             'search_channel': search_channel,
             'tile_browse_mode': tile_mode,
+        },
+    )
+
+
+def collection_detail(request, slug):
+    collection = get_object_or_404(
+        ProductCollection.objects.prefetch_related('products'),
+        slug=slug,
+        is_archived=False,
+    )
+    products = (
+        Product.objects.filter(pk__in=collection.products.values('pk'), is_active=True)
+        .select_related(*_PRODUCT_SUBCLASS_SELECT, 'category')
+    )
+    products = annotate_stock_listing_quantity(products)
+    products = order_products_by_effective_price(products)
+    product_count = products.count()
+    return render(
+        request,
+        'shop/collection_detail.html',
+        {
+            'collection': collection,
+            'products': products,
+            'product_count': product_count,
+            'browse_mode': 'stock',
         },
     )
 

@@ -99,6 +99,19 @@
     }
     .preorder-notice span{color:var(--ink); font-size:13px; font-weight:400; text-transform:none; line-height:1.45; flex:1; min-width:200px}
     .preorder-notice .btn{padding:8px 18px; font-size:11px}
+    .collection-strip{margin:0 0 28px}
+    .collection-strip__head{display:flex;align-items:baseline;justify-content:space-between;gap:14px;margin:0 0 14px}
+    .collection-strip__title{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+    .collection-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+    .collection-card{
+      display:block;border:1px solid var(--line);background:#fff;text-decoration:none !important;transition:border-color .15s,transform .15s;
+    }
+    .collection-card:hover{border-color:var(--accent);transform:translateY(-1px)}
+    .collection-card__media{aspect-ratio:16/6;background:#f8fafc;overflow:hidden}
+    .collection-card__media img{width:100%;height:100%;object-fit:cover}
+    .collection-card__body{padding:14px 14px 16px}
+    .collection-card__title{font-size:13px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;margin:0 0 6px}
+    .collection-card__meta{font-size:12px;color:var(--muted);line-height:1.5}
 
     @media(max-width:1024px){
       .container{padding:0 24px}
@@ -190,6 +203,31 @@
         {% endif %}
       </div>
     </div>
+
+    {% if browse_mode == 'stock' and storefront_collections %}
+    <section class="collection-strip" aria-label="Collections">
+      <div class="collection-strip__head">
+        <p class="collection-strip__title">Collections</p>
+      </div>
+      <div class="collection-grid">
+        {% for coll in storefront_collections %}
+        <a class="collection-card" href="{% url 'shop:collection_detail' coll.slug %}">
+          <div class="collection-card__media">
+            {% if coll.banner_image %}
+            <img src="{{ coll.banner_image.url }}" alt="{{ coll.title }}">
+            {% endif %}
+          </div>
+          <div class="collection-card__body">
+            <h3 class="collection-card__title">{{ coll.title }}</h3>
+            <p class="collection-card__meta">
+              {% if coll.description %}{{ coll.description|striptags|truncatewords:18 }}{% else %}Curated selection from in stock and coming soon items.{% endif %}
+            </p>
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+    </section>
+    {% endif %}
 
     <div class="preorder-layout">
       <aside class="preorder-filters" aria-label="Filters">
