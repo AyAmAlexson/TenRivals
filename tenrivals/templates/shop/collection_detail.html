@@ -1,6 +1,9 @@
 {% extends 'shop/base_marketing.html' %}
 {% load static %}
 {% block title %}{{ collection.title }} — TR Shop{% endblock %}
+{% block extra_head %}
+  {% include 'shop/includes/product_tile_styles.html' %}
+{% endblock %}
 {% block extra_css %}
   .collection-hero{margin:0 0 28px;border:1px solid var(--line);background:#fff;overflow:hidden}
   .collection-hero__media{aspect-ratio:16/6;background:#f8fafc}
@@ -10,7 +13,8 @@
   .collection-title{font-size:clamp(24px,3vw,34px);line-height:1.08;margin:0 0 12px}
   .collection-desc{font-size:15px;line-height:1.65;color:var(--muted);max-width:820px;text-transform:none}
   .collection-meta{margin:18px 0 0;font-size:12px;color:var(--muted);text-transform:none}
-  .collection-grid{display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+  .collection-grid{display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));align-items:stretch}
+  .collection-grid > .product-tile{height:100%;border:1px solid var(--line);background:#fff}
   .collection-empty{padding:18px;border:1px solid var(--line);background:#fff;color:var(--muted)}
 {% endblock %}
 {% block content %}
