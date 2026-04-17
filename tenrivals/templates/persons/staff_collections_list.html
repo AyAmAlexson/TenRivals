@@ -41,6 +41,7 @@
           <td>{% if coll.is_archived %}<span class="badge badge--no">Archived</span>{% else %}<span class="badge badge--yes">Active</span>{% endif %}</td>
           <td>
             <div class="action-icons">
+              <a href="{% url 'shop:collection_detail' coll.slug %}" class="icon-btn" title="View on site" aria-label="View on site" target="_blank" rel="noopener">↗</a>
               <a href="{% url 'administration:staff_collection_edit' coll.pk %}" class="icon-btn" title="Edit" aria-label="Edit">✎</a>
               <form method="post" action="{% url 'administration:staff_collections' %}" style="display:inline">
                 {% csrf_token %}
