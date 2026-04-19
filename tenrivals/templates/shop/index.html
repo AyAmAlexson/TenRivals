@@ -166,13 +166,24 @@
     .promo-carousel{
       position:relative; border:1px solid var(--line); background:#fff; overflow:hidden;
     }
-    .promo-carousel__viewport{position:relative; aspect-ratio: 1200 / 300; min-height:160px; max-height:260px}
+    .promo-carousel__viewport{position:relative; width:100%; aspect-ratio: 1200 / 300; min-height:160px; max-height:260px}
     .promo-carousel__slide{
       position:absolute; inset:0; opacity:0; visibility:hidden; transition:opacity .45s ease, visibility .45s ease;
     }
     .promo-carousel__slide.is-active{opacity:1; visibility:visible}
-    .promo-carousel__slide a,.promo-carousel__slide img{display:block; width:100%; height:100%}
-    .promo-carousel__slide img{object-fit:cover; object-position:center}
+    /* Fill frame when asset is narrower than viewport (e.g. 1600px raster in a wider box); global img{max-width:100%} would cap at intrinsic width */
+    .promo-carousel__slide a,
+    .promo-carousel__slide img{
+      display:block;
+      width:100%;
+      height:100%;
+      max-width:none;
+      max-height:none;
+      min-width:100%;
+      min-height:100%;
+      object-fit:cover;
+      object-position:center;
+    }
     .promo-carousel__nav{
       position:absolute; top:50%; transform:translateY(-50%); width:42px; height:42px; border:1px solid rgba(255,255,255,.45);
       background:rgba(17,17,17,.22); color:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:2;
