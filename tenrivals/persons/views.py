@@ -20,6 +20,7 @@ from rivals.models import Player
 from django.shortcuts import render, redirect
 import telebot
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.contrib import messages
 from django.utils import timezone
 from django.contrib.auth import logout, login
@@ -953,12 +954,19 @@ def staff_home_banners(request):
             link = (request.POST.get("promo_link_url") or "").strip()[:500]
             note = (request.POST.get("promo_internal_note") or "").strip()[:200]
             next_order = (HomePromoBanner.objects.aggregate(m=Max("sort_order"))["m"] or 0) + 1
-            HomePromoBanner.objects.create(
+            banner = HomePromoBanner(
                 image=image,
                 sort_order=next_order,
                 image_link_url=link,
                 internal_note=note,
             )
+            try:
+                banner.full_clean()
+                banner.save()
+            except ValidationError as exc:
+                for msg in exc.messages:
+                    messages.error(request, msg)
+                return redirect("administration:staff_home_banners")
             messages.success(request, "Promo banner added.")
             return redirect("administration:staff_home_banners")
         if action == "delete_promo_banner":
@@ -979,8 +987,27 @@ def staff_home_banners(request):
             banner = get_object_or_404(HomePromoBanner, pk=sid)
             banner.image_link_url = (request.POST.get("promo_link_url") or "").strip()[:500]
             banner.internal_note = (request.POST.get("promo_internal_note") or "").strip()[:200]
-            banner.save(update_fields=["image_link_url", "internal_note"])
-            messages.success(request, "Promo banner updated.")
+            new_image = request.FILES.get("promo_replace_image")
+            if new_image:
+                if banner.image:
+                    try:
+                        banner.image.delete(save=False)
+                    except OSError:
+                        pass
+                banner.image = new_image
+            try:
+                banner.full_clean()
+                banner.save()
+            except ValidationError as exc:
+                for msg in exc.messages:
+                    messages.error(request, msg)
+                return redirect("administration:staff_home_banners")
+            messages.success(
+                request,
+                "Promo banner updated (including image)."
+                if new_image
+                else "Promo banner updated.",
+            )
             return redirect("administration:staff_home_banners")
         messages.error(request, "Unknown action.")
         return redirect("administration:staff_home_banners")
@@ -1091,7 +1118,7 @@ def staff_collection_edit(request, collection_id=None):
         valid_ids = list(Product.objects.filter(pk__in=product_ids, is_active=True).values_list("pk", flat=True))
 
         if target is None:
-            target = ProductCollection.objects.create(
+            target = ProductCollection(
                 title=title,
                 slug=slug,
                 description=description,
@@ -1109,7 +1136,18 @@ def staff_collection_edit(request, collection_id=None):
                 target.banner_image = None
             if new_banner:
                 target.banner_image = new_banner
+        try:
+            target.full_clean()
             target.save()
+        except ValidationError as exc:
+            for msg in exc.messages:
+                messages.error(request, msg)
+            if target.pk:
+                return redirect(
+                    "administration:staff_collection_edit",
+                    collection_id=target.pk,
+                )
+            return redirect("administration:staff_collection_new")
         target.products.set(valid_ids)
         messages.success(request, "Collection saved.")
         return redirect("administration:staff_collections")
@@ -1132,7 +1170,7 @@ def staff_collection_edit(request, collection_id=None):
             "selected_ids_csv": ",".join(str(pid) for pid in selected_ids),
             "staff_nav_active": "collections",
             "page_heading": "Edit collection" if target else "New collection",
-            "page_note": "Recommended banner size: 1600x560 px. "
+            "page_note": "Banner: raster 1600x560 px or SVG for sharp text. "
             "Add/remove products here without affecting the product database.",
         },
     )

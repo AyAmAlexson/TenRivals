@@ -129,7 +129,7 @@
 
 <div class="card" style="margin-bottom:28px">
   <h2 class="card-title">Mid-page promo banners (max {{ max_promo_banners }})</h2>
-  <p class="page-note" style="margin-top:-6px">Wide low-height carousel between Featured Products and New Arrivals. Recommended size: 1600x420 px. (Collection page banners use 1600x560 px.)</p>
+  <p class="page-note" style="margin-top:-6px">Wide low-height carousel between Featured Products and New Arrivals. Raster: 1600x420 px. SVG allowed for sharp text. (Collection banners: 1600x560 px.)</p>
 
   {% for banner in promo_banners %}
   <div class="hero-slide-row">
@@ -139,10 +139,15 @@
     <span class="muted">—</span>
     {% endif %}
     <div>
-      <form method="post" action="{% url 'administration:staff_home_banners' %}" class="form-grid" style="max-width:100%">
+      <form method="post" enctype="multipart/form-data" action="{% url 'administration:staff_home_banners' %}" class="form-grid" style="max-width:100%">
         {% csrf_token %}
         <input type="hidden" name="action" value="update_promo_banner">
         <input type="hidden" name="promo_banner_id" value="{{ banner.pk }}">
+        <div class="form-group" style="margin:0">
+          <label for="id_promo_replace_{{ banner.pk }}">Replace banner image (optional)</label>
+          <input id="id_promo_replace_{{ banner.pk }}" name="promo_replace_image" type="file" accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml">
+          <p class="muted">Leave empty to keep the current file. Raster: 1600x420 px; SVG for sharp text.</p>
+        </div>
         <div class="form-group" style="margin:0">
           <label>Banner click URL (optional)</label>
           <input name="promo_link_url" type="text" class="form-control" value="{{ banner.image_link_url }}" maxlength="500" placeholder="/shop/collections/example or https://…">
@@ -151,7 +156,7 @@
           <label>Staff note (optional)</label>
           <input name="promo_internal_note" type="text" class="form-control" value="{{ banner.internal_note }}" maxlength="200">
         </div>
-        <button type="submit" class="btn btn--sm">Update link & note</button>
+        <button type="submit" class="btn btn--sm">Update banner</button>
       </form>
     </div>
     <form id="delete-promo-banner-{{ banner.pk }}" method="post" action="{% url 'administration:staff_home_banners' %}">
@@ -174,8 +179,8 @@
       <div class="form-grid">
         <div class="form-group">
           <label for="id_add_promo_image">Image (required)</label>
-          <input id="id_add_promo_image" name="promo_image" type="file" accept="image/*" required>
-          <p class="muted">Recommended size: 1600x420 px.</p>
+          <input id="id_add_promo_image" name="promo_image" type="file" accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml" required>
+          <p class="muted">Raster: 1600x420 px. SVG allowed for sharp text.</p>
         </div>
         <div class="form-group">
           <label for="id_add_promo_link">Banner link URL (optional)</label>

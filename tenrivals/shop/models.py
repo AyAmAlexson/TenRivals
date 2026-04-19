@@ -2,6 +2,7 @@ from decimal import Decimal
 
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.validators import FileExtensionValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -478,9 +479,17 @@ class HomeHeroSlide(models.Model):
 class HomePromoBanner(models.Model):
     """Wide clickable banner carousel placed between featured products and new arrivals."""
 
-    image = models.ImageField(
+    image = models.FileField(
         upload_to='shop/home_promo_banners/',
-        help_text=_('Recommended size: 1600x420 px or similar wide landscape ratio.'),
+        validators=[
+            FileExtensionValidator(
+                allowed_extensions=('png', 'jpg', 'jpeg', 'webp', 'svg'),
+            ),
+        ],
+        help_text=_(
+            'Raster (PNG/JPEG/WebP) or SVG. Recommended raster size: 1600x420 px '
+            '(wide landscape). SVG keeps text sharp at any width.'
+        ),
     )
     sort_order = models.PositiveSmallIntegerField(default=0, db_index=True)
     image_link_url = models.CharField(blank=True, max_length=500)
@@ -501,11 +510,19 @@ class ProductCollection(models.Model):
 
     title = models.CharField(max_length=160, unique=True)
     slug = models.SlugField(max_length=180, unique=True, db_index=True)
-    banner_image = models.ImageField(
+    banner_image = models.FileField(
         upload_to='shop/collections/',
         null=True,
         blank=True,
-        help_text=_('Recommended size: 1600x560 px or similar wide banner ratio.'),
+        validators=[
+            FileExtensionValidator(
+                allowed_extensions=('png', 'jpg', 'jpeg', 'webp', 'svg'),
+            ),
+        ],
+        help_text=_(
+            'Raster (PNG/JPEG/WebP) or SVG. Recommended raster size: 1600x560 px '
+            '(wide banner). SVG keeps text sharp at any width.'
+        ),
     )
     description = models.TextField(blank=True)
     is_archived = models.BooleanField(default=False, db_index=True)
