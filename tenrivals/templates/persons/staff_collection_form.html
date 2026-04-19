@@ -33,7 +33,8 @@
     <div class="form-group">
       <label for="id_banner_image">Collection banner (optional)</label>
       <input id="id_banner_image" name="banner_image" type="file" accept="image/*">
-      <p class="page-meta" style="margin:8px 0 0">Recommended size: `1600x560 px`.</p>
+      <p class="page-meta" style="margin:8px 0 0">Recommended size: 1600x560 px (collection page banner).</p>
+      <p class="page-meta" style="margin:4px 0 0">Homepage promo banner uses a different ratio: 1600x420 px.</p>
       {% if collection and collection.banner_image %}
       <div style="margin-top:10px">
         <a href="{{ collection.banner_image.url }}" target="_blank" rel="noopener"><img src="{{ collection.banner_image.url }}" alt="{{ collection.title }}" style="max-width:280px;border:1px solid var(--line)"></a>
