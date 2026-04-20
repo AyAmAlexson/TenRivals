@@ -97,6 +97,10 @@
       background:rgba(178,0,9,.04); border:1px solid rgba(178,0,9,.12);
       padding:10px 16px; margin:0 0 20px;
     }
+    .preorder-notice--stock{
+      background:rgba(31,41,55,.08);
+      border:1px solid rgba(31,41,55,.2);
+    }
     .preorder-notice span{color:var(--ink); font-size:13px; font-weight:400; text-transform:none; line-height:1.45; flex:1; min-width:200px}
     .preorder-notice .btn{padding:8px 18px; font-size:11px}
     .collection-strip{margin:0 0 28px}
@@ -238,7 +242,7 @@
           <div class="preorder-tabs" role="group" aria-labelledby="preorder-filter-type">
             {% if browse_mode == 'stock' %}
             <a class="preorder-tab {% if active_tab == 'all' or active_tab|slice:':7' == 'cbrand:' %}active{% endif %}" href="?{% if catalog_brand %}cbrand={{ catalog_brand|urlencode }}{% endif %}">All in stock</a>
-            <a class="preorder-tab {% if active_tab == 'type:ACC_GEAR' %}active{% endif %}" href="?type=ACC_GEAR{{ cbrand_qs }}">Accessories & equipment</a>
+            <a class="preorder-tab {% if active_tab == 'type:ACC_GEAR' %}active{% endif %}" href="?type=ACC_GEAR{{ cbrand_qs }}">Accessories</a>
             <a class="preorder-tab {% if active_tab == 'type:ACCESSORIES' %}active{% endif %}" href="?type=ACCESSORIES{{ cbrand_qs }}">Accessories</a>
             <a class="preorder-tab {% if active_tab == 'type:DAMPENERS' %}active{% endif %}" href="?type=DAMPENERS{{ cbrand_qs }}">Dampeners</a>
             <a class="preorder-tab {% if active_tab == 'type:STRINGS' %}active{% endif %}" href="?type=STRINGS{{ cbrand_qs }}">Strings</a>
@@ -343,8 +347,8 @@
           <a href="https://t.me/tennis_rivals_shop_tbilisi" class="btn" style="margin-left:auto">Contact us</a>
         </div>
         {% else %}
-        <div class="preorder-notice">
-          <span>Items on hand in Tbilisi. Contact us to confirm size and pickup.</span>
+        <div class="preorder-notice preorder-notice--stock">
+          <span>Items in stock in Tbilisi. Yexy us, if you want something you can&apos;t find here.</span>
           <a href="https://t.me/tennis_rivals_shop_tbilisi" class="btn" style="margin-left:auto">Contact us</a>
         </div>
         {% endif %}

@@ -16,7 +16,7 @@ def filter_products_by_listing_channel(qs, channel: str):
 
 def order_products_by_effective_price(qs):
     return qs.annotate(sort_price=Coalesce('actual_price', 'initial_price')).order_by(
-        'sort_price', 'id'
+        '-sort_price', 'id'
     )
 
 
