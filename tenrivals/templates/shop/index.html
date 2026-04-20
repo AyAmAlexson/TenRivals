@@ -657,7 +657,7 @@
           syncNearestPageFromScroll();
         }
         return hasOverflow;
-      });
+      };
       var step = function(dir){
         if(!syncControlsVisibility()) return;
         activePage = setRailActive(track, dots, activePage + dir, true);
