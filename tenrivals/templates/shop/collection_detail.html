@@ -16,12 +16,20 @@
   .collection-meta{margin:18px 0 0;font-size:12px;color:var(--muted);text-transform:none;max-width:var(--collection-copy-max)}
   .collection-group{padding:22px 0;border-top:1px solid var(--line)}
   .collection-group:first-of-type{border-top:none;padding-top:0}
+  .group-headline{
+    margin:0 0 12px;
+    font-size:13px;
+    line-height:1.2;
+    font-weight:900;
+    text-transform:uppercase;
+    letter-spacing:.12em;
+    color:var(--ink);
+  }
   .group-intro{display:grid;grid-template-columns:minmax(240px,300px) minmax(0,1fr);gap:18px;align-items:start;margin-bottom:14px}
   .group-intro--no-media{grid-template-columns:1fr}
   .group-intro__copy{max-width:var(--collection-copy-max);width:100%}
   .group-media{aspect-ratio:1/1;border:1px solid var(--line);background:#f8fafc;overflow:hidden}
   .group-media img{width:100%;height:100%;object-fit:cover}
-  .group-title{margin:0 0 8px;font-size:20px;line-height:1.2}
   .group-text{margin:0;font-size:14px;line-height:1.6;color:var(--muted);text-transform:none}
   .group-rail-wrap{display:block;width:100%}
   .group-rail{flex:1;min-width:0;overflow:hidden}
@@ -98,12 +106,12 @@
   {% if group_sections %}
     {% for section in group_sections %}
     <section class="collection-group">
+      {% if section.group and section.group.title %}<h2 class="group-headline">{{ section.group.title }}</h2>{% endif %}
       <div class="group-intro{% if not section.group or not section.group.image %} group-intro--no-media{% endif %}">
         {% if section.group and section.group.image %}
         <div class="group-media"><img src="{{ section.group.image.url }}" alt="{{ section.group.title|default:collection.title }}"></div>
         {% endif %}
         <div class="group-intro__copy">
-          {% if section.group and section.group.title %}<h2 class="group-title">{{ section.group.title }}</h2>{% endif %}
           {% if section.group and section.group.description %}<p class="group-text">{{ section.group.description|linebreaksbr }}</p>{% endif %}
         </div>
       </div>
