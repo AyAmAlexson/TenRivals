@@ -5,18 +5,20 @@
   {% include 'shop/includes/product_tile_styles.html' %}
 {% endblock %}
 {% block extra_css %}
+  :root{ --collection-copy-max:820px; }
   .collection-hero{margin:0 0 28px;border:1px solid var(--line);background:#fff;overflow:hidden}
   .collection-hero__media{aspect-ratio:16/6;background:#f8fafc}
   .collection-hero__media img{width:100%;height:100%;object-fit:cover}
   .collection-hero__body{padding:24px 24px 22px}
-  .collection-kicker{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin:0 0 10px}
-  .collection-title{font-size:clamp(24px,3vw,34px);line-height:1.08;margin:0 0 12px}
-  .collection-desc{font-size:15px;line-height:1.65;color:var(--muted);max-width:820px;text-transform:none}
-  .collection-meta{margin:18px 0 0;font-size:12px;color:var(--muted);text-transform:none}
+  .collection-kicker{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin:0 0 10px;max-width:var(--collection-copy-max)}
+  .collection-title{font-size:clamp(24px,3vw,34px);line-height:1.08;margin:0 0 12px;max-width:var(--collection-copy-max)}
+  .collection-desc{font-size:15px;line-height:1.65;color:var(--muted);max-width:var(--collection-copy-max);text-transform:none}
+  .collection-meta{margin:18px 0 0;font-size:12px;color:var(--muted);text-transform:none;max-width:var(--collection-copy-max)}
   .collection-group{padding:22px 0;border-top:1px solid var(--line)}
   .collection-group:first-of-type{border-top:none;padding-top:0}
   .group-intro{display:grid;grid-template-columns:minmax(240px,300px) minmax(0,1fr);gap:18px;align-items:start;margin-bottom:14px}
   .group-intro--no-media{grid-template-columns:1fr}
+  .group-intro__copy{max-width:var(--collection-copy-max);width:100%}
   .group-media{aspect-ratio:1/1;border:1px solid var(--line);background:#f8fafc;overflow:hidden}
   .group-media img{width:100%;height:100%;object-fit:cover}
   .group-title{margin:0 0 8px;font-size:20px;line-height:1.2}
@@ -29,7 +31,7 @@
   .group-rail__cell{flex:0 0 clamp(220px,24vw,270px);min-width:220px;display:flex}
   .group-rail__cell > .product-tile{height:100%;width:100%;border:1px solid var(--line);background:#fff}
   .collection-empty{padding:18px;border:1px solid var(--line);background:#fff;color:var(--muted)}
-  .all-products-title{margin:0 0 10px;font-size:22px}
+  .all-products-title{margin:0 0 10px;font-size:22px;max-width:var(--collection-copy-max)}
   @media(max-width:860px){.group-intro{grid-template-columns:1fr}.group-media{max-width:340px}}
 {% endblock %}
 {% block content %}
@@ -58,7 +60,7 @@
         {% if section.group and section.group.image %}
         <div class="group-media"><img src="{{ section.group.image.url }}" alt="{{ section.group.title|default:collection.title }}"></div>
         {% endif %}
-        <div>
+        <div class="group-intro__copy">
           {% if section.group and section.group.title %}<h2 class="group-title">{{ section.group.title }}</h2>{% endif %}
           {% if section.group and section.group.description %}<p class="group-text">{{ section.group.description|linebreaksbr }}</p>{% endif %}
         </div>
