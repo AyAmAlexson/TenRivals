@@ -776,6 +776,9 @@ def staff_order_for_me_edit(request, order_id=None):
             if not (item['item_url'].startswith('http://') or item['item_url'].startswith('https://')):
                 errors.append(f'Invalid URL: {item["item_url"]}')
                 break
+            if len(item['item_url']) > 1000:
+                errors.append('One of item links is too long (max 1000 chars).')
+                break
 
         estimated_total = None
         if estimated_total_raw:
@@ -783,6 +786,9 @@ def staff_order_for_me_edit(request, order_id=None):
                 estimated_total = Decimal(estimated_total_raw)
                 if estimated_total < 0:
                     raise InvalidOperation()
+                if estimated_total > Decimal('99999999.99'):
+                    raise InvalidOperation()
+                estimated_total = estimated_total.quantize(Decimal('0.01'))
             except Exception:
                 errors.append('Estimated total must be a non-negative number.')
 
@@ -816,7 +822,7 @@ def staff_order_for_me_edit(request, order_id=None):
                             update_fields=['first_name', 'last_name', 'phone', 'email', 'tg_account', 'updated_at']
                         )
                     if order is None:
-                        order = OrderForMe.objects.create(
+                        order = OrderForMe(
                             order_number=allocate_order_for_me_number(timezone.localdate().year),
                             customer=customer,
                             first_name=first_name,
@@ -829,6 +835,8 @@ def staff_order_for_me_edit(request, order_id=None):
                             estimated_total=estimated_total,
                             general_comment=general_comment,
                         )
+                        order.full_clean()
+                        order.save()
                     else:
                         order.customer = customer
                         order.first_name = first_name
@@ -840,19 +848,20 @@ def staff_order_for_me_edit(request, order_id=None):
                         order.status = status
                         order.estimated_total = estimated_total
                         order.general_comment = general_comment
+                        order.full_clean()
                         order.save()
                         order.items.all().delete()
-                    OrderForMeItem.objects.bulk_create(
-                        [
-                            OrderForMeItem(
-                                order=order,
-                                sort_order=item['sort_order'],
-                                item_url=item['item_url'],
-                                item_comment=item['item_comment'],
-                            )
-                            for item in items
-                        ]
-                    )
+                    item_models = []
+                    for item in items:
+                        item_model = OrderForMeItem(
+                            order=order,
+                            sort_order=item['sort_order'],
+                            item_url=item['item_url'],
+                            item_comment=item['item_comment'],
+                        )
+                        item_model.full_clean()
+                        item_models.append(item_model)
+                    OrderForMeItem.objects.bulk_create(item_models)
                 if old_status != OrderForMe.Status.CANCELLED and order.status == OrderForMe.Status.CANCELLED:
                     _send_order_for_me_cancelled_email(request, order)
                 messages.success(request, f'{order.order_number} saved.')
@@ -861,7 +870,7 @@ def staff_order_for_me_edit(request, order_id=None):
                 logger.exception('staff_order_for_me_edit save failed: %s', exc)
                 messages.error(
                     request,
-                    'Could not save this request. Please retry and contact support if the problem persists.',
+                    f'Could not save this request: {exc.__class__.__name__}. Please retry.',
                 )
                 order_view = {
                     'order_number': order.order_number if order else '',
