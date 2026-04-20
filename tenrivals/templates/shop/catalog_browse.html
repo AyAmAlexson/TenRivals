@@ -261,7 +261,7 @@
             {% endif %}
             {% for code, label in type_tabs %}
               {% if code != 'OTHER' and code != 'ACCESSORIES' and code != 'GRIPS' and code != 'STRINGS' and code != 'DAMPENERS' %}
-                {% if browse_mode != 'stock' and (code == 'RACKET' or code == 'M_SHOES' or code == 'W_SHOES') %}
+                {% if browse_mode != 'stock' and code == 'RACKET' or browse_mode != 'stock' and code == 'M_SHOES' or browse_mode != 'stock' and code == 'W_SHOES' %}
                 <a class="preorder-tab {% if active_tab == 'type:'|add:code %}active{% endif %}" href="?type={{ code }}{{ cbrand_qs }}">{{ label }}</a>
                 {% endif %}
               {% endif %}

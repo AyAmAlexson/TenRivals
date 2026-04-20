@@ -11,6 +11,7 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.core.mail import send_mail, EmailMultiAlternatives
 from django.db import transaction
 from django.db.models import Q
+from django.db.utils import DatabaseError
 from django.http import Http404, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.template.loader import render_to_string
@@ -555,11 +556,15 @@ def _catalog_browse_context(request, browse_mode: str):
     product_count = products.count()
     storefront_collections = []
     if browse_mode == 'stock':
-        storefront_collections = list(
-            ProductCollection.objects.filter(is_archived=False)
-            .prefetch_related('products')
-            .order_by('title', 'id')
-        )
+        try:
+            storefront_collections = list(
+                ProductCollection.objects.filter(is_archived=False)
+                .prefetch_related('products')
+                .order_by('title', 'id')
+            )
+        except DatabaseError:
+            # Local/staging DB can lag behind migrations; keep stock page available.
+            storefront_collections = []
 
     return {
         'browse_mode': browse_mode,
