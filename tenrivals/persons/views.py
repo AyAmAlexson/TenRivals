@@ -29,6 +29,7 @@ from django.core.mail import send_mail
 
 from shop.models import (
     BlogPost,
+    Customer,
     HomeHeroContent,
     HomeHeroSlide,
     HomePromoBanner,
