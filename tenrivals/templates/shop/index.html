@@ -109,6 +109,7 @@
     }
     .cat-seg{
       --seg:#1a1a1a;
+      --seg-border:var(--line);
       text-decoration:none !important;
       position:relative;
       z-index:0;
@@ -117,10 +118,10 @@
       display:flex; align-items:center; justify-content:center;
       padding:10px 10px;
       text-align:center;
-      border:1px solid var(--seg);
+      border:1px solid var(--seg-border);
       background:#fff;
       color:var(--ink);
-      transition:background .18s ease, color .18s ease, border-color .18s ease;
+      transition:background .18s ease, color .18s ease;
     }
     .cat-seg:not(:first-child){margin-left:-1px}
     .cat-seg--navy{--seg:#141c2c}
@@ -135,7 +136,6 @@
       text-decoration:none !important;
       background:var(--seg);
       color:#fff;
-      border-color:var(--seg);
     }
     .cat-seg:focus-visible{outline:2px solid color-mix(in srgb, var(--seg) 65%, #000); outline-offset:2px}
     .cat-seg__label{
@@ -183,21 +183,38 @@
       border:none; background:transparent; color:var(--carousel-accent); cursor:pointer;
       padding:0 4px; font-size:16px; line-height:1; font-weight:800;
       opacity:.78;
-      transition:color .15s, opacity .15s;
+      transform:translateX(0);
+      transition:color .15s, opacity .15s, transform .15s ease;
     }
     .carousel-controls__arrow:hover:not(:disabled){opacity:1}
+    .carousel-controls__arrow[data-rail-prev]:hover:not(:disabled),
+    .carousel-controls__arrow[data-promo-prev]:hover:not(:disabled){transform:translateX(-2px)}
+    .carousel-controls__arrow[data-rail-next]:hover:not(:disabled),
+    .carousel-controls__arrow[data-promo-next]:hover:not(:disabled){transform:translateX(2px)}
     .carousel-controls__arrow:disabled{opacity:.35; cursor:not-allowed}
     .carousel-controls__dots{display:flex; align-items:center; gap:6px}
     .carousel-controls__dot{
       border:none; background:transparent; cursor:pointer; padding:0;
-      font-size:13px; line-height:1; color:var(--carousel-muted); min-width:10px;
-      transition:color .15s, opacity .15s;
+      width:12px; height:12px; min-width:12px; border-radius:50%;
+      border:1.5px solid var(--carousel-muted);
+      position:relative;
       opacity:.95;
+      transition:border-color .15s, box-shadow .15s, opacity .15s;
+    }
+    .carousel-controls__dot::after{
+      content:'';
+      position:absolute; inset:0; margin:auto;
+      width:4px; height:4px; border-radius:50%;
+      background:var(--carousel-muted);
+      transition:background .15s;
     }
     .carousel-controls__dot:hover{opacity:1}
-    .carousel-controls__dot.is-active{color:var(--carousel-accent); font-weight:800; opacity:1}
-    .carousel-controls__dot::before{content:'•'}
-    .carousel-controls__dot.is-active::before{content:'o'}
+    .carousel-controls__dot.is-active{
+      border-color:var(--carousel-accent);
+      box-shadow:0 0 0 2px color-mix(in srgb, var(--carousel-accent) 32%, #fff);
+      opacity:1;
+    }
+    .carousel-controls__dot.is-active::after{background:var(--carousel-accent)}
     /* Featured stories — vertical cards, horizontal carousel */
     .featured-stories-block{margin-top:8px}
     .promo-band{padding:6px 0 2px}
@@ -560,7 +577,13 @@
         });
       }
     }
-    function setupRailDots(track, dotsWrap){
+    function getRailStepItems(track){
+      var first = track && track.children && track.children[0];
+      if(!track || !first) return 1;
+      var firstWidth = first.getBoundingClientRect().width || first.offsetWidth || 1;
+      return Math.max(1, Math.floor(track.clientWidth / firstWidth));
+    }
+    function setupRailDots(track, dotsWrap, onDot){
       if(!track || !dotsWrap) return [];
       var items = track.children ? Array.prototype.slice.call(track.children) : [];
       dotsWrap.innerHTML = '';
@@ -569,48 +592,67 @@
         dot.type = 'button';
         dot.className = 'carousel-controls__dot';
         dot.setAttribute('aria-label', 'Go to item ' + (idx + 1));
-        dot.addEventListener('click', function(){
-          var target = items[idx];
-          if(target) target.scrollIntoView({ behavior:'smooth', inline:'start', block:'nearest' });
-        });
+        dot.addEventListener('click', function(){ onDot(idx); });
         dotsWrap.appendChild(dot);
         return dot;
       });
     }
-    function updateRailState(track, prev, next, dots){
-      if(!track) return;
-      var max = Math.max(0, track.scrollWidth - track.clientWidth);
-      var x = track.scrollLeft;
-      if(prev) prev.disabled = x <= 2;
-      if(next) next.disabled = x >= max - 2;
-      if(dots && dots.length){
-        var active = 0;
-        var best = Infinity;
-        dots.forEach(function(_, idx){
-          var child = track.children[idx];
-          if(!child) return;
-          var delta = Math.abs(child.offsetLeft - x);
-          if(delta < best){ best = delta; active = idx; }
-        });
-        dots.forEach(function(dot, idx){ dot.classList.toggle('is-active', idx === active); });
+    function setRailActive(track, dots, index, shouldScroll){
+      if(!track) return 0;
+      var items = track.children ? Array.prototype.slice.call(track.children) : [];
+      var n = items.length;
+      if(!n) return 0;
+      var i = ((index % n) + n) % n;
+      var target = items[i];
+      if(shouldScroll && target){
+        target.scrollIntoView({ behavior:'smooth', inline:'start', block:'nearest' });
       }
+      if(dots && dots.length){
+        dots.forEach(function(dot, idx){ dot.classList.toggle('is-active', idx === i); });
+      }
+      return i;
     }
     document.querySelectorAll('[data-product-rail]').forEach(function(wrap){
       var track = wrap.querySelector('.product-rail__track');
       var prev = wrap.querySelector('[data-rail-prev]');
       var next = wrap.querySelector('[data-rail-next]');
       var dotsWrap = wrap.querySelector('[data-rail-dots]');
+      var controls = wrap.querySelector('.carousel-controls');
       if(!track) return;
-      var dots = setupRailDots(track, dotsWrap);
+      var activeIndex = 0;
+      var dots = setupRailDots(track, dotsWrap, function(idx){
+        activeIndex = setRailActive(track, dots, idx, true);
+      });
+      var syncControlsVisibility = function(){
+        var hasOverflow = (track.scrollWidth - track.clientWidth) > 1;
+        if(controls) controls.hidden = !hasOverflow;
+        if(prev) prev.disabled = !hasOverflow;
+        if(next) next.disabled = !hasOverflow;
+        return hasOverflow;
+      };
       var step = function(dir){
-        var w = track.clientWidth * 0.85;
-        track.scrollBy({ left: dir * w, behavior: 'smooth' });
+        if(!syncControlsVisibility()) return;
+        var stepItems = getRailStepItems(track);
+        activeIndex = setRailActive(track, dots, activeIndex + (dir * stepItems), true);
       };
       if(prev) prev.addEventListener('click', function(){ step(-1); });
       if(next) next.addEventListener('click', function(){ step(1); });
-      track.addEventListener('scroll', function(){ updateRailState(track, prev, next, dots); });
-      window.addEventListener('resize', function(){ updateRailState(track, prev, next, dots); });
-      updateRailState(track, prev, next, dots);
+      track.addEventListener('scroll', function(){
+        var x = track.scrollLeft;
+        var best = Infinity;
+        var nearest = activeIndex;
+        Array.prototype.forEach.call(track.children || [], function(child, idx){
+          var delta = Math.abs(child.offsetLeft - x);
+          if(delta < best){ best = delta; nearest = idx; }
+        });
+        activeIndex = setRailActive(track, dots, nearest, false);
+      });
+      window.addEventListener('resize', function(){
+        syncControlsVisibility();
+        activeIndex = setRailActive(track, dots, activeIndex, false);
+      });
+      syncControlsVisibility();
+      activeIndex = setRailActive(track, dots, 0, false);
     });
     document.querySelectorAll('[data-promo-carousel]').forEach(function(carousel){
       var slides = carousel.querySelectorAll('[data-promo-slide]');

@@ -77,20 +77,35 @@
     .carousel-controls__arrow{
       border:none;background:transparent;color:var(--carousel-accent);cursor:pointer;
       padding:0 4px;font-size:16px;line-height:1;font-weight:800;opacity:.78;
-      transition:color .15s,opacity .15s;
+      transform:translateX(0);
+      transition:color .15s,opacity .15s,transform .15s ease;
     }
     .carousel-controls__arrow:hover:not(:disabled){opacity:1}
+    .carousel-controls__arrow[data-rail-prev]:hover:not(:disabled){transform:translateX(-2px)}
+    .carousel-controls__arrow[data-rail-next]:hover:not(:disabled){transform:translateX(2px)}
     .carousel-controls__arrow:disabled{opacity:.35;cursor:not-allowed}
     .carousel-controls__dots{display:flex;align-items:center;gap:6px}
     .carousel-controls__dot{
       border:none;background:transparent;cursor:pointer;padding:0;
-      font-size:13px;line-height:1;color:var(--carousel-muted);min-width:10px;
-      transition:color .15s,opacity .15s;opacity:.95;
+      width:12px;height:12px;min-width:12px;border-radius:50%;
+      border:1.5px solid var(--carousel-muted);
+      position:relative;opacity:.95;
+      transition:border-color .15s,box-shadow .15s,opacity .15s;
     }
     .carousel-controls__dot:hover{opacity:1}
-    .carousel-controls__dot.is-active{color:var(--carousel-accent);font-weight:800;opacity:1}
-    .carousel-controls__dot::before{content:'•'}
-    .carousel-controls__dot.is-active::before{content:'o'}
+    .carousel-controls__dot::after{
+      content:'';
+      position:absolute;inset:0;margin:auto;
+      width:4px;height:4px;border-radius:50%;
+      background:var(--carousel-muted);
+      transition:background .15s;
+    }
+    .carousel-controls__dot.is-active{
+      border-color:var(--carousel-accent);
+      box-shadow:0 0 0 2px color-mix(in srgb, var(--carousel-accent) 32%, #fff);
+      opacity:1;
+    }
+    .carousel-controls__dot.is-active::after{background:var(--carousel-accent)}
     .article-products__grid > *{flex:0 0 clamp(168px,42%,220px);min-width:168px;scroll-snap-align:start}
     .article-product-card{
       display:flex;flex-direction:column;border:1px solid var(--line);background:#fff;
@@ -216,7 +231,13 @@
   function clampScrollDelta(rail){
     return Math.max(200, Math.floor(rail.clientWidth * 0.85));
   }
-  function setupRailDots(rail, dotsWrap){
+  function getRailStepItems(rail){
+    var first = rail && rail.children && rail.children[0];
+    if(!rail || !first) return 1;
+    var firstWidth = first.getBoundingClientRect().width || first.offsetWidth || 1;
+    return Math.max(1, Math.floor(rail.clientWidth / firstWidth));
+  }
+  function setupRailDots(rail, dotsWrap, onDot){
     if(!rail || !dotsWrap) return [];
     var items = Array.from(rail.children || []);
     dotsWrap.innerHTML = '';
@@ -225,51 +246,67 @@
       dot.type = 'button';
       dot.className = 'carousel-controls__dot';
       dot.setAttribute('aria-label', 'Go to item ' + (idx + 1));
-      dot.addEventListener('click', function(){
-        var target = items[idx];
-        if(target) target.scrollIntoView({ behavior:'smooth', inline:'start', block:'nearest' });
-      });
+      dot.addEventListener('click', function(){ onDot(idx); });
       dotsWrap.appendChild(dot);
       return dot;
     });
   }
-  function updateDisabled(rail, prev, next, dots){
-    if(!rail) return;
-    var max = Math.max(0, rail.scrollWidth - rail.clientWidth);
-    var x = rail.scrollLeft;
-    if(prev) prev.disabled = x <= 2;
-    if(next) next.disabled = x >= max - 2;
-    if(dots && dots.length){
-      var active = 0;
-      var best = Infinity;
-      dots.forEach(function(_, idx){
-        var child = rail.children[idx];
-        if(!child) return;
-        var delta = Math.abs(child.offsetLeft - x);
-        if(delta < best){ best = delta; active = idx; }
-      });
-      dots.forEach(function(dot, idx){ dot.classList.toggle('is-active', idx === active); });
+  function setRailActive(rail, dots, index, shouldScroll){
+    if(!rail) return 0;
+    var items = Array.from(rail.children || []);
+    var n = items.length;
+    if(!n) return 0;
+    var i = ((index % n) + n) % n;
+    var target = items[i];
+    if(shouldScroll && target){
+      target.scrollIntoView({ behavior:'smooth', inline:'start', block:'nearest' });
     }
+    if(dots && dots.length){
+      dots.forEach(function(dot, idx){ dot.classList.toggle('is-active', idx === i); });
+    }
+    return i;
   }
   document.querySelectorAll('[data-product-rail-wrap]').forEach(function(wrap){
     var rail = wrap.querySelector('[data-product-rail]');
     var prev = wrap.querySelector('[data-rail-prev]');
     var next = wrap.querySelector('[data-rail-next]');
     var dotsWrap = wrap.querySelector('[data-rail-dots]');
+    var controls = wrap.querySelector('.carousel-controls');
     if(!rail) return;
-    var dots = setupRailDots(rail, dotsWrap);
+    var activeIndex = 0;
+    var dots = setupRailDots(rail, dotsWrap, function(idx){
+      activeIndex = setRailActive(rail, dots, idx, true);
+    });
+    var syncControlsVisibility = function(){
+      var hasOverflow = (rail.scrollWidth - rail.clientWidth) > 1;
+      if(controls) controls.hidden = !hasOverflow;
+      if(prev) prev.disabled = !hasOverflow;
+      if(next) next.disabled = !hasOverflow;
+      return hasOverflow;
+    };
     function step(dir){
-      rail.scrollBy({ left: dir * clampScrollDelta(rail), behavior: 'smooth' });
+      if(!syncControlsVisibility()) return;
+      var stepItems = getRailStepItems(rail) || Math.max(1, Math.floor(clampScrollDelta(rail) / 180));
+      activeIndex = setRailActive(rail, dots, activeIndex + (dir * stepItems), true);
     }
     if(prev) prev.addEventListener('click', function(){ step(-1); });
     if(next) next.addEventListener('click', function(){ step(1); });
     rail.addEventListener('scroll', function(){
-      updateDisabled(rail, prev, next, dots);
+      var x = rail.scrollLeft;
+      var best = Infinity;
+      var nearest = activeIndex;
+      Array.from(rail.children || []).forEach(function(child, idx){
+        var delta = Math.abs(child.offsetLeft - x);
+        if(delta < best){ best = delta; nearest = idx; }
+      });
+      activeIndex = setRailActive(rail, dots, nearest, false);
     });
     window.addEventListener('resize', function(){
-      updateDisabled(rail, prev, next, dots);
+      syncControlsVisibility();
+      activeIndex = setRailActive(rail, dots, activeIndex, false);
     });
-    updateDisabled(rail, prev, next, dots);
+    syncControlsVisibility();
+    activeIndex = setRailActive(rail, dots, 0, false);
   });
 })();
 </script>
