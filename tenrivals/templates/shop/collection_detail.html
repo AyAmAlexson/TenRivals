@@ -28,19 +28,28 @@
   .group-rail__track{display:flex;gap:8px;overflow-x:auto;scroll-behavior:smooth;padding:4px 0 16px;margin:0;scrollbar-width:thin}
   .group-rail__cell{flex:0 0 clamp(220px,24vw,270px);min-width:220px;display:flex}
   .group-rail__cell > .product-tile{height:100%;width:100%;border:1px solid var(--line);background:#fff}
-  .carousel-controls{display:flex;align-items:center;justify-content:center;gap:10px;padding-top:4px}
-  .carousel-controls__arrow{
-    border:none;background:transparent;color:var(--ink);cursor:pointer;
-    padding:0 4px;font-size:16px;line-height:1;font-weight:800;transition:color .15s;
+  .carousel-controls{
+    --carousel-accent:var(--accent);
+    --carousel-muted:#94a3b8;
+    display:flex;align-items:center;justify-content:center;gap:10px;padding-top:4px;
   }
-  .carousel-controls__arrow:hover:not(:disabled){color:var(--accent)}
+  .carousel-controls--teal{--carousel-accent:#0f766e; --carousel-muted:#8dbdb9}
+  .carousel-controls--magenta{--carousel-accent:#be185d; --carousel-muted:#d7a1b8}
+  .carousel-controls__arrow{
+    border:none;background:transparent;color:var(--carousel-accent);cursor:pointer;
+    padding:0 4px;font-size:16px;line-height:1;font-weight:800;opacity:.78;
+    transition:color .15s,opacity .15s;
+  }
+  .carousel-controls__arrow:hover:not(:disabled){opacity:1}
   .carousel-controls__arrow:disabled{opacity:.35;cursor:not-allowed}
   .carousel-controls__dots{display:flex;align-items:center;gap:6px}
   .carousel-controls__dot{
     border:none;background:transparent;cursor:pointer;padding:0;
-    font-size:13px;line-height:1;color:#94a3b8;min-width:10px;transition:color .15s;
+    font-size:13px;line-height:1;color:var(--carousel-muted);min-width:10px;
+    transition:color .15s,opacity .15s;opacity:.95;
   }
-  .carousel-controls__dot.is-active{color:var(--accent-dark);font-weight:800}
+  .carousel-controls__dot:hover{opacity:1}
+  .carousel-controls__dot.is-active{color:var(--carousel-accent);font-weight:800;opacity:1}
   .carousel-controls__dot::before{content:'•'}
   .carousel-controls__dot.is-active::before{content:'o'}
   .collection-empty{padding:18px;border:1px solid var(--line);background:#fff;color:var(--muted)}
@@ -85,7 +94,7 @@
           <div class="group-rail__cell">{% include 'shop/includes/product_tile.html' with p=p browse_mode='stock' %}</div>
           {% endfor %}
         </div></div>
-        <div class="carousel-controls" aria-label="Collection group carousel controls">
+        <div class="carousel-controls carousel-controls--teal" aria-label="Collection group carousel controls">
           <button type="button" class="carousel-controls__arrow" data-rail-prev aria-label="Scroll group left">←</button>
           <div class="carousel-controls__dots" data-rail-dots></div>
           <button type="button" class="carousel-controls__arrow" data-rail-next aria-label="Scroll group right">→</button>
@@ -105,7 +114,7 @@
           <div class="group-rail__cell">{% include 'shop/includes/product_tile.html' with p=p browse_mode='stock' %}</div>
           {% endfor %}
         </div></div>
-        <div class="carousel-controls" aria-label="All collection products carousel controls">
+        <div class="carousel-controls carousel-controls--magenta" aria-label="All collection products carousel controls">
           <button type="button" class="carousel-controls__arrow" data-rail-prev aria-label="Scroll all products left">←</button>
           <div class="carousel-controls__dots" data-rail-dots></div>
           <button type="button" class="carousel-controls__arrow" data-rail-next aria-label="Scroll all products right">→</button>

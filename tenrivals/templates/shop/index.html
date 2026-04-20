@@ -169,23 +169,33 @@
     .product-rail__cell{flex:0 0 clamp(220px, 22vw, 260px); min-width:220px}
     .product-rail__track .product-tile{height:100%}
     .carousel-controls{
+      --carousel-accent:var(--accent);
+      --carousel-muted:#94a3b8;
       display:flex; align-items:center; justify-content:center; gap:10px;
       padding-top:4px;
     }
+    .carousel-controls--red{--carousel-accent:#B20009; --carousel-muted:#d9a1a5}
+    .carousel-controls--teal{--carousel-accent:#0f766e; --carousel-muted:#8dbdb9}
+    .carousel-controls--blue{--carousel-accent:#1e40af; --carousel-muted:#9baad7}
+    .carousel-controls--navy{--carousel-accent:#141c2c; --carousel-muted:#9da4af}
+    .carousel-controls--magenta{--carousel-accent:#be185d; --carousel-muted:#d7a1b8}
     .carousel-controls__arrow{
-      border:none; background:transparent; color:var(--ink); cursor:pointer;
+      border:none; background:transparent; color:var(--carousel-accent); cursor:pointer;
       padding:0 4px; font-size:16px; line-height:1; font-weight:800;
-      transition:color .15s;
+      opacity:.78;
+      transition:color .15s, opacity .15s;
     }
-    .carousel-controls__arrow:hover:not(:disabled){color:var(--accent)}
+    .carousel-controls__arrow:hover:not(:disabled){opacity:1}
     .carousel-controls__arrow:disabled{opacity:.35; cursor:not-allowed}
     .carousel-controls__dots{display:flex; align-items:center; gap:6px}
     .carousel-controls__dot{
       border:none; background:transparent; cursor:pointer; padding:0;
-      font-size:13px; line-height:1; color:#94a3b8; min-width:10px;
-      transition:color .15s;
+      font-size:13px; line-height:1; color:var(--carousel-muted); min-width:10px;
+      transition:color .15s, opacity .15s;
+      opacity:.95;
     }
-    .carousel-controls__dot.is-active{color:var(--accent-dark); font-weight:800}
+    .carousel-controls__dot:hover{opacity:1}
+    .carousel-controls__dot.is-active{color:var(--carousel-accent); font-weight:800; opacity:1}
     .carousel-controls__dot::before{content:'•'}
     .carousel-controls__dot.is-active::before{content:'o'}
     /* Featured stories — vertical cards, horizontal carousel */
@@ -414,7 +424,7 @@
           <div class="product-rail__cell">{% include 'shop/includes/product_tile.html' with p=p browse_mode='home' %}</div>
           {% endfor %}
         </div></div>
-        <div class="carousel-controls" aria-label="Featured products carousel controls">
+        <div class="carousel-controls carousel-controls--red" aria-label="Featured products carousel controls">
           <button type="button" class="carousel-controls__arrow" data-rail-prev aria-label="Scroll featured left">←</button>
           <div class="carousel-controls__dots" data-rail-dots></div>
           <button type="button" class="carousel-controls__arrow" data-rail-next aria-label="Scroll featured right">→</button>
@@ -439,7 +449,7 @@
           {% endfor %}
         </div>
         {% if promo_banners|length > 1 %}
-        <div class="carousel-controls promo-carousel__controls" aria-label="Promo banner controls">
+        <div class="carousel-controls carousel-controls--navy promo-carousel__controls" aria-label="Promo banner controls">
           <button type="button" class="carousel-controls__arrow" aria-label="Previous promo banner" data-promo-prev>←</button>
           <div class="carousel-controls__dots" aria-label="Promo banner pagination">
           {% for banner in promo_banners %}
@@ -461,7 +471,7 @@
           <div class="product-rail__cell">{% include 'shop/includes/product_tile.html' with p=p browse_mode='home' %}</div>
           {% endfor %}
         </div></div>
-        <div class="carousel-controls" aria-label="New arrivals carousel controls">
+        <div class="carousel-controls carousel-controls--blue" aria-label="New arrivals carousel controls">
           <button type="button" class="carousel-controls__arrow" data-rail-prev aria-label="Scroll new arrivals left">←</button>
           <div class="carousel-controls__dots" data-rail-dots></div>
           <button type="button" class="carousel-controls__arrow" data-rail-next aria-label="Scroll new arrivals right">→</button>
@@ -493,7 +503,7 @@
           </div>
           {% endfor %}
         </div></div>
-        <div class="carousel-controls" aria-label="Featured stories carousel controls">
+        <div class="carousel-controls carousel-controls--teal" aria-label="Featured stories carousel controls">
           <button type="button" class="carousel-controls__arrow" data-rail-prev aria-label="Scroll stories left">←</button>
           <div class="carousel-controls__dots" data-rail-dots></div>
           <button type="button" class="carousel-controls__arrow" data-rail-next aria-label="Scroll stories right">→</button>
