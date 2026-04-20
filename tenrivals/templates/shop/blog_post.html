@@ -87,25 +87,26 @@
     .carousel-controls__dots{display:flex;align-items:center;gap:6px}
     .carousel-controls__dot{
       border:none;background:transparent;cursor:pointer;padding:0;
-      width:12px;height:12px;min-width:12px;border-radius:50%;
-      border:1.5px solid var(--carousel-muted);
+      width:8px;height:8px;min-width:8px;border-radius:50%;
+      background:var(--carousel-muted);
       position:relative;opacity:.95;
-      transition:border-color .15s,box-shadow .15s,opacity .15s;
+      transition:border-color .15s,box-shadow .15s,opacity .15s,background .15s,width .15s,height .15s;
     }
     .carousel-controls__dot:hover{opacity:1}
-    .carousel-controls__dot::after{
-      content:'';
-      position:absolute;inset:0;margin:auto;
-      width:4px;height:4px;border-radius:50%;
-      background:var(--carousel-muted);
-      transition:background .15s;
-    }
     .carousel-controls__dot.is-active{
+      width:12px;height:12px;min-width:12px;
+      background:transparent;
+      border:1.5px solid var(--carousel-accent);
       border-color:var(--carousel-accent);
       box-shadow:0 0 0 2px color-mix(in srgb, var(--carousel-accent) 32%, #fff);
       opacity:1;
     }
-    .carousel-controls__dot.is-active::after{background:var(--carousel-accent)}
+    .carousel-controls__dot.is-active::after{
+      content:'';
+      position:absolute;inset:0;margin:auto;
+      width:4px;height:4px;border-radius:50%;
+      background:var(--carousel-accent);
+    }
     .article-products__grid > *{flex:0 0 clamp(168px,42%,220px);min-width:168px;scroll-snap-align:start}
     .article-product-card{
       display:flex;flex-direction:column;border:1px solid var(--line);background:#fff;
@@ -231,32 +232,37 @@
   function clampScrollDelta(rail){
     return Math.max(200, Math.floor(rail.clientWidth * 0.85));
   }
-  function getRailStepItems(rail){
+  function getRailVisibleItems(rail){
     var first = rail && rail.children && rail.children[0];
     if(!rail || !first) return 1;
     var firstWidth = first.getBoundingClientRect().width || first.offsetWidth || 1;
     return Math.max(1, Math.floor(rail.clientWidth / firstWidth));
   }
+  function getRailPageCount(rail){
+    var total = rail && rail.children ? rail.children.length : 0;
+    var visible = getRailVisibleItems(rail);
+    return Math.max(1, total - visible + 1);
+  }
   function setupRailDots(rail, dotsWrap, onDot){
     if(!rail || !dotsWrap) return [];
-    var items = Array.from(rail.children || []);
+    var pageCount = getRailPageCount(rail);
     dotsWrap.innerHTML = '';
-    return items.map(function(_, idx){
+    return Array.from({ length: pageCount }, function(_, idx){
       var dot = document.createElement('button');
       dot.type = 'button';
       dot.className = 'carousel-controls__dot';
-      dot.setAttribute('aria-label', 'Go to item ' + (idx + 1));
+      dot.setAttribute('aria-label', 'Go to position ' + (idx + 1));
       dot.addEventListener('click', function(){ onDot(idx); });
       dotsWrap.appendChild(dot);
       return dot;
     });
   }
-  function setRailActive(rail, dots, index, shouldScroll){
+  function setRailActive(rail, dots, pageIndex, shouldScroll){
     if(!rail) return 0;
     var items = Array.from(rail.children || []);
-    var n = items.length;
-    if(!n) return 0;
-    var i = ((index % n) + n) % n;
+    var pageCount = getRailPageCount(rail);
+    if(!items.length) return 0;
+    var i = ((pageIndex % pageCount) + pageCount) % pageCount;
     var target = items[i];
     if(shouldScroll && target){
       target.scrollIntoView({ behavior:'smooth', inline:'start', block:'nearest' });
@@ -273,40 +279,53 @@
     var dotsWrap = wrap.querySelector('[data-rail-dots]');
     var controls = wrap.querySelector('.carousel-controls');
     if(!rail) return;
-    var activeIndex = 0;
-    var dots = setupRailDots(rail, dotsWrap, function(idx){
-      activeIndex = setRailActive(rail, dots, idx, true);
-    });
+    var activePage = 0;
+    var dots = [];
+    var rebuildDots = function(){
+      dots = setupRailDots(rail, dotsWrap, function(idx){
+        activePage = setRailActive(rail, dots, idx, true);
+      });
+    };
+    rebuildDots();
+    var syncNearestPageFromScroll = function(){
+      var x = rail.scrollLeft;
+      var best = Infinity;
+      var nearest = activePage;
+      var pageCount = getRailPageCount(rail);
+      for(var idx = 0; idx < pageCount; idx++){
+        var child = rail.children[idx];
+        if(!child) break;
+        var delta = Math.abs(child.offsetLeft - x);
+        if(delta < best){ best = delta; nearest = idx; }
+      }
+      activePage = setRailActive(rail, dots, nearest, false);
+    };
     var syncControlsVisibility = function(){
       var hasOverflow = (rail.scrollWidth - rail.clientWidth) > 1;
       if(controls) controls.hidden = !hasOverflow;
       if(prev) prev.disabled = !hasOverflow;
       if(next) next.disabled = !hasOverflow;
+      if(hasOverflow){
+        rebuildDots();
+        syncNearestPageFromScroll();
+      }
       return hasOverflow;
     };
     function step(dir){
       if(!syncControlsVisibility()) return;
-      var stepItems = getRailStepItems(rail) || Math.max(1, Math.floor(clampScrollDelta(rail) / 180));
-      activeIndex = setRailActive(rail, dots, activeIndex + (dir * stepItems), true);
+      activePage = setRailActive(rail, dots, activePage + dir, true);
     }
     if(prev) prev.addEventListener('click', function(){ step(-1); });
     if(next) next.addEventListener('click', function(){ step(1); });
     rail.addEventListener('scroll', function(){
-      var x = rail.scrollLeft;
-      var best = Infinity;
-      var nearest = activeIndex;
-      Array.from(rail.children || []).forEach(function(child, idx){
-        var delta = Math.abs(child.offsetLeft - x);
-        if(delta < best){ best = delta; nearest = idx; }
-      });
-      activeIndex = setRailActive(rail, dots, nearest, false);
+      syncNearestPageFromScroll();
     });
     window.addEventListener('resize', function(){
       syncControlsVisibility();
-      activeIndex = setRailActive(rail, dots, activeIndex, false);
+      activePage = setRailActive(rail, dots, activePage, false);
     });
     syncControlsVisibility();
-    activeIndex = setRailActive(rail, dots, 0, false);
+    activePage = setRailActive(rail, dots, 0, false);
   });
 })();
 </script>
