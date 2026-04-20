@@ -541,6 +541,7 @@ def _catalog_browse_context(request, browse_mode: str):
     if browse_mode == 'stock':
         products = annotate_stock_listing_quantity(products)
     products = order_products_by_effective_price(products)
+    products = products.order_by('-in_stock', '-sort_price', 'id')
     type_tabs = [(choice.value, choice.label) for choice in ProductType]
 
     product_count = products.count()
