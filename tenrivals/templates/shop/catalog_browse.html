@@ -110,6 +110,7 @@
     }
     .preorder-notice span{color:var(--ink); font-size:13px; font-weight:400; text-transform:none; line-height:1.45; flex:1; min-width:200px}
     .preorder-notice .btn{padding:8px 18px; font-size:11px}
+    .preorder-notice__actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-left:auto}
     .collection-strip{margin:0 0 28px}
     .collection-strip__head{display:flex;align-items:baseline;justify-content:space-between;gap:14px;margin:0 0 14px}
     .collection-strip__title{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
@@ -203,8 +204,6 @@
       <div class="catalog-bar__left">
         <ul class="catalog-bar__tabs">
           <li><a class="catalog-bar__tab {% if browse_mode == 'stock' %}is-active{% endif %}" href="{% url 'shop:stock' %}">In Stock</a></li>
-          <span class="catalog-bar__sep">/</span>
-          <li><a class="catalog-bar__tab {% if browse_mode == 'preorder' %}is-active{% endif %}" href="{% url 'shop:preorder' %}">Preorder</a></li>
         </ul>
         <span class="catalog-bar__count">{{ product_count }} product{{ product_count|pluralize }}</span>
       </div>
@@ -358,7 +357,10 @@
         {% else %}
         <div class="preorder-notice preorder-notice--stock">
           <span>Items in stock in Tbilisi. Text us, if you want something you can&apos;t find here.</span>
-          <a href="https://t.me/tennis_rivals_shop_tbilisi" class="btn" style="margin-left:auto">Contact us</a>
+          <div class="preorder-notice__actions">
+            <a href="https://t.me/tennis_rivals_shop_tbilisi" class="btn">Contact us</a>
+            <a href="{% url 'shop:order_for_me' %}" class="btn">Order for me</a>
+          </div>
         </div>
         {% endif %}
 
@@ -369,6 +371,15 @@
         <p style="grid-column:1/-1">No products to display.</p>
       {% endfor %}
         </div>
+        {% if browse_mode == 'stock' %}
+        <div class="preorder-notice preorder-notice--stock" style="margin:20px 0 0">
+          <span>Items in stock in Tbilisi. Text us, if you want something you can&apos;t find here.</span>
+          <div class="preorder-notice__actions">
+            <a href="https://t.me/tennis_rivals_shop_tbilisi" class="btn">Contact us</a>
+            <a href="{% url 'shop:order_for_me' %}" class="btn">Order for me</a>
+          </div>
+        </div>
+        {% endif %}
       </div>
     </div>
   </main>

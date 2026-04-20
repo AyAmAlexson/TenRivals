@@ -235,8 +235,8 @@
       <a href="{% url 'shop:stock' %}">Stock</a><span>/</span>
       <a href="{% url 'shop:stock' %}?type={{ product.type }}">{{ pdp_type_breadcrumb_label }}</a><span>/</span>
       {% else %}
-      <a href="{% url 'shop:preorder' %}">Preorder</a><span>/</span>
-      <a href="{% url 'shop:preorder' %}?type={{ product.type }}">{{ pdp_type_breadcrumb_label }}</a><span>/</span>
+      <a href="{% url 'shop:order_for_me' %}">Order for me</a><span>/</span>
+      <a href="{% url 'shop:order_for_me' %}">{{ pdp_type_breadcrumb_label }}</a><span>/</span>
       {% endif %}
       <span style="color:var(--ink)">{{ product.name }}</span>
     </div>
