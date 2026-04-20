@@ -182,7 +182,7 @@
           {% endif %}
           <div class="col"><div class="field">{{ form.sku.label_tag }}{{ form.sku }}{% if form.sku.errors %}<ul class="errorlist">{% for e in form.sku.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}</div></div>
         </div>
-        <div class="row">
+      <div class="row">
           <div class="col"><div class="field">{{ form.listing_channel.label_tag }}{{ form.listing_channel }}{% if form.listing_channel.help_text %}<p class="hint">{{ form.listing_channel.help_text }}</p>{% endif %}{% if form.listing_channel.errors %}<ul class="errorlist">{% for e in form.listing_channel.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}</div></div>
           <div class="col"><div class="field">{{ form.listing_quantity.label_tag }}{{ form.listing_quantity }}{% if form.listing_quantity.help_text %}<p class="hint">{{ form.listing_quantity.help_text }}</p>{% endif %}{% if form.listing_quantity.errors %}<ul class="errorlist">{% for e in form.listing_quantity.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}</div></div>
         </div>
@@ -193,8 +193,8 @@
         <div class="row">
           <div class="col"><div class="field">{{ form.initial_price.label_tag }}{{ form.initial_price }}<p class="hint">Base/list price (struck through when sale price set)</p>{% if form.initial_price.errors %}<ul class="errorlist">{% for e in form.initial_price.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}</div></div>
           <div class="col"><div class="field">{{ form.actual_price.label_tag }}{{ form.actual_price }}<p class="hint">Optional sale / current price</p>{% if form.actual_price.errors %}<ul class="errorlist">{% for e in form.actual_price.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}</div></div>
-        </div>
-        <div class="row">
+      </div>
+      <div class="row">
           <div class="col field-check"><div class="field">{{ form.in_stock }}{{ form.in_stock.label_tag }}</div></div>
           <div class="col field-check"><div class="field">{{ form.is_active }}{{ form.is_active.label_tag }}</div></div>
           <div class="col field-check"><div class="field">{{ form.featured_product }}{{ form.featured_product.label_tag }}{% if form.featured_product.help_text %}<p class="hint">{{ form.featured_product.help_text }}</p>{% endif %}</div></div>
@@ -278,8 +278,8 @@
       {% elif 'material' in form.fields and 'gauge_mm' not in form.fields %}
       <div class="form-card">
         <h3>Apparel</h3>
-        <div class="row">
-          <div class="col"><div class="field">{{ form.gender.label_tag }}{{ form.gender }}</div></div>
+      <div class="row">
+        <div class="col"><div class="field">{{ form.gender.label_tag }}{{ form.gender }}</div></div>
           <div class="col"><div class="field">{{ form.material.label_tag }}{{ form.material }}</div></div>
         </div>
         <div class="field">
