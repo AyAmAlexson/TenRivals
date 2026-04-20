@@ -885,10 +885,11 @@ def staff_order_for_me_edit(request, order_id=None):
                     'general_comment': general_comment,
                 }
 
-    if order:
-        item_rows = list(order.items.order_by('sort_order', 'id').values('item_url', 'item_comment')[:max_items])
-    elif request.method == 'POST':
+    if request.method == 'POST':
+        # After validation/save error, keep the user-entered rows instead of reloading stale DB rows.
         item_rows = _parse_order_for_me_items(request, max_items=max_items)
+    elif order:
+        item_rows = list(order.items.order_by('sort_order', 'id').values('item_url', 'item_comment')[:max_items])
     else:
         item_rows = []
     if not item_rows:
