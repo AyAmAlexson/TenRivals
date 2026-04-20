@@ -66,9 +66,10 @@
     .article-products__track-wrap{display:block;width:100%}
     .article-products__grid{
       display:flex;gap:14px;overflow-x:auto;scroll-behavior:smooth;padding:4px 2px 10px;
-      scroll-snap-type:x mandatory;scrollbar-width:thin;
+      scroll-snap-type:x mandatory;scrollbar-width:none;-ms-overflow-style:none;
       -webkit-overflow-scrolling:touch;
     }
+    .article-products__grid::-webkit-scrollbar{display:none}
     .carousel-controls{
       --carousel-accent:#141c2c;
       --carousel-muted:#9da4af;

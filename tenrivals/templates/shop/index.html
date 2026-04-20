@@ -164,8 +164,10 @@
     .product-rail__track{
       display:flex; gap:8px; overflow-x:auto; scroll-behavior:smooth;
       padding:4px 0 16px; margin:0;
-      scrollbar-width:thin;
+      scrollbar-width:none;
+      -ms-overflow-style:none;
     }
+    .product-rail__track::-webkit-scrollbar{display:none}
     .product-rail__cell{flex:0 0 clamp(220px, 22vw, 260px); min-width:220px}
     .product-rail__track .product-tile{height:100%}
     .carousel-controls{

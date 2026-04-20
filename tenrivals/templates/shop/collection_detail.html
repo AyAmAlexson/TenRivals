@@ -25,7 +25,11 @@
   .group-text{margin:0;font-size:14px;line-height:1.6;color:var(--muted);text-transform:none}
   .group-rail-wrap{display:block;width:100%}
   .group-rail{flex:1;min-width:0;overflow:hidden}
-  .group-rail__track{display:flex;gap:8px;overflow-x:auto;scroll-behavior:smooth;padding:4px 0 16px;margin:0;scrollbar-width:thin}
+  .group-rail__track{
+    display:flex;gap:8px;overflow-x:auto;scroll-behavior:smooth;padding:4px 0 16px;margin:0;
+    scrollbar-width:none;-ms-overflow-style:none;
+  }
+  .group-rail__track::-webkit-scrollbar{display:none}
   .group-rail__cell{flex:0 0 clamp(220px,24vw,270px);min-width:220px;display:flex}
   .group-rail__cell > .product-tile{height:100%;width:100%;border:1px solid var(--line);background:#fff}
   .carousel-controls{
