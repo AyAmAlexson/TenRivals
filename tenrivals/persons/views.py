@@ -808,9 +808,9 @@ def staff_order_for_me_edit(request, order_id=None):
                 'general_comment': general_comment,
             }
         else:
+            old_status = order.status if order else None
             try:
                 with transaction.atomic():
-                    old_status = order.status if order else None
                     customer = Customer.objects.filter(email__iexact=email).first()
                     if customer:
                         customer.first_name = first_name
@@ -870,7 +870,7 @@ def staff_order_for_me_edit(request, order_id=None):
                 logger.exception('staff_order_for_me_edit save failed: %s', exc)
                 messages.error(
                     request,
-                    f'Could not save this request: {exc.__class__.__name__}. Please retry.',
+                    f'Could not save this request: {exc.__class__.__name__} ({exc}). Please retry.',
                 )
                 order_view = {
                     'order_number': order.order_number if order else '',
