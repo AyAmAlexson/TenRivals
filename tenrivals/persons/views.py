@@ -802,60 +802,79 @@ def staff_order_for_me_edit(request, order_id=None):
                 'general_comment': general_comment,
             }
         else:
-            with transaction.atomic():
-                old_status = order.status if order else None
-                customer = Customer.objects.filter(email__iexact=email).first()
-                if customer:
-                    customer.first_name = first_name
-                    customer.last_name = last_name
-                    customer.phone = phone
-                    customer.email = email
-                    customer.tg_account = telegram
-                    customer.save(
-                        update_fields=['first_name', 'last_name', 'phone', 'email', 'tg_account', 'updated_at']
-                    )
-                if order is None:
-                    order = OrderForMe.objects.create(
-                        order_number=allocate_order_for_me_number(timezone.localdate().year),
-                        customer=customer,
-                        first_name=first_name,
-                        last_name=last_name,
-                        email=email,
-                        phone=phone,
-                        telegram=telegram,
-                        contact_method=contact_method,
-                        status=status,
-                        estimated_total=estimated_total,
-                        general_comment=general_comment,
-                    )
-                else:
-                    order.customer = customer
-                    order.first_name = first_name
-                    order.last_name = last_name
-                    order.email = email
-                    order.phone = phone
-                    order.telegram = telegram
-                    order.contact_method = contact_method
-                    order.status = status
-                    order.estimated_total = estimated_total
-                    order.general_comment = general_comment
-                    order.save()
-                    order.items.all().delete()
-                OrderForMeItem.objects.bulk_create(
-                    [
-                        OrderForMeItem(
-                            order=order,
-                            sort_order=item['sort_order'],
-                            item_url=item['item_url'],
-                            item_comment=item['item_comment'],
+            try:
+                with transaction.atomic():
+                    old_status = order.status if order else None
+                    customer = Customer.objects.filter(email__iexact=email).first()
+                    if customer:
+                        customer.first_name = first_name
+                        customer.last_name = last_name
+                        customer.phone = phone
+                        customer.email = email
+                        customer.tg_account = telegram
+                        customer.save(
+                            update_fields=['first_name', 'last_name', 'phone', 'email', 'tg_account', 'updated_at']
                         )
-                        for item in items
-                    ]
+                    if order is None:
+                        order = OrderForMe.objects.create(
+                            order_number=allocate_order_for_me_number(timezone.localdate().year),
+                            customer=customer,
+                            first_name=first_name,
+                            last_name=last_name,
+                            email=email,
+                            phone=phone,
+                            telegram=telegram,
+                            contact_method=contact_method,
+                            status=status,
+                            estimated_total=estimated_total,
+                            general_comment=general_comment,
+                        )
+                    else:
+                        order.customer = customer
+                        order.first_name = first_name
+                        order.last_name = last_name
+                        order.email = email
+                        order.phone = phone
+                        order.telegram = telegram
+                        order.contact_method = contact_method
+                        order.status = status
+                        order.estimated_total = estimated_total
+                        order.general_comment = general_comment
+                        order.save()
+                        order.items.all().delete()
+                    OrderForMeItem.objects.bulk_create(
+                        [
+                            OrderForMeItem(
+                                order=order,
+                                sort_order=item['sort_order'],
+                                item_url=item['item_url'],
+                                item_comment=item['item_comment'],
+                            )
+                            for item in items
+                        ]
+                    )
+                if old_status != OrderForMe.Status.CANCELLED and order.status == OrderForMe.Status.CANCELLED:
+                    _send_order_for_me_cancelled_email(request, order)
+                messages.success(request, f'{order.order_number} saved.')
+                return redirect('administration:staff_order_for_me_edit', order_id=order.pk)
+            except Exception as exc:
+                logger.exception('staff_order_for_me_edit save failed: %s', exc)
+                messages.error(
+                    request,
+                    'Could not save this request. Please retry and contact support if the problem persists.',
                 )
-            if old_status != OrderForMe.Status.CANCELLED and order.status == OrderForMe.Status.CANCELLED:
-                _send_order_for_me_cancelled_email(request, order)
-            messages.success(request, f'{order.order_number} saved.')
-            return redirect('administration:staff_order_for_me_edit', order_id=order.pk)
+                order_view = {
+                    'order_number': order.order_number if order else '',
+                    'first_name': first_name,
+                    'last_name': last_name,
+                    'email': email,
+                    'phone': phone,
+                    'telegram': telegram,
+                    'contact_method': contact_method,
+                    'status': status,
+                    'estimated_total': estimated_total_raw,
+                    'general_comment': general_comment,
+                }
 
     if order:
         item_rows = list(order.items.order_by('sort_order', 'id').values('item_url', 'item_comment')[:max_items])
