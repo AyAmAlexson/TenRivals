@@ -99,42 +99,45 @@
     .shop-home-mid{background:#fff}
     .announce-bar{background:var(--accent); color:#fff; text-align:center; padding:10px 20px; font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.12em}
 
-    /* Category strip — text-only row, grid fill, height aligned with .announce-bar */
+    /* Category strip — brand palette borders (style guide), flush segments, match .announce-bar height */
     .cat-strip{padding:0; background:#fff; border-bottom:1px solid var(--line)}
     .cat-rail{
       display:flex; flex-wrap:nowrap; width:100%;
-      border:1px solid var(--line);
-      background-color:#fff;
-      background-image:
-        linear-gradient(to right, rgba(26,26,26,.1) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(26,26,26,.1) 1px, transparent 1px);
-      background-size:8px 8px;
-      background-position:0 0;
+      background:#fff;
       scrollbar-width:thin;
       scrollbar-color:rgba(26,26,26,.25) transparent;
     }
     .cat-seg{
+      --seg:#1a1a1a;
       text-decoration:none !important;
       position:relative;
+      z-index:0;
       flex:1 1 0;
       min-width:0;
       display:flex; align-items:center; justify-content:center;
       padding:10px 10px;
       text-align:center;
-      border-right:1px solid var(--line);
-      background:transparent;
+      border:1px solid var(--seg);
+      background:#fff;
       color:var(--ink);
-      transition:background .18s ease, color .18s ease;
+      transition:background .18s ease, color .18s ease, border-color .18s ease;
     }
-    .cat-seg:last-child{border-right:none}
+    .cat-seg:not(:first-child){margin-left:-1px}
+    .cat-seg--navy{--seg:#141c2c}
+    .cat-seg--teal{--seg:#0f766e}
+    .cat-seg--red{--seg:var(--accent)}
+    .cat-seg--blue{--seg:#1e40af}
+    .cat-seg--slate{--seg:#475569}
+    .cat-seg--magenta{--seg:#be185d}
     .cat-seg:hover,
     .cat-seg:focus-visible{
-      z-index:1;
+      z-index:2;
       text-decoration:none !important;
-      background:var(--accent);
+      background:var(--seg);
       color:#fff;
+      border-color:var(--seg);
     }
-    .cat-seg:focus-visible{outline:2px solid var(--accent-dark); outline-offset:2px}
+    .cat-seg:focus-visible{outline:2px solid color-mix(in srgb, var(--seg) 65%, #000); outline-offset:2px}
     .cat-seg__label{
       font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.12em;
       line-height:1.25; max-width:100%;
@@ -156,23 +159,35 @@
     .section-head a{font-size:11px; color:var(--muted); font-weight:800; text-transform:uppercase; letter-spacing:.08em; transition:color .15s; white-space:nowrap}
     .section-head a:hover{color:var(--accent)}
     /* Product rails (horizontal scroll) */
-    .product-rail-wrap{display:flex; align-items:stretch; gap:4px}
-    .product-rail-nav{
-      flex-shrink:0; width:42px; min-width:42px; align-self:center;
-      height:42px; border:1px solid var(--line); background:#fff; cursor:pointer;
-      display:flex; align-items:center; justify-content:center; color:var(--ink);
-      transition:border-color .15s, background .15s;
-    }
-    .product-rail-nav:hover{border-color:var(--ink); background:#fafafa}
-    .product-rail-nav svg{width:20px; height:20px}
+    .product-rail-wrap{display:block; width:100%}
     .product-rail{flex:1; min-width:0; overflow:hidden}
     .product-rail__track{
       display:flex; gap:8px; overflow-x:auto; scroll-behavior:smooth;
-      padding:4px 8px 16px; margin:0 -4px;
+      padding:4px 0 16px; margin:0;
       scrollbar-width:thin;
     }
     .product-rail__cell{flex:0 0 clamp(220px, 22vw, 260px); min-width:220px}
     .product-rail__track .product-tile{height:100%}
+    .carousel-controls{
+      display:flex; align-items:center; justify-content:center; gap:10px;
+      padding-top:4px;
+    }
+    .carousel-controls__arrow{
+      border:none; background:transparent; color:var(--ink); cursor:pointer;
+      padding:0 4px; font-size:16px; line-height:1; font-weight:800;
+      transition:color .15s;
+    }
+    .carousel-controls__arrow:hover:not(:disabled){color:var(--accent)}
+    .carousel-controls__arrow:disabled{opacity:.35; cursor:not-allowed}
+    .carousel-controls__dots{display:flex; align-items:center; gap:6px}
+    .carousel-controls__dot{
+      border:none; background:transparent; cursor:pointer; padding:0;
+      font-size:13px; line-height:1; color:#94a3b8; min-width:10px;
+      transition:color .15s;
+    }
+    .carousel-controls__dot.is-active{color:var(--accent-dark); font-weight:800}
+    .carousel-controls__dot::before{content:'•'}
+    .carousel-controls__dot.is-active::before{content:'o'}
     /* Featured stories — vertical cards, horizontal carousel */
     .featured-stories-block{margin-top:8px}
     .promo-band{padding:6px 0 2px}
@@ -197,19 +212,7 @@
       object-fit:cover;
       object-position:center;
     }
-    .promo-carousel__nav{
-      position:absolute; top:50%; transform:translateY(-50%); width:42px; height:42px; border:1px solid rgba(255,255,255,.45);
-      background:rgba(17,17,17,.22); color:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:2;
-    }
-    .promo-carousel__nav:hover{background:rgba(17,17,17,.4)}
-    .promo-carousel__nav--prev{left:12px}
-    .promo-carousel__nav--next{right:12px}
-    .promo-carousel__nav svg{width:20px; height:20px}
-    .promo-carousel__dots{display:flex; justify-content:center; gap:8px; padding:12px 0 2px}
-    .promo-carousel__dot{
-      width:8px; height:8px; border-radius:50%; border:none; background:#cbd5e1; cursor:pointer; padding:0;
-    }
-    .promo-carousel__dot.is-active{background:var(--accent)}
+    .promo-carousel__controls{padding:10px 0 2px}
     .story-rail__cell{flex:0 0 clamp(220px, 24vw, 280px); min-width:220px}
     .story-rail__track{padding-bottom:20px}
     .story-card{
@@ -391,12 +394,12 @@
   <div class="cat-strip">
     <div class="container">
       <nav class="cat-rail" aria-label="Shop categories">
-        <a class="cat-seg" href="{% url 'shop:stock' %}?type=RACKET"><span class="cat-seg__label">Rackets</span></a>
-        <a class="cat-seg" href="{% url 'shop:stock' %}?type=M_SHOES"><span class="cat-seg__label">Shoes</span></a>
-        <a class="cat-seg" href="{% url 'shop:stock' %}?type=BAGS"><span class="cat-seg__label">Bags</span></a>
-        <a class="cat-seg" href="{% url 'shop:stock' %}?type=M_APP"><span class="cat-seg__label">Clothing</span></a>
-        <a class="cat-seg" href="{% url 'shop:stock' %}?type=BALLS"><span class="cat-seg__label">Balls</span></a>
-        <a class="cat-seg" href="{% url 'shop:stock' %}?type=ACC_GEAR"><span class="cat-seg__label">Accessories</span></a>
+        <a class="cat-seg cat-seg--red" href="{% url 'shop:stock' %}?type=RACKET"><span class="cat-seg__label">Rackets</span></a>
+        <a class="cat-seg cat-seg--teal" href="{% url 'shop:stock' %}?type=M_SHOES"><span class="cat-seg__label">Shoes</span></a>
+        <a class="cat-seg cat-seg--blue" href="{% url 'shop:stock' %}?type=BAGS"><span class="cat-seg__label">Bags</span></a>
+        <a class="cat-seg cat-seg--navy" href="{% url 'shop:stock' %}?type=M_APP"><span class="cat-seg__label">Clothing</span></a>
+        <a class="cat-seg cat-seg--slate" href="{% url 'shop:stock' %}?type=BALLS"><span class="cat-seg__label">Balls</span></a>
+        <a class="cat-seg cat-seg--magenta" href="{% url 'shop:stock' %}?type=ACC_GEAR"><span class="cat-seg__label">Accessories</span></a>
       </nav>
     </div>
   </div>
@@ -406,17 +409,16 @@
     <section class="section">
       <div class="section-head"><h2>Featured Products</h2><a href="{% url 'shop:preorder' %}">View all &rarr;</a></div>
       <div class="product-rail-wrap" data-product-rail>
-        <button type="button" class="product-rail-nav" aria-label="Scroll featured left" data-rail-prev>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg>
-        </button>
         <div class="product-rail"><div class="product-rail__track">
           {% for p in featured_products %}
           <div class="product-rail__cell">{% include 'shop/includes/product_tile.html' with p=p browse_mode='home' %}</div>
           {% endfor %}
         </div></div>
-        <button type="button" class="product-rail-nav" aria-label="Scroll featured right" data-rail-next>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
-        </button>
+        <div class="carousel-controls" aria-label="Featured products carousel controls">
+          <button type="button" class="carousel-controls__arrow" data-rail-prev aria-label="Scroll featured left">←</button>
+          <div class="carousel-controls__dots" data-rail-dots></div>
+          <button type="button" class="carousel-controls__arrow" data-rail-next aria-label="Scroll featured right">→</button>
+        </div>
       </div>
     </section>
 
@@ -435,20 +437,16 @@
             {% endif %}
           </div>
           {% endfor %}
-          {% if promo_banners|length > 1 %}
-          <button type="button" class="promo-carousel__nav promo-carousel__nav--prev" aria-label="Previous promo banner" data-promo-prev>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg>
-          </button>
-          <button type="button" class="promo-carousel__nav promo-carousel__nav--next" aria-label="Next promo banner" data-promo-next>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
-          </button>
-          {% endif %}
         </div>
         {% if promo_banners|length > 1 %}
-        <div class="promo-carousel__dots" aria-label="Promo banner pagination">
+        <div class="carousel-controls promo-carousel__controls" aria-label="Promo banner controls">
+          <button type="button" class="carousel-controls__arrow" aria-label="Previous promo banner" data-promo-prev>←</button>
+          <div class="carousel-controls__dots" aria-label="Promo banner pagination">
           {% for banner in promo_banners %}
-          <button type="button" class="promo-carousel__dot{% if forloop.first %} is-active{% endif %}" aria-label="Go to banner {{ forloop.counter }}" data-promo-dot></button>
+          <button type="button" class="carousel-controls__dot{% if forloop.first %} is-active{% endif %}" aria-label="Go to banner {{ forloop.counter }}" data-promo-dot></button>
           {% endfor %}
+          </div>
+          <button type="button" class="carousel-controls__arrow" aria-label="Next promo banner" data-promo-next>→</button>
         </div>
         {% endif %}
       </div>
@@ -458,17 +456,16 @@
     <section class="section">
       <div class="section-head"><h2>New Arrivals</h2><a href="{% url 'shop:stock' %}">View all &rarr;</a></div>
       <div class="product-rail-wrap" data-product-rail>
-        <button type="button" class="product-rail-nav" aria-label="Scroll new arrivals left" data-rail-prev>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg>
-        </button>
         <div class="product-rail"><div class="product-rail__track">
           {% for p in new_arrivals %}
           <div class="product-rail__cell">{% include 'shop/includes/product_tile.html' with p=p browse_mode='home' %}</div>
           {% endfor %}
         </div></div>
-        <button type="button" class="product-rail-nav" aria-label="Scroll new arrivals right" data-rail-next>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
-        </button>
+        <div class="carousel-controls" aria-label="New arrivals carousel controls">
+          <button type="button" class="carousel-controls__arrow" data-rail-prev aria-label="Scroll new arrivals left">←</button>
+          <div class="carousel-controls__dots" data-rail-dots></div>
+          <button type="button" class="carousel-controls__arrow" data-rail-next aria-label="Scroll new arrivals right">→</button>
+        </div>
       </div>
     </section>
 
@@ -476,9 +473,6 @@
     <section class="section featured-stories-block">
       <div class="section-head"><h2>Featured Stories</h2><a href="{% url 'shop:blog_index' %}">View all &rarr;</a></div>
       <div class="product-rail-wrap" data-product-rail>
-        <button type="button" class="product-rail-nav" aria-label="Scroll stories left" data-rail-prev>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg>
-        </button>
         <div class="product-rail"><div class="product-rail__track story-rail__track">
           {% for post in featured_blog_posts %}
           <div class="product-rail__cell story-rail__cell">
@@ -499,9 +493,11 @@
           </div>
           {% endfor %}
         </div></div>
-        <button type="button" class="product-rail-nav" aria-label="Scroll stories right" data-rail-next>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
-        </button>
+        <div class="carousel-controls" aria-label="Featured stories carousel controls">
+          <button type="button" class="carousel-controls__arrow" data-rail-prev aria-label="Scroll stories left">←</button>
+          <div class="carousel-controls__dots" data-rail-dots></div>
+          <button type="button" class="carousel-controls__arrow" data-rail-next aria-label="Scroll stories right">→</button>
+        </div>
       </div>
     </section>
     {% endif %}
@@ -554,17 +550,57 @@
         });
       }
     }
+    function setupRailDots(track, dotsWrap){
+      if(!track || !dotsWrap) return [];
+      var items = track.children ? Array.prototype.slice.call(track.children) : [];
+      dotsWrap.innerHTML = '';
+      return items.map(function(_, idx){
+        var dot = document.createElement('button');
+        dot.type = 'button';
+        dot.className = 'carousel-controls__dot';
+        dot.setAttribute('aria-label', 'Go to item ' + (idx + 1));
+        dot.addEventListener('click', function(){
+          var target = items[idx];
+          if(target) target.scrollIntoView({ behavior:'smooth', inline:'start', block:'nearest' });
+        });
+        dotsWrap.appendChild(dot);
+        return dot;
+      });
+    }
+    function updateRailState(track, prev, next, dots){
+      if(!track) return;
+      var max = Math.max(0, track.scrollWidth - track.clientWidth);
+      var x = track.scrollLeft;
+      if(prev) prev.disabled = x <= 2;
+      if(next) next.disabled = x >= max - 2;
+      if(dots && dots.length){
+        var active = 0;
+        var best = Infinity;
+        dots.forEach(function(_, idx){
+          var child = track.children[idx];
+          if(!child) return;
+          var delta = Math.abs(child.offsetLeft - x);
+          if(delta < best){ best = delta; active = idx; }
+        });
+        dots.forEach(function(dot, idx){ dot.classList.toggle('is-active', idx === active); });
+      }
+    }
     document.querySelectorAll('[data-product-rail]').forEach(function(wrap){
       var track = wrap.querySelector('.product-rail__track');
       var prev = wrap.querySelector('[data-rail-prev]');
       var next = wrap.querySelector('[data-rail-next]');
+      var dotsWrap = wrap.querySelector('[data-rail-dots]');
       if(!track) return;
+      var dots = setupRailDots(track, dotsWrap);
       var step = function(dir){
         var w = track.clientWidth * 0.85;
         track.scrollBy({ left: dir * w, behavior: 'smooth' });
       };
       if(prev) prev.addEventListener('click', function(){ step(-1); });
       if(next) next.addEventListener('click', function(){ step(1); });
+      track.addEventListener('scroll', function(){ updateRailState(track, prev, next, dots); });
+      window.addEventListener('resize', function(){ updateRailState(track, prev, next, dots); });
+      updateRailState(track, prev, next, dots);
     });
     document.querySelectorAll('[data-promo-carousel]').forEach(function(carousel){
       var slides = carousel.querySelectorAll('[data-promo-slide]');
@@ -579,6 +615,8 @@
         i = (idx + n) % n;
         slides.forEach(function(el, j){ el.classList.toggle('is-active', j === i); });
         dots.forEach(function(el, j){ el.classList.toggle('is-active', j === i); });
+        if(prev) prev.disabled = n < 2;
+        if(next) next.disabled = n < 2;
       }
       function go(delta){ show(i + delta); resetTimer(); }
       var timer = null;

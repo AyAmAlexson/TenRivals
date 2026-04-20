@@ -23,13 +23,26 @@
   .group-media img{width:100%;height:100%;object-fit:cover}
   .group-title{margin:0 0 8px;font-size:20px;line-height:1.2}
   .group-text{margin:0;font-size:14px;line-height:1.6;color:var(--muted);text-transform:none}
-  .group-rail-wrap{display:flex;align-items:stretch;gap:4px}
-  .group-rail-nav{flex-shrink:0;width:42px;min-width:42px;align-self:center;height:42px;border:1px solid var(--line);background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--ink)}
-  .group-rail-nav svg{width:20px;height:20px}
+  .group-rail-wrap{display:block;width:100%}
   .group-rail{flex:1;min-width:0;overflow:hidden}
-  .group-rail__track{display:flex;gap:8px;overflow-x:auto;scroll-behavior:smooth;padding:4px 8px 16px;margin:0 -4px;scrollbar-width:thin}
+  .group-rail__track{display:flex;gap:8px;overflow-x:auto;scroll-behavior:smooth;padding:4px 0 16px;margin:0;scrollbar-width:thin}
   .group-rail__cell{flex:0 0 clamp(220px,24vw,270px);min-width:220px;display:flex}
   .group-rail__cell > .product-tile{height:100%;width:100%;border:1px solid var(--line);background:#fff}
+  .carousel-controls{display:flex;align-items:center;justify-content:center;gap:10px;padding-top:4px}
+  .carousel-controls__arrow{
+    border:none;background:transparent;color:var(--ink);cursor:pointer;
+    padding:0 4px;font-size:16px;line-height:1;font-weight:800;transition:color .15s;
+  }
+  .carousel-controls__arrow:hover:not(:disabled){color:var(--accent)}
+  .carousel-controls__arrow:disabled{opacity:.35;cursor:not-allowed}
+  .carousel-controls__dots{display:flex;align-items:center;gap:6px}
+  .carousel-controls__dot{
+    border:none;background:transparent;cursor:pointer;padding:0;
+    font-size:13px;line-height:1;color:#94a3b8;min-width:10px;transition:color .15s;
+  }
+  .carousel-controls__dot.is-active{color:var(--accent-dark);font-weight:800}
+  .carousel-controls__dot::before{content:'•'}
+  .carousel-controls__dot.is-active::before{content:'o'}
   .collection-empty{padding:18px;border:1px solid var(--line);background:#fff;color:var(--muted)}
   .all-products-title{margin:0 0 10px;font-size:22px;max-width:var(--collection-copy-max)}
   @media(max-width:860px){.group-intro{grid-template-columns:1fr}.group-media{max-width:340px}}
@@ -67,13 +80,16 @@
       </div>
       {% if section.products %}
       <div class="group-rail-wrap" data-group-rail>
-        <button type="button" class="group-rail-nav" data-rail-prev aria-label="Scroll group left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg></button>
         <div class="group-rail"><div class="group-rail__track">
           {% for p in section.products %}
           <div class="group-rail__cell">{% include 'shop/includes/product_tile.html' with p=p browse_mode='stock' %}</div>
           {% endfor %}
         </div></div>
-        <button type="button" class="group-rail-nav" data-rail-next aria-label="Scroll group right"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
+        <div class="carousel-controls" aria-label="Collection group carousel controls">
+          <button type="button" class="carousel-controls__arrow" data-rail-prev aria-label="Scroll group left">←</button>
+          <div class="carousel-controls__dots" data-rail-dots></div>
+          <button type="button" class="carousel-controls__arrow" data-rail-next aria-label="Scroll group right">→</button>
+        </div>
       </div>
       {% else %}
       <div class="collection-empty">No active products in this group yet.</div>
@@ -84,13 +100,16 @@
     <section class="collection-group">
       <h2 class="all-products-title">All products in collection</h2>
       <div class="group-rail-wrap" data-group-rail>
-        <button type="button" class="group-rail-nav" data-rail-prev aria-label="Scroll all products left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg></button>
         <div class="group-rail"><div class="group-rail__track">
           {% for p in all_products %}
           <div class="group-rail__cell">{% include 'shop/includes/product_tile.html' with p=p browse_mode='stock' %}</div>
           {% endfor %}
         </div></div>
-        <button type="button" class="group-rail-nav" data-rail-next aria-label="Scroll all products right"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
+        <div class="carousel-controls" aria-label="All collection products carousel controls">
+          <button type="button" class="carousel-controls__arrow" data-rail-prev aria-label="Scroll all products left">←</button>
+          <div class="carousel-controls__dots" data-rail-dots></div>
+          <button type="button" class="carousel-controls__arrow" data-rail-next aria-label="Scroll all products right">→</button>
+        </div>
       </div>
     </section>
     {% endif %}
@@ -99,14 +118,54 @@
   {% endif %}
 <script>
 (function(){
+  function setupRailDots(track, dotsWrap){
+    if(!track || !dotsWrap) return [];
+    const items = Array.from(track.children || []);
+    dotsWrap.innerHTML = '';
+    return items.map(function(_, idx){
+      const dot = document.createElement('button');
+      dot.type = 'button';
+      dot.className = 'carousel-controls__dot';
+      dot.setAttribute('aria-label', 'Go to item ' + (idx + 1));
+      dot.addEventListener('click', function(){
+        const target = items[idx];
+        if(target) target.scrollIntoView({ behavior:'smooth', inline:'start', block:'nearest' });
+      });
+      dotsWrap.appendChild(dot);
+      return dot;
+    });
+  }
+  function updateRailState(track, prev, next, dots){
+    if(!track) return;
+    const max = Math.max(0, track.scrollWidth - track.clientWidth);
+    const x = track.scrollLeft;
+    if(prev) prev.disabled = x <= 2;
+    if(next) next.disabled = x >= max - 2;
+    if(dots && dots.length){
+      let active = 0;
+      let best = Infinity;
+      dots.forEach(function(_, idx){
+        const child = track.children[idx];
+        if(!child) return;
+        const delta = Math.abs(child.offsetLeft - x);
+        if(delta < best){ best = delta; active = idx; }
+      });
+      dots.forEach(function(dot, idx){ dot.classList.toggle('is-active', idx === active); });
+    }
+  }
   document.querySelectorAll('[data-group-rail]').forEach(function(wrap){
     const track = wrap.querySelector('.group-rail__track');
     const prev = wrap.querySelector('[data-rail-prev]');
     const next = wrap.querySelector('[data-rail-next]');
+    const dotsWrap = wrap.querySelector('[data-rail-dots]');
     if(!track) return;
+    const dots = setupRailDots(track, dotsWrap);
     const step = function(dir){ track.scrollBy({ left: dir * track.clientWidth * 0.85, behavior: 'smooth' }); };
     if(prev) prev.addEventListener('click', function(){ step(-1); });
     if(next) next.addEventListener('click', function(){ step(1); });
+    track.addEventListener('scroll', function(){ updateRailState(track, prev, next, dots); });
+    window.addEventListener('resize', function(){ updateRailState(track, prev, next, dots); });
+    updateRailState(track, prev, next, dots);
   });
 })();
 </script>

@@ -63,25 +63,27 @@
       font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;
       color:var(--muted);margin:0 0 14px;padding:0 4px;
     }
-    .article-products__track-wrap{
-      display:flex;align-items:center;gap:10px;width:100%;
-    }
-    .article-products__arrow{
-      flex-shrink:0;width:42px;height:42px;padding:0;border:1px solid #cbd5e1;
-      background:#fff;color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;
-      transition:background .15s,border-color .15s,color .15s;
-    }
-    .article-products__arrow:hover:not(:disabled){
-      background:var(--accent);border-color:var(--accent);color:#fff;
-    }
-    .article-products__arrow:disabled{opacity:.35;cursor:not-allowed}
-    .article-products__arrow svg{width:20px;height:20px}
+    .article-products__track-wrap{display:block;width:100%}
     .article-products__grid{
-      flex:1;min-width:0;
       display:flex;gap:14px;overflow-x:auto;scroll-behavior:smooth;padding:4px 2px 10px;
       scroll-snap-type:x mandatory;scrollbar-width:thin;
       -webkit-overflow-scrolling:touch;
     }
+    .carousel-controls{display:flex;align-items:center;justify-content:center;gap:10px;padding-top:4px}
+    .carousel-controls__arrow{
+      border:none;background:transparent;color:var(--ink);cursor:pointer;
+      padding:0 4px;font-size:16px;line-height:1;font-weight:800;transition:color .15s;
+    }
+    .carousel-controls__arrow:hover:not(:disabled){color:var(--accent)}
+    .carousel-controls__arrow:disabled{opacity:.35;cursor:not-allowed}
+    .carousel-controls__dots{display:flex;align-items:center;gap:6px}
+    .carousel-controls__dot{
+      border:none;background:transparent;cursor:pointer;padding:0;
+      font-size:13px;line-height:1;color:#94a3b8;min-width:10px;transition:color .15s;
+    }
+    .carousel-controls__dot.is-active{color:var(--accent-dark);font-weight:800}
+    .carousel-controls__dot::before{content:'•'}
+    .carousel-controls__dot.is-active::before{content:'o'}
     .article-products__grid > *{flex:0 0 clamp(168px,42%,220px);min-width:168px;scroll-snap-align:start}
     .article-product-card{
       display:flex;flex-direction:column;border:1px solid var(--line);background:#fff;
@@ -124,7 +126,6 @@
       .article-nav{padding:20px 20px 0}
       .article-head,.article-body{padding:22px 20px 24px}
       .article-products{margin-left:0;margin-right:0;padding-left:0;padding-right:0}
-      .article-products__arrow{width:38px;height:38px}
       .article-cta{padding:16px 16px}
     }
     @media(max-width:640px){
@@ -168,9 +169,6 @@
           <section class="article-products" aria-label="Featured products">
             <h3 class="article-products__title">Featured products</h3>
             <div class="article-products__track-wrap" data-product-rail-wrap>
-              <button type="button" class="article-products__arrow article-products__arrow--prev" data-rail-prev aria-label="Scroll products left">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
-              </button>
               <div class="article-products__grid" data-product-rail>
                 {% for p in sec.products %}
                 <a class="article-product-card" href="{% url 'shop:product_detail' p.pk %}">
@@ -186,9 +184,11 @@
                 </a>
                 {% endfor %}
               </div>
-              <button type="button" class="article-products__arrow article-products__arrow--next" data-rail-next aria-label="Scroll products right">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
-              </button>
+              <div class="carousel-controls" aria-label="Featured products carousel controls">
+                <button type="button" class="carousel-controls__arrow" data-rail-prev aria-label="Scroll products left">←</button>
+                <div class="carousel-controls__dots" data-rail-dots></div>
+                <button type="button" class="carousel-controls__arrow" data-rail-next aria-label="Scroll products right">→</button>
+              </div>
             </div>
           </section>
         {% elif sec.type == 'cta' %}
@@ -209,30 +209,60 @@
   function clampScrollDelta(rail){
     return Math.max(200, Math.floor(rail.clientWidth * 0.85));
   }
-  function updateDisabled(rail, prev, next){
+  function setupRailDots(rail, dotsWrap){
+    if(!rail || !dotsWrap) return [];
+    var items = Array.from(rail.children || []);
+    dotsWrap.innerHTML = '';
+    return items.map(function(_, idx){
+      var dot = document.createElement('button');
+      dot.type = 'button';
+      dot.className = 'carousel-controls__dot';
+      dot.setAttribute('aria-label', 'Go to item ' + (idx + 1));
+      dot.addEventListener('click', function(){
+        var target = items[idx];
+        if(target) target.scrollIntoView({ behavior:'smooth', inline:'start', block:'nearest' });
+      });
+      dotsWrap.appendChild(dot);
+      return dot;
+    });
+  }
+  function updateDisabled(rail, prev, next, dots){
     if(!rail) return;
     var max = Math.max(0, rail.scrollWidth - rail.clientWidth);
     var x = rail.scrollLeft;
     if(prev) prev.disabled = x <= 2;
     if(next) next.disabled = x >= max - 2;
+    if(dots && dots.length){
+      var active = 0;
+      var best = Infinity;
+      dots.forEach(function(_, idx){
+        var child = rail.children[idx];
+        if(!child) return;
+        var delta = Math.abs(child.offsetLeft - x);
+        if(delta < best){ best = delta; active = idx; }
+      });
+      dots.forEach(function(dot, idx){ dot.classList.toggle('is-active', idx === active); });
+    }
   }
   document.querySelectorAll('[data-product-rail-wrap]').forEach(function(wrap){
     var rail = wrap.querySelector('[data-product-rail]');
     var prev = wrap.querySelector('[data-rail-prev]');
     var next = wrap.querySelector('[data-rail-next]');
+    var dotsWrap = wrap.querySelector('[data-rail-dots]');
     if(!rail) return;
+    var dots = setupRailDots(rail, dotsWrap);
     function step(dir){
       rail.scrollBy({ left: dir * clampScrollDelta(rail), behavior: 'smooth' });
     }
     if(prev) prev.addEventListener('click', function(){ step(-1); });
     if(next) next.addEventListener('click', function(){ step(1); });
     rail.addEventListener('scroll', function(){
-      updateDisabled(rail, prev, next);
+      updateDisabled(rail, prev, next, dots);
     });
     window.addEventListener('resize', function(){
-      updateDisabled(rail, prev, next);
+      updateDisabled(rail, prev, next, dots);
     });
-    updateDisabled(rail, prev, next);
+    updateDisabled(rail, prev, next, dots);
   });
 })();
 </script>
