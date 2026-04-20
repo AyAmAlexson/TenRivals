@@ -99,71 +99,49 @@
     .shop-home-mid{background:#fff}
     .announce-bar{background:var(--accent); color:#fff; text-align:center; padding:10px 20px; font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.12em}
 
-    /* Category strip — segmented row (Lucide icons, ISC / lucide-static) */
-    .cat-strip{padding:28px 0 24px; background:#fff; border-bottom:1px solid var(--line)}
+    /* Category strip — text-only row, grid fill, height aligned with .announce-bar */
+    .cat-strip{padding:0; background:#fff; border-bottom:1px solid var(--line)}
     .cat-rail{
       display:flex; flex-wrap:nowrap; width:100%;
-      border-radius:14px; overflow:hidden;
-      border:1px solid rgba(15,23,42,.12);
-      box-shadow:0 1px 2px rgba(15,23,42,.05), 0 4px 14px rgba(15,23,42,.04);
-      background:#fafafa;
+      border:1px solid var(--line);
+      background-color:#fff;
+      background-image:
+        linear-gradient(to right, rgba(26,26,26,.1) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(26,26,26,.1) 1px, transparent 1px);
+      background-size:8px 8px;
+      background-position:0 0;
       scrollbar-width:thin;
-      scrollbar-color:rgba(15,23,42,.28) transparent;
+      scrollbar-color:rgba(26,26,26,.25) transparent;
     }
     .cat-seg{
-      --seg-ink:#1e293b;
-      --seg-icon:#475569;
       text-decoration:none !important;
       position:relative;
       flex:1 1 0;
       min-width:0;
-      display:flex; flex-direction:column; align-items:center; justify-content:center;
-      gap:10px;
-      padding:18px 8px 16px;
+      display:flex; align-items:center; justify-content:center;
+      padding:10px 10px;
       text-align:center;
-      border-right:1px solid rgba(15,23,42,.1);
-      background:linear-gradient(180deg, var(--seg-bg-top) 0%, var(--seg-bg-bot) 100%);
-      color:var(--seg-ink);
-      transition:background .2s ease, box-shadow .2s ease, color .2s ease;
+      border-right:1px solid var(--line);
+      background:transparent;
+      color:var(--ink);
+      transition:background .18s ease, color .18s ease;
     }
     .cat-seg:last-child{border-right:none}
-    .cat-seg--rackets{--seg-bg-top:#fff5f5; --seg-bg-bot:#fef2f2; --seg-icon:#b91c1c}
-    .cat-seg--shoes{--seg-bg-top:#eff6ff; --seg-bg-bot:#f0f9ff; --seg-icon:#1d4ed8}
-    .cat-seg--bags{--seg-bg-top:#f5f3ff; --seg-bg-bot:#faf5ff; --seg-icon:#6d28d9}
-    .cat-seg--apparel{--seg-bg-top:#ecfdf5; --seg-bg-bot:#f0fdf4; --seg-icon:#047857}
-    .cat-seg--balls{--seg-bg-top:#fffbeb; --seg-bg-bot:#fff7ed; --seg-icon:#b45309}
-    .cat-seg--gear{--seg-bg-top:#f1f5f9; --seg-bg-bot:#f8fafc; --seg-icon:#334155}
-    .cat-seg:hover{
+    .cat-seg:hover,
+    .cat-seg:focus-visible{
       z-index:1;
       text-decoration:none !important;
-      background:linear-gradient(180deg, #fff 0%, var(--seg-bg-top) 100%);
-      box-shadow:inset 0 0 0 1px rgba(15,23,42,.14);
+      background:var(--accent);
+      color:#fff;
     }
-    .cat-seg:focus-visible{
-      z-index:2;
-      outline:2px solid var(--accent);
-      outline-offset:-2px;
-    }
-    .cat-seg__icon{
-      width:40px; height:40px;
-      display:flex; align-items:center; justify-content:center;
-      color:var(--seg-icon);
-      transition:color .2s ease, transform .2s ease;
-    }
-    .cat-seg__icon svg{width:26px; height:26px; stroke-width:2; flex-shrink:0}
-    .cat-seg:hover .cat-seg__icon{
-      color:color-mix(in srgb, var(--seg-icon) 78%, #0f172a);
-      transform:translateY(-1px);
-    }
+    .cat-seg:focus-visible{outline:2px solid var(--accent-dark); outline-offset:2px}
     .cat-seg__label{
-      font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.09em;
+      font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.12em;
       line-height:1.25; max-width:100%;
-      color:var(--seg-ink);
-      transition:color .2s ease;
+      color:inherit;
       hyphens:auto;
       word-break:break-word;
     }
-    .cat-seg:hover .cat-seg__label{color:var(--accent-dark)}
 
     /* Product & stories rails */
     .shop-home-main{background:#fff; padding:8px 0 44px}
@@ -280,14 +258,12 @@
 
     /* Responsive */
     @media(max-width:1024px){
-      .cat-rail{overflow-x:auto; -webkit-overflow-scrolling:touch; scroll-snap-type:x mandatory; border-radius:12px}
-      .cat-seg{flex:0 0 32%; min-width:140px; scroll-snap-align:start; padding:14px 6px 12px}
+      .cat-rail{overflow-x:auto; -webkit-overflow-scrolling:touch; scroll-snap-type:x mandatory}
+      .cat-seg{flex:0 0 32%; min-width:140px; scroll-snap-align:start}
       .brands-row{flex-wrap:wrap; justify-content:center; gap:24px}
     }
     @media(max-width:640px){
-      .cat-seg{flex:0 0 42%; min-width:132px; padding:12px 6px 10px}
-      .cat-seg__icon{width:36px; height:36px}
-      .cat-seg__icon svg{width:24px; height:24px}
+      .cat-seg{flex:0 0 42%; min-width:132px; padding:10px 8px}
       .footer-top{grid-template-columns:1fr 1fr}
       .auth{display:none}
       .hero-nav{width:38px; height:38px}
@@ -411,46 +387,16 @@
   <!-- Announcement banner -->
   <div class="announce-bar">Free delivery in Tbilisi &nbsp;|&nbsp; Pre-order from US & EU with official customs clearance</div>
 
-  <!-- Category navigation — icons from lucide-static (ISC) -->
+  <!-- Category navigation -->
   <div class="cat-strip">
     <div class="container">
       <nav class="cat-rail" aria-label="Shop categories">
-        <a class="cat-seg cat-seg--rackets" href="{% url 'shop:stock' %}?type=RACKET">
-          <span class="cat-seg__icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
-          </span>
-          <span class="cat-seg__label">Rackets</span>
-        </a>
-        <a class="cat-seg cat-seg--shoes" href="{% url 'shop:stock' %}?type=M_SHOES">
-          <span class="cat-seg__icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16v-2.38C4 11.5 2.97 10.5 3 8c.03-2.72 1.49-6 4.5-6C9.37 2 10 3.8 10 5.5c0 3.11-2 5.66-2 8.68V16a2 2 0 1 1-4 0Z"/><path d="M20 20v-2.38c0-2.12 1.03-3.12 1-5.62-.03-2.72-1.49-6-4.5-6C14.63 6 14 7.8 14 9.5c0 3.11 2 5.66 2 8.68V20a2 2 0 1 0 4 0Z"/><path d="M16 17h4"/><path d="M4 13h4"/></svg>
-          </span>
-          <span class="cat-seg__label">Shoes</span>
-        </a>
-        <a class="cat-seg cat-seg--bags" href="{% url 'shop:stock' %}?type=BAGS">
-          <span class="cat-seg__icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-          </span>
-          <span class="cat-seg__label">Bags</span>
-        </a>
-        <a class="cat-seg cat-seg--apparel" href="{% url 'shop:stock' %}?type=M_APP">
-          <span class="cat-seg__icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg>
-          </span>
-          <span class="cat-seg__label">Clothing</span>
-        </a>
-        <a class="cat-seg cat-seg--balls" href="{% url 'shop:stock' %}?type=BALLS">
-          <span class="cat-seg__icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 11c3.5 4.5 9 6 14 3.5"/><path d="M8 21c3.5-4.5 9-6 14-3.5"/></svg>
-          </span>
-          <span class="cat-seg__label">Balls</span>
-        </a>
-        <a class="cat-seg cat-seg--gear" href="{% url 'shop:stock' %}?type=ACC_GEAR">
-          <span class="cat-seg__icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"/><path d="M12 22V12"/><path d="m3.3 7 7.703 4.734a2 2 0 0 0 1.994 0L20.7 7"/><path d="m7.5 4.27 9 5.15"/></svg>
-          </span>
-          <span class="cat-seg__label">Accessories &amp; equipment</span>
-        </a>
+        <a class="cat-seg" href="{% url 'shop:stock' %}?type=RACKET"><span class="cat-seg__label">Rackets</span></a>
+        <a class="cat-seg" href="{% url 'shop:stock' %}?type=M_SHOES"><span class="cat-seg__label">Shoes</span></a>
+        <a class="cat-seg" href="{% url 'shop:stock' %}?type=BAGS"><span class="cat-seg__label">Bags</span></a>
+        <a class="cat-seg" href="{% url 'shop:stock' %}?type=M_APP"><span class="cat-seg__label">Clothing</span></a>
+        <a class="cat-seg" href="{% url 'shop:stock' %}?type=BALLS"><span class="cat-seg__label">Balls</span></a>
+        <a class="cat-seg" href="{% url 'shop:stock' %}?type=ACC_GEAR"><span class="cat-seg__label">Accessories</span></a>
       </nav>
     </div>
   </div>
