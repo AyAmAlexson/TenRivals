@@ -33,6 +33,7 @@ from shop.models import (
     HomePromoBanner,
     Product,
     ProductCollection,
+    ProductCollectionGroup,
     ProductListing,
     ProductListingChannel,
     SalesOrder,
@@ -1087,6 +1088,7 @@ def staff_collections(request):
 @user_passes_test(_superuser_required)
 def staff_collection_edit(request, collection_id=None):
     target = get_object_or_404(ProductCollection, pk=collection_id) if collection_id else None
+    max_groups = 5
     if request.method == "POST":
         title = (request.POST.get("title") or "").strip()[:160]
         raw_slug = (request.POST.get("slug") or "").strip()[:180]
@@ -1104,19 +1106,6 @@ def staff_collection_edit(request, collection_id=None):
                 "administration:staff_collection_edit",
                 collection_id=target.pk,
             ) if target else redirect("administration:staff_collection_new")
-        raw_ids = (request.POST.get("product_ids") or "").strip()
-        product_ids: list[int] = []
-        if raw_ids:
-            for part in raw_ids.split(","):
-                try:
-                    pid = int(part.strip())
-                except (TypeError, ValueError):
-                    continue
-                if pid > 0:
-                    product_ids.append(pid)
-        product_ids = sorted(set(product_ids))
-        valid_ids = list(Product.objects.filter(pk__in=product_ids, is_active=True).values_list("pk", flat=True))
-
         if target is None:
             target = ProductCollection(
                 title=title,
@@ -1148,7 +1137,60 @@ def staff_collection_edit(request, collection_id=None):
                     collection_id=target.pk,
                 )
             return redirect("administration:staff_collection_new")
-        target.products.set(valid_ids)
+
+        kept_group_ids: set[int] = set()
+        group_product_union: set[int] = set()
+        for idx in range(1, max_groups + 1):
+            if request.POST.get(f"group_{idx}_enabled") != "1":
+                continue
+            raw_group_id = (request.POST.get(f"group_{idx}_id") or "").strip()
+            group_title = (request.POST.get(f"group_{idx}_title") or "").strip()[:180]
+            group_description = (request.POST.get(f"group_{idx}_description") or "").strip()
+            group_products_raw = (request.POST.get(f"group_{idx}_product_ids") or "").strip()
+            group_products: list[int] = []
+            if group_products_raw:
+                for part in group_products_raw.split(","):
+                    try:
+                        pid = int(part.strip())
+                    except (TypeError, ValueError):
+                        continue
+                    if pid > 0:
+                        group_products.append(pid)
+            valid_ids = list(
+                Product.objects.filter(pk__in=sorted(set(group_products)), is_active=True).values_list("pk", flat=True)
+            )
+            new_image = request.FILES.get(f"group_{idx}_image")
+            remove_image = request.POST.get(f"group_{idx}_remove_image") == "1"
+
+            group = None
+            if raw_group_id.isdigit():
+                group = ProductCollectionGroup.objects.filter(pk=int(raw_group_id), collection=target).first()
+            if group is None:
+                group = ProductCollectionGroup(collection=target, sort_order=idx)
+            group.sort_order = idx
+            group.title = group_title
+            group.description = group_description
+            if remove_image and group.image:
+                group.image.delete(save=False)
+                group.image = None
+            if new_image:
+                group.image = new_image
+            try:
+                group.full_clean()
+                group.save()
+            except ValidationError as exc:
+                for msg in exc.messages:
+                    messages.error(request, f"Group {idx}: {msg}")
+                return redirect(
+                    "administration:staff_collection_edit",
+                    collection_id=target.pk,
+                )
+            group.products.set(valid_ids)
+            kept_group_ids.add(group.pk)
+            group_product_union.update(valid_ids)
+
+        ProductCollectionGroup.objects.filter(collection=target).exclude(pk__in=kept_group_ids).delete()
+        target.products.set(sorted(group_product_union))
         messages.success(request, "Collection saved.")
         return redirect("administration:staff_collections")
 
@@ -1157,17 +1199,51 @@ def staff_collection_edit(request, collection_id=None):
         .select_related("category")
         .order_by("brand", "name", "id")
     )
-    selected_ids = set(target.products.values_list("pk", flat=True)) if target else set()
-    selected_products = [p for p in all_products if p.pk in selected_ids]
-    available_products = [p for p in all_products if p.pk not in selected_ids]
+    groups = (
+        list(target.groups.prefetch_related("products").order_by("sort_order", "id"))
+        if target
+        else []
+    )
+    if not groups:
+        legacy_ids = list(target.products.values_list("pk", flat=True)) if target else []
+        if legacy_ids:
+            seed = ProductCollectionGroup(
+                collection=target,
+                sort_order=1,
+                title="",
+                description="",
+            )
+            seed._seed_ids = sorted(set(legacy_ids))
+            groups = [seed]
+
+    group_forms = []
+    for idx in range(1, max_groups + 1):
+        grp = groups[idx - 1] if idx - 1 < len(groups) else None
+        selected_ids = []
+        if grp is not None:
+            if hasattr(grp, "_seed_ids"):
+                selected_ids = list(grp._seed_ids)
+            elif getattr(grp, "pk", None):
+                selected_ids = list(grp.products.values_list("pk", flat=True))
+        group_forms.append(
+            {
+                "index": idx,
+                "enabled": grp is not None,
+                "group_id": getattr(grp, "pk", None) if grp is not None else None,
+                "title": (getattr(grp, "title", "") or "") if grp is not None else "",
+                "description": (getattr(grp, "description", "") or "") if grp is not None else "",
+                "image": (getattr(grp, "image", None) if grp is not None else None),
+                "selected_ids_csv": ",".join(str(pid) for pid in selected_ids),
+            }
+        )
     return render(
         request,
         "persons/staff_collection_form.html",
         {
             "collection": target,
-            "selected_products": selected_products,
-            "available_products": available_products,
-            "selected_ids_csv": ",".join(str(pid) for pid in selected_ids),
+            "group_forms": group_forms,
+            "all_products": all_products,
+            "max_groups": max_groups,
             "staff_nav_active": "collections",
             "page_heading": "Edit collection" if target else "New collection",
             "page_note": "Banner: raster 1600x560 px or SVG for sharp text. "

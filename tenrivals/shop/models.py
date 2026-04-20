@@ -543,6 +543,49 @@ class ProductCollection(models.Model):
         return self.title
 
 
+class ProductCollectionGroup(models.Model):
+    """Optional visual/content block with its own product subset inside a collection."""
+
+    collection = models.ForeignKey(
+        ProductCollection,
+        on_delete=models.CASCADE,
+        related_name='groups',
+    )
+    sort_order = models.PositiveSmallIntegerField(default=1, db_index=True)
+    image = models.FileField(
+        upload_to='shop/collections/groups/',
+        null=True,
+        blank=True,
+        validators=[
+            FileExtensionValidator(
+                allowed_extensions=('png', 'jpg', 'jpeg', 'webp', 'svg'),
+            ),
+        ],
+        help_text=_(
+            'Optional square image for this group. '
+            'Raster recommendation: 1200x1200 px. SVG is allowed.'
+        ),
+    )
+    title = models.CharField(max_length=180, blank=True)
+    description = models.TextField(blank=True)
+    products = models.ManyToManyField(
+        'Product',
+        blank=True,
+        related_name='collection_groups',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['sort_order', 'id']
+        verbose_name = 'Collection group'
+        verbose_name_plural = 'Collection groups'
+
+    def __str__(self):
+        label = self.title.strip() if self.title else f'Group #{self.pk}'
+        return f'{self.collection.title}: {label}'
+
+
 class BlogPost(models.Model):
     """Editorial post at /shop/blog/<slug>/. Featured home carousel uses the same rows."""
 

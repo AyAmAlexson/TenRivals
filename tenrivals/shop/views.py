@@ -633,23 +633,63 @@ def product_search(request):
 
 def collection_detail(request, slug):
     collection = get_object_or_404(
-        ProductCollection.objects.prefetch_related('products'),
+        ProductCollection.objects.prefetch_related('products', 'groups', 'groups__products'),
         slug=slug,
         is_archived=False,
     )
-    products = (
-        Product.objects.filter(pk__in=collection.products.values('pk'), is_active=True)
+    active_groups = list(
+        collection.groups.all().order_by('sort_order', 'id')[:5]
+    )
+    group_sections = []
+    union_ids = set()
+    for grp in active_groups:
+        grp_products = (
+            Product.objects.filter(
+                pk__in=grp.products.values('pk'),
+                is_active=True,
+            ).select_related(*_PRODUCT_SUBCLASS_SELECT, 'category')
+        )
+        grp_products = order_products_by_effective_price(
+            annotate_stock_listing_quantity(grp_products)
+        )
+        grp_ids = list(grp_products.values_list('pk', flat=True))
+        union_ids.update(grp_ids)
+        group_sections.append(
+            {
+                'group': grp,
+                'products': list(grp_products),
+                'product_count': len(grp_ids),
+            }
+        )
+
+    all_products = (
+        Product.objects.filter(pk__in=union_ids, is_active=True)
         .select_related(*_PRODUCT_SUBCLASS_SELECT, 'category')
     )
-    products = annotate_stock_listing_quantity(products)
-    products = order_products_by_effective_price(products)
-    product_count = products.count()
+    all_products = list(order_products_by_effective_price(annotate_stock_listing_quantity(all_products)))
+    if not group_sections and collection.products.exists():
+        fallback = (
+            Product.objects.filter(pk__in=collection.products.values('pk'), is_active=True)
+            .select_related(*_PRODUCT_SUBCLASS_SELECT, 'category')
+        )
+        fallback = list(order_products_by_effective_price(annotate_stock_listing_quantity(fallback)))
+        group_sections.append(
+            {
+                'group': None,
+                'products': fallback,
+                'product_count': len(fallback),
+            }
+        )
+        all_products = fallback
+
+    product_count = len(all_products)
     return render(
         request,
         'shop/collection_detail.html',
         {
             'collection': collection,
-            'products': products,
+            'group_sections': group_sections,
+            'all_products': all_products,
             'product_count': product_count,
             'browse_mode': 'stock',
         },

@@ -13,9 +13,24 @@
   .collection-title{font-size:clamp(24px,3vw,34px);line-height:1.08;margin:0 0 12px}
   .collection-desc{font-size:15px;line-height:1.65;color:var(--muted);max-width:820px;text-transform:none}
   .collection-meta{margin:18px 0 0;font-size:12px;color:var(--muted);text-transform:none}
-  .collection-grid{display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));align-items:stretch}
-  .collection-grid > .product-tile{height:100%;border:1px solid var(--line);background:#fff}
+  .collection-group{padding:22px 0;border-top:1px solid var(--line)}
+  .collection-group:first-of-type{border-top:none;padding-top:0}
+  .group-intro{display:grid;grid-template-columns:minmax(240px,300px) minmax(0,1fr);gap:18px;align-items:start;margin-bottom:14px}
+  .group-intro--no-media{grid-template-columns:1fr}
+  .group-media{aspect-ratio:1/1;border:1px solid var(--line);background:#f8fafc;overflow:hidden}
+  .group-media img{width:100%;height:100%;object-fit:cover}
+  .group-title{margin:0 0 8px;font-size:20px;line-height:1.2}
+  .group-text{margin:0;font-size:14px;line-height:1.6;color:var(--muted);text-transform:none}
+  .group-rail-wrap{display:flex;align-items:stretch;gap:4px}
+  .group-rail-nav{flex-shrink:0;width:42px;min-width:42px;align-self:center;height:42px;border:1px solid var(--line);background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--ink)}
+  .group-rail-nav svg{width:20px;height:20px}
+  .group-rail{flex:1;min-width:0;overflow:hidden}
+  .group-rail__track{display:flex;gap:8px;overflow-x:auto;scroll-behavior:smooth;padding:4px 8px 16px;margin:0 -4px;scrollbar-width:thin}
+  .group-rail__cell{flex:0 0 clamp(220px,24vw,270px);min-width:220px;display:flex}
+  .group-rail__cell > .product-tile{height:100%;width:100%;border:1px solid var(--line);background:#fff}
   .collection-empty{padding:18px;border:1px solid var(--line);background:#fff;color:var(--muted)}
+  .all-products-title{margin:0 0 10px;font-size:22px}
+  @media(max-width:860px){.group-intro{grid-template-columns:1fr}.group-media{max-width:340px}}
 {% endblock %}
 {% block content %}
   <a class="back-to-blog" href="{% url 'shop:stock' %}">← Back to in stock</a>
@@ -36,13 +51,61 @@
     </div>
   </section>
 
-  {% if products %}
-  <div class="collection-grid">
-    {% for p in products %}
-    {% include 'shop/includes/product_tile.html' with p=p browse_mode='stock' %}
+  {% if group_sections %}
+    {% for section in group_sections %}
+    <section class="collection-group">
+      <div class="group-intro{% if not section.group or not section.group.image %} group-intro--no-media{% endif %}">
+        {% if section.group and section.group.image %}
+        <div class="group-media"><img src="{{ section.group.image.url }}" alt="{{ section.group.title|default:collection.title }}"></div>
+        {% endif %}
+        <div>
+          {% if section.group and section.group.title %}<h2 class="group-title">{{ section.group.title }}</h2>{% endif %}
+          {% if section.group and section.group.description %}<p class="group-text">{{ section.group.description|linebreaksbr }}</p>{% endif %}
+        </div>
+      </div>
+      {% if section.products %}
+      <div class="group-rail-wrap" data-group-rail>
+        <button type="button" class="group-rail-nav" data-rail-prev aria-label="Scroll group left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg></button>
+        <div class="group-rail"><div class="group-rail__track">
+          {% for p in section.products %}
+          <div class="group-rail__cell">{% include 'shop/includes/product_tile.html' with p=p browse_mode='stock' %}</div>
+          {% endfor %}
+        </div></div>
+        <button type="button" class="group-rail-nav" data-rail-next aria-label="Scroll group right"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
+      </div>
+      {% else %}
+      <div class="collection-empty">No active products in this group yet.</div>
+      {% endif %}
+    </section>
     {% endfor %}
-  </div>
+    {% if group_sections|length > 1 %}
+    <section class="collection-group">
+      <h2 class="all-products-title">All products in collection</h2>
+      <div class="group-rail-wrap" data-group-rail>
+        <button type="button" class="group-rail-nav" data-rail-prev aria-label="Scroll all products left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg></button>
+        <div class="group-rail"><div class="group-rail__track">
+          {% for p in all_products %}
+          <div class="group-rail__cell">{% include 'shop/includes/product_tile.html' with p=p browse_mode='stock' %}</div>
+          {% endfor %}
+        </div></div>
+        <button type="button" class="group-rail-nav" data-rail-next aria-label="Scroll all products right"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></button>
+      </div>
+    </section>
+    {% endif %}
   {% else %}
   <div class="collection-empty">No active products are currently attached to this collection.</div>
   {% endif %}
+<script>
+(function(){
+  document.querySelectorAll('[data-group-rail]').forEach(function(wrap){
+    const track = wrap.querySelector('.group-rail__track');
+    const prev = wrap.querySelector('[data-rail-prev]');
+    const next = wrap.querySelector('[data-rail-next]');
+    if(!track) return;
+    const step = function(dir){ track.scrollBy({ left: dir * track.clientWidth * 0.85, behavior: 'smooth' }); };
+    if(prev) prev.addEventListener('click', function(){ step(-1); });
+    if(next) next.addEventListener('click', function(){ step(1); });
+  });
+})();
+</script>
 {% endblock %}
