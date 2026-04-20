@@ -1,11 +1,12 @@
 import json
 from decimal import Decimal
 from itertools import chain
-from urllib.parse import quote
+from urllib.parse import quote, urlencode
 
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import authenticate, login
+from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
 from django.core.mail import send_mail, EmailMultiAlternatives
 from django.db import transaction
@@ -63,6 +64,8 @@ from .models import (
     HomeHeroContent,
     HomeHeroSlide,
     Customer,
+    OrderForMe,
+    OrderForMeItem,
     Product,
     ProductCollection,
     ProductListing,
@@ -81,7 +84,12 @@ from .sales_order_stock import (
     take_lines_from_stock,
     validate_order_line_demands,
 )
-from .sales_order_utils import allocate_invoice_number, line_amounts, product_unit_gross_price
+from .sales_order_utils import (
+    allocate_invoice_number,
+    allocate_order_for_me_number,
+    line_amounts,
+    product_unit_gross_price,
+)
 
 _PRODUCT_SUBCLASS_SELECT = (
     'shoe',
@@ -713,6 +721,183 @@ def preorder(request):
     )
 
 
+def _order_for_me_initial_contact(request):
+    if request.user.is_authenticated:
+        return {
+            'first_name': (request.user.first_name or '').strip(),
+            'last_name': (request.user.last_name or '').strip(),
+            'email': (request.user.email or '').strip(),
+            'phone': (getattr(request.user, 'mobile', '') or '').strip(),
+            'telegram': (getattr(request.user, 'telegram', '') or '').strip(),
+            'contact_method': 'EMAIL',
+            'general_comment': '',
+            'agree_terms': False,
+        }
+    return {
+        'first_name': '',
+        'last_name': '',
+        'email': '',
+        'phone': '',
+        'telegram': '',
+        'contact_method': 'EMAIL',
+        'general_comment': '',
+        'agree_terms': False,
+    }
+
+
+def _order_for_me_items_from_post(request):
+    items = []
+    for idx in range(1, 7):
+        url = (request.POST.get(f'item_url_{idx}') or '').strip()
+        comment = (request.POST.get(f'item_comment_{idx}') or '').strip()
+        if not url:
+            continue
+        items.append({'item_url': url, 'item_comment': comment, 'sort_order': idx})
+    return items
+
+
+def _send_order_for_me_staff_email(request, order: OrderForMe):
+    website = (getattr(settings, 'WEBSITE_URL', '') or '').rstrip('/')
+    staff_path = reverse('administration:staff_order_for_me_list')
+    if website:
+        staff_url = f'{website}{staff_path}'
+    else:
+        staff_url = request.build_absolute_uri(staff_path)
+    lines = [
+        f'Order: {order.order_number}',
+        f'Status: {order.get_status_display()}',
+        f'Customer: {order.first_name} {order.last_name}',
+        f'Email: {order.email}',
+        f'Phone: {order.phone}',
+        f'Telegram: {order.telegram or "—"}',
+        f'Contact method: {order.get_contact_method_display()}',
+        f'General comment: {order.general_comment or "—"}',
+        '',
+        'Items:',
+    ]
+    for item in order.items.all():
+        lines.append(f'- {item.item_url}')
+        lines.append(f'  Comment: {item.item_comment or "—"}')
+    lines.extend(['', f'Staff list: {staff_url}'])
+    send_mail(
+        subject='NEW Order For Me form submitted',
+        message='\n'.join(lines),
+        from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', None) or 'no-reply@tenrivals.com',
+        recipient_list=_ORDER_FOR_ME_EMAILS,
+        fail_silently=True,
+    )
+
+
+@login_required
+def order_for_me_create(request):
+    contact = _order_for_me_initial_contact(request)
+    items = [{'item_url': '', 'item_comment': ''}]
+    max_items = 6
+    success_modal = request.GET.get('submitted') == '1'
+
+    if request.method == 'POST':
+        contact = {
+            'first_name': (request.POST.get('first_name') or '').strip(),
+            'last_name': (request.POST.get('last_name') or '').strip(),
+            'email': (request.POST.get('email') or '').strip(),
+            'phone': (request.POST.get('phone') or '').strip(),
+            'telegram': (request.POST.get('telegram') or '').strip(),
+            'contact_method': (request.POST.get('contact_method') or 'EMAIL').strip().upper(),
+            'general_comment': (request.POST.get('general_comment') or '').strip(),
+            'agree_terms': request.POST.get('agree_terms') == '1',
+        }
+        items = _order_for_me_items_from_post(request)
+        if not items:
+            items = [{'item_url': '', 'item_comment': ''}]
+
+        errors = []
+        if not contact['first_name'] or not contact['last_name']:
+            errors.append('First and last name are required.')
+        if not contact['email'] or '@' not in contact['email']:
+            errors.append('Valid email is required.')
+        if not contact['phone']:
+            errors.append('Phone is required.')
+        if contact['contact_method'] not in {'EMAIL', 'WHATSAPP', 'TELEGRAM'}:
+            errors.append('Select a valid contact method.')
+        if not contact['agree_terms']:
+            errors.append('You need to agree to Terms and Privacy Policy.')
+        if len(items) > max_items:
+            errors.append('You can submit up to 6 item links.')
+        for item in items:
+            if not (item['item_url'].startswith('http://') or item['item_url'].startswith('https://')):
+                errors.append(f'Please provide a valid URL: {item["item_url"]}')
+                break
+
+        if errors:
+            for err in errors:
+                messages.error(request, err)
+        else:
+            with transaction.atomic():
+                customer, _ = Customer.objects.get_or_create(
+                    user=request.user,
+                    defaults={
+                        'first_name': contact['first_name'],
+                        'last_name': contact['last_name'],
+                        'phone': contact['phone'],
+                        'email': contact['email'],
+                        'tg_account': contact['telegram'],
+                    },
+                )
+                customer.first_name = contact['first_name']
+                customer.last_name = contact['last_name']
+                customer.phone = contact['phone']
+                customer.email = contact['email']
+                customer.tg_account = contact['telegram']
+                customer.save(
+                    update_fields=[
+                        'first_name',
+                        'last_name',
+                        'phone',
+                        'email',
+                        'tg_account',
+                        'updated_at',
+                    ]
+                )
+
+                order = OrderForMe.objects.create(
+                    order_number=allocate_order_for_me_number(timezone.localdate().year),
+                    customer=customer,
+                    first_name=contact['first_name'],
+                    last_name=contact['last_name'],
+                    email=contact['email'],
+                    phone=contact['phone'],
+                    telegram=contact['telegram'],
+                    contact_method=contact['contact_method'],
+                    general_comment=contact['general_comment'],
+                    status=OrderForMe.Status.SUBMITTED,
+                )
+                OrderForMeItem.objects.bulk_create(
+                    [
+                        OrderForMeItem(
+                            order=order,
+                            sort_order=item['sort_order'],
+                            item_url=item['item_url'],
+                            item_comment=item['item_comment'],
+                        )
+                        for item in items
+                    ]
+                )
+            order = OrderForMe.objects.prefetch_related('items').get(pk=order.pk)
+            _send_order_for_me_staff_email(request, order)
+            return redirect(f'{reverse("shop:order_for_me")}?' + urlencode({'submitted': '1'}))
+
+    return render(
+        request,
+        'shop/order_for_me.html',
+        {
+            'contact': contact,
+            'items': items,
+            'max_items': max_items,
+            'success_modal': success_modal,
+        },
+    )
+
+
 def blog_index(request):
     posts = BlogPost.objects.filter(is_published=True).order_by('-published_at', '-id')
     return render(
@@ -1060,6 +1245,7 @@ _CHECKOUT_EMAILS = [
     'mr.alexson.assistant@gmail.com',
     'andy.rivals@tenrivals.com',
 ]
+_ORDER_FOR_ME_EMAILS = list(_CHECKOUT_EMAILS)
 
 
 def _checkout_initial_contact(request):

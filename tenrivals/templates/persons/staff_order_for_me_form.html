@@ -1,0 +1,141 @@
+{% extends 'persons/staff_base.html' %}
+{% block title %}{{ page_heading }} — Staff — TR Shop{% endblock %}
+{% block page_heading %}{{ page_heading }}{% endblock %}
+{% block page_note %}<p class="page-note">{{ page_note }}</p>{% endblock %}
+{% block extra_head %}
+<style>
+  .form-control,.form-textarea{width:100%;padding:10px 12px;border:1px solid var(--line);font-size:14px;font-family:inherit}
+  .form-textarea{min-height:120px;resize:vertical}
+  .form-control:focus,.form-textarea:focus{outline:none;border-color:var(--accent)}
+  .item-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;padding:10px;border:1px solid var(--line);margin-bottom:10px}
+  .item-row__head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+  .item-row__actions{display:flex;gap:8px}
+  @media(max-width:860px){.item-row{grid-template-columns:1fr}}
+</style>
+{% endblock %}
+{% block content %}
+<form method="post">
+  {% csrf_token %}
+  <div class="card">
+    <h2 class="card-title">Request details</h2>
+    {% if order_view and order_view.order_number %}
+    <p class="page-meta" style="margin-top:-8px;margin-bottom:16px">Order number: <span class="mono">{{ order_view.order_number }}</span></p>
+    {% endif %}
+    <div class="form-row">
+      <div class="form-group">
+        <label for="id_first_name">First name</label>
+        <input class="form-control" id="id_first_name" name="first_name" required value="{{ order_view.first_name|default:'' }}">
+      </div>
+      <div class="form-group">
+        <label for="id_last_name">Last name</label>
+        <input class="form-control" id="id_last_name" name="last_name" required value="{{ order_view.last_name|default:'' }}">
+      </div>
+      <div class="form-group">
+        <label for="id_email">Email</label>
+        <input class="form-control" id="id_email" name="email" type="email" required value="{{ order_view.email|default:'' }}">
+      </div>
+      <div class="form-group">
+        <label for="id_phone">Phone</label>
+        <input class="form-control" id="id_phone" name="phone" required value="{{ order_view.phone|default:'' }}">
+      </div>
+      <div class="form-group">
+        <label for="id_telegram">Telegram</label>
+        <input class="form-control" id="id_telegram" name="telegram" value="{{ order_view.telegram|default:'' }}">
+      </div>
+      <div class="form-group">
+        <label for="id_contact_method">Contact method</label>
+        <select class="form-control" id="id_contact_method" name="contact_method">
+          {% for code, label in contact_method_choices %}
+          <option value="{{ code }}" {% if order_view and order_view.contact_method == code %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="id_status">Status</label>
+        <select class="form-control" id="id_status" name="status">
+          {% for code, label in status_choices %}
+          <option value="{{ code }}" {% if order_view and order_view.status == code %}selected{% endif %}>{% if code == 'SUBMITTED' %}Submitted{% else %}{{ label }}{% endif %}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="id_estimated_total">Estimated total (₾)</label>
+        <input class="form-control" id="id_estimated_total" name="estimated_total" type="number" min="0" step="0.01" value="{{ order_view.estimated_total|default:'' }}">
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="id_general_comment">General comment</label>
+      <textarea class="form-textarea" id="id_general_comment" name="general_comment">{{ order_view.general_comment|default:'' }}</textarea>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 class="card-title">Items (up to {{ max_items }})</h2>
+    <div id="ofm-items">
+      {% for item in item_rows %}
+      <div class="item-row" data-item-row>
+        <div class="item-row__head" style="grid-column:1/-1">
+          <strong>Item</strong>
+          <div class="item-row__actions">
+            <button type="button" class="icon-btn" data-add-item title="Add row">+</button>
+            <button type="button" class="icon-btn icon-btn--danger" data-remove-item title="Remove row">−</button>
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label>Link</label>
+          <input class="form-control" type="url" required name="item_url_{{ forloop.counter }}" value="{{ item.item_url }}">
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label>Comment</label>
+          <input class="form-control" name="item_comment_{{ forloop.counter }}" value="{{ item.item_comment }}" placeholder="Specify details - color, size, variant, etc.">
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="actions" style="margin-top:24px">
+    <a href="{% url 'administration:staff_order_for_me_list' %}" class="btn btn--outline">Back</a>
+    <button type="submit" class="btn">Save request</button>
+  </div>
+</form>
+
+<script>
+(function(){
+  const wrap = document.getElementById('ofm-items');
+  const maxItems = {{ max_items }};
+  if(!wrap) return;
+
+  function renumber(){
+    const rows = Array.from(wrap.querySelectorAll('[data-item-row]'));
+    rows.forEach((row, idx) => {
+      const n = idx + 1;
+      const urlInput = row.querySelector('input[type="url"]');
+      const commentInput = row.querySelector('input[name^="item_comment_"]');
+      if(urlInput) urlInput.name = 'item_url_' + n;
+      if(commentInput) commentInput.name = 'item_comment_' + n;
+      const removeBtn = row.querySelector('[data-remove-item]');
+      if(removeBtn) removeBtn.disabled = rows.length <= 1;
+    });
+  }
+  function addRow(afterRow){
+    const rows = Array.from(wrap.querySelectorAll('[data-item-row]'));
+    if(rows.length >= maxItems) return;
+    const clone = rows[rows.length - 1].cloneNode(true);
+    clone.querySelectorAll('input').forEach((el) => { el.value = ''; });
+    afterRow.after(clone);
+    renumber();
+  }
+  wrap.addEventListener('click', function(e){
+    const row = e.target.closest('[data-item-row]');
+    if(!row) return;
+    if(e.target.closest('[data-add-item]')){ addRow(row); return; }
+    if(e.target.closest('[data-remove-item]')){
+      const rows = Array.from(wrap.querySelectorAll('[data-item-row]'));
+      if(rows.length > 1){ row.remove(); renumber(); }
+    }
+  });
+  renumber();
+})();
+</script>
+{% endblock %}

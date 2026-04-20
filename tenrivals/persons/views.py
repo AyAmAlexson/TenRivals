@@ -25,12 +25,15 @@ from django.contrib import messages
 from django.utils import timezone
 from django.contrib.auth import logout, login
 from django.utils.text import slugify
+from django.core.mail import send_mail
 
 from shop.models import (
     BlogPost,
     HomeHeroContent,
     HomeHeroSlide,
     HomePromoBanner,
+    OrderForMe,
+    OrderForMeItem,
     Product,
     ProductCollection,
     ProductCollectionGroup,
@@ -39,6 +42,7 @@ from shop.models import (
     SalesOrder,
 )
 from shop.staff_stock_stats import build_stock_stats
+from shop.sales_order_utils import allocate_order_for_me_number
 import hashlib
 import hmac
 from django.utils.encoding import force_str
@@ -56,8 +60,34 @@ from django.db.models import Max, Q
 import qrcode
 import base64
 from io import BytesIO
+from decimal import Decimal, InvalidOperation
 
 logger = logging.getLogger(__name__)
+_ORDER_FOR_ME_EMAILS = [
+    'a.molodenko@gmail.com',
+    'mr.alexson.assistant@gmail.com',
+    'andy.rivals@tenrivals.com',
+]
+
+
+def _send_order_for_me_cancelled_email(request, order: OrderForMe):
+    website = (getattr(settings, 'WEBSITE_URL', '') or '').rstrip('/')
+    staff_path = reverse('administration:staff_order_for_me_list')
+    staff_url = f'{website}{staff_path}' if website else request.build_absolute_uri(staff_path)
+    send_mail(
+        subject=f'Order For Me {order.order_number} CANCELLED',
+        message=(
+            f'Order: {order.order_number}\n'
+            f'Status: Cancelled\n'
+            f'Customer: {order.first_name} {order.last_name}\n'
+            f'Email: {order.email}\n'
+            f'Phone: {order.phone}\n'
+            f'Staff list: {staff_url}\n'
+        ),
+        from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', None) or 'no-reply@tenrivals.com',
+        recipient_list=_ORDER_FOR_ME_EMAILS,
+        fail_silently=True,
+    )
 
 def get_telegram_bot_instance():
     """Возвращает инициализированный экземпляр бота или None."""
@@ -119,6 +149,34 @@ class ShopOrderHistoryView(LoginRequiredMixin, ListView):
             .prefetch_related('lines', 'lines__product')
             .order_by('-order_date', '-id')
         )
+
+
+class AccountOrderForMeHistoryView(LoginRequiredMixin, ListView):
+    model = OrderForMe
+    template_name = 'account_order_for_me_history.html'
+    context_object_name = 'orders'
+
+    def get_queryset(self):
+        return (
+            OrderForMe.objects.filter(customer__user=self.request.user)
+            .prefetch_related('items')
+            .order_by('-created_at', '-id')
+        )
+
+
+@login_required
+@require_POST
+def account_order_for_me_cancel(request, order_id: int):
+    order = get_object_or_404(OrderForMe, pk=order_id, customer__user=request.user)
+    if order.status in {OrderForMe.Status.CANCELLED, OrderForMe.Status.ORDERED}:
+        messages.info(request, 'This request can no longer be cancelled.')
+        return redirect('persons:order_for_me_history')
+
+    order.status = OrderForMe.Status.CANCELLED
+    order.save(update_fields=['status', 'status_changed_at', 'updated_at'])
+    _send_order_for_me_cancelled_email(request, order)
+    messages.success(request, f'Request {order.order_number} was cancelled.')
+    return redirect('persons:order_for_me_history')
 
 def generate_verification_code():
     # Генерация случайного кода верификации
@@ -621,6 +679,208 @@ def _sync_primary_email_address(user):
             email=email_lower,
             defaults={"primary": True, "verified": True},
         )
+
+
+def _parse_order_for_me_items(request, max_items: int = 6):
+    items = []
+    for idx in range(1, max_items + 1):
+        item_url = (request.POST.get(f'item_url_{idx}') or '').strip()
+        item_comment = (request.POST.get(f'item_comment_{idx}') or '').strip()
+        if not item_url:
+            continue
+        items.append(
+            {
+                'sort_order': idx,
+                'item_url': item_url,
+                'item_comment': item_comment,
+            }
+        )
+    return items
+
+
+@login_required
+@user_passes_test(_superuser_required)
+def staff_order_for_me_list(request):
+    if request.method == 'POST':
+        action = (request.POST.get('action') or '').strip()
+        oid_raw = (request.POST.get('order_id') or '').strip()
+        order = OrderForMe.objects.filter(pk=int(oid_raw)).first() if oid_raw.isdigit() else None
+        if not order:
+            messages.error(request, 'Order for me record not found.')
+            return redirect('administration:staff_order_for_me_list')
+        if action == 'cancel':
+            if order.status == OrderForMe.Status.CANCELLED:
+                messages.info(request, f'{order.order_number} is already cancelled.')
+            else:
+                order.status = OrderForMe.Status.CANCELLED
+                order.save(update_fields=['status', 'status_changed_at', 'updated_at'])
+                _send_order_for_me_cancelled_email(request, order)
+                messages.success(request, f'{order.order_number} marked as Cancelled.')
+            return redirect('administration:staff_order_for_me_list')
+        messages.error(request, 'Unknown action.')
+        return redirect('administration:staff_order_for_me_list')
+
+    orders = (
+        OrderForMe.objects.select_related('customer')
+        .prefetch_related('items')
+        .order_by('-created_at', '-id')[:500]
+    )
+    return render(
+        request,
+        'persons/staff_order_for_me_list.html',
+        {
+            'orders': orders,
+            'staff_nav_active': 'order_for_me',
+            'page_heading': 'Order for me',
+            'page_note': 'Custom sourcing requests from users. Cancel action is soft (status only).',
+            'status_choices': OrderForMe.Status.choices,
+        },
+    )
+
+
+@login_required
+@user_passes_test(_superuser_required)
+def staff_order_for_me_edit(request, order_id=None):
+    order = get_object_or_404(OrderForMe, pk=order_id) if order_id else None
+    order_view = order
+    max_items = 6
+    if request.method == 'POST':
+        first_name = (request.POST.get('first_name') or '').strip()[:120]
+        last_name = (request.POST.get('last_name') or '').strip()[:120]
+        email = (request.POST.get('email') or '').strip()
+        phone = (request.POST.get('phone') or '').strip()[:32]
+        telegram = (request.POST.get('telegram') or '').strip()[:64]
+        contact_method = (request.POST.get('contact_method') or 'EMAIL').strip().upper()
+        status = (request.POST.get('status') or OrderForMe.Status.SUBMITTED).strip().upper()
+        general_comment = (request.POST.get('general_comment') or '').strip()
+        estimated_total_raw = (request.POST.get('estimated_total') or '').strip()
+        items = _parse_order_for_me_items(request, max_items=max_items)
+
+        errors = []
+        if not first_name or not last_name:
+            errors.append('First and last name are required.')
+        if not email or '@' not in email:
+            errors.append('Valid email is required.')
+        if not phone:
+            errors.append('Phone is required.')
+        if contact_method not in {OrderForMe.ContactMethod.EMAIL, OrderForMe.ContactMethod.WHATSAPP, OrderForMe.ContactMethod.TELEGRAM}:
+            errors.append('Invalid contact method.')
+        valid_statuses = {choice[0] for choice in OrderForMe.Status.choices}
+        if status not in valid_statuses:
+            errors.append('Invalid status.')
+        if not items:
+            errors.append('Add at least one item URL.')
+        if len(items) > max_items:
+            errors.append(f'At most {max_items} items are allowed.')
+        for item in items:
+            if not (item['item_url'].startswith('http://') or item['item_url'].startswith('https://')):
+                errors.append(f'Invalid URL: {item["item_url"]}')
+                break
+
+        estimated_total = None
+        if estimated_total_raw:
+            try:
+                estimated_total = Decimal(estimated_total_raw)
+                if estimated_total < 0:
+                    raise InvalidOperation()
+            except Exception:
+                errors.append('Estimated total must be a non-negative number.')
+
+        if errors:
+            for err in errors:
+                messages.error(request, err)
+            order_view = {
+                'order_number': order.order_number if order else '',
+                'first_name': first_name,
+                'last_name': last_name,
+                'email': email,
+                'phone': phone,
+                'telegram': telegram,
+                'contact_method': contact_method,
+                'status': status,
+                'estimated_total': estimated_total_raw,
+                'general_comment': general_comment,
+            }
+        else:
+            with transaction.atomic():
+                old_status = order.status if order else None
+                customer = Customer.objects.filter(email__iexact=email).first()
+                if customer:
+                    customer.first_name = first_name
+                    customer.last_name = last_name
+                    customer.phone = phone
+                    customer.email = email
+                    customer.tg_account = telegram
+                    customer.save(
+                        update_fields=['first_name', 'last_name', 'phone', 'email', 'tg_account', 'updated_at']
+                    )
+                if order is None:
+                    order = OrderForMe.objects.create(
+                        order_number=allocate_order_for_me_number(timezone.localdate().year),
+                        customer=customer,
+                        first_name=first_name,
+                        last_name=last_name,
+                        email=email,
+                        phone=phone,
+                        telegram=telegram,
+                        contact_method=contact_method,
+                        status=status,
+                        estimated_total=estimated_total,
+                        general_comment=general_comment,
+                    )
+                else:
+                    order.customer = customer
+                    order.first_name = first_name
+                    order.last_name = last_name
+                    order.email = email
+                    order.phone = phone
+                    order.telegram = telegram
+                    order.contact_method = contact_method
+                    order.status = status
+                    order.estimated_total = estimated_total
+                    order.general_comment = general_comment
+                    order.save()
+                    order.items.all().delete()
+                OrderForMeItem.objects.bulk_create(
+                    [
+                        OrderForMeItem(
+                            order=order,
+                            sort_order=item['sort_order'],
+                            item_url=item['item_url'],
+                            item_comment=item['item_comment'],
+                        )
+                        for item in items
+                    ]
+                )
+            if old_status != OrderForMe.Status.CANCELLED and order.status == OrderForMe.Status.CANCELLED:
+                _send_order_for_me_cancelled_email(request, order)
+            messages.success(request, f'{order.order_number} saved.')
+            return redirect('administration:staff_order_for_me_edit', order_id=order.pk)
+
+    if order:
+        item_rows = list(order.items.order_by('sort_order', 'id').values('item_url', 'item_comment')[:max_items])
+    elif request.method == 'POST':
+        item_rows = _parse_order_for_me_items(request, max_items=max_items)
+    else:
+        item_rows = []
+    if not item_rows:
+        item_rows = [{'item_url': '', 'item_comment': ''}]
+
+    return render(
+        request,
+        'persons/staff_order_for_me_form.html',
+        {
+            'order_obj': order,
+            'order_view': order_view or order,
+            'item_rows': item_rows,
+            'max_items': max_items,
+            'staff_nav_active': 'order_for_me',
+            'page_heading': 'Edit Order for me' if order else 'New Order for me',
+            'page_note': 'Staff can adjust status, estimate, and line items.',
+            'status_choices': OrderForMe.Status.choices,
+            'contact_method_choices': OrderForMe.ContactMethod.choices,
+        },
+    )
 
 
 @login_required

@@ -1,0 +1,131 @@
+{% extends 'persons/staff_base.html' %}
+{% block title %}Order for me — Staff — TR Shop{% endblock %}
+{% block page_heading %}{{ page_heading }}{% endblock %}
+{% block page_note %}<p class="page-note">{{ page_note }}</p>{% endblock %}
+{% block extra_head %}
+<style>
+  .confirm-overlay{position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;align-items:center;justify-content:center;z-index:12060;padding:16px}
+  .confirm-overlay.is-open{display:flex}
+  .confirm-modal{width:min(420px,100%);background:#fff;border:1px solid var(--line);padding:18px}
+  .confirm-modal__title{margin:0 0 10px;font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+  .confirm-modal__text{margin:0 0 14px;font-size:14px;color:var(--muted);line-height:1.5}
+  .confirm-modal__actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+  .row-link{cursor:pointer}
+  .row-link:hover td{background:#f9fafb}
+</style>
+{% endblock %}
+{% block content %}
+<div class="staff-toolbar">
+  <a href="{% url 'administration:staff_order_for_me_new' %}" class="btn">New request</a>
+</div>
+
+<div class="card">
+  <h2 class="card-title">Order for me requests (up to 500)</h2>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Number</th>
+          <th>Date</th>
+          <th>Status</th>
+          <th>Customer</th>
+          <th>Contact</th>
+          <th>Method</th>
+          <th class="num">Estimate</th>
+          <th>Items</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for o in orders %}
+        <tr class="row-link" data-href="{% url 'administration:staff_order_for_me_edit' o.pk %}">
+          <td class="mono">{{ o.order_number }}</td>
+          <td class="mono">{{ o.created_at|date:"Y-m-d H:i" }}</td>
+          <td><span class="badge">{{ o.get_status_display }}</span></td>
+          <td>{{ o.first_name }} {{ o.last_name }}</td>
+          <td>
+            <div>{{ o.email }}</div>
+            <div class="page-meta" style="margin:4px 0 0">{{ o.phone }}{% if o.telegram %} · {{ o.telegram }}{% endif %}</div>
+          </td>
+          <td>{{ o.get_contact_method_display }}</td>
+          <td class="mono num">{% if o.estimated_total %}{{ o.estimated_total|floatformat:2 }}{% else %}—{% endif %}</td>
+          <td>{{ o.items.count }}</td>
+          <td>
+            <div class="action-icons">
+              <a href="{% url 'administration:staff_order_for_me_edit' o.pk %}" class="icon-btn" title="Edit" aria-label="Edit">✎</a>
+              {% if o.status != 'CANCELLED' %}
+              <form id="cancel-ofm-{{ o.pk }}" method="post" action="{% url 'administration:staff_order_for_me_list' %}" style="display:inline">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="cancel">
+                <input type="hidden" name="order_id" value="{{ o.pk }}">
+                <button type="button" class="icon-btn icon-btn--danger js-cancel-order" data-form-id="cancel-ofm-{{ o.pk }}" data-order-number="{{ o.order_number }}" title="Cancel" aria-label="Cancel">×</button>
+              </form>
+              {% else %}
+              <span class="badge badge--no">Cancelled</span>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="9" style="color:var(--muted)">No requests yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="confirm-overlay" id="ofm-cancel-confirm" aria-hidden="true">
+  <div class="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="ofm-cancel-title">
+    <h3 class="confirm-modal__title" id="ofm-cancel-title">Cancel request</h3>
+    <p class="confirm-modal__text" id="ofm-cancel-text">Do you really want to cancel this request?</p>
+    <div class="confirm-modal__actions">
+      <button type="button" class="btn btn--sm btn--outline" id="ofm-cancel-no">Keep</button>
+      <button type="button" class="btn btn--sm" id="ofm-cancel-yes">Cancel request</button>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  const overlay = document.getElementById('ofm-cancel-confirm');
+  const text = document.getElementById('ofm-cancel-text');
+  const noBtn = document.getElementById('ofm-cancel-no');
+  const yesBtn = document.getElementById('ofm-cancel-yes');
+  let pending = null;
+
+  function closeModal(){
+    pending = null;
+    overlay.classList.remove('is-open');
+    overlay.setAttribute('aria-hidden', 'true');
+  }
+
+  document.querySelectorAll('.row-link').forEach(function(row){
+    row.addEventListener('click', function(e){
+      if(e.target.closest('a,button,form,input,select,textarea,label')) return;
+      const href = row.getAttribute('data-href');
+      if(href) window.location.href = href;
+    });
+  });
+  document.querySelectorAll('.js-cancel-order').forEach(function(btn){
+    btn.addEventListener('click', function(e){
+      e.stopPropagation();
+      const formId = btn.getAttribute('data-form-id');
+      const form = formId ? document.getElementById(formId) : null;
+      if(!form) return;
+      pending = form;
+      text.textContent = 'Cancel request ' + (btn.getAttribute('data-order-number') || '') + '?';
+      overlay.classList.add('is-open');
+      overlay.setAttribute('aria-hidden', 'false');
+    });
+  });
+  noBtn.addEventListener('click', closeModal);
+  overlay.addEventListener('click', function(e){ if(e.target === overlay) closeModal(); });
+  yesBtn.addEventListener('click', function(){
+    if(!pending) return;
+    const form = pending;
+    closeModal();
+    form.submit();
+  });
+  document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && overlay.classList.contains('is-open')) closeModal(); });
+})();
+</script>
+{% endblock %}

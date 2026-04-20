@@ -1,4 +1,4 @@
-{# Expects: active_nav — 'profile' | 'orders' #}
+{# Expects: active_nav — 'profile' | 'orders' | 'order_for_me' #}
 <aside class="sidebar">
   <div class="sidebar-avatar">{{ user.first_name|make_list|first|default:"?" }}{{ user.last_name|make_list|first|default:"?" }}</div>
   <div class="sidebar-name">{{ user.first_name }} {{ user.last_name }}</div>
@@ -6,6 +6,7 @@
   <nav class="sidebar-nav">
     <a href="{% url 'persons:account_details' %}" class="{% if active_nav == 'profile' %}active{% endif %}">Personal Info</a>
     <a href="{% url 'persons:shop_order_history' %}" class="{% if active_nav == 'orders' %}active{% endif %}">Order history</a>
+    <a href="{% url 'persons:order_for_me_history' %}" class="{% if active_nav == 'order_for_me' %}active{% endif %}">Order for me</a>
     <a href="{% url 'account_change_password' %}">Change Password</a>
     <a href="{% url 'persons:change_email' %}">Change Email</a>
     <a href="{% url 'shop:index' %}">Back to Shop</a>

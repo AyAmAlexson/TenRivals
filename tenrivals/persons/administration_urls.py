@@ -31,6 +31,13 @@ urlpatterns = [
         views.staff_collection_edit,
         name="staff_collection_edit",
     ),
+    path("order-for-me/", views.staff_order_for_me_list, name="staff_order_for_me_list"),
+    path("order-for-me/new/", views.staff_order_for_me_edit, name="staff_order_for_me_new"),
+    path(
+        "order-for-me/<int:order_id>/",
+        views.staff_order_for_me_edit,
+        name="staff_order_for_me_edit",
+    ),
     path("customers/new/", staff_sales_views.staff_customer_edit, name="staff_customer_new"),
     path(
         "customers/<int:pk>/edit/",

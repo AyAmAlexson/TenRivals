@@ -9,6 +9,7 @@ from typing import Any
 from django.db import transaction
 
 from .models import (
+    OrderForMeYearSequence,
     Product,
     ProductListing,
     ProductListingChannel,
@@ -137,6 +138,17 @@ def allocate_invoice_number(order_year: int) -> str:
         row.last_seq += 1
         row.save(update_fields=['last_seq'])
         return f'{order_year}-{row.last_seq:06d}'
+
+
+def allocate_order_for_me_number(order_year: int) -> str:
+    with transaction.atomic():
+        row, _ = OrderForMeYearSequence.objects.select_for_update().get_or_create(
+            year=order_year,
+            defaults={'last_seq': 0},
+        )
+        row.last_seq += 1
+        row.save(update_fields=['last_seq'])
+        return f'OFM-{order_year}-{row.last_seq:06d}'
 
 
 def parse_services_payload(raw: Any) -> list[dict[str, Any]]:

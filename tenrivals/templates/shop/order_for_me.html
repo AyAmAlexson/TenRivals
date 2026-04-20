@@ -1,0 +1,199 @@
+{% extends 'shop/base_marketing.html' %}
+{% block title %}Order for me — TR Shop{% endblock %}
+{% block extra_css %}
+  .ofm-page{margin:0 -32px; padding:28px 32px 52px; background:linear-gradient(180deg,#f1f5f9 0%,#fff 100%)}
+  .ofm-hero{max-width:980px; margin:0 auto 20px}
+  .ofm-title{font-size:28px; line-height:1.1; margin:0 0 10px}
+  .ofm-sub{font-size:15px; line-height:1.6; color:var(--muted); margin:0}
+  .ofm-steps{display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:10px; margin:22px 0 26px}
+  .ofm-step{background:#fff; border:1px solid var(--line); padding:12px 12px 10px}
+  .ofm-step__n{font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.08em; color:var(--accent); margin:0 0 8px}
+  .ofm-step__text{font-size:13px; line-height:1.5; color:var(--ink)}
+  .ofm-card{max-width:980px; margin:0 auto; background:#fff; border:1px solid var(--line); padding:22px}
+  .ofm-card h2{font-size:13px; letter-spacing:.08em; margin:0 0 14px}
+  .ofm-grid{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+  .ofm-group{margin-bottom:16px}
+  .ofm-label{display:block; font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin-bottom:6px}
+  .ofm-input,.ofm-select,.ofm-textarea{
+    width:100%; border:1px solid var(--line); padding:10px 12px; font:inherit; font-size:14px; background:#fff;
+  }
+  .ofm-textarea{min-height:96px; resize:vertical}
+  .ofm-items{display:grid; gap:10px}
+  .ofm-item{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto auto; gap:8px; align-items:end}
+  .ofm-item button{
+    width:36px; height:36px; border:1px solid var(--line); background:#fff; cursor:pointer; font:inherit; font-size:18px; line-height:1;
+  }
+  .ofm-item button:hover{border-color:#cbd5e1; background:#f8fafc}
+  .ofm-help{font-size:12px; color:var(--muted); margin-top:6px}
+  .ofm-radios{display:flex; gap:14px; flex-wrap:wrap}
+  .ofm-radios label{font-size:14px; color:var(--ink); display:inline-flex; align-items:center; gap:8px}
+  .ofm-agree{display:flex; align-items:flex-start; gap:10px; font-size:13px; color:var(--ink)}
+  .ofm-agree a{color:var(--accent)}
+  .ofm-actions{display:flex; justify-content:flex-start; margin-top:12px}
+  .ofm-errors{margin-bottom:12px}
+  .ofm-errors .alert{margin-bottom:8px}
+  .ofm-modal{position:fixed; inset:0; background:rgba(15,23,42,.45); display:none; align-items:center; justify-content:center; z-index:12060; padding:16px}
+  .ofm-modal.is-open{display:flex}
+  .ofm-modal__card{width:min(520px,100%); background:#fff; border:1px solid var(--line); padding:20px}
+  .ofm-modal__title{margin:0 0 10px; font-size:15px; font-weight:800; text-transform:uppercase; letter-spacing:.06em}
+  .ofm-modal__text{margin:0 0 14px; font-size:14px; color:var(--muted); line-height:1.55}
+  .ofm-modal__actions{display:flex; gap:8px; flex-wrap:wrap}
+  @media(max-width:1080px){.ofm-steps{grid-template-columns:repeat(3,minmax(0,1fr))}}
+  @media(max-width:760px){
+    .ofm-page{margin:0 -20px; padding:24px 20px 44px}
+    .ofm-steps{grid-template-columns:1fr}
+    .ofm-grid{grid-template-columns:1fr}
+    .ofm-item{grid-template-columns:1fr; gap:6px}
+    .ofm-item button{width:40px; height:34px}
+  }
+{% endblock %}
+{% block content %}
+<div class="ofm-page">
+  <section class="ofm-hero">
+    <h1 class="ofm-title">Order for me</h1>
+    <p class="ofm-sub">Send links to any products from online stores in Europe, USA, or China, and we will order and deliver them for you.</p>
+    <div class="ofm-steps">
+      <div class="ofm-step"><p class="ofm-step__n">Step 1</p><p class="ofm-step__text">Send product links, add details (color, size, variant), and click Get a quote. This does not obligate you to buy.</p></div>
+      <div class="ofm-step"><p class="ofm-step__n">Step 2</p><p class="ofm-step__text">Receive a quote within 48 hours using your selected contact method.</p></div>
+      <div class="ofm-step"><p class="ofm-step__n">Step 3</p><p class="ofm-step__text">Confirm the order. The final price is fixed at this moment and will not change.</p></div>
+      <div class="ofm-step"><p class="ofm-step__n">Step 4</p><p class="ofm-step__text">Receive your order in about 21 days. Most orders arrive earlier, but in rare cases may take longer.</p></div>
+      <div class="ofm-step"><p class="ofm-step__n">Step 5</p><p class="ofm-step__text">Pay on delivery using your preferred payment method.</p></div>
+    </div>
+  </section>
+
+  <form class="ofm-card" method="post" novalidate>
+    {% csrf_token %}
+    {% if messages %}
+    <div class="ofm-errors">
+      {% for message in messages %}
+      <div class="alert alert-{{ message.level_tag }}">{{ message }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <h2>Contact details</h2>
+    <div class="ofm-grid">
+      <div class="ofm-group">
+        <label class="ofm-label" for="id_first_name">First name</label>
+        <input class="ofm-input" id="id_first_name" name="first_name" required value="{{ contact.first_name }}">
+      </div>
+      <div class="ofm-group">
+        <label class="ofm-label" for="id_last_name">Last name</label>
+        <input class="ofm-input" id="id_last_name" name="last_name" required value="{{ contact.last_name }}">
+      </div>
+      <div class="ofm-group">
+        <label class="ofm-label" for="id_email">Email</label>
+        <input class="ofm-input" id="id_email" name="email" type="email" required value="{{ contact.email }}">
+      </div>
+      <div class="ofm-group">
+        <label class="ofm-label" for="id_phone">Phone</label>
+        <input class="ofm-input" id="id_phone" name="phone" required value="{{ contact.phone }}">
+      </div>
+      <div class="ofm-group">
+        <label class="ofm-label" for="id_telegram">Telegram (optional)</label>
+        <input class="ofm-input" id="id_telegram" name="telegram" value="{{ contact.telegram }}">
+      </div>
+      <div class="ofm-group">
+        <label class="ofm-label">Contact method</label>
+        <div class="ofm-radios">
+          <label><input type="radio" name="contact_method" value="EMAIL" {% if contact.contact_method == 'EMAIL' %}checked{% endif %}> Email</label>
+          <label><input type="radio" name="contact_method" value="WHATSAPP" {% if contact.contact_method == 'WHATSAPP' %}checked{% endif %}> WhatsApp (must be linked to the phone above)</label>
+          <label><input type="radio" name="contact_method" value="TELEGRAM" {% if contact.contact_method == 'TELEGRAM' %}checked{% endif %}> Telegram</label>
+        </div>
+      </div>
+    </div>
+
+    <h2>Items to quote</h2>
+    <div class="ofm-items" id="ofm-items">
+      {% for item in items %}
+      <div class="ofm-item" data-ofm-item>
+        <div>
+          <label class="ofm-label">Link</label>
+          <input class="ofm-input" name="item_url_{{ forloop.counter }}" type="url" required value="{{ item.item_url }}">
+        </div>
+        <div>
+          <label class="ofm-label">Comment</label>
+          <input class="ofm-input" name="item_comment_{{ forloop.counter }}" value="{{ item.item_comment }}" placeholder="Specify details - color, size, variant, etc.">
+        </div>
+        <button type="button" data-add-item aria-label="Add item">+</button>
+        <button type="button" data-remove-item aria-label="Remove item">−</button>
+      </div>
+      {% endfor %}
+    </div>
+    <p class="ofm-help">You can add up to {{ max_items }} item rows.</p>
+
+    <div class="ofm-group">
+      <label class="ofm-label" for="id_general_comment">General comment for this request</label>
+      <textarea class="ofm-textarea" id="id_general_comment" name="general_comment">{{ contact.general_comment }}</textarea>
+    </div>
+
+    <label class="ofm-agree">
+      <input type="checkbox" name="agree_terms" value="1" {% if contact.agree_terms %}checked{% endif %}>
+      <span>I agree with <a href="{% url 'shop:legal_terms' %}" target="_blank" rel="noopener">Terms</a> and <a href="{% url 'shop:legal_privacy' %}" target="_blank" rel="noopener">Privacy Policy</a>.</span>
+    </label>
+
+    <div class="ofm-actions">
+      <button type="submit" class="btn">Get a quote</button>
+    </div>
+  </form>
+
+  <div class="ofm-modal{% if success_modal %} is-open{% endif %}" id="ofm-success-modal" aria-hidden="{% if success_modal %}false{% else %}true{% endif %}">
+    <div class="ofm-modal__card" role="dialog" aria-modal="true" aria-labelledby="ofm-success-title">
+      <h3 class="ofm-modal__title" id="ofm-success-title">Request submitted</h3>
+      <p class="ofm-modal__text">Thank you, your request has been submitted successfully. We will contact you within 48 hours.</p>
+      <div class="ofm-modal__actions">
+        <a class="btn" href="{% url 'shop:order_for_me' %}">Place another order</a>
+        <a class="btn btn--outline" href="{% url 'shop:stock' %}">Back to in stock</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const itemsWrap = document.getElementById('ofm-items');
+  const maxItems = {{ max_items }};
+  if(!itemsWrap) return;
+
+  function renumber(){
+    const rows = Array.from(itemsWrap.querySelectorAll('[data-ofm-item]'));
+    rows.forEach((row, idx) => {
+      const n = idx + 1;
+      const urlInput = row.querySelector('input[type="url"]');
+      const commentInput = row.querySelector('input[name^="item_comment_"]');
+      if(urlInput) urlInput.name = 'item_url_' + n;
+      if(commentInput) commentInput.name = 'item_comment_' + n;
+      const removeBtn = row.querySelector('[data-remove-item]');
+      if(removeBtn) removeBtn.disabled = rows.length <= 1;
+    });
+  }
+
+  function addRow(afterRow){
+    const rows = Array.from(itemsWrap.querySelectorAll('[data-ofm-item]'));
+    if(rows.length >= maxItems) return;
+    const tpl = rows[rows.length - 1].cloneNode(true);
+    tpl.querySelectorAll('input').forEach((el) => { el.value = ''; });
+    afterRow.after(tpl);
+    renumber();
+  }
+
+  itemsWrap.addEventListener('click', function(e){
+    const row = e.target.closest('[data-ofm-item]');
+    if(!row) return;
+    if(e.target.closest('[data-add-item]')){
+      addRow(row);
+      return;
+    }
+    if(e.target.closest('[data-remove-item]')){
+      const rows = Array.from(itemsWrap.querySelectorAll('[data-ofm-item]'));
+      if(rows.length > 1){
+        row.remove();
+        renumber();
+      }
+    }
+  });
+
+  renumber();
+})();
+</script>
+{% endblock %}

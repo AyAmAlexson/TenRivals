@@ -975,6 +975,90 @@ class SalesInvoiceYearSequence(models.Model):
         return f'{self.year} → {self.last_seq}'
 
 
+class OrderForMeYearSequence(models.Model):
+    """Per-year sequence for Order For Me numbers OFM-YYYY-XXXXXX."""
+
+    year = models.PositiveIntegerField(unique=True, db_index=True)
+    last_seq = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        verbose_name = 'Order For Me sequence (year)'
+
+    def __str__(self):
+        return f'OFM {self.year} → {self.last_seq}'
+
+
+class OrderForMe(models.Model):
+    class ContactMethod(models.TextChoices):
+        EMAIL = 'EMAIL', _('Email')
+        WHATSAPP = 'WHATSAPP', _('WhatsApp')
+        TELEGRAM = 'TELEGRAM', _('Telegram')
+
+    class Status(models.TextChoices):
+        SUBMITTED = 'SUBMITTED', _('Submitted')
+        QUOTE_PROVIDED = 'QUOTE_PROVIDED', _('Quote provided')
+        CANCELLED = 'CANCELLED', _('Cancelled')
+        ORDERED = 'ORDERED', _('Ordered')
+
+    order_number = models.CharField(max_length=20, unique=True, db_index=True)
+    customer = models.ForeignKey(
+        Customer,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='order_for_me_orders',
+    )
+    first_name = models.CharField(max_length=120)
+    last_name = models.CharField(max_length=120)
+    email = models.EmailField()
+    phone = models.CharField(max_length=32)
+    telegram = models.CharField(max_length=64, blank=True)
+    contact_method = models.CharField(
+        max_length=16,
+        choices=ContactMethod.choices,
+        default=ContactMethod.EMAIL,
+        db_index=True,
+    )
+    general_comment = models.TextField(blank=True)
+    estimated_total = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    status = models.CharField(
+        max_length=24,
+        choices=Status.choices,
+        default=Status.SUBMITTED,
+        db_index=True,
+    )
+    status_changed_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at', '-id']
+        indexes = [
+            models.Index(fields=['customer', '-created_at']),
+            models.Index(fields=['status', '-created_at']),
+        ]
+
+    def __str__(self):
+        return self.order_number
+
+
+class OrderForMeItem(models.Model):
+    order = models.ForeignKey(
+        OrderForMe,
+        on_delete=models.CASCADE,
+        related_name='items',
+    )
+    sort_order = models.PositiveSmallIntegerField(default=1, db_index=True)
+    item_url = models.URLField(max_length=1000)
+    item_comment = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ['sort_order', 'id']
+
+    def __str__(self):
+        return f'{self.order.order_number} item #{self.sort_order}'
+
+
 class SalesOrder(models.Model):
     """Staff-issued retail invoice (VAT-inclusive GEL)."""
 

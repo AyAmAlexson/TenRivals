@@ -12,6 +12,8 @@ urlpatterns = [
     # Управление аккаунтом
     path('my_account/', views.AccountDetailView.as_view(), name='account_details'),
     path('my_account/orders/', views.ShopOrderHistoryView.as_view(), name='shop_order_history'),
+    path('my_account/order-for-me/', views.AccountOrderForMeHistoryView.as_view(), name='order_for_me_history'),
+    path('my_account/order-for-me/<int:order_id>/cancel/', views.account_order_for_me_cancel, name='order_for_me_cancel'),
     path('delete/', views.delete_profile, name='delete_profile'),
     
     # Управление email
