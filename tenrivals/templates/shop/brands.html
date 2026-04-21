@@ -17,8 +17,8 @@
       display:flex;
       align-items:center;
       justify-content:center;
-      min-height:128px;
-      padding:26px 22px;
+      min-height:148px;
+      padding:20px 18px;
       text-decoration:none;
       color:inherit;
       transition:border-color .15s,box-shadow .15s,background .15s;
@@ -28,18 +28,31 @@
       box-shadow:0 8px 26px rgba(15,23,42,.07);
       background:#fafafa;
     }
-    .brands-all-tile img{
-      max-height:52px;
-      max-width:150px;
+    /* Shared “optical” frame: every mark fits the same box, then per-brand scale evens visual weight. */
+    .brands-all-tile__mark{
+      --brand-optical-scale:1;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      width:min(100%,260px);
+      height:84px;
+      flex:0 0 auto;
+    }
+    .brands-all-tile__img{
+      display:block;
+      max-width:100%;
+      max-height:100%;
       width:auto;
       height:auto;
       object-fit:contain;
       object-position:center;
+      transform:scale(var(--brand-optical-scale));
+      transform-origin:center center;
     }
     @media(max-width:640px){
       .brands-all-grid{grid-template-columns:repeat(2,1fr);gap:14px}
-      .brands-all-tile{min-height:108px;padding:20px 16px}
-      .brands-all-tile img{max-height:44px;max-width:130px}
+      .brands-all-tile{min-height:124px;padding:16px 12px}
+      .brands-all-tile__mark{height:72px;width:min(100%,220px)}
     }
 {% endblock %}
 {% block info_main %}
@@ -52,7 +65,9 @@
   <div class="brands-all-grid">
     {% for row in featured_stock_brands %}
     <a class="brands-all-tile" href="{% url 'shop:stock' %}?cbrand={{ row.stock_brand|urlencode }}">
-      <img src="{% static row.logo %}" alt="{{ row.label }}" width="150" height="52" loading="lazy" decoding="async">
+      <span class="brands-all-tile__mark" style="--brand-optical-scale: {{ row.logo_optical_scale|default:1 }}">
+        <img class="brands-all-tile__img" src="{% static row.logo %}" alt="{{ row.label }}" width="260" height="84" loading="lazy" decoding="async">
+      </span>
     </a>
     {% endfor %}
   </div>

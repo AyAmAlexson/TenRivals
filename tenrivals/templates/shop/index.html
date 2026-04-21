@@ -304,6 +304,7 @@
       flex-shrink:0;
     }
     .brand-logo-link{
+      --brand-optical-scale:1;
       display:flex;
       align-items:center;
       justify-content:center;
@@ -312,9 +313,9 @@
       border:none;
       text-decoration:none;
       background:transparent;
-      transition:opacity .2s,transform .2s;
+      transition:opacity .2s;
     }
-    .brand-logo-link:hover{opacity:0.88;transform:scale(1.02)}
+    .brand-logo-link:hover{opacity:0.88}
     .brand-logo-link:focus-visible{outline:2px solid var(--accent);outline-offset:4px}
     .brand-logo-link img{
       display:block;
@@ -323,7 +324,11 @@
       max-width:min(320px,42vw);
       object-fit:contain;
       object-position:center;
+      transform:scale(var(--brand-optical-scale));
+      transform-origin:center center;
+      transition:transform .2s,opacity .2s;
     }
+    .brand-logo-link:hover img{transform:scale(calc(var(--brand-optical-scale) * 1.02))}
     .brands-marquee__sequence > li[aria-hidden="true"] .brand-logo-link{pointer-events:none}
     @keyframes brands-marquee{
       from{transform:translate3d(0,0,0)}
@@ -633,14 +638,14 @@
           <ul class="brands-marquee__sequence">
             {% for row in featured_stock_brands %}
             <li>
-              <a class="brand-logo-link" href="{% url 'shop:stock' %}?cbrand={{ row.stock_brand|urlencode }}" title="Shop {{ row.label }} in stock">
+              <a class="brand-logo-link" style="--brand-optical-scale: {{ row.logo_optical_scale|default:1 }}" href="{% url 'shop:stock' %}?cbrand={{ row.stock_brand|urlencode }}" title="Shop {{ row.label }} in stock">
                 <img src="{% static row.logo %}" alt="{{ row.label }}" width="280" height="64" loading="lazy" decoding="async">
               </a>
             </li>
             {% endfor %}
             {% for row in featured_stock_brands %}
             <li aria-hidden="true">
-              <a class="brand-logo-link" href="{% url 'shop:stock' %}?cbrand={{ row.stock_brand|urlencode }}" tabindex="-1" title="Shop {{ row.label }} in stock">
+              <a class="brand-logo-link" style="--brand-optical-scale: {{ row.logo_optical_scale|default:1 }}" href="{% url 'shop:stock' %}?cbrand={{ row.stock_brand|urlencode }}" tabindex="-1" title="Shop {{ row.label }} in stock">
                 <img src="{% static row.logo %}" alt="" width="280" height="64" loading="lazy" decoding="async">
               </a>
             </li>

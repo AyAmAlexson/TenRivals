@@ -1,6 +1,6 @@
 """Shared catalog queries for shop (stock/preorder lists and nav)."""
 
-from typing import TypedDict
+from typing import NotRequired, TypedDict
 
 from django.db import models
 from django.db.models import OuterRef, Subquery, Sum, Value
@@ -15,6 +15,8 @@ class FeaturedStockBrand(TypedDict):
     stock_brand: str
     logo: str
     label: str
+    # Brands page: CSS transform scale inside the shared tile frame so marks look equally “heavy”.
+    logo_optical_scale: NotRequired[float]
 
 
 # Paths are under static/ (use with {% static %}).
@@ -24,26 +26,31 @@ FEATURED_STOCK_BRANDS: list[FeaturedStockBrand] = [
         'stock_brand': 'HEAD',
         'logo': 'assets/img/brand-logos/head.svg',
         'label': 'HEAD',
+        'logo_optical_scale': 1.06,
     },
     {
         'stock_brand': 'Yonex',
         'logo': 'assets/img/brand-logos/yonex.svg',
         'label': 'Yonex',
+        'logo_optical_scale': 1.0,
     },
     {
         'stock_brand': 'Wilson',
         'logo': 'assets/img/brand-logos/wilson.svg',
         'label': 'Wilson',
+        'logo_optical_scale': 0.78,
     },
     {
         'stock_brand': 'Asics',
         'logo': 'assets/img/brand-logos/asics.svg',
         'label': 'Asics',
+        'logo_optical_scale': 0.92,
     },
     {
         'stock_brand': 'Prince',
         'logo': 'assets/img/brand-logos/prince.svg',
         'label': 'Prince',
+        'logo_optical_scale': 1.14,
     },
 ]
 
