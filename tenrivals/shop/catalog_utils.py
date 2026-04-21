@@ -23,6 +23,12 @@ class FeaturedStockBrand(TypedDict):
 # stock_brand must match Product.brand exactly for the stock catalog filter.
 FEATURED_STOCK_BRANDS: list[FeaturedStockBrand] = [
     {
+        'stock_brand': 'Toroline',
+        'logo': 'assets/img/brand-logos/toroline.png',
+        'label': 'Toroline',
+        'logo_optical_scale': 1.12,
+    },
+    {
         'stock_brand': 'HEAD',
         'logo': 'assets/img/brand-logos/head.svg',
         'label': 'HEAD',
