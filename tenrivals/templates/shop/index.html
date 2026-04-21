@@ -280,50 +280,54 @@
       border-top:1px solid var(--line);
       border-bottom:1px solid var(--line);
       background:#fff;
-      -webkit-mask-image:linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
-      mask-image:linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
+      -webkit-mask-image:linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
+      mask-image:linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
     }
     .brands-marquee__track{
       display:flex;
       width:max-content;
-      animation:brands-marquee 34s linear infinite;
+      animation:brands-marquee 55s linear infinite;
       will-change:transform;
+      backface-visibility:hidden;
     }
     .brands-marquee:hover .brands-marquee__track{animation-play-state:paused}
-    .brands-marquee__lane{
+    /* One flex row, logos duplicated in markup so 50% === one full cycle (seamless loop). */
+    .brands-marquee__sequence{
       list-style:none;
       margin:0;
-      padding:14px 0;
+      padding:18px 0 22px;
       display:flex;
+      flex-direction:row;
+      flex-wrap:nowrap;
       align-items:center;
-      gap:12px;
-      white-space:nowrap;
+      gap:clamp(36px,6vw,72px);
       flex-shrink:0;
     }
-    .brands-marquee__lane + .brands-marquee__lane{padding-left:12px}
     .brand-logo-link{
-      display:inline-flex;
+      display:flex;
       align-items:center;
       justify-content:center;
-      min-height:52px;
-      padding:8px 20px;
-      border:1px solid var(--line);
+      height:clamp(52px,10vw,76px);
+      padding:0 6px;
+      border:none;
       text-decoration:none;
-      background:#fff;
-      transition:border-color .15s,background .15s,box-shadow .15s;
+      background:transparent;
+      transition:opacity .2s,transform .2s;
     }
-    .brand-logo-link:hover{border-color:#cbd5e1;background:#f8fafc;box-shadow:0 4px 14px rgba(15,23,42,.05)}
+    .brand-logo-link:hover{opacity:0.88;transform:scale(1.02)}
+    .brand-logo-link:focus-visible{outline:2px solid var(--accent);outline-offset:4px}
     .brand-logo-link img{
-      height:30px;
+      display:block;
+      height:clamp(44px,8.5vw,64px);
       width:auto;
-      max-width:132px;
+      max-width:min(320px,42vw);
       object-fit:contain;
       object-position:center;
     }
-    .brands-marquee__lane[aria-hidden="true"] .brand-logo-link{pointer-events:none}
+    .brands-marquee__sequence > li[aria-hidden="true"] .brand-logo-link{pointer-events:none}
     @keyframes brands-marquee{
-      from{transform:translateX(0)}
-      to{transform:translateX(-50%)}
+      from{transform:translate3d(0,0,0)}
+      to{transform:translate3d(-50%,0,0)}
     }
     .shop-about{
       background:linear-gradient(180deg,#fff 0%,#f8fafc 100%);
@@ -371,7 +375,7 @@
     @media(max-width:1024px){
       .cat-rail{overflow-x:auto; -webkit-overflow-scrolling:touch; scroll-snap-type:x mandatory}
       .cat-seg{flex:0 0 32%; min-width:140px; scroll-snap-align:start}
-      .brands-marquee__track{animation-duration:42s}
+      .brands-marquee__track{animation-duration:62s}
     }
     @media(max-width:640px){
       .cat-seg{flex:0 0 42%; min-width:132px; padding:10px 8px}
@@ -379,10 +383,10 @@
       .auth{display:none}
       .hero-nav{width:38px; height:38px}
       .product-rail__cell{flex-basis:78vw; min-width:78vw}
-      .brand-logo-link{min-height:46px;padding:6px 14px}
-      .brand-logo-link img{height:26px;max-width:118px}
-      .brands-marquee__lane{gap:10px;padding:12px 0}
-      .brands-marquee__track{animation-duration:46s}
+      .brand-logo-link{height:clamp(46px,14vw,58px);padding:0 4px}
+      .brand-logo-link img{height:clamp(38px,12vw,50px);max-width:min(260px,55vw)}
+      .brands-marquee__sequence{gap:clamp(28px,7vw,48px);padding:14px 0 18px}
+      .brands-marquee__track{animation-duration:68s}
       .promo-carousel__viewport{min-height:120px}
       .shop-about{padding:32px 0 38px}
       .shop-about__headline{font-size:23px}
@@ -626,20 +630,18 @@
       <div class="section-head"><h2>Our Brands</h2><a href="{% url 'shop:brands' %}">View all &rarr;</a></div>
       <div class="brands-marquee" aria-label="Featured tennis brands">
         <div class="brands-marquee__track">
-          <ul class="brands-marquee__lane">
+          <ul class="brands-marquee__sequence">
             {% for row in featured_stock_brands %}
             <li>
               <a class="brand-logo-link" href="{% url 'shop:stock' %}?cbrand={{ row.stock_brand|urlencode }}" title="Shop {{ row.label }} in stock">
-                <img src="{% static row.logo %}" alt="{{ row.label }}" width="132" height="30" loading="lazy" decoding="async">
+                <img src="{% static row.logo %}" alt="{{ row.label }}" width="280" height="64" loading="lazy" decoding="async">
               </a>
             </li>
             {% endfor %}
-          </ul>
-          <ul class="brands-marquee__lane" aria-hidden="true">
             {% for row in featured_stock_brands %}
-            <li>
+            <li aria-hidden="true">
               <a class="brand-logo-link" href="{% url 'shop:stock' %}?cbrand={{ row.stock_brand|urlencode }}" tabindex="-1" title="Shop {{ row.label }} in stock">
-                <img src="{% static row.logo %}" alt="" width="132" height="30" loading="lazy" decoding="async">
+                <img src="{% static row.logo %}" alt="" width="280" height="64" loading="lazy" decoding="async">
               </a>
             </li>
             {% endfor %}
