@@ -274,9 +274,54 @@
     /* Brands strip */
     .shop-home-mid .brands-strip{background:#fff; border-top:1px solid var(--line); padding:36px 0 44px}
     .brands-strip .section-head{margin-bottom:24px}
-    .brands-row{display:flex; align-items:center; justify-content:space-between; gap:16px}
-    .brand-name{font-family:'Saira Condensed','Saira',sans-serif; font-size:24px; font-weight:400; text-transform:uppercase; letter-spacing:1px; color:#94a3b8; transition:color .15s; text-decoration:none}
-    .brand-name:hover{color:var(--accent)}
+    .brands-marquee{
+      position:relative;
+      overflow:hidden;
+      border-top:1px solid var(--line);
+      border-bottom:1px solid var(--line);
+      background:#fff;
+      -webkit-mask-image:linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
+      mask-image:linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
+    }
+    .brands-marquee__track{
+      display:flex;
+      width:max-content;
+      animation:brands-marquee 34s linear infinite;
+      will-change:transform;
+    }
+    .brands-marquee:hover .brands-marquee__track{animation-play-state:paused}
+    .brands-marquee__lane{
+      list-style:none;
+      margin:0;
+      padding:14px 0;
+      display:flex;
+      align-items:center;
+      gap:12px;
+      white-space:nowrap;
+      flex-shrink:0;
+    }
+    .brands-marquee__lane + .brands-marquee__lane{padding-left:12px}
+    .brand-name{
+      display:inline-flex;
+      align-items:center;
+      padding:8px 12px;
+      border:1px solid var(--line);
+      font-family:'Saira Condensed','Saira',sans-serif;
+      font-size:22px;
+      font-weight:400;
+      text-transform:uppercase;
+      letter-spacing:.04em;
+      color:#64748b;
+      transition:color .15s,border-color .15s,background .15s;
+      text-decoration:none;
+      background:#fff;
+    }
+    .brand-name:hover{color:var(--accent);border-color:#cbd5e1;background:#f8fafc}
+    .brands-marquee__lane[aria-hidden="true"] .brand-name{pointer-events:none}
+    @keyframes brands-marquee{
+      from{transform:translateX(0)}
+      to{transform:translateX(-50%)}
+    }
     .shop-about{
       background:linear-gradient(180deg,#fff 0%,#f8fafc 100%);
       border-top:1px solid var(--line);
@@ -323,7 +368,7 @@
     @media(max-width:1024px){
       .cat-rail{overflow-x:auto; -webkit-overflow-scrolling:touch; scroll-snap-type:x mandatory}
       .cat-seg{flex:0 0 32%; min-width:140px; scroll-snap-align:start}
-      .brands-row{flex-wrap:wrap; justify-content:center; gap:24px}
+      .brands-marquee__track{animation-duration:42s}
     }
     @media(max-width:640px){
       .cat-seg{flex:0 0 42%; min-width:132px; padding:10px 8px}
@@ -331,10 +376,15 @@
       .auth{display:none}
       .hero-nav{width:38px; height:38px}
       .product-rail__cell{flex-basis:78vw; min-width:78vw}
-      .brand-name{font-size:18px}
+      .brand-name{font-size:18px;padding:7px 10px}
+      .brands-marquee__lane{gap:10px;padding:12px 0}
+      .brands-marquee__track{animation-duration:46s}
       .promo-carousel__viewport{min-height:120px}
       .shop-about{padding:32px 0 38px}
       .shop-about__headline{font-size:23px}
+    }
+    @media (prefers-reduced-motion: reduce){
+      .brands-marquee__track{animation:none}
     }
 
     /* Buttons */
@@ -570,12 +620,23 @@
   <section class="brands-strip">
     <div class="container">
       <div class="section-head"><h2>Our Brands</h2><a href="#">View all &rarr;</a></div>
-      <div class="brands-row">
-        {% for b in home_catalog_brands %}
-        <a class="brand-name" href="{% url 'shop:stock' %}?cbrand={{ b|urlencode }}">{{ b }}</a>
-        {% empty %}
-        <span class="brand-name" style="color:#cbd5e1;font-size:14px;text-transform:none">Brands appear when products are in stock</span>
-        {% endfor %}
+      <div class="brands-marquee" aria-label="Featured tennis brands">
+        <div class="brands-marquee__track">
+          <ul class="brands-marquee__lane">
+            {% for b in home_catalog_brands %}
+            <li><a class="brand-name" href="{% url 'shop:stock' %}?cbrand={{ b|urlencode }}">{{ b }}</a></li>
+            {% empty %}
+            <li><span class="brand-name" style="color:#94a3b8;font-size:14px;text-transform:none">Brands appear when products are in stock</span></li>
+            {% endfor %}
+          </ul>
+          <ul class="brands-marquee__lane" aria-hidden="true">
+            {% for b in home_catalog_brands %}
+            <li><a class="brand-name" href="{% url 'shop:stock' %}?cbrand={{ b|urlencode }}" tabindex="-1">{{ b }}</a></li>
+            {% empty %}
+            <li><span class="brand-name" style="color:#94a3b8;font-size:14px;text-transform:none">Brands appear when products are in stock</span></li>
+            {% endfor %}
+          </ul>
+        </div>
       </div>
     </div>
   </section>
