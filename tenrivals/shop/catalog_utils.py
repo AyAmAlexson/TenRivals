@@ -1,10 +1,51 @@
 """Shared catalog queries for shop (stock/preorder lists and nav)."""
 
+from typing import TypedDict
+
 from django.db import models
 from django.db.models import OuterRef, Subquery, Sum, Value
 from django.db.models.functions import Coalesce
 
 from .models import Product, ProductListing, ProductListingChannel
+
+
+class FeaturedStockBrand(TypedDict):
+    """Home marquee / brands page: logo asset and exact Product.brand for ?cbrand=."""
+
+    stock_brand: str
+    logo: str
+    label: str
+
+
+# Paths are under static/ (use with {% static %}).
+# stock_brand must match Product.brand exactly for the stock catalog filter.
+FEATURED_STOCK_BRANDS: list[FeaturedStockBrand] = [
+    {
+        'stock_brand': 'HEAD',
+        'logo': 'assets/img/brand-logos/head.svg',
+        'label': 'HEAD',
+    },
+    {
+        'stock_brand': 'Yonex',
+        'logo': 'assets/img/brand-logos/yonex.svg',
+        'label': 'Yonex',
+    },
+    {
+        'stock_brand': 'Wilson',
+        'logo': 'assets/img/brand-logos/wilson.svg',
+        'label': 'Wilson',
+    },
+    {
+        'stock_brand': 'Asics',
+        'logo': 'assets/img/brand-logos/asics.svg',
+        'label': 'Asics',
+    },
+    {
+        'stock_brand': 'Prince',
+        'logo': 'assets/img/brand-logos/prince.svg',
+        'label': 'Prince',
+    },
+]
 
 
 def filter_products_by_listing_channel(qs, channel: str):

@@ -301,23 +301,26 @@
       flex-shrink:0;
     }
     .brands-marquee__lane + .brands-marquee__lane{padding-left:12px}
-    .brand-name{
+    .brand-logo-link{
       display:inline-flex;
       align-items:center;
-      padding:8px 12px;
+      justify-content:center;
+      min-height:52px;
+      padding:8px 20px;
       border:1px solid var(--line);
-      font-family:'Saira Condensed','Saira',sans-serif;
-      font-size:22px;
-      font-weight:400;
-      text-transform:uppercase;
-      letter-spacing:.04em;
-      color:#64748b;
-      transition:color .15s,border-color .15s,background .15s;
       text-decoration:none;
       background:#fff;
+      transition:border-color .15s,background .15s,box-shadow .15s;
     }
-    .brand-name:hover{color:var(--accent);border-color:#cbd5e1;background:#f8fafc}
-    .brands-marquee__lane[aria-hidden="true"] .brand-name{pointer-events:none}
+    .brand-logo-link:hover{border-color:#cbd5e1;background:#f8fafc;box-shadow:0 4px 14px rgba(15,23,42,.05)}
+    .brand-logo-link img{
+      height:30px;
+      width:auto;
+      max-width:132px;
+      object-fit:contain;
+      object-position:center;
+    }
+    .brands-marquee__lane[aria-hidden="true"] .brand-logo-link{pointer-events:none}
     @keyframes brands-marquee{
       from{transform:translateX(0)}
       to{transform:translateX(-50%)}
@@ -376,7 +379,8 @@
       .auth{display:none}
       .hero-nav{width:38px; height:38px}
       .product-rail__cell{flex-basis:78vw; min-width:78vw}
-      .brand-name{font-size:18px;padding:7px 10px}
+      .brand-logo-link{min-height:46px;padding:6px 14px}
+      .brand-logo-link img{height:26px;max-width:118px}
       .brands-marquee__lane{gap:10px;padding:12px 0}
       .brands-marquee__track{animation-duration:46s}
       .promo-carousel__viewport{min-height:120px}
@@ -619,21 +623,25 @@
 
   <section class="brands-strip">
     <div class="container">
-      <div class="section-head"><h2>Our Brands</h2><a href="#">View all &rarr;</a></div>
+      <div class="section-head"><h2>Our Brands</h2><a href="{% url 'shop:brands' %}">View all &rarr;</a></div>
       <div class="brands-marquee" aria-label="Featured tennis brands">
         <div class="brands-marquee__track">
           <ul class="brands-marquee__lane">
-            {% for b in home_catalog_brands %}
-            <li><a class="brand-name" href="{% url 'shop:stock' %}?cbrand={{ b|urlencode }}">{{ b }}</a></li>
-            {% empty %}
-            <li><span class="brand-name" style="color:#94a3b8;font-size:14px;text-transform:none">Brands appear when products are in stock</span></li>
+            {% for row in featured_stock_brands %}
+            <li>
+              <a class="brand-logo-link" href="{% url 'shop:stock' %}?cbrand={{ row.stock_brand|urlencode }}" title="Shop {{ row.label }} in stock">
+                <img src="{% static row.logo %}" alt="{{ row.label }}" width="132" height="30" loading="lazy" decoding="async">
+              </a>
+            </li>
             {% endfor %}
           </ul>
           <ul class="brands-marquee__lane" aria-hidden="true">
-            {% for b in home_catalog_brands %}
-            <li><a class="brand-name" href="{% url 'shop:stock' %}?cbrand={{ b|urlencode }}" tabindex="-1">{{ b }}</a></li>
-            {% empty %}
-            <li><span class="brand-name" style="color:#94a3b8;font-size:14px;text-transform:none">Brands appear when products are in stock</span></li>
+            {% for row in featured_stock_brands %}
+            <li>
+              <a class="brand-logo-link" href="{% url 'shop:stock' %}?cbrand={{ row.stock_brand|urlencode }}" tabindex="-1" title="Shop {{ row.label }} in stock">
+                <img src="{% static row.logo %}" alt="" width="132" height="30" loading="lazy" decoding="async">
+              </a>
+            </li>
             {% endfor %}
           </ul>
         </div>

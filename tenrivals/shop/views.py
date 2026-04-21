@@ -12,7 +12,7 @@ from django.core.mail import send_mail, EmailMultiAlternatives
 from django.db import transaction
 from django.db.models import Q
 from django.db.utils import DatabaseError
-from django.http import Http404, JsonResponse
+from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.template.loader import render_to_string
 from django.urls import reverse
@@ -36,12 +36,12 @@ from .cart_session import (
     try_add_to_cart,
 )
 from .catalog_utils import (
+    FEATURED_STOCK_BRANDS,
     annotate_stock_listing_quantity,
     distinct_brands_for_type,
     filter_products_by_listing_channel,
     order_products_by_effective_price,
     stock_catalog_base_queryset,
-    top_stock_brands_by_listing_quantity,
 )
 from .forms import (
     AccessoryForm,
@@ -349,7 +349,6 @@ def index(request):
             )[:1],
         )
     )
-    home_catalog_brands = top_stock_brands_by_listing_quantity(7)
     return render(
         request,
         'shop/index.html',
@@ -360,8 +359,16 @@ def index(request):
             'featured_blog_posts': featured_blog_posts,
             'featured_products': featured_products,
             'new_arrivals': new_arrivals,
-            'home_catalog_brands': home_catalog_brands,
+            'featured_stock_brands': FEATURED_STOCK_BRANDS,
         },
+    )
+
+
+def brands(request):
+    return render(
+        request,
+        'shop/brands.html',
+        {'featured_stock_brands': FEATURED_STOCK_BRANDS},
     )
 
 
@@ -541,7 +548,7 @@ def _catalog_browse_context(request, browse_mode: str):
             products = products.filter(racket__string_pattern=racket_pattern)
 
     if catalog_brand:
-        products = products.filter(brand=catalog_brand)
+        products = products.filter(brand__iexact=catalog_brand)
         if not category_slug and not type_code:
             active_tab = f'cbrand:{catalog_brand}'
 
@@ -1015,7 +1022,54 @@ def shop_info_page(request, page_key: str):
     template = _SHOP_STATIC_PAGE_TEMPLATES.get(page_key)
     if template is None:
         raise Http404('Page not found')
-    return render(request, template, {})
+    context = {}
+    if page_key == 'sitemap':
+        try:
+            from .models import ProductCollection
+
+            context['sitemap_collections'] = list(
+                ProductCollection.objects.filter(is_archived=False).order_by(
+                    'title', 'id'
+                )
+            )
+        except DatabaseError:
+            context['sitemap_collections'] = []
+    return render(request, template, context)
+
+
+def robots_txt(request):
+    """Crawl hints for bots; Sitemap URL follows the current host (staging-friendly)."""
+    from django.urls import reverse
+
+    lines = [
+        'User-agent: *',
+        '',
+        '# Admin & internal apps',
+        'Disallow: /admin/',
+        'Disallow: /administration/',
+        'Disallow: /league/',
+        'Disallow: /__debug__/',
+        '',
+        '# Staff / editor flows',
+        'Disallow: /shop/add',
+        'Disallow: /shop/edit',
+        '',
+        '# Account & auth (no SEO value)',
+        'Disallow: /persons/my_account/',
+        'Disallow: /persons/delete/',
+        'Disallow: /persons/email/',
+        'Disallow: /persons/telegram/',
+        'Disallow: /persons/verify-telegram/',
+        'Disallow: /persons/resend-verification-code/',
+        'Disallow: /persons/staff/',
+        'Disallow: /persons/superuser/',
+        'Disallow: /persons/accounts/',
+        'Disallow: /accounts/',
+        '',
+        f'Sitemap: {request.build_absolute_uri(reverse("sitemap_xml"))}',
+        '',
+    ]
+    return HttpResponse('\n'.join(lines), content_type='text/plain; charset=utf-8')
 
 
 def _product_create_pick_type_qs(return_next: str, channel_raw: str) -> str:

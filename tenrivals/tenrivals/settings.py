@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'django.contrib.sites',
     'allauth_ui',
     'django.contrib.staticfiles',
+    'django.contrib.sitemaps',
     'django_filters',
     'django.contrib.flatpages',
 
@@ -253,6 +254,11 @@ else:
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 SITE_ID = 1
+# django.contrib.sites: used by sitemaps, allauth, absolute URLs. Hostname only (no scheme/path).
+# Override per environment, e.g. SITE_DOMAIN=www.tenrivals.com on Heroku if that is canonical.
+SITE_DOMAIN = env.str('SITE_DOMAIN', default='tenrivals.com')
+SITE_DISPLAY_NAME = env.str('SITE_DISPLAY_NAME', default='Tennis Rivals')
+
 LOGIN_URL = 'account_login'
 LOGOUT_REDIRECT_URL = LOGIN_URL
 LOGIN_REDIRECT_URL = '/shop/'

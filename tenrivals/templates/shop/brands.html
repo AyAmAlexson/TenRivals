@@ -1,0 +1,60 @@
+{% extends 'shop/info/layout.html' %}
+{% load static %}
+{% block title %}All our brands — TR Shop{% endblock %}
+{% block extra_css %}
+{{ block.super }}
+    .brands-all-hero{margin-bottom:8px}
+    .brands-all-hero .info-hero__lead{max-width:56ch}
+    .brands-all-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(168px,1fr));
+      gap:18px;
+      margin-top:8px;
+    }
+    .brands-all-tile{
+      border:1px solid var(--line);
+      background:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      min-height:128px;
+      padding:26px 22px;
+      text-decoration:none;
+      color:inherit;
+      transition:border-color .15s,box-shadow .15s,background .15s;
+    }
+    a.brands-all-tile:hover,a.brands-all-tile:focus-visible{
+      border-color:var(--accent);
+      box-shadow:0 8px 26px rgba(15,23,42,.07);
+      background:#fafafa;
+    }
+    .brands-all-tile img{
+      max-height:52px;
+      max-width:150px;
+      width:auto;
+      height:auto;
+      object-fit:contain;
+      object-position:center;
+    }
+    @media(max-width:640px){
+      .brands-all-grid{grid-template-columns:repeat(2,1fr);gap:14px}
+      .brands-all-tile{min-height:108px;padding:20px 16px}
+      .brands-all-tile img{max-height:44px;max-width:130px}
+    }
+{% endblock %}
+{% block info_main %}
+<header class="info-hero brands-all-hero">
+  <h1 class="info-hero__h1">All our brands</h1>
+  <p class="info-hero__lead">Tap a logo to open in-stock gear filtered by that brand.</p>
+</header>
+
+<div class="info-section" aria-label="Brand logos">
+  <div class="brands-all-grid">
+    {% for row in featured_stock_brands %}
+    <a class="brands-all-tile" href="{% url 'shop:stock' %}?cbrand={{ row.stock_brand|urlencode }}">
+      <img src="{% static row.logo %}" alt="{{ row.label }}" width="150" height="52" loading="lazy" decoding="async">
+    </a>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
