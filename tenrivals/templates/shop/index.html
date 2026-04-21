@@ -277,16 +277,26 @@
     .brands-row{display:flex; align-items:center; justify-content:space-between; gap:16px}
     .brand-name{font-family:'Saira Condensed','Saira',sans-serif; font-size:24px; font-weight:400; text-transform:uppercase; letter-spacing:1px; color:#94a3b8; transition:color .15s; text-decoration:none}
     .brand-name:hover{color:var(--accent)}
-    .shop-about{background:#f8fafc;border-top:1px solid var(--line);padding:40px 0 46px}
-    .shop-about__inner{background:#fff;border:1px solid var(--line);padding:30px 30px 28px}
-    .shop-about__headline{margin:0 0 10px;font-size:28px;line-height:1.14;letter-spacing:.03em}
-    .shop-about__subheadline{margin:0 0 18px;font-size:14px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:.08em}
-    .shop-about__lead{margin:0 0 18px;font-size:14px;line-height:1.72;color:var(--ink);text-transform:none}
-    .shop-about__section-title{margin:24px 0 10px;font-size:16px;line-height:1.25;letter-spacing:.05em}
-    .shop-about__list{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+    .shop-about{
+      background:linear-gradient(180deg,#fff 0%,#f8fafc 100%);
+      border-top:1px solid var(--line);
+      padding:52px 0 56px;
+    }
+    .shop-about__headline{margin:0 0 12px;font-size:30px;line-height:1.14;letter-spacing:.02em;max-width:20ch}
+    .shop-about__subheadline{margin:0 0 20px;font-size:13px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:.1em}
+    .shop-about__lead{margin:0 0 20px;font-size:14px;line-height:1.72;color:var(--ink);text-transform:none;max-width:96ch}
+    .shop-about__feature-chips{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 18px}
+    .shop-about__chip{
+      padding:7px 11px;border:1px solid #d7dde6;background:#fff;
+      font-size:10px;font-weight:800;letter-spacing:.11em;text-transform:uppercase;color:#334155;
+      transition:border-color .15s,color .15s,transform .15s,box-shadow .15s;
+    }
+    .shop-about__chip:hover{border-color:var(--accent);color:var(--accent);transform:translateY(-1px);box-shadow:0 6px 18px rgba(15,23,42,.06)}
+    .shop-about__section-title{margin:26px 0 10px;font-size:16px;line-height:1.25;letter-spacing:.05em}
+    .shop-about__list{list-style:none;margin:0;padding:0;display:grid;gap:12px;max-width:98ch}
     .shop-about__list li{font-size:14px;line-height:1.72;color:var(--ink);text-transform:none}
     .shop-about__list strong{font-weight:800}
-    .shop-about__closing{margin:18px 0 0;font-size:14px;line-height:1.72;color:var(--ink);text-transform:none}
+    .shop-about__closing{margin:18px 0 0;font-size:14px;line-height:1.72;color:var(--ink);text-transform:none;max-width:96ch}
 
     /* Headings */
     h1, h2, h3, h4, h5{font-family:'Saira', system-ui, sans-serif; font-weight:800; letter-spacing:.3px; text-transform:uppercase}
@@ -314,8 +324,7 @@
       .product-rail__cell{flex-basis:78vw; min-width:78vw}
       .brand-name{font-size:18px}
       .promo-carousel__viewport{min-height:120px}
-      .shop-about{padding:28px 0 34px}
-      .shop-about__inner{padding:22px 18px 20px}
+      .shop-about{padding:32px 0 38px}
       .shop-about__headline{font-size:23px}
     }
 
@@ -563,29 +572,33 @@
   </section>
   <section class="shop-about" aria-label="About Tennis Rivals">
     <div class="container">
-      <div class="shop-about__inner">
-        <h2 class="shop-about__headline">Your Premium Tennis Destination in Tbilisi, Georgia</h2>
-        <p class="shop-about__subheadline">Expertly Curated Gear for the Dedicated Player</p>
-        <p class="shop-about__lead">
-          At Tennis Rivals, we are more than just an online tennis shop in Tbilisi. We are a community-driven project founded by players, for players. Whether you are stepping onto the clay courts of Mziuri or training at Raketo, we understand that the right equipment is the foundation of your growth. Our mission is to provide the Georgian tennis community with access to the world&apos;s most advanced tennis technology, backed by radical transparency and expert advice.
-        </p>
-
-        <h3 class="shop-about__section-title">Why Choose Tennis Rivals for Your Gear?</h3>
-        <ul class="shop-about__list">
-          <li><strong>Curated Professional Selection:</strong> We do not just stock every racket on the market. We act as a filter, offering a hand-picked selection of high-performance gear from industry leaders like Wilson, Solinco, Prince, and Toroline. From the legendary Wilson Blade v9 to the spin-friendly Solinco Whiteout, every item in our store has been tested on local courts to ensure it meets the needs of players ranging from NTRP 2.5 to 3.5 and beyond.</li>
-          <li><strong>The Best Tennis Shoes and Apparel in Georgia:</strong> Movement is the soul of tennis. That is why we offer specialized tennis footwear designed for both hard and clay courts. Our size guides and personal consultations help you find the perfect fit to prevent injury and maximize your lateral speed.</li>
-          <li><strong>Official and Transparent Service:</strong> We are proud to be a 100% legal business in Georgia. When you buy a tennis racket in Tbilisi from us, you receive an official fiscal receipt. We stand against grey imports, ensuring that every product is authentic and covered by our fair-play return policy.</li>
-          <li><strong>Global Pre-Orders, Local Delivery:</strong> Cannot find a specific grip size or a limited-edition frame in Tbilisi? Our Global Pre-Order service connects you to the best warehouses in the US and Europe. We handle the logistics, customs, and paperwork, delivering your dream gear directly to your door with free delivery in Tbilisi.</li>
-        </ul>
-
-        <h3 class="shop-about__section-title">Join the Rivals Community</h3>
-        <p class="shop-about__closing">
-          Tennis in Georgia is growing, and we are here to support that momentum. Beyond being a store, we provide expert insights into tennis stringing, racket customization, and gear maintenance. We believe that professional-grade equipment should not be a luxury - it should be a tool for your next victory.
-        </p>
-        <p class="shop-about__closing">
-          Explore our collection today and see why Tennis Rivals is the preferred choice for players who take their game seriously. From high-quality strings to the latest racket innovations, we help you find the line for your growth.
-        </p>
+      <h2 class="shop-about__headline">Your Premium Tennis Destination in Tbilisi, Georgia</h2>
+      <p class="shop-about__subheadline">Expertly Curated Gear for the Dedicated Player</p>
+      <div class="shop-about__feature-chips" aria-label="Store highlights">
+        <span class="shop-about__chip">Player-first curation</span>
+        <span class="shop-about__chip">Official fiscal receipts</span>
+        <span class="shop-about__chip">Expert fitting support</span>
+        <span class="shop-about__chip">Fast delivery in Tbilisi</span>
       </div>
+      <p class="shop-about__lead">
+        At Tennis Rivals, we are more than just an online tennis shop in Tbilisi. We are a community-driven project founded by players, for players. Whether you are stepping onto the clay courts of Mziuri or training at Raketo, we understand that the right equipment is the foundation of your growth. Our mission is to provide the Georgian tennis community with access to the world&apos;s most advanced tennis technology, backed by radical transparency and expert advice.
+      </p>
+
+      <h3 class="shop-about__section-title">Why Choose Tennis Rivals for Your Gear?</h3>
+      <ul class="shop-about__list">
+        <li><strong>Curated Professional Selection:</strong> We do not just stock every racket on the market. We act as a filter, offering a hand-picked selection of high-performance gear from industry leaders like Wilson, Solinco, Prince, and Toroline. From the legendary Wilson Blade v9 to the spin-friendly Solinco Whiteout, every item in our store has been tested on local courts to ensure it meets the needs of players ranging from NTRP 2.5 to 3.5 and beyond.</li>
+        <li><strong>The Best Tennis Shoes and Apparel in Georgia:</strong> Movement is the soul of tennis. That is why we offer specialized tennis footwear designed for both hard and clay courts. Our size guides and personal consultations help you find the perfect fit to prevent injury and maximize your lateral speed.</li>
+        <li><strong>Official and Transparent Service:</strong> We are proud to be a 100% legal business in Georgia. When you buy a tennis racket in Tbilisi from us, you receive an official fiscal receipt. We stand against grey imports, ensuring that every product is authentic and covered by our fair-play return policy.</li>
+        <li><strong>Global Pre-Orders, Local Delivery:</strong> Cannot find a specific grip size or a limited-edition frame in Tbilisi? Our Global Pre-Order service connects you to the best warehouses in the US and Europe. We handle the logistics, customs, and paperwork, delivering your dream gear directly to your door with free delivery in Tbilisi.</li>
+      </ul>
+
+      <h3 class="shop-about__section-title">Join the Rivals Community</h3>
+      <p class="shop-about__closing">
+        Tennis in Georgia is growing, and we are here to support that momentum. Beyond being a store, we provide expert insights into tennis stringing, racket customization, and gear maintenance. We believe that professional-grade equipment should not be a luxury - it should be a tool for your next victory.
+      </p>
+      <p class="shop-about__closing">
+        Explore our collection today and see why Tennis Rivals is the preferred choice for players who take their game seriously. From high-quality strings to the latest racket innovations, we help you find the line for your growth.
+      </p>
     </div>
   </section>
   </div>
