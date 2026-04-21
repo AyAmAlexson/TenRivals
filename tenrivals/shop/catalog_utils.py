@@ -26,7 +26,8 @@ FEATURED_STOCK_BRANDS: list[FeaturedStockBrand] = [
         'stock_brand': 'Toroline',
         'logo': 'assets/img/brand-logos/toroline.png',
         'label': 'Toroline',
-        'logo_optical_scale': 1.12,
+        # Wide neon mark + solid fill reads heavy vs monochrome wordmarks
+        'logo_optical_scale': 0.9,
     },
     {
         'stock_brand': 'HEAD',
@@ -44,7 +45,8 @@ FEATURED_STOCK_BRANDS: list[FeaturedStockBrand] = [
         'stock_brand': 'Wilson',
         'logo': 'assets/img/brand-logos/wilson.svg',
         'label': 'Wilson',
-        'logo_optical_scale': 0.78,
+        # Horizontal script SVG: height-limited row shrinks it — nudge up vs HEAD/Yonex
+        'logo_optical_scale': 1.06,
     },
     {
         'stock_brand': 'Asics',
@@ -56,7 +58,8 @@ FEATURED_STOCK_BRANDS: list[FeaturedStockBrand] = [
         'stock_brand': 'Prince',
         'logo': 'assets/img/brand-logos/prince.svg',
         'label': 'Prince',
-        'logo_optical_scale': 1.14,
+        # Tight wordmark viewBox — closer to neutral than old padded Illustrator export
+        'logo_optical_scale': 1.02,
     },
 ]
 
