@@ -53,22 +53,22 @@
     .footer-bottom-inner .footer-legal-row--inline{width:100%}
   }
   .service-strip{
-    background:linear-gradient(90deg,#c9dfd5 0%,#b7d0c4 50%,#c9dfd5 100%);
+    background:linear-gradient(90deg,#b9d8c8 0%,#a7cab8 50%,#b9d8c8 100%);
     color:#0f172a;
-    border-top:1px solid rgba(15,23,42,.16);
-    border-bottom:1px solid rgba(15,23,42,.12);
+    border-top:1px solid rgba(15,23,42,.22);
+    border-bottom:1px solid rgba(15,23,42,.16);
   }
   .service-strip__row{
     display:grid;
     grid-template-columns:repeat(3,minmax(0,1fr));
     gap:0;
-    padding:18px 0;
+    padding:24px 0 22px;
   }
   .service-strip__item{padding:0 18px}
-  .service-strip__item + .service-strip__item{border-left:1px solid rgba(15,23,42,.14)}
+  .service-strip__item + .service-strip__item{border-left:1px solid rgba(15,23,42,.18)}
   .service-strip__title{
     margin:0 0 6px;
-    font-size:10px;
+    font-size:11px;
     font-weight:800;
     letter-spacing:.13em;
     text-transform:uppercase;
@@ -76,16 +76,17 @@
   }
   .service-strip__text{
     margin:0;
-    font-size:12px;
+    font-size:13px;
     line-height:1.5;
-    color:rgba(15,23,42,.88);
+    color:rgba(15,23,42,.92);
     text-transform:none;
   }
   .service-strip__text a{display:inline;color:inherit;font-weight:700;padding:0}
+  .service-strip + .footer{margin-top:0}
   @media(max-width:860px){
-    .service-strip__row{grid-template-columns:1fr;padding:14px 0}
+    .service-strip__row{grid-template-columns:1fr;padding:18px 0}
     .service-strip__item{padding:0}
-    .service-strip__item + .service-strip__item{border-left:none;border-top:1px solid rgba(15,23,42,.14);padding-top:12px;margin-top:12px}
+    .service-strip__item + .service-strip__item{border-left:none;border-top:1px solid rgba(15,23,42,.18);padding-top:12px;margin-top:12px}
   }
 </style>
 <section class="service-strip" aria-label="Customer service highlights">
@@ -93,7 +94,7 @@
     <div class="service-strip__row">
       <article class="service-strip__item">
         <h4 class="service-strip__title">Customer service</h4>
-        <p class="service-strip__text">Our team is available Monday to Friday to help with product selection, sizing, and custom orders.</p>
+        <p class="service-strip__text">Our team is available Monday to Sunday to help with product selection, sizing, and custom orders.</p>
       </article>
       <article class="service-strip__item">
         <h4 class="service-strip__title">Secure payment</h4>

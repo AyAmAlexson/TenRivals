@@ -282,9 +282,10 @@
       border-top:1px solid var(--line);
       padding:52px 0 56px;
     }
-    .shop-about__headline{margin:0 0 12px;font-size:30px;line-height:1.14;letter-spacing:.02em;max-width:20ch}
+    .shop-about__content{max-width:98ch}
+    .shop-about__headline{margin:0 0 12px;font-size:30px;line-height:1.14;letter-spacing:.02em;max-width:30ch}
     .shop-about__subheadline{margin:0 0 20px;font-size:13px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:.1em}
-    .shop-about__lead{margin:0 0 20px;font-size:14px;line-height:1.72;color:var(--ink);text-transform:none;max-width:96ch}
+    .shop-about__lead{margin:0 0 20px;font-size:14px;line-height:1.72;color:var(--ink);text-transform:none}
     .shop-about__feature-chips{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 18px}
     .shop-about__chip{
       padding:7px 11px;border:1px solid #d7dde6;background:#fff;
@@ -293,10 +294,18 @@
     }
     .shop-about__chip:hover{border-color:var(--accent);color:var(--accent);transform:translateY(-1px);box-shadow:0 6px 18px rgba(15,23,42,.06)}
     .shop-about__section-title{margin:26px 0 10px;font-size:16px;line-height:1.25;letter-spacing:.05em}
-    .shop-about__list{list-style:none;margin:0;padding:0;display:grid;gap:12px;max-width:98ch}
+    .shop-about__list{list-style:none;margin:0;padding:0;display:grid;gap:12px}
     .shop-about__list li{font-size:14px;line-height:1.72;color:var(--ink);text-transform:none}
     .shop-about__list strong{font-weight:800}
-    .shop-about__closing{margin:18px 0 0;font-size:14px;line-height:1.72;color:var(--ink);text-transform:none;max-width:96ch}
+    .shop-about__community{
+      margin-top:26px;
+      background:#edf1f5;
+      border:1px solid #d9e0e8;
+      padding:18px 18px 16px;
+    }
+    .shop-about__community .shop-about__section-title{margin:0 0 10px}
+    .shop-about__closing{margin:14px 0 0;font-size:14px;line-height:1.72;color:var(--ink);text-transform:none}
+    .shop-about__closing:first-of-type{margin-top:0}
 
     /* Headings */
     h1, h2, h3, h4, h5{font-family:'Saira', system-ui, sans-serif; font-weight:800; letter-spacing:.3px; text-transform:uppercase}
@@ -572,7 +581,8 @@
   </section>
   <section class="shop-about" aria-label="About Tennis Rivals">
     <div class="container">
-      <h2 class="shop-about__headline">Your Premium Tennis Destination in Tbilisi, Georgia</h2>
+      <div class="shop-about__content">
+      <h2 class="shop-about__headline">Your Premium Tennis Destination<br>in Tbilisi, Georgia</h2>
       <p class="shop-about__subheadline">Expertly Curated Gear for the Dedicated Player</p>
       <div class="shop-about__feature-chips" aria-label="Store highlights">
         <span class="shop-about__chip">Player-first curation</span>
@@ -592,13 +602,16 @@
         <li><strong>Global Pre-Orders, Local Delivery:</strong> Cannot find a specific grip size or a limited-edition frame in Tbilisi? Our Global Pre-Order service connects you to the best warehouses in the US and Europe. We handle the logistics, customs, and paperwork, delivering your dream gear directly to your door with free delivery in Tbilisi.</li>
       </ul>
 
-      <h3 class="shop-about__section-title">Join the Rivals Community</h3>
-      <p class="shop-about__closing">
-        Tennis in Georgia is growing, and we are here to support that momentum. Beyond being a store, we provide expert insights into tennis stringing, racket customization, and gear maintenance. We believe that professional-grade equipment should not be a luxury - it should be a tool for your next victory.
-      </p>
-      <p class="shop-about__closing">
-        Explore our collection today and see why Tennis Rivals is the preferred choice for players who take their game seriously. From high-quality strings to the latest racket innovations, we help you find the line for your growth.
-      </p>
+      <div class="shop-about__community">
+        <h3 class="shop-about__section-title">Join the Rivals Community</h3>
+        <p class="shop-about__closing">
+          Tennis in Georgia is growing, and we are here to support that momentum. Beyond being a store, we provide expert insights into tennis stringing, racket customization, and gear maintenance. We believe that professional-grade equipment should not be a luxury - it should be a tool for your next victory.
+        </p>
+        <p class="shop-about__closing">
+          Explore our collection today and see why Tennis Rivals is the preferred choice for players who take their game seriously. From high-quality strings to the latest racket innovations, we help you find the line for your growth.
+        </p>
+      </div>
+      </div>
     </div>
   </section>
   </div>
