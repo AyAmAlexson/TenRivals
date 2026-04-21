@@ -475,6 +475,17 @@ class HomeHeroSlide(models.Model):
     def __str__(self):
         return f'Hero slide #{self.pk}'
 
+    def save(self, *args, **kwargs):
+        from shop.image_uploads import assign_optimized_imagefield, imagefield_changed
+
+        update_fields = kwargs.get('update_fields')
+        if update_fields is not None and 'image' not in update_fields:
+            return super().save(*args, **kwargs)
+        prev = HomeHeroSlide.objects.filter(pk=self.pk).first() if self.pk else None
+        if self.image and imagefield_changed(prev, self, 'image'):
+            assign_optimized_imagefield(self.image, max_width=2000, max_height=1200)
+        return super().save(*args, **kwargs)
+
 
 class HomePromoBanner(models.Model):
     """Wide clickable banner carousel placed between featured products and new arrivals."""
@@ -503,6 +514,17 @@ class HomePromoBanner(models.Model):
 
     def __str__(self):
         return f'Home promo banner #{self.pk}'
+
+    def save(self, *args, **kwargs):
+        from shop.image_uploads import assign_optimized_filefield, imagefield_changed
+
+        update_fields = kwargs.get('update_fields')
+        if update_fields is not None and 'image' not in update_fields:
+            return super().save(*args, **kwargs)
+        prev = HomePromoBanner.objects.filter(pk=self.pk).first() if self.pk else None
+        if self.image and imagefield_changed(prev, self, 'image'):
+            assign_optimized_filefield(self.image, max_width=2000, max_height=700)
+        return super().save(*args, **kwargs)
 
 
 class ProductCollection(models.Model):
@@ -716,6 +738,33 @@ class BlogPost(models.Model):
 
     def __str__(self):
         return self.title
+
+    def save(self, *args, **kwargs):
+        from shop.image_uploads import assign_optimized_imagefield, imagefield_changed
+
+        img_fields = (
+            'hero_image',
+            'card_image',
+            'article_image_1',
+            'article_image_2',
+            'article_image_3',
+        )
+        update_fields = kwargs.get('update_fields')
+        if update_fields is not None and not set(update_fields) & set(img_fields):
+            return super().save(*args, **kwargs)
+
+        prev = BlogPost.objects.filter(pk=self.pk).first() if self.pk else None
+
+        if self.hero_image and imagefield_changed(prev, self, 'hero_image'):
+            assign_optimized_imagefield(self.hero_image, max_width=2000, max_height=1200)
+        if self.card_image and imagefield_changed(prev, self, 'card_image'):
+            assign_optimized_imagefield(self.card_image, max_width=900, max_height=1400)
+        for fname in ('article_image_1', 'article_image_2', 'article_image_3'):
+            f = getattr(self, fname)
+            if f and imagefield_changed(prev, self, fname):
+                assign_optimized_imagefield(f, max_width=1400, max_height=1400)
+
+        return super().save(*args, **kwargs)
 
     @property
     def teaser_image(self):
