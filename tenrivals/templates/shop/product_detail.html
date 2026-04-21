@@ -245,7 +245,7 @@
       <div class="pdp-gallery">
         <div class="pdp-main-img" id="pdp-main-wrap">
           {% if pdp_gallery %}
-          <img id="pdp-main-img" src="{{ pdp_gallery.0 }}" alt="{{ product.name }}">
+          <img id="pdp-main-img" src="{{ pdp_gallery.0 }}" alt="{{ product.name }}" decoding="async" fetchpriority="high" sizes="(max-width:900px) 100vw, min(52vw, 560px)">
           {% else %}
           <span>No image</span>
           {% endif %}
@@ -254,7 +254,7 @@
         <div class="pdp-thumbs" role="tablist" aria-label="Product images">
           {% for url in pdp_gallery %}
           <button type="button" class="pdp-thumb{% if forloop.first %} active{% endif %}" data-src="{{ url }}" aria-label="Image {{ forloop.counter }}">
-            <img src="{{ url }}" alt="">
+            <img src="{{ url }}" alt="" loading="lazy" decoding="async" sizes="72px">
           </button>
           {% endfor %}
         </div>

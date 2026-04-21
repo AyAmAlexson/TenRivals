@@ -224,7 +224,7 @@
         <a class="collection-card" href="{% url 'shop:collection_detail' coll.slug %}">
           <div class="collection-card__media">
             {% if coll.banner_image %}
-            <img src="{{ coll.banner_image.url }}" alt="{{ coll.title }}">
+            <img src="{{ coll.banner_image.url }}" alt="{{ coll.title }}" loading="lazy" decoding="async" sizes="120px">
             {% endif %}
           </div>
           <div class="collection-card__body">

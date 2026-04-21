@@ -12,6 +12,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Saira:wght@400;600;800&family=Saira+Condensed:wght@400&display=swap" rel="stylesheet">
   <link rel="icon" href="{% static 'assets/img/favicon.png' %}">
+  {% if hero_slides %}{% with hero_slides|first as hero_pre %}
+  <link rel="preload" as="image" href="{{ hero_pre.image.url }}" fetchpriority="high">
+  {% endwith %}{% endif %}
   <link href="{% static 'css/styles.css' %}" rel="stylesheet">
   {% include 'shop/includes/product_tile_styles.html' %}
   <style>
@@ -475,10 +478,10 @@
       <div class="hero-slide{% if forloop.first %} is-active{% endif %}" data-hero-slide>
         {% if slide.image_link_url %}
         <a href="{{ slide.image_link_url|abs_site_href }}"{% if slide.image_link_url|slice:":4" == "http" %} target="_blank" rel="noopener"{% endif %}>
-          <img src="{{ slide.image.url }}" alt="">
+          <img src="{{ slide.image.url }}" alt="" decoding="async" sizes="100vw"{% if slide.image.width and slide.image.height %} width="{{ slide.image.width }}" height="{{ slide.image.height }}"{% endif %}{% if forloop.first %} fetchpriority="high"{% else %} loading="lazy" fetchpriority="low"{% endif %}>
         </a>
         {% else %}
-        <img src="{{ slide.image.url }}" alt="">
+        <img src="{{ slide.image.url }}" alt="" decoding="async" sizes="100vw"{% if slide.image.width and slide.image.height %} width="{{ slide.image.width }}" height="{{ slide.image.height }}"{% endif %}{% if forloop.first %} fetchpriority="high"{% else %} loading="lazy" fetchpriority="low"{% endif %}>
         {% endif %}
       </div>
       {% empty %}
@@ -535,7 +538,7 @@
       <div class="product-rail-wrap" data-product-rail>
         <div class="product-rail"><div class="product-rail__track">
           {% for p in featured_products %}
-          <div class="product-rail__cell">{% include 'shop/includes/product_tile.html' with p=p browse_mode='home' %}</div>
+          <div class="product-rail__cell">{% include 'shop/includes/product_tile.html' with p=p browse_mode='home' tile_fetch=forloop.counter0 %}</div>
           {% endfor %}
         </div></div>
         <div class="carousel-controls carousel-controls--red" aria-label="Featured products carousel controls">
@@ -554,10 +557,10 @@
           <div class="promo-carousel__slide{% if forloop.first %} is-active{% endif %}" data-promo-slide>
             {% if banner.image_link_url %}
             <a href="{{ banner.image_link_url|abs_site_href }}"{% if banner.image_link_url|slice:":4" == "http" %} target="_blank" rel="noopener"{% endif %}>
-              <img src="{{ banner.image.url }}" alt="{{ banner.internal_note|default:'Promo banner' }}">
+              <img src="{{ banner.image.url }}" alt="{{ banner.internal_note|default:'Promo banner' }}" decoding="async" sizes="(max-width:1200px) 100vw, 1200px"{% if banner.image.width and banner.image.height %} width="{{ banner.image.width }}" height="{{ banner.image.height }}"{% endif %}{% if forloop.first %} fetchpriority="high"{% else %} loading="lazy" fetchpriority="low"{% endif %}>
             </a>
             {% else %}
-            <img src="{{ banner.image.url }}" alt="{{ banner.internal_note|default:'Promo banner' }}">
+            <img src="{{ banner.image.url }}" alt="{{ banner.internal_note|default:'Promo banner' }}" decoding="async" sizes="(max-width:1200px) 100vw, 1200px"{% if banner.image.width and banner.image.height %} width="{{ banner.image.width }}" height="{{ banner.image.height }}"{% endif %}{% if forloop.first %} fetchpriority="high"{% else %} loading="lazy" fetchpriority="low"{% endif %}>
             {% endif %}
           </div>
           {% endfor %}
@@ -582,7 +585,7 @@
       <div class="product-rail-wrap" data-product-rail>
         <div class="product-rail"><div class="product-rail__track">
           {% for p in new_arrivals %}
-          <div class="product-rail__cell">{% include 'shop/includes/product_tile.html' with p=p browse_mode='home' %}</div>
+          <div class="product-rail__cell">{% include 'shop/includes/product_tile.html' with p=p browse_mode='home' tile_fetch=forloop.counter0 %}</div>
           {% endfor %}
         </div></div>
         <div class="carousel-controls carousel-controls--blue" aria-label="New arrivals carousel controls">
@@ -603,7 +606,7 @@
             <a class="story-card" href="{% url 'shop:blog_post' slug=post.slug %}">
               {% if post.teaser_image %}
               <div class="story-card__media">
-                <img src="{{ post.teaser_image.url }}" alt="{{ post.title }}" loading="lazy">
+                <img src="{{ post.teaser_image.url }}" alt="{{ post.title }}" decoding="async" sizes="(max-width:640px) 78vw, 320px"{% if post.teaser_image.width and post.teaser_image.height %} width="{{ post.teaser_image.width }}" height="{{ post.teaser_image.height }}"{% endif %}{% if forloop.counter0 < 2 %} fetchpriority="low"{% else %} loading="lazy"{% endif %}>
               </div>
               {% else %}
               <div class="story-card__media" style="min-height:160px;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase">Ten Rivals</div>

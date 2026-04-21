@@ -1,6 +1,11 @@
 {% extends 'shop/base_marketing.html' %}
 {% load catalog_tags %}
 {% block title %}{{ post.title }} — TR Shop Blog{% endblock %}
+{% block extra_head %}
+{% if post.hero_image %}
+<link rel="preload" as="image" href="{{ post.hero_image.url }}" fetchpriority="high">
+{% endif %}
+{% endblock %}
 {% block extra_css %}
     .marketing-main{padding:0}
     .footer{margin-top:0}
@@ -167,7 +172,7 @@
 
   {% if post.hero_image %}
   <figure class="article-hero-wrap">
-    <img src="{{ post.hero_image.url }}" alt="" itemprop="image">
+    <img src="{{ post.hero_image.url }}" alt="" itemprop="image" decoding="async" fetchpriority="high" sizes="(max-width:720px) 100vw, 720px"{% if post.hero_image.width and post.hero_image.height %} width="{{ post.hero_image.width }}" height="{{ post.hero_image.height }}"{% endif %}>
   </figure>
   {% endif %}
 
@@ -199,7 +204,7 @@
                 {% for p in sec.products %}
                 <a class="article-product-card" href="{% url 'shop:product_detail' p.pk %}">
                   <div class="article-product-card__media">
-                    {% if p.image_1 %}<img src="{{ p.image_1.url }}" alt="{{ p.name }}">{% endif %}
+                    {% if p.image_1 %}<img src="{{ p.image_1.url }}" alt="{{ p.name }}" loading="lazy" decoding="async" sizes="168px">{% endif %}
                   </div>
                   <div class="article-product-card__body">
                     <p class="article-product-card__brand">{{ p.brand }}</p>

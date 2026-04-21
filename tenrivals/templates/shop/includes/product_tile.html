@@ -1,4 +1,4 @@
-{# p, request required. browse_mode: "stock" | "preorder" | "home" | omit (same as home) #}
+{# p, request required. browse_mode: "stock" | "preorder" | "home" | omit (same as home). tile_fetch: optional int — first tiles on home rails get faster image hints. #}
 <div class="product-tile">
   {% if user.is_staff %}
   <a href="{% url 'shop:product_edit' p.pk %}?{% if browse_mode == 'stock' %}channel={% if p.stock_listing_qty > 0 %}stock{% else %}preorder{% endif %}&{% elif browse_mode == 'preorder' %}channel=preorder&{% endif %}next={{ request.get_full_path|urlencode }}" class="product-tile__edit" title="Edit product" aria-label="Edit product">
@@ -8,7 +8,7 @@
   <a class="product-tile__link" href="{% url 'shop:product_detail' p.pk %}{% if browse_mode == 'stock' %}?channel={% if p.stock_listing_qty > 0 %}stock{% else %}preorder{% endif %}{% elif browse_mode == 'preorder' %}?channel=preorder{% endif %}">
     <div class="product-tile__media">
       {% if p.main_image %}
-      <img src="{{ p.main_image.url }}" alt="{{ p.name }}" loading="lazy">
+      <img src="{{ p.main_image.url }}" alt="{{ p.name }}" decoding="async" sizes="(max-width:640px) 78vw, 260px"{% if p.main_image.width and p.main_image.height %} width="{{ p.main_image.width }}" height="{{ p.main_image.height }}"{% endif %}{% if tile_fetch == 0 and browse_mode == 'home' %} fetchpriority="high"{% elif tile_fetch and tile_fetch < 4 and browse_mode == 'home' %} loading="eager" fetchpriority="low"{% else %} loading="lazy"{% endif %}>
       {% else %}
       <svg width="48" height="48" viewBox="0 0 48 48" fill="none" aria-hidden="true" style="opacity:.35"><rect x="8" y="12" width="32" height="28" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M8 32l8-8 6 6 8-10 10 12" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="18" cy="20" r="3" stroke="currentColor" stroke-width="1.5"/></svg>
       {% endif %}

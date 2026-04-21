@@ -204,7 +204,9 @@ if IS_PRODUCTION:
     AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
     AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
     AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME')
-    AWS_S3_CUSTOM_DOMAIN = os.environ.get('AWS_S3_CUSTOM_DOMAIN', None) # Необязательно, для CDN
+    # Set AWS_S3_CUSTOM_DOMAIN to a CloudFront (or other CDN) hostname so media is served
+    # edge-cached globally — biggest win for large hero/blog images without code changes.
+    AWS_S3_CUSTOM_DOMAIN = os.environ.get('AWS_S3_CUSTOM_DOMAIN', None)  # e.g. dxxxx.cloudfront.net
 
     # Проверка наличия обязательных переменных на Heroku
     if not all([AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_STORAGE_BUCKET_NAME, AWS_S3_REGION_NAME]):

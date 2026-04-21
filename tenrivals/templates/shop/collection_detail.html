@@ -2,6 +2,9 @@
 {% load static %}
 {% block title %}{{ collection.title }} — TR Shop{% endblock %}
 {% block extra_head %}
+  {% if collection.banner_image %}
+  <link rel="preload" as="image" href="{{ collection.banner_image.url }}" fetchpriority="high">
+  {% endif %}
   {% include 'shop/includes/product_tile_styles.html' %}
 {% endblock %}
 {% block extra_css %}
@@ -92,7 +95,7 @@
   <section class="collection-hero">
     {% if collection.banner_image %}
     <div class="collection-hero__media">
-      <img src="{{ collection.banner_image.url }}" alt="{{ collection.title }}">
+      <img src="{{ collection.banner_image.url }}" alt="{{ collection.title }}" decoding="async" fetchpriority="high" sizes="(max-width:900px) 100vw, 900px"{% if collection.banner_image.width and collection.banner_image.height %} width="{{ collection.banner_image.width }}" height="{{ collection.banner_image.height }}"{% endif %}>
     </div>
     {% endif %}
     <div class="collection-hero__body">
@@ -111,7 +114,7 @@
       {% if section.group and section.group.title %}<h2 class="group-headline">{{ section.group.title }}</h2>{% endif %}
       <div class="group-intro{% if not section.group or not section.group.image %} group-intro--no-media{% endif %}">
         {% if section.group and section.group.image %}
-        <div class="group-media"><img src="{{ section.group.image.url }}" alt="{{ section.group.title|default:collection.title }}"></div>
+        <div class="group-media"><img src="{{ section.group.image.url }}" alt="{{ section.group.title|default:collection.title }}" loading="lazy" decoding="async" sizes="(max-width:860px) 100vw, 400px"></div>
         {% endif %}
         <div class="group-intro__copy">
           {% if section.group and section.group.description %}<p class="group-text">{{ section.group.description|linebreaksbr }}</p>{% endif %}
