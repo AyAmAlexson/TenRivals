@@ -67,7 +67,7 @@ def stock_products_for_select():
     return (
         qs.filter(stock_listing_qty__gt=0)
         .order_by('brand', 'name')
-        .select_related('shoe', 'racket', 'apparel')
+        .select_related('shoe', 'racket', 'apparel', 'string')
     )
 
 

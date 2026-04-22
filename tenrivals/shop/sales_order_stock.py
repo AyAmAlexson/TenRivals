@@ -3,7 +3,14 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from .models import Product, ProductListing, ProductListingChannel, ProductType, SalesOrder
+from .models import (
+    Product,
+    ProductListing,
+    ProductListingChannel,
+    ProductType,
+    SalesOrder,
+    String,
+)
 from .sales_order_utils import stock_listing_quantity
 from .size_inventory import normalize_sizes_to_qty_map
 
@@ -44,6 +51,31 @@ def product_requires_variant(product: Product) -> bool:
     return False
 
 
+def _string_effective_variant_map(st: String, listing_total: int) -> dict[str, int]:
+    """
+    Per-gauge/colorway qty for strings. Listing row is source of truth when JSON buckets
+    are all zero (staff set qty on listing only) — same idea as list-shaped gauges + fallback.
+    """
+    m = normalize_sizes_to_qty_map(st.gauges, fallback_total=listing_total)
+    if not m:
+        if st.gauge_mm is not None and listing_total > 0:
+            return {f'{st.gauge_mm} mm': listing_total}
+        return {}
+    if sum(int(v or 0) for v in m.values()) > 0:
+        return m
+    if listing_total <= 0:
+        return m
+    keys_sorted = sorted(m.keys(), key=lambda x: str(x).strip())
+    if not keys_sorted:
+        if st.gauge_mm is not None:
+            return {f'{st.gauge_mm} mm': listing_total}
+        return m
+    merged = dict(m)
+    k0 = keys_sorted[0]
+    merged[k0] = listing_total
+    return merged
+
+
 def get_variant_qty_map(product: Product) -> dict[str, int]:
     """Per-grip, shoe size, or apparel size quantities (normalized dict)."""
     listing_total = stock_listing_quantity(product.pk)
@@ -70,13 +102,7 @@ def get_variant_qty_map(product: Product) -> dict[str, int]:
             st = product.string
         except Exception:
             return {}
-        # Match racket/shoe/apparel: legacy `gauges` as a list only encodes labels; qty lives on the listing.
-        m = normalize_sizes_to_qty_map(st.gauges, fallback_total=listing_total)
-        if m:
-            return m
-        if st.gauge_mm is not None and listing_total > 0:
-            return {f'{st.gauge_mm} mm': listing_total}
-        return {}
+        return _string_effective_variant_map(st, listing_total)
     return {}
 
 
@@ -183,18 +209,11 @@ def adjust_product_variant_stock(product: Product, variant_key: str, delta: int)
         return
 
     if product.type == ProductType.STRINGS:
-        from .models import String
-
         st = String.objects.select_for_update().get(pk=product.pk)
         row = _listing_row_for_update(product.pk)
         if not row:
             raise ValueError('No STOCK listing for string')
-        d = dict(
-            normalize_sizes_to_qty_map(st.gauges, fallback_total=int(row.quantity))
-        )
-        if not d and st.gauge_mm is not None:
-            label = f'{st.gauge_mm} mm'
-            d = {label: int(row.quantity)}
+        d = dict(_string_effective_variant_map(st, int(row.quantity)))
         cur = int(d.get(vk, 0))
         new_v = cur + delta
         if new_v < 0:
