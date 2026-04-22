@@ -214,7 +214,7 @@
     servicesBody.querySelectorAll('tr').forEach(function(tr){
       const nm = (tr.querySelector('.svc-name') && tr.querySelector('.svc-name').value || '').trim();
       const g = parseNum(tr.querySelector('.svc-gross') && tr.querySelector('.svc-gross').value);
-      if(nm && g>0) arr.push({ name: nm, gross: fmt(g) });
+      if(nm) arr.push({ name: nm, gross: fmt(g) });
     });
     servicesHidden.value = JSON.stringify(arr);
   }

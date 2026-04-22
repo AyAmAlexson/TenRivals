@@ -86,23 +86,23 @@ def _invoice_context(order: SalesOrder, request=None) -> dict:
             }
         )
     services = []
-    raw = order.services or []
-    if isinstance(raw, list):
-        for item in raw:
-            if isinstance(item, dict):
-                g = Decimal(str(item.get('gross', '0') or '0'))
-                if g <= 0:
-                    continue
-                net, vat = gross_split_vat_net(g)
-                services.append(
-                    {
-                        'name': item.get('name', ''),
-                        'gross': g,
-                        'vat': vat,
-                        'net': net,
-                    }
-                )
-    delivery_gross = order.delivery_gross or Decimal('0')
+    for s in parse_services_payload(order.services):
+        g = s['gross']
+        net, vat = gross_split_vat_net(g)
+        services.append(
+            {
+                'name': s['name'],
+                'gross': g,
+                'vat': vat,
+                'net': net,
+            }
+        )
+    dg = order.delivery_gross
+    delivery_gross = (
+        Decimal(str(dg))
+        if dg is not None
+        else Decimal('0')
+    ).quantize(Decimal('0.01'))
     delivery_net = delivery_vat = Decimal('0')
     if delivery_gross > 0:
         delivery_net, delivery_vat = gross_split_vat_net(delivery_gross)

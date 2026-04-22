@@ -152,7 +152,10 @@ def allocate_order_for_me_number(order_year: int) -> str:
 
 
 def parse_services_payload(raw: Any) -> list[dict[str, Any]]:
-    """Normalize services from JSON / form into [{'name': str, 'gross': Decimal}, ...]."""
+    """Normalize services from JSON / form into [{'name': str, 'gross': Decimal}, ...].
+
+    Gross may be 0 (complimentary service); lines without a name are skipped.
+    """
     if not raw:
         return []
     if isinstance(raw, str):
@@ -162,6 +165,8 @@ def parse_services_payload(raw: Any) -> list[dict[str, Any]]:
             raw = json.loads(raw)
         except json.JSONDecodeError:
             return []
+    if isinstance(raw, tuple):
+        raw = list(raw)
     if not isinstance(raw, list):
         return []
     out = []
@@ -175,7 +180,7 @@ def parse_services_payload(raw: Any) -> list[dict[str, Any]]:
             g = Decimal(str(item.get('gross', '0') or '0')).quantize(Decimal('0.01'))
         except Exception:
             g = Decimal('0')
-        if g <= 0:
+        if g < 0:
             continue
         out.append({'name': name, 'gross': g})
     return out
