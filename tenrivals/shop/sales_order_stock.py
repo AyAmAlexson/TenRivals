@@ -70,7 +70,8 @@ def get_variant_qty_map(product: Product) -> dict[str, int]:
             st = product.string
         except Exception:
             return {}
-        m = normalize_sizes_to_qty_map(st.gauges, fallback_total=0)
+        # Match racket/shoe/apparel: legacy `gauges` as a list only encodes labels; qty lives on the listing.
+        m = normalize_sizes_to_qty_map(st.gauges, fallback_total=listing_total)
         if m:
             return m
         if st.gauge_mm is not None and listing_total > 0:
@@ -188,7 +189,9 @@ def adjust_product_variant_stock(product: Product, variant_key: str, delta: int)
         row = _listing_row_for_update(product.pk)
         if not row:
             raise ValueError('No STOCK listing for string')
-        d = dict(normalize_sizes_to_qty_map(st.gauges, fallback_total=0))
+        d = dict(
+            normalize_sizes_to_qty_map(st.gauges, fallback_total=int(row.quantity))
+        )
         if not d and st.gauge_mm is not None:
             label = f'{st.gauge_mm} mm'
             d = {label: int(row.quantity)}
