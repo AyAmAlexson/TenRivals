@@ -58,7 +58,7 @@
     .pdp-grid{
       display:grid;
       grid-template-columns:minmax(0,2fr) minmax(0,1fr);
-      gap:28px 72px;
+      gap:28px 56px;
       padding:0 0 56px;
       align-items:stretch;
     }
@@ -68,18 +68,19 @@
       flex-direction:column;
       min-width:0;
       min-height:0;
-      /* ~1.5× generous inner padding; extra on the right before the buy column */
-      padding:clamp(36px,5vw,72px) clamp(48px,7vw,104px) clamp(36px,5vw,72px) clamp(36px,5vw,72px);
+      /* Moderate inner padding; slightly more on the right toward the buy column */
+      padding:clamp(20px,3.2vw,44px) clamp(24px,4vw,52px) clamp(20px,3.2vw,44px) clamp(20px,3.2vw,44px);
       box-sizing:border-box;
     }
-    .pdp-gallery{flex:1; display:flex; flex-direction:column; align-items:center; gap:14px; min-height:100%; width:100%}
-    /* Gallery main + thumbs — main frame uses ~2/3 width so the photo reads ~1.5× smaller in the cell */
+    .pdp-gallery{flex:1; display:flex; flex-direction:column; align-items:center; gap:12px; min-height:100%; width:100%}
+    .pdp-main-img--zoomable{cursor:zoom-in}
+    /* Gallery main + thumbs — ~84% width: between full bleed and the previous tight crop */
     .pdp-main-img{
       flex:0 1 auto;
       width:100%;
-      max-width:min(100%,66.666%);
+      max-width:min(100%,84%);
       align-self:center;
-      min-height:160px;
+      min-height:200px;
       aspect-ratio:1/1;
       background:#fff;
       display:flex;
@@ -90,7 +91,7 @@
       overflow:hidden;
     }
     .pdp-main-img img{width:100%; height:100%; object-fit:contain; object-position:center}
-    .pdp-thumbs{display:flex; flex-wrap:wrap; justify-content:center; gap:8px; width:100%; max-width:min(100%,66.666%)}
+    .pdp-thumbs{display:flex; flex-wrap:wrap; justify-content:center; gap:8px; width:100%; max-width:min(100%,84%)}
     .pdp-thumb{width:68px; height:68px; flex-shrink:0; background:#fff; display:flex; align-items:center; justify-content:center; color:#c4c9d2; font-size:10px; cursor:pointer; border:2px solid transparent; transition:border-color .15s; overflow:hidden; padding:0}
     .pdp-thumb img{width:100%; height:100%; object-fit:contain}
     .pdp-thumb.active{border-color:var(--accent)}
@@ -189,6 +190,93 @@
     .pdp-modal__text{font-size:14px; line-height:1.6; color:var(--ink); font-weight:400; text-transform:none; margin:0 0 20px; padding-bottom:16px; border-bottom:1px solid var(--line)}
     .pdp-modal__actions{display:flex; flex-wrap:wrap; gap:10px}
     .pdp-cart-error{margin:0 0 12px; padding:10px 12px; background:#fef2f2; border:1px solid #fecaca; color:#991b1b; font-size:13px; font-weight:400; text-transform:none}
+
+    /* Full-screen image lightbox (above cart modal) */
+    .pdp-lightbox{
+      position:fixed;
+      inset:0;
+      z-index:21000;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:min(56px,8vw) min(72px,10vw);
+    }
+    .pdp-lightbox[hidden]{display:none!important}
+    .pdp-lightbox__backdrop{
+      position:absolute;
+      inset:0;
+      background:rgba(2,6,23,.9);
+      cursor:pointer;
+      border:none;
+      padding:0;
+    }
+    .pdp-lightbox__stage{
+      position:relative;
+      z-index:1;
+      max-width:min(96vw,1280px);
+      max-height:88vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      pointer-events:none;
+    }
+    .pdp-lightbox__stage img{
+      max-width:100%;
+      max-height:88vh;
+      width:auto;
+      height:auto;
+      object-fit:contain;
+      pointer-events:auto;
+    }
+    .pdp-lightbox__close{
+      position:absolute;
+      top:max(12px,env(safe-area-inset-top,0px));
+      right:max(12px,env(safe-area-inset-right,0px));
+      z-index:3;
+      width:44px;
+      height:44px;
+      border:1px solid rgba(255,255,255,.35);
+      background:rgba(15,23,42,.55);
+      color:#fff;
+      font-size:26px;
+      line-height:1;
+      cursor:pointer;
+      font-family:inherit;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:0;
+      transition:background .15s,border-color .15s;
+    }
+    .pdp-lightbox__close:hover{background:rgba(15,23,42,.85)}
+    .pdp-lightbox__arrow{
+      position:absolute;
+      top:50%;
+      transform:translateY(-50%);
+      z-index:3;
+      width:48px;
+      height:48px;
+      border:1px solid rgba(255,255,255,.35);
+      background:rgba(15,23,42,.55);
+      color:#fff;
+      font-size:28px;
+      line-height:1;
+      cursor:pointer;
+      font-family:inherit;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:0 0 4px;
+      transition:background .15s,border-color .15s;
+    }
+    .pdp-lightbox__arrow:hover{background:rgba(15,23,42,.85)}
+    .pdp-lightbox__arrow--prev{left:max(8px,env(safe-area-inset-left,0px))}
+    .pdp-lightbox__arrow--next{right:max(8px,env(safe-area-inset-right,0px))}
+    .pdp-lightbox__arrow[hidden]{display:none!important}
+    @media(max-width:640px){
+      .pdp-lightbox{padding:48px 12px}
+      .pdp-lightbox__arrow{width:42px;height:42px;font-size:22px}
+    }
     @media(max-width:1024px){
       .pdp-grid{grid-template-columns:1fr; gap:24px}
       .pdp-cell--desc,.pdp-cell--specs{padding-top:24px}
@@ -278,9 +366,9 @@
     <div class="pdp-grid">
       <div class="pdp-cell pdp-cell--gallery">
       <div class="pdp-gallery">
-        <div class="pdp-main-img" id="pdp-main-wrap">
+        <div class="pdp-main-img{% if pdp_gallery %} pdp-main-img--zoomable{% endif %}" id="pdp-main-wrap"{% if pdp_gallery %} role="button" tabindex="0" aria-label="View larger image"{% endif %}>
           {% if pdp_gallery %}
-          <img id="pdp-main-img" src="{{ pdp_gallery.0 }}" alt="{{ product.name }}" decoding="async" fetchpriority="high" sizes="(max-width:900px) 100vw, min(52vw, 560px)">
+          <img id="pdp-main-img" src="{{ pdp_gallery.0 }}" alt="{{ product.name }}" decoding="async" fetchpriority="high" sizes="(max-width:900px) 100vw, min(58vw, 640px)">
           {% else %}
           <span>No image</span>
           {% endif %}
@@ -525,6 +613,19 @@
       </div>
     </div>
 
+    {% if pdp_gallery %}
+    {{ pdp_gallery|json_script:"pdp-gallery-data" }}
+    <div id="pdp-lightbox" class="pdp-lightbox" hidden role="dialog" aria-modal="true" aria-label="Enlarged product images">
+      <button type="button" class="pdp-lightbox__backdrop" data-pdp-lightbox-close aria-label="Close gallery"></button>
+      <div class="pdp-lightbox__stage">
+        <img id="pdp-lightbox-img" src="" alt="">
+      </div>
+      <button type="button" class="pdp-lightbox__close" data-pdp-lightbox-close aria-label="Close">&times;</button>
+      <button type="button" class="pdp-lightbox__arrow pdp-lightbox__arrow--prev" aria-label="Previous image">&#8249;</button>
+      <button type="button" class="pdp-lightbox__arrow pdp-lightbox__arrow--next" aria-label="Next image">&#8250;</button>
+    </div>
+    {% endif %}
+
     <div id="pdp-cart-modal" class="pdp-modal" hidden>
       <div class="pdp-modal__backdrop" data-close-modal tabindex="-1"></div>
       <div class="pdp-modal__panel" role="dialog" aria-modal="true" aria-labelledby="pdp-cart-modal-title">
@@ -556,6 +657,87 @@
         this.classList.add('active');
       });
     });
+    (function() {
+      var dataEl = document.getElementById('pdp-gallery-data');
+      var wrap = document.getElementById('pdp-main-wrap');
+      var mainImg = document.getElementById('pdp-main-img');
+      var lb = document.getElementById('pdp-lightbox');
+      if (!dataEl || !wrap || !mainImg || !lb) return;
+      var urls = [];
+      try { urls = JSON.parse(dataEl.textContent); } catch (e) { return; }
+      if (!Array.isArray(urls) || !urls.length) return;
+      var lbImg = document.getElementById('pdp-lightbox-img');
+      var prev = lb.querySelector('.pdp-lightbox__arrow--prev');
+      var next = lb.querySelector('.pdp-lightbox__arrow--next');
+      var idx = 0;
+      var nameAlt = "{{ product.name|escapejs }}";
+      function syncNav() {
+        var mult = urls.length > 1;
+        if (prev) prev.hidden = !mult;
+        if (next) next.hidden = !mult;
+      }
+      function show(i) {
+        idx = (i + urls.length) % urls.length;
+        if (lbImg) {
+          lbImg.src = urls[idx];
+          lbImg.alt = nameAlt;
+        }
+        syncNav();
+      }
+      function indexFromMain() {
+        var cur = mainImg.getAttribute('src') || '';
+        var i;
+        for (i = 0; i < urls.length; i++) {
+          if (cur === urls[i]) return i;
+        }
+        try {
+          var path = new URL(cur, window.location.href).pathname;
+          for (i = 0; i < urls.length; i++) {
+            if (new URL(urls[i], window.location.href).pathname === path) return i;
+          }
+        } catch (e) {}
+        return 0;
+      }
+      function openLb() {
+        show(indexFromMain());
+        lb.hidden = false;
+        document.body.style.overflow = 'hidden';
+      }
+      function closeLb() {
+        lb.hidden = true;
+        document.body.style.overflow = '';
+      }
+      wrap.addEventListener('click', function(e) {
+        if (e.target === wrap || e.target === mainImg) openLb();
+      });
+      wrap.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          openLb();
+        }
+      });
+      lb.querySelectorAll('[data-pdp-lightbox-close]').forEach(function(el) {
+        el.addEventListener('click', function(ev) {
+          ev.preventDefault();
+          closeLb();
+        });
+      });
+      if (prev) prev.addEventListener('click', function(ev) { ev.stopPropagation(); show(idx - 1); });
+      if (next) next.addEventListener('click', function(ev) { ev.stopPropagation(); show(idx + 1); });
+      document.addEventListener('keydown', function(e) {
+        if (lb.hidden) return;
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          closeLb();
+        } else if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          show(idx - 1);
+        } else if (e.key === 'ArrowRight') {
+          e.preventDefault();
+          show(idx + 1);
+        }
+      });
+    })();
     (function() {
       function getCookie(name) {
         const v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
