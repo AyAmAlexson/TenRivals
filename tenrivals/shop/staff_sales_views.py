@@ -529,7 +529,9 @@ def staff_sales_order_edit(request, pk=None):
             'formset': formset,
             'order': instance,
             'product_prices': product_prices,
-            'product_variants_json': json.dumps(catalog_variants),
+            # Pass a dict; |json_script in the template serializes once. json.dumps here
+            # would double-encode and JSON.parse in the browser yields a string, not an object.
+            'product_variants_json': catalog_variants,
             'services_json_initial': services_for_js,
             'staff_nav_active': 'sales_orders',
             'page_heading': ('Edit order ' + instance.invoice_number)
