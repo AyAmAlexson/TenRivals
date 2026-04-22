@@ -5,6 +5,17 @@
 {% block extra_head %}
 <style>
   .img-preview{max-width:220px;max-height:160px;object-fit:cover;border:1px solid var(--line)}
+  .staff-article-inline-hint{
+    margin:0 0 4px;
+    padding:12px 14px;
+    max-width:52rem;
+    font-size:13px;
+    line-height:1.55;
+    color:var(--muted);
+    background:#f8fafc;
+    border:1px solid var(--line);
+  }
+  .staff-article-inline-hint strong{color:var(--ink)}
 </style>
 {% endblock %}
 {% block content %}
@@ -133,17 +144,23 @@
         <input id="id_cta_end_button_url" name="cta_end_button_url" type="text" class="form-control" maxlength="500" value="{{ post_obj.cta_end_button_url|default:'' }}">
       </div>
       <div class="form-group">
-        <label for="id_article_image_1">Article image 1 <span style="font-weight:400;color:var(--muted)">(not shown in current layout)</span></label>
+        <p class="staff-article-inline-hint" role="note">
+          <strong>Article images 1–3 (ideal size):</strong>
+          On the live article they use the <strong>full text column width (~720px)</strong> and keep aspect ratio inside a height cap (~440px).
+          Best results: <strong>wide, not-too-tall</strong> frames — e.g. <strong>16:9</strong> or <strong>4:3</strong>, about <strong>1600–2000px</strong> on the long edge (JPEG or WebP, sRGB).
+          Tall narrow portraits shrink and leave <strong>empty space on the sides</strong>.
+        </p>
+        <label for="id_article_image_1">Article image 1 <span style="font-weight:400;color:var(--muted)">(below text block 1)</span></label>
         <input id="id_article_image_1" name="article_image_1" type="file" accept="image/*">
         {% if post_obj and post_obj.article_image_1 %}<div style="margin-top:8px"><img class="img-preview" src="{{ post_obj.article_image_1.url }}" alt=""></div>{% endif %}
       </div>
       <div class="form-group">
-        <label for="id_article_image_2">Article image 2 <span style="font-weight:400;color:var(--muted)">(not shown)</span></label>
+        <label for="id_article_image_2">Article image 2 <span style="font-weight:400;color:var(--muted)">(below text block 2)</span></label>
         <input id="id_article_image_2" name="article_image_2" type="file" accept="image/*">
         {% if post_obj and post_obj.article_image_2 %}<div style="margin-top:8px"><img class="img-preview" src="{{ post_obj.article_image_2.url }}" alt=""></div>{% endif %}
       </div>
       <div class="form-group">
-        <label for="id_article_image_3">Article image 3 <span style="font-weight:400;color:var(--muted)">(not shown)</span></label>
+        <label for="id_article_image_3">Article image 3 <span style="font-weight:400;color:var(--muted)">(below text block 3, before featured products)</span></label>
         <input id="id_article_image_3" name="article_image_3" type="file" accept="image/*">
         {% if post_obj and post_obj.article_image_3 %}<div style="margin-top:8px"><img class="img-preview" src="{{ post_obj.article_image_3.url }}" alt=""></div>{% endif %}
       </div>

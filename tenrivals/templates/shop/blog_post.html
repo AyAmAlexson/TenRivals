@@ -36,6 +36,20 @@
     .article-hero-wrap img{
       width:100%;max-height:min(52vh,520px);object-fit:contain;object-position:center;display:block;
     }
+    .article-inline-figure{
+      margin:28px 0;padding:0;
+      border-top:1px solid var(--line);
+      border-bottom:1px solid var(--line);
+      background:#f8fafc;
+      overflow:hidden;
+    }
+    .article-inline-figure img{
+      width:100%;
+      display:block;
+      max-height:min(48vh,440px);
+      object-fit:contain;
+      object-position:center;
+    }
     .article-head{padding:32px 36px 28px;border-bottom:1px solid var(--line);background:#fff}
     .article-title{
       font-size:clamp(24px,3.4vw,36px);font-weight:800;line-height:1.12;margin:0 0 14px;
@@ -196,6 +210,10 @@
             {{ sec.text|linebreaks }}
             {% if sec.author %}<span class="article-quote__author">— {{ sec.author }}</span>{% endif %}
           </blockquote>
+        {% elif sec.type == 'figure' %}
+          <figure class="article-inline-figure">
+            <img src="{{ sec.image.url }}" alt="" loading="lazy" decoding="async" sizes="(max-width:720px) 100vw, 720px"{% if sec.image.width and sec.image.height %} width="{{ sec.image.width }}" height="{{ sec.image.height }}"{% endif %}>
+          </figure>
         {% elif sec.type == 'products' %}
           <section class="article-products" aria-label="Featured products">
             <h3 class="article-products__title">Featured products</h3>

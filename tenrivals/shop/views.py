@@ -951,8 +951,10 @@ def blog_post(request, slug):
             sections.append({'type': 'paragraph', 'text': t})
 
     article_sections = []
-    # Order: text 1 → quote → text 2 → CTA middle → text 3 → products → text 4 → CTA end
+    # Order: text 1 → optional inline img 1 → quote → text 2 → img 2 → CTA middle → text 3 → img 3 → products → text 4 → CTA end
     _add_paragraph(article_sections, post.body_block_1)
+    if post.article_image_1:
+        article_sections.append({"type": "figure", "image": post.article_image_1})
 
     if _p(post.quote_text):
         article_sections.append(
@@ -964,6 +966,8 @@ def blog_post(request, slug):
         )
 
     _add_paragraph(article_sections, post.body_block_2)
+    if post.article_image_2:
+        article_sections.append({"type": "figure", "image": post.article_image_2})
 
     if _p(post.cta_mid_button_label) and _p(post.cta_mid_button_url):
         article_sections.append(
@@ -976,6 +980,8 @@ def blog_post(request, slug):
         )
 
     _add_paragraph(article_sections, post.body_block_3)
+    if post.article_image_3:
+        article_sections.append({"type": "figure", "image": post.article_image_3})
 
     if featured_products:
         article_sections.append({'type': 'products', 'products': featured_products})
