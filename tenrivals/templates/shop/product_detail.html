@@ -58,17 +58,28 @@
     .pdp-grid{
       display:grid;
       grid-template-columns:minmax(0,2fr) minmax(0,1fr);
-      gap:28px 48px;
+      gap:28px 72px;
       padding:0 0 56px;
       align-items:stretch;
     }
     .pdp-cell--desc,.pdp-cell--specs{align-self:start}
-    .pdp-cell--gallery{display:flex; flex-direction:column; min-width:0; min-height:0}
-    .pdp-gallery{flex:1; display:flex; flex-direction:column; gap:10px; min-height:100%}
-    /* Gallery main + thumbs */
+    .pdp-cell--gallery{
+      display:flex;
+      flex-direction:column;
+      min-width:0;
+      min-height:0;
+      /* ~1.5× generous inner padding; extra on the right before the buy column */
+      padding:clamp(36px,5vw,72px) clamp(48px,7vw,104px) clamp(36px,5vw,72px) clamp(36px,5vw,72px);
+      box-sizing:border-box;
+    }
+    .pdp-gallery{flex:1; display:flex; flex-direction:column; align-items:center; gap:14px; min-height:100%; width:100%}
+    /* Gallery main + thumbs — main frame uses ~2/3 width so the photo reads ~1.5× smaller in the cell */
     .pdp-main-img{
-      flex:1 1 auto;
-      min-height:220px;
+      flex:0 1 auto;
+      width:100%;
+      max-width:min(100%,66.666%);
+      align-self:center;
+      min-height:160px;
       aspect-ratio:1/1;
       background:#fff;
       display:flex;
@@ -79,7 +90,7 @@
       overflow:hidden;
     }
     .pdp-main-img img{width:100%; height:100%; object-fit:contain; object-position:center}
-    .pdp-thumbs{display:flex; gap:8px}
+    .pdp-thumbs{display:flex; flex-wrap:wrap; justify-content:center; gap:8px; width:100%; max-width:min(100%,66.666%)}
     .pdp-thumb{width:68px; height:68px; flex-shrink:0; background:#fff; display:flex; align-items:center; justify-content:center; color:#c4c9d2; font-size:10px; cursor:pointer; border:2px solid transparent; transition:border-color .15s; overflow:hidden; padding:0}
     .pdp-thumb img{width:100%; height:100%; object-fit:contain}
     .pdp-thumb.active{border-color:var(--accent)}
