@@ -54,12 +54,30 @@
     .breadcrumb a:hover{color:var(--accent)}
     .breadcrumb span{margin:0 6px; color:#d1d5db}
 
-    /* Product layout */
-    .pdp{display:grid; grid-template-columns:1fr 1fr; gap:48px; padding:0 0 48px}
-
-    /* Gallery */
-    .pdp-gallery{display:flex; flex-direction:column; gap:10px}
-    .pdp-main-img{aspect-ratio:1/1; background:#fff; display:flex; align-items:center; justify-content:center; color:#c4c9d2; font-size:14px; overflow:hidden}
+    /* Product layout: 2×2 — row1 gallery | buy (equal height); row2 description | specs (50/50) */
+    .pdp-grid{
+      display:grid;
+      grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+      gap:28px 48px;
+      padding:0 0 56px;
+      align-items:stretch;
+    }
+    .pdp-cell--desc,.pdp-cell--specs{align-self:start}
+    .pdp-cell--gallery{display:flex; flex-direction:column; min-width:0; min-height:0}
+    .pdp-gallery{flex:1; display:flex; flex-direction:column; gap:10px; min-height:100%}
+    /* Gallery main + thumbs */
+    .pdp-main-img{
+      flex:1 1 auto;
+      min-height:220px;
+      aspect-ratio:1/1;
+      background:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:#c4c9d2;
+      font-size:14px;
+      overflow:hidden;
+    }
     .pdp-main-img img{width:100%; height:100%; object-fit:contain; object-position:center}
     .pdp-thumbs{display:flex; gap:8px}
     .pdp-thumb{width:68px; height:68px; flex-shrink:0; background:#fff; display:flex; align-items:center; justify-content:center; color:#c4c9d2; font-size:10px; cursor:pointer; border:2px solid transparent; transition:border-color .15s; overflow:hidden; padding:0}
@@ -67,8 +85,9 @@
     .pdp-thumb.active{border-color:var(--accent)}
     .pdp-thumb:hover{border-color:var(--ink)}
 
-    /* Info panel */
-    .pdp-info{display:flex; flex-direction:column}
+    /* Buy column (title, price, cart) — spacer fills height to match gallery column */
+    .pdp-buy{display:flex; flex-direction:column; min-height:100%}
+    .pdp-buy-spacer{flex:1 1 auto; min-height:0}
     .pdp-brand{font-family:'Saira Condensed', 'Saira', sans-serif; font-size:17px; font-weight:500; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; margin-bottom:6px}
     .pdp-title{font-size:22px; margin:0 0 6px; line-height:1.2; font-weight:600; text-transform:none; letter-spacing:0}
     .pdp-color{font-size:14px; font-weight:400; color:#94a3b8; margin-bottom:20px; text-transform:none; line-height:1.45}
@@ -106,17 +125,20 @@
     .pdp-variant-btn:hover{border-color:var(--ink)}
 
     /* Shipping info */
-    .pdp-shipping{font-size:13px; color:var(--muted); margin-bottom:28px; line-height:1.7}
+    .pdp-shipping{font-size:13px; color:var(--muted); margin-bottom:0; line-height:1.7}
 
-    .pdp-specs{margin:0 0 24px}
+    .pdp-cell--desc,.pdp-cell--specs{
+      padding-top:28px;
+      border-top:1px solid var(--line);
+      min-width:0;
+    }
+    .pdp-specs{margin:0}
     .pdp-specs-title{
       font-size:11px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; color:var(--muted);
       margin:0 0 12px; padding-bottom:8px; border-bottom:1px solid var(--line);
     }
 
-    /* Full-width description below gallery row */
-    .pdp-desc-section{margin-top:8px; padding:32px 0 56px; border-top:1px solid var(--line)}
-    .pdp-desc-section .pdp-desc-heading{
+    .pdp-desc-block .pdp-desc-heading{
       font-size:11px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; color:var(--muted);
       margin:0 0 16px;
     }
@@ -127,7 +149,7 @@
     .specs-table{width:100%; border-collapse:collapse}
     .specs-table tr{border-bottom:1px solid var(--line)}
     .specs-table td{padding:10px 0; font-size:14px}
-    .specs-table td:first-child{color:var(--muted); width:180px}
+    .specs-table td:first-child{color:var(--muted); width:38%; min-width:7em}
     .specs-table td:last-child{color:var(--ink); font-weight:400; text-transform:none}
 
     /* Responsive */
@@ -157,7 +179,8 @@
     .pdp-modal__actions{display:flex; flex-wrap:wrap; gap:10px}
     .pdp-cart-error{margin:0 0 12px; padding:10px 12px; background:#fef2f2; border:1px solid #fecaca; color:#991b1b; font-size:13px; font-weight:400; text-transform:none}
     @media(max-width:1024px){
-      .pdp{grid-template-columns:1fr; gap:24px}
+      .pdp-grid{grid-template-columns:1fr; gap:24px}
+      .pdp-cell--desc,.pdp-cell--specs{padding-top:24px}
     }
     @media(max-width:640px){
       .footer-top{grid-template-columns:1fr 1fr}
@@ -241,7 +264,8 @@
       <span style="color:var(--ink)">{{ product.name }}</span>
     </div>
 
-    <div class="pdp">
+    <div class="pdp-grid">
+      <div class="pdp-cell pdp-cell--gallery">
       <div class="pdp-gallery">
         <div class="pdp-main-img" id="pdp-main-wrap">
           {% if pdp_gallery %}
@@ -260,8 +284,10 @@
         </div>
         {% endif %}
       </div>
+      </div>
 
-      <div class="pdp-info">
+      <div class="pdp-cell pdp-cell--buy">
+      <div class="pdp-buy">
         {% if user.is_staff %}
         <p style="margin-bottom:10px"><a href="{% url 'shop:product_edit' product.pk %}" class="btn btn--outline" style="padding:8px 16px;font-size:13px">Edit product</a></p>
         {% endif %}
@@ -408,6 +434,24 @@
           {% endif %}
         </div>
 
+        <div class="pdp-buy-spacer" aria-hidden="true"></div>
+      </div>
+      </div>
+
+      <div class="pdp-cell pdp-cell--desc">
+        <section class="pdp-desc-block" aria-labelledby="pdp-desc-heading">
+          <h2 class="pdp-desc-heading" id="pdp-desc-heading">Description</h2>
+          <div class="pdp-desc-body">
+            {% if product.description %}
+            <div style="white-space:pre-wrap">{{ product.description }}</div>
+            {% else %}
+            <p>No detailed description yet. Message us on Telegram for more info.</p>
+            {% endif %}
+          </div>
+        </section>
+      </div>
+
+      <div class="pdp-cell pdp-cell--specs">
         <div class="pdp-specs" aria-labelledby="pdp-specs-title">
           <h2 class="pdp-specs-title" id="pdp-specs-title">Specifications</h2>
           <table class="specs-table">
@@ -467,7 +511,6 @@
             {% endfor %}
           </table>
         </div>
-
       </div>
     </div>
 
@@ -488,16 +531,6 @@
       </div>
     </div>
 
-    <section class="pdp-desc-section" aria-labelledby="pdp-desc-heading">
-      <h2 class="pdp-desc-heading" id="pdp-desc-heading">Description</h2>
-      <div class="pdp-desc-body">
-        {% if product.description %}
-        <div style="white-space:pre-wrap">{{ product.description }}</div>
-        {% else %}
-        <p>No detailed description yet. Message us on Telegram for more info.</p>
-        {% endif %}
-      </div>
-    </section>
   </main>
 
   {% include 'shop/includes/shop_footer.html' %}
