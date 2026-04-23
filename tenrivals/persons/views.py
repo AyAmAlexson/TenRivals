@@ -1542,6 +1542,28 @@ def staff_collection_edit(request, collection_id=None):
     )
 
 
+def _blog_upload_is_svg(upload) -> bool:
+    """Blog ImageFields are raster-only (Pillow); SVG can also trigger heavy dimension probing."""
+    name = (getattr(upload, "name", "") or "").lower()
+    if name.endswith(".svg"):
+        return True
+    ct = (getattr(upload, "content_type", "") or "").lower()
+    if ct in ("image/svg+xml", "image/svg"):
+        return True
+    try:
+        upload.seek(0)
+        head = upload.read(8000)
+        upload.seek(0)
+    except Exception:
+        return False
+    stripped = head.lstrip(b"\xef\xbb\xbf").lower()
+    if stripped.startswith(b"<svg"):
+        return True
+    if stripped.startswith(b"<?xml") and b"<svg" in stripped[:4000]:
+        return True
+    return False
+
+
 def _unique_blog_slug(raw_slug: str, title: str, exclude_pk: int | None = None) -> str:
     base = slugify((raw_slug or "").strip())[:160] if raw_slug else slugify((title or "").strip())[:160]
     if not base:
@@ -1701,6 +1723,19 @@ def staff_blog_edit(request, post_id=None):
         img1 = request.FILES.get("article_image_1")
         img2 = request.FILES.get("article_image_2")
         img3 = request.FILES.get("article_image_3")
+        for upload, label in (
+            (hero, "Hero image"),
+            (card, "Card image"),
+            (img1, "Article image 1"),
+            (img2, "Article image 2"),
+            (img3, "Article image 3"),
+        ):
+            if upload and _blog_upload_is_svg(upload):
+                messages.error(
+                    request,
+                    f"{label}: SVG is not supported for blog images. Use JPEG, PNG, or WebP.",
+                )
+                return _back_to_edit()
         if hero:
             target.hero_image = hero
         if card:
