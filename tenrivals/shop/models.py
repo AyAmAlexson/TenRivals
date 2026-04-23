@@ -634,23 +634,23 @@ class BlogPost(models.Model):
         blank=True,
         help_text=_('Portrait image for the home “Featured stories” carousel (3:4 works best). Falls back to hero if empty.'),
     )
-    article_image_1 = models.ImageField(
+    article_image_1 = models.FileField(
         upload_to='shop/blog/inline/',
         null=True,
         blank=True,
-        help_text=_('Optional extra image for the body (1/3).'),
+        help_text=_('Optional inline figure (1/3). Raster (JPEG/PNG/WebP) is auto-optimized; SVG is allowed.'),
     )
-    article_image_2 = models.ImageField(
+    article_image_2 = models.FileField(
         upload_to='shop/blog/inline/',
         null=True,
         blank=True,
-        help_text=_('Optional extra image for the body (2/3).'),
+        help_text=_('Optional inline figure (2/3). Raster is auto-optimized; SVG is allowed.'),
     )
-    article_image_3 = models.ImageField(
+    article_image_3 = models.FileField(
         upload_to='shop/blog/inline/',
         null=True,
         blank=True,
-        help_text=_('Optional extra image for the body (3/3).'),
+        help_text=_('Optional inline figure (3/3). Raster is auto-optimized; SVG is allowed.'),
     )
     quote_text = models.TextField(
         blank=True,
@@ -740,7 +740,11 @@ class BlogPost(models.Model):
         return self.title
 
     def save(self, *args, **kwargs):
-        from shop.image_uploads import assign_optimized_imagefield, imagefield_changed
+        from shop.image_uploads import (
+            assign_optimized_filefield,
+            assign_optimized_imagefield,
+            imagefield_changed,
+        )
 
         img_fields = (
             'hero_image',
@@ -762,7 +766,7 @@ class BlogPost(models.Model):
         for fname in ('article_image_1', 'article_image_2', 'article_image_3'):
             f = getattr(self, fname)
             if f and imagefield_changed(prev, self, fname):
-                assign_optimized_imagefield(f, max_width=1400, max_height=1400)
+                assign_optimized_filefield(f, max_width=1400, max_height=1400)
 
         return super().save(*args, **kwargs)
 

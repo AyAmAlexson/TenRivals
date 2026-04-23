@@ -1728,9 +1728,6 @@ def staff_blog_edit(request, post_id=None):
         for upload, label in (
             (hero, "Hero image"),
             (card, "Card image"),
-            (img1, "Article image 1"),
-            (img2, "Article image 2"),
-            (img3, "Article image 3"),
         ):
             if not upload:
                 continue
@@ -1745,7 +1742,23 @@ def staff_blog_edit(request, post_id=None):
             if _blog_upload_is_svg(upload):
                 messages.error(
                     request,
-                    f"{label}: SVG is not supported for blog images. Use JPEG, PNG, or WebP.",
+                    f"{label}: SVG is not supported here. Use JPEG, PNG, or WebP for hero and card images.",
+                )
+                return _back_to_edit()
+
+        for upload, label in (
+            (img1, "Article image 1"),
+            (img2, "Article image 2"),
+            (img3, "Article image 3"),
+        ):
+            if not upload:
+                continue
+            size = getattr(upload, "size", None) or 0
+            if size > _MAX_BLOG_IMAGE_UPLOAD_BYTES:
+                messages.error(
+                    request,
+                    f"{label}: file is too large (max {_MAX_BLOG_IMAGE_UPLOAD_BYTES // (1024 * 1024)} MB). "
+                    "Resize or export a smaller file, then try again.",
                 )
                 return _back_to_edit()
         if hero:
