@@ -75,7 +75,9 @@ def optimize_raster_upload(
     if scale < 1.0:
         nw = max(1, int(w * scale))
         nh = max(1, int(h * scale))
-        im = im.resize((nw, nh), Image.Resampling.LANCZOS)
+        # Large downscales: LANCZOS is slow on big sources (e.g. multi‑MB PNG on small dynos).
+        resample = Image.Resampling.BILINEAR if scale < 0.45 else Image.Resampling.LANCZOS
+        im = im.resize((nw, nh), resample)
     elif len(raw) <= _MAX_BYTES_KEEP_ORIGINAL:
         return None
 

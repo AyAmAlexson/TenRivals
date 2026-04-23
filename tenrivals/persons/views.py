@@ -1158,6 +1158,8 @@ def staff_preorder_list(request):
 _MAX_HERO_SLIDES = 5
 _MAX_HOME_PROMO_BANNERS = 5
 _MAX_FEATURED_STORIES = 12
+# Blog save runs Pillow + S3 in the request; Heroku default gunicorn timeout is 30s.
+_MAX_BLOG_IMAGE_UPLOAD_BYTES = 30 * 1024 * 1024
 
 
 def _parse_staff_datetime(raw):
@@ -1730,7 +1732,17 @@ def staff_blog_edit(request, post_id=None):
             (img2, "Article image 2"),
             (img3, "Article image 3"),
         ):
-            if upload and _blog_upload_is_svg(upload):
+            if not upload:
+                continue
+            size = getattr(upload, "size", None) or 0
+            if size > _MAX_BLOG_IMAGE_UPLOAD_BYTES:
+                messages.error(
+                    request,
+                    f"{label}: file is too large (max {_MAX_BLOG_IMAGE_UPLOAD_BYTES // (1024 * 1024)} MB). "
+                    "Resize or export a smaller image, then try again.",
+                )
+                return _back_to_edit()
+            if _blog_upload_is_svg(upload):
                 messages.error(
                     request,
                     f"{label}: SVG is not supported for blog images. Use JPEG, PNG, or WebP.",

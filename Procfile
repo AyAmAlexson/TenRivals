@@ -1,5 +1,5 @@
 release: PYTHONPATH=TenRivals python tenrivals/manage.py migrate --noinput
-web: PYTHONPATH=TenRivals gunicorn --chdir tenrivals --workers=${WEB_CONCURRENCY:-4} tenrivals.wsgi --log-file -
+web: PYTHONPATH=TenRivals gunicorn --chdir tenrivals --workers=${WEB_CONCURRENCY:-4} --timeout ${GUNICORN_TIMEOUT:-120} tenrivals.wsgi --log-file -
 
 worker: PYTHONPATH=TenRivals celery --workdir tenrivals -A tenrivals.celery:app worker --loglevel=info
 
