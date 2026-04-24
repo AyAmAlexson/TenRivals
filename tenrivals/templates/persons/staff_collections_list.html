@@ -10,6 +10,10 @@
   .confirm-modal__title{margin:0 0 10px;font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
   .confirm-modal__text{margin:0 0 14px;font-size:14px;color:var(--muted);line-height:1.5}
   .confirm-modal__actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+  .slug-cell{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap;vertical-align:middle}
+  .slug-copy-btn{flex-shrink:0}
+  .slug-copy-btn svg{display:block}
+  .slug-copy-btn.is-done{border-color:#059669;color:#059669}
 </style>
 {% endblock %}
 {% block content %}
@@ -36,7 +40,14 @@
         <tr>
           <td class="mono">{{ coll.pk }}</td>
           <td>{{ coll.title }}</td>
-          <td class="mono">{{ coll.slug }}</td>
+          <td class="mono">
+            <span class="slug-cell">
+              <span>{{ coll.slug }}</span>
+              <button type="button" class="icon-btn slug-copy-btn js-copy-collection-path" data-path="{% url 'shop:collection_detail' coll.slug %}" title="Copy storefront path" aria-label="Copy path for {{ coll.slug }}">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              </button>
+            </span>
+          </td>
           <td>{{ coll.products.count }}</td>
           <td>{% if coll.is_archived %}<span class="badge badge--no">Archived</span>{% else %}<span class="badge badge--yes">Active</span>{% endif %}</td>
           <td>
@@ -107,6 +118,46 @@
     const form = pending;
     closeModal();
     form.submit();
+  });
+
+  function copyTextToClipboard(text){
+    if(navigator.clipboard && window.isSecureContext){
+      return navigator.clipboard.writeText(text);
+    }
+    return new Promise(function(resolve, reject){
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      try{
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        resolve();
+      }catch(e){
+        document.body.removeChild(ta);
+        reject(e);
+      }
+    });
+  }
+  document.querySelectorAll('.js-copy-collection-path').forEach(function(btn){
+    var defaultTitle = btn.getAttribute('title') || 'Copy path';
+    btn.addEventListener('click', function(){
+      var path = btn.getAttribute('data-path') || '';
+      if(!path) return;
+      copyTextToClipboard(path).then(function(){
+        btn.classList.add('is-done');
+        btn.setAttribute('title', 'Copied');
+        setTimeout(function(){
+          btn.classList.remove('is-done');
+          btn.setAttribute('title', defaultTitle);
+        }, 1600);
+      }).catch(function(){
+        window.prompt('Copy path:', path);
+      });
+    });
   });
 })();
 </script>
