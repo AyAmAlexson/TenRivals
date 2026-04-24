@@ -427,6 +427,11 @@
         padding-right:max(20px, env(safe-area-inset-right, 0px));
       }
       .hero-content{max-width:100%}
+      /* Promo / collection-style wide banners: keep left copy in frame, crop from the right */
+      .promo-carousel__slide a,
+      .promo-carousel__slide img{
+        object-position:left center;
+      }
     }
     @media(max-width:640px){
       .footer-top{grid-template-columns:1fr}
