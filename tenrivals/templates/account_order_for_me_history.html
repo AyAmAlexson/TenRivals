@@ -15,17 +15,8 @@
     *{box-sizing:border-box; margin:0; padding:0}
     body{font-family:'Saira', system-ui, sans-serif; color:var(--ink); background:#f8f8f8; min-height:100vh; display:flex; flex-direction:column}
     a{color:inherit; text-decoration:none}
-    .topbar{background:#111; color:rgba(255,255,255,.7); font-size:12px}
-    .topbar-row{display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:34px}
-    .topbar .links{display:flex; gap:20px; flex-wrap:wrap}
-    .topbar a{opacity:.8; transition:opacity .15s}
-    .topbar a:hover{opacity:1}
-    .city-select{display:inline-flex; align-items:center; opacity:1 !important; font-weight:600; cursor:default}
-    header{background:#1a1a1a}
-    .header-row{display:flex; align-items:center; justify-content:space-between; gap:20px; padding:14px 0}
-    .logo{height:36px}
-    .header-right{display:flex; align-items:center; gap:20px}
-    .auth a{font-weight:600; color:#fff; font-size:14px}
+    img{display:block;max-width:100%}
+    {% include 'shop/includes/shop_public_header_styles.html' %}
     .container{max-width:1200px; margin:0 auto; padding:0 20px}
     .page-main{flex:1; padding:40px 0}
     .page-title{font-size:24px; font-weight:800; text-transform:uppercase; letter-spacing:1px; margin:0 0 32px}
@@ -60,7 +51,7 @@
     .btn--outline{background:#fff; color:var(--accent); border:1px solid var(--accent)}
     .order-empty{text-align:center; padding:48px 24px; color:var(--muted); font-size:15px; line-height:1.5; max-width:520px; margin:0 auto}
     .order-empty a{color:var(--accent); font-weight:700}
-    .confirm-overlay{position:fixed; inset:0; background:rgba(15,23,42,.45); display:none; align-items:center; justify-content:center; z-index:12060; padding:16px}
+    .confirm-overlay{position:fixed; inset:0; background:rgba(15,23,42,.45); display:none; align-items:center; justify-content:center; z-index:36500; padding:16px}
     .confirm-overlay.is-open{display:flex}
     .confirm-modal{width:min(420px,100%); background:#fff; border:1px solid var(--line); padding:18px}
     .confirm-modal__title{margin:0 0 10px; font-size:13px; font-weight:800; letter-spacing:.08em; text-transform:uppercase}
@@ -72,35 +63,12 @@
     .alert-info{background:#eff6ff; color:#1e40af; border:1px solid #bfdbfe}
     footer{background:#1a1a1a; color:rgba(255,255,255,.5); margin-top:auto}
     .footer-bottom{padding:16px 0; font-size:12px; color:rgba(255,255,255,.3); text-align:center}
+    @media(max-width:640px){.container{padding:0 16px}.page-main{padding:28px 0}}
   </style>
 </head>
 <body>
 {% include 'includes/google_tag_manager_body.html' %}
-  <div class="topbar">
-    <div class="container">
-      <div class="topbar-row">
-        <div class="links">
-          <a href="{% url 'shop:index' %}">Shop</a>
-          <a href="{% url 'shop:order_for_me' %}">Order for me</a>
-        </div>
-        <a href="#" class="city-select" onclick="return false">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style="vertical-align:-1px; margin-right:4px"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" stroke="currentColor" stroke-width="2" fill="none"/><circle cx="12" cy="9" r="2.5" stroke="currentColor" stroke-width="1.5"/></svg>Tbilisi
-        </a>
-      </div>
-    </div>
-  </div>
-  <header>
-    <div class="container">
-      <div class="header-row">
-        <a href="{% url 'shop:index' %}" aria-label="Home">
-          <img class="logo" src="{% static 'assets/img/TR Logo 25/TR 25 LOGO HOR RED.svg' %}" alt="TR Shop">
-        </a>
-        <div class="header-right">
-          <div class="auth"><a href="{% url 'account_logout' %}">Log out</a></div>
-        </div>
-      </div>
-    </div>
-  </header>
+  {% include 'shop/includes/shop_public_site_header.html' with search_channel='stock' %}
   <div class="page-main">
     <div class="container">
       <h1 class="page-title">Order for me</h1>
@@ -175,6 +143,7 @@
   <footer>
     <div class="container"><div class="footer-bottom">© 2026 TenRivals Shop. All rights reserved.</div></div>
   </footer>
+  {% include 'shop/includes/shop_public_header_scripts.html' %}
   <script>
   (function(){
     const overlay = document.getElementById('ofm-cancel-confirm');

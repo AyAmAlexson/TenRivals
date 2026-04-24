@@ -6,6 +6,7 @@
   <title>Checkout — TR Shop</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   {% load static %}
+  {% load catalog_tags %}
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Saira:wght@400;600;800&display=swap" rel="stylesheet">
@@ -17,13 +18,8 @@
     body{font-family:'Saira',system-ui,sans-serif;color:var(--ink)}
     a{text-decoration:none;color:inherit}
     .container{max-width:1200px;margin:0 auto;padding:0 20px}
-    header{background:#1a1a1a}.header-row{display:grid;grid-template-columns:180px 1fr auto auto auto;gap:20px;align-items:center;padding:14px 0}
-    .logo{height:36px}.socials{display:flex;gap:14px}.social-link{color:rgba(255,255,255,.7)}.social-link:hover{color:#fff}
-    .auth a{font-weight:800;color:#fff;font-size:13px;text-transform:uppercase;letter-spacing:.08em}
-    .search{display:flex;align-items:center;gap:8px;border:1px solid #333;padding:9px 14px;background:#252525}
-    .search input{border:0;outline:0;width:100%;background:transparent;color:#fff}
-    .header-cart{position:relative;display:inline-flex;align-items:center;color:rgba(255,255,255,.85);padding:4px}
-    .header-cart__badge{position:absolute;top:-2px;right:-4px;min-width:18px;height:18px;padding:0 5px;background:var(--accent);color:#fff;font-size:10px;font-weight:800;border-radius:999px;display:flex;align-items:center;justify-content:center}
+    img{display:block;max-width:100%}
+    {% include 'shop/includes/shop_public_header_styles.html' %}
     .checkout{padding:26px 0 64px}
     .grid{display:grid;grid-template-columns:1fr 340px;gap:28px;align-items:start}
     @media(max-width:980px){.grid{grid-template-columns:1fr}}
@@ -52,20 +48,7 @@
 </head>
 <body>
 {% include 'includes/google_tag_manager_body.html' %}
-<header>
-  <div class="container">
-    <div class="header-row">
-      <a href="{% url 'shop:index' %}" aria-label="Home"><img class="logo" src="{% static 'assets/img/TR Logo 25/TR 25 LOGO HOR RED.svg' %}" alt="TR Shop"></a>
-      {% include 'shop/includes/shop_search_form.html' with search_channel='stock' %}
-      <nav class="socials" aria-label="Social links">
-        <a class="social-link" href="https://www.instagram.com/tennis_rivals_shop/" target="_blank" rel="noopener">Instagram</a>
-        <a class="social-link" href="https://t.me/tennis_rivals_shop_tbilisi" target="_blank" rel="noopener">Telegram</a>
-      </nav>
-      {% include 'shop/includes/shop_cart_header_link.html' %}
-      <div class="auth">{% if user.is_authenticated %}<a href="{% url 'persons:account_details' %}">Account</a>{% else %}<a href="{% url 'account_login' %}">Sign in</a>{% endif %}</div>
-    </div>
-  </div>
-</header>
+{% include 'shop/includes/shop_public_site_header.html' with search_channel='stock' %}
 
 <main class="container checkout">
   <p style="margin-bottom:14px"><a href="{% url 'shop:cart' %}" style="color:var(--muted);font-size:13px">← Back to cart</a></p>
@@ -191,5 +174,6 @@
     });
   }
 </script>
+{% include 'shop/includes/shop_public_header_scripts.html' %}
 </body>
 </html>

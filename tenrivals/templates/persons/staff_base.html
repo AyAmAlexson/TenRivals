@@ -67,14 +67,79 @@
       border-color:var(--accent);
       color:#fff;
     }
+    .staff-topbar{display:block}
+    .staff-menu-btn{
+      display:none;
+      align-items:center;
+      justify-content:center;
+      width:44px;
+      height:44px;
+      padding:0;
+      border:1px solid rgba(255,255,255,.22);
+      background:rgba(255,255,255,.06);
+      color:#fff;
+      cursor:pointer;
+      flex-shrink:0;
+      touch-action:manipulation;
+    }
+    .staff-menu-btn__bars{display:block;width:20px;height:2px;background:#fff;box-shadow:0 7px 0 #fff,0 -7px 0 #fff}
+    .staff-nav-scrim{display:none}
+    .staff-nav-drawer{
+      display:none;
+      position:fixed;
+      top:0;
+      right:0;
+      bottom:0;
+      left:0;
+      z-index:36000;
+      max-width:min(400px,100vw);
+      margin-left:auto;
+      background:#141416;
+      border-left:1px solid rgba(255,255,255,.1);
+      transform:translateX(100%);
+      visibility:hidden;
+      transition:transform .25s ease,visibility .25s;
+      flex-direction:column;
+    }
+    .staff-nav-drawer__scroll{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:max(8px,env(safe-area-inset-top)) 16px max(24px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
+    .staff-nav-drawer__head{display:flex;align-items:center;justify-content:space-between;padding:8px 0 14px;margin-bottom:8px;border-bottom:1px solid rgba(255,255,255,.1)}
+    .staff-nav-drawer__title{font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.85)}
+    .staff-nav-drawer__close{width:44px;height:44px;border:1px solid rgba(255,255,255,.2);background:transparent;color:#fff;font-size:24px;cursor:pointer}
+    .staff-drawer-toplinks{display:flex;flex-direction:column;gap:0;margin:0 0 12px;padding:0;border-bottom:1px solid rgba(255,255,255,.1)}
+    .staff-drawer-toplinks a{display:block;padding:12px 4px;font-size:14px;font-weight:600;color:rgba(255,255,255,.88);border-top:1px solid rgba(255,255,255,.06)}
+    .staff-drawer-toplinks a:first-child{border-top:none}
+    .staff-drawer-cityline{display:flex;align-items:center;padding:12px 4px;font-size:14px;font-weight:600;color:rgba(255,255,255,.72);border-top:1px solid rgba(255,255,255,.06)}
+    .staff-drawer-nav .staff-tabs{flex-direction:column;align-items:stretch;gap:0;margin:0}
+    .staff-drawer-nav .staff-tab{
+      justify-content:flex-start;
+      border-radius:0;
+      border:none;
+      border-bottom:1px solid rgba(255,255,255,.1);
+      padding:12px 14px;
+      font-size:12px;
+      letter-spacing:.08em;
+      background:rgba(255,255,255,.04);
+      color:rgba(255,255,255,.9);
+    }
+    .staff-drawer-nav .staff-tab:hover{background:rgba(255,255,255,.08);color:#fff}
+    .staff-drawer-nav .staff-tab.is-active{background:var(--accent);border-color:var(--accent);color:#fff}
     @media(max-width:1080px){
-      .header-row{
-        flex-wrap:wrap;
-      }
-      .header-right{
-        width:100%;
-        justify-content:space-between;
-      }
+      .header-row{flex-wrap:wrap}
+      .header-right{width:100%;justify-content:space-between}
+    }
+    @media(max-width:959px){
+      .staff-topbar{display:none!important}
+      .staff-menu-btn{display:inline-flex}
+      .staff-header-nav-desktop{display:none!important}
+      .staff-nav-scrim{display:block;position:fixed;inset:0;z-index:35990;background:rgba(0,0,0,.45);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .2s,visibility .2s}
+      html.staff-mobile-nav-open .staff-nav-scrim{opacity:1;visibility:visible;pointer-events:auto}
+      html.staff-mobile-nav-open{overflow:hidden}
+      .staff-nav-drawer{display:flex}
+      html.staff-mobile-nav-open .staff-nav-drawer{transform:translateX(0);visibility:visible}
+      .header-row{flex-wrap:nowrap;align-items:center;gap:12px}
+      .header-right{flex:1;min-width:0;justify-content:flex-end;gap:10px;width:auto}
+      .staff-site-header .user-menu:hover .user-dropdown{display:none!important}
+      .staff-site-header .user-menu.is-open .user-dropdown{display:block!important;padding-top:8px}
     }
     .staff-narrow{max-width:720px; margin:0 auto}
     .card{background:#fff; border:1px solid var(--line); padding:24px; margin-bottom:24px}
@@ -135,7 +200,7 @@
 </head>
 <body>
   {% include 'includes/google_tag_manager_body.html' %}
-  <div class="topbar">
+  <div class="topbar staff-topbar">
     <div class="container">
       <div class="topbar-row">
         <div class="links">
@@ -149,18 +214,20 @@
     </div>
   </div>
 
-  <header>
+  <header class="staff-site-header">
     <div class="container">
       <div class="header-row">
         <a href="{% url 'shop:index' %}" aria-label="Home">
           <img class="logo" src="{% static 'assets/img/TR Logo 25/TR 25 LOGO HOR RED.svg' %}" alt="TR Shop">
         </a>
         <div class="header-right">
-          {% include 'persons/staff_nav.html' %}
+          <div class="staff-header-nav-desktop">
+            {% include 'persons/staff_nav.html' %}
+          </div>
           <div class="auth">
             {% if user.is_authenticated %}
             <div class="user-menu">
-              <button type="button" class="user-avatar">{{ user.first_name|make_list|first|default:"?" }}{{ user.last_name|make_list|first|default:"?" }}</button>
+              <button type="button" class="user-avatar" aria-haspopup="true" aria-expanded="false">{{ user.first_name|make_list|first|default:"?" }}{{ user.last_name|make_list|first|default:"?" }}</button>
               <div class="user-dropdown">
                 <a href="{% url 'persons:account_details' %}">Account</a>
                 <a href="{% url 'account_logout' %}">Log out</a>
@@ -170,10 +237,33 @@
             <a href="{% url 'account_login' %}">Sign in</a>
             {% endif %}
           </div>
+          <button type="button" class="staff-menu-btn" id="staff-site-menu-open" aria-controls="staff-public-nav" aria-expanded="false" aria-label="Open menu">
+            <span class="staff-menu-btn__bars" aria-hidden="true"></span>
+          </button>
         </div>
       </div>
     </div>
   </header>
+
+  <div class="staff-nav-scrim" id="staff-nav-scrim" aria-hidden="true"></div>
+  <div class="staff-nav-drawer" id="staff-public-nav" role="dialog" aria-modal="true" aria-labelledby="staff-drawer-title" aria-hidden="true" tabindex="-1">
+    <div class="staff-nav-drawer__scroll">
+      <div class="staff-nav-drawer__head">
+        <span class="staff-nav-drawer__title" id="staff-drawer-title">Menu</span>
+        <button type="button" class="staff-nav-drawer__close" id="staff-site-menu-close" aria-label="Close menu">&times;</button>
+      </div>
+      <div class="staff-drawer-toplinks">
+        <a href="{% url 'shop:index' %}">Shop</a>
+        <a href="{% url 'shop:order_for_me' %}">Order for me</a>
+        <span class="staff-drawer-cityline" aria-label="Location">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style="vertical-align:-1px;margin-right:4px"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" stroke="currentColor" stroke-width="2" fill="none"/><circle cx="12" cy="9" r="2.5" stroke="currentColor" stroke-width="1.5"/></svg>Tbilisi
+        </span>
+      </div>
+      <div class="staff-drawer-nav">
+        {% include 'persons/staff_nav.html' %}
+      </div>
+    </div>
+  </div>
 
   <div class="page-main">
     <div class="container">
@@ -195,5 +285,79 @@
       <div class="footer-bottom">© 2026 TenRivals Shop. All rights reserved.</div>
     </div>
   </footer>
+  <script>
+  (function () {
+    var MQ = '(max-width: 959px)';
+    function mq() { return window.matchMedia(MQ).matches; }
+
+    function closeStaffNav() {
+      document.documentElement.classList.remove('staff-mobile-nav-open');
+      var rail = document.getElementById('staff-public-nav');
+      var scrim = document.getElementById('staff-nav-scrim');
+      var openBtn = document.getElementById('staff-site-menu-open');
+      if (rail) rail.setAttribute('aria-hidden', 'true');
+      if (scrim) scrim.setAttribute('aria-hidden', 'true');
+      if (openBtn) openBtn.setAttribute('aria-expanded', 'false');
+    }
+
+    function openStaffNav() {
+      document.documentElement.classList.add('staff-mobile-nav-open');
+      var rail = document.getElementById('staff-public-nav');
+      var scrim = document.getElementById('staff-nav-scrim');
+      var openBtn = document.getElementById('staff-site-menu-open');
+      if (rail) rail.setAttribute('aria-hidden', 'false');
+      if (scrim) scrim.setAttribute('aria-hidden', 'false');
+      if (openBtn) openBtn.setAttribute('aria-expanded', 'true');
+    }
+
+    function toggleStaffNav() {
+      if (document.documentElement.classList.contains('staff-mobile-nav-open')) closeStaffNav();
+      else openStaffNav();
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+      var openBtn = document.getElementById('staff-site-menu-open');
+      var closeBtn = document.getElementById('staff-site-menu-close');
+      var scrim = document.getElementById('staff-nav-scrim');
+      if (openBtn) openBtn.addEventListener('click', function (e) {
+        e.preventDefault();
+        if (!mq()) return;
+        toggleStaffNav();
+      });
+      if (closeBtn) closeBtn.addEventListener('click', function (e) {
+        e.preventDefault();
+        closeStaffNav();
+      });
+      if (scrim) scrim.addEventListener('click', function () { closeStaffNav(); });
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeStaffNav();
+      });
+      window.addEventListener('resize', function () {
+        if (!mq()) closeStaffNav();
+      });
+
+      document.querySelectorAll('.staff-site-header .user-avatar').forEach(function (btn) {
+        btn.addEventListener('click', function (e) {
+          if (!mq()) return;
+          e.preventDefault();
+          e.stopPropagation();
+          var menu = btn.closest('.user-menu');
+          if (!menu) return;
+          var open = menu.classList.toggle('is-open');
+          btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        });
+      });
+      document.addEventListener('click', function (e) {
+        if (!mq()) return;
+        if (e.target.closest('.staff-site-header .user-menu')) return;
+        document.querySelectorAll('.staff-site-header .user-menu.is-open').forEach(function (m) {
+          m.classList.remove('is-open');
+          var b = m.querySelector('.user-avatar');
+          if (b) b.setAttribute('aria-expanded', 'false');
+        });
+      });
+    });
+  })();
+  </script>
 </body>
 </html>

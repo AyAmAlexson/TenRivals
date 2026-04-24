@@ -425,7 +425,6 @@
     @media(max-width:640px){
       .cat-seg{flex:0 0 42%; min-width:132px; padding:10px 8px}
       .footer-top{grid-template-columns:1fr 1fr}
-      .auth{display:none}
       .hero-nav{width:38px; height:38px}
       .product-rail__cell{flex-basis:78vw; min-width:78vw}
       .brand-logo-link{height:clamp(46px,14vw,58px);padding:0 4px}
@@ -459,63 +458,7 @@
 <body>
 {% include 'includes/google_tag_manager_body.html' %}
   <div class="build-version">2.48</div>
-  <!-- Top information bar -->
-  <div class="topbar">
-    <div class="container">
-      <div class="topbar-row">
-        <div class="links">
-          {% include 'shop/includes/shop_info_nav_links.html' %}
-          {% if user.is_superuser %}<a href="{% url 'administration:staff_users' %}">Staff</a>{% endif %}
-        </div>
-        <a href="#" class="city-select" onclick="return false">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style="vertical-align:-1px; margin-right:4px"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" stroke="currentColor" stroke-width="2" fill="none"/><circle cx="12" cy="9" r="2.5" stroke="currentColor" stroke-width="1.5"/></svg>Tbilisi
-        </a>
-      </div>
-    </div>
-  </div>
-
-  <!-- Header with logo, search and auth -->
-  <header>
-    <div class="container">
-      <div class="header-row">
-        <a href="{% url 'shop:index' %}" class="brand" aria-label="Home">
-          <img class="logo" src="{% static 'assets/img/TR Logo 25/TR 25 LOGO HOR RED.svg' %}" alt="TR Shop">
-        </a>
-        {% include 'shop/includes/shop_search_form.html' %}
-        <!-- Social icon links instead of buttons -->
-        <nav class="socials" aria-label="Social links">
-          <a class="social-link" href="https://www.instagram.com/tennis_rivals_shop/" target="_blank" rel="noopener" aria-label="Instagram" title="Instagram">
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" aria-hidden="true">
-              <rect x="3" y="3" width="18" height="18" rx="0" stroke="currentColor" stroke-width="1.6"/>
-              <circle cx="12" cy="12" r="4.2" stroke="currentColor" stroke-width="1.6"/>
-              <circle cx="17.5" cy="6.5" r="1.2" fill="currentColor"/>
-            </svg>
-          </a>
-          <a class="social-link" href="https://t.me/tennis_rivals_shop_tbilisi" target="_blank" rel="noopener" aria-label="Telegram" title="Telegram">
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" aria-hidden="true">
-              <path d="M21 4L3 11l6 2 2 6 3-4 4.5 3L21 4Z" stroke="currentColor" stroke-width="1.6" fill="none" />
-            </svg>
-          </a>
-        </nav>
-        {% include 'shop/includes/shop_cart_header_link.html' %}
-        <div class="auth">
-          {% if user.is_authenticated %}
-          <div class="user-menu">
-            <button class="user-avatar">{{ user.first_name|make_list|first|default:"?" }}{{ user.last_name|make_list|first|default:"?" }}</button>
-            <div class="user-dropdown">
-              <a href="{% url 'persons:account_details' %}">Account</a>
-              <a href="{% url 'account_logout' %}">Log out</a>
-            </div>
-          </div>
-          {% else %}
-          <a href="{% url 'account_login' %}">Sign in</a>
-          {% endif %}
-        </div>
-      </div>
-    </div>
-  </header>
-
-  {% include 'shop/includes/shop_public_main_nav.html' %}
+  {% include 'shop/includes/shop_public_site_header.html' %}
 
   <!-- Hero carousel -->
   <section class="hero" id="shop-hero" data-hero-carousel data-interval="7000">
@@ -902,5 +845,6 @@
     });
   })();
   </script>
+  {% include 'shop/includes/shop_public_header_scripts.html' %}
 </body>
 </html>
