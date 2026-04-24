@@ -134,6 +134,7 @@
 
         <section class="card">
           <h2>4. Payment Method</h2>
+          <p class="hint" style="margin-bottom:12px">You are not charged on the website. Pay when your order arrives (card terminal or cash) or by bank transfer if you select that option — see <a href="{% url 'shop:info_payment' %}" style="color:var(--accent);font-weight:700">Payment</a> for details.</p>
           <label class="radio"><input type="radio" name="payment_method" value="COD" {% if checkout_contact.payment_method == 'COD' %}checked{% endif %}> <span>Payment on delivery</span></label>
           <label class="radio"><input type="radio" name="payment_method" value="TRANSFER" {% if checkout_contact.payment_method == 'TRANSFER' %}checked{% endif %}> <span>Bank transfer to TBC account</span></label>
           <label class="radio"><input type="radio" value="CARD" disabled> <span>Online card payment — coming soon</span></label>

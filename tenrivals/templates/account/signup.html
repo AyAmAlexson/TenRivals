@@ -34,7 +34,8 @@
     .field .field-error{font-size:12px; color:#b91c1c; margin-top:4px}
 
     .check-row{display:flex; align-items:flex-start; gap:8px; margin-bottom:12px; font-size:13px; color:#64748b; line-height:1.4}
-    .check-row input[type="checkbox"]{width:16px; height:16px; accent-color:#B20009; margin-top:1px; flex-shrink:0}
+    .check-row--terms{font-size:13px;color:#334155}
+    .check-row input[type="checkbox"]{width:16px; height:16px; accent-color:#B20009; margin-top:3px; flex-shrink:0}
     .check-row a{color:#B20009}
     .check-row a:hover{text-decoration:underline}
 
@@ -95,22 +96,25 @@
         <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
         {% endif %}
 
-        <div class="check-row">
+        <div class="check-row check-row--terms">
           {{ form.terms_accepted }}
           <label for="{{ form.terms_accepted.id_for_label }}">
-            {% trans "By submitting, I agree to the" %}
-            <a href="{% url 'shop:legal_terms' %}" target="_blank" rel="noopener">{% trans "Terms & Conditions" %}</a>,
-            <a href="{% url 'shop:legal_privacy' %}" target="_blank" rel="noopener">{% trans "Privacy Policy" %}</a>
+            {% trans "I have read and agree to the" %}
+            <a href="{% url 'shop:legal_terms' %}" target="_blank" rel="noopener">{% trans "Terms and conditions" %}</a>,
+            <a href="{% url 'shop:legal_privacy' %}" target="_blank" rel="noopener">{% trans "Privacy policy" %}</a>,
             {% trans "and" %}
-            <a href="{% url 'shop:legal_cookies' %}" target="_blank" rel="noopener">{% trans "Cookie Policy" %}</a>.
+            <a href="{% url 'shop:legal_cookies' %}" target="_blank" rel="noopener">{% trans "Cookie policy" %}</a>.
+            {% trans "Payment is on delivery (card or cash) or by bank transfer where offered; online card checkout is not available yet — see" %}
+            <a href="{% url 'shop:info_payment' %}" target="_blank" rel="noopener">{% trans "Payment" %}</a>.
           </label>
         </div>
         {% if form.terms_accepted.errors %}<div class="field-error" style="margin-top:-6px;margin-bottom:10px">{{ form.terms_accepted.errors }}</div>{% endif %}
 
         <div class="check-row">
-          <input type="checkbox" value="true" checked id="id_newsletter" name="newsletter_opt_in">
-          <label for="id_newsletter">{% trans "I agree to receive news and offers" %}</label>
+          {{ form.newsletter_opt_in }}
+          <label for="{{ form.newsletter_opt_in.id_for_label }}">{{ form.newsletter_opt_in.label }}</label>
         </div>
+        {% if form.newsletter_opt_in.errors %}<div class="field-error" style="margin-top:-8px;margin-bottom:10px">{{ form.newsletter_opt_in.errors }}</div>{% endif %}
 
         <div class="actions">
           <button class="btn-submit" id="submit" type="submit">{% trans "Create Account" %}</button>

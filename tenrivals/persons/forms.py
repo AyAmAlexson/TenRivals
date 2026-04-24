@@ -44,9 +44,16 @@ class CustomLoginForm(LoginForm):
 
 class CustomSignupForm(SignupForm):
     terms_accepted = forms.BooleanField(
-        label=_('I accept the Terms and Conditions'),
+        label=_('I have read and agree to the Terms, Privacy Policy, and Cookie Policy'),
         required=True,
-        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'})
+        error_messages={'required': _('You must accept the terms and policies to create an account.')},
+        widget=forms.CheckboxInput(
+            attrs={
+                'class': 'form-check-input',
+                'required': True,
+                'aria-required': 'true',
+            }
+        ),
     )
     newsletter_opt_in = forms.BooleanField(
         label=_('I agree to receive news and offers'),
@@ -72,14 +79,8 @@ class CustomSignupForm(SignupForm):
         self.fields['email'].label = 'Email'
         self.fields['password1'].label = 'Password'
         self.fields['password2'].label = 'Confirm Password'
-
-    def clean_terms_accepted(self):
-        accepted = self.cleaned_data.get('terms_accepted')
-        if not accepted:
-            raise forms.ValidationError(
-                _('You must agree to the Terms, Privacy Policy, and Cookie Policy to continue.')
-            )
-        return accepted
+        # Match previous signup UX: newsletter pre-checked unless user opts out.
+        self.fields['newsletter_opt_in'].initial = True
 
     def save(self, request):
         user = super(CustomSignupForm, self).save(request)

@@ -22,7 +22,7 @@
 
 <div class="info-section">
   <h2 class="info-h2">3. Products &amp; information</h2>
-  <p class="info-prose">We aim for accurate descriptions, images, and availability. Minor differences (e.g. manufacturer packaging changes) are not defects. If an item is unavailable after you pay or confirm, we will refund that item or the order as applicable and notify you.</p>
+  <p class="info-prose">We aim for accurate descriptions, images, and availability. Minor differences (e.g. manufacturer packaging changes) are not defects. If an item is unavailable after you have placed an order or paid (including pay-on-delivery arrangements), we will refund or adjust that item or the order as applicable and notify you.</p>
 </div>
 
 <div class="info-section">
@@ -32,15 +32,16 @@
 
 <div class="info-section">
   <h2 class="info-h2">5. Orders &amp; contract</h2>
-  <p class="info-prose">Checkout steps on the site are an offer to buy. The contract is formed when we <strong>confirm acceptance</strong> — typically after successful <strong>payment authorisation</strong> (for online card payment) or when we confirm your order by message, as indicated at checkout. We may refuse or cancel orders for stock, legal, or good-faith fraud-prevention reasons; in that case you will not be charged or we will refund.</p>
+  <p class="info-prose">Checkout steps on the site are an offer to buy. The contract is formed when we <strong>confirm acceptance</strong> of your order — for example by email, SMS, Telegram, or another channel we use to confirm the order and delivery details. <strong>Online card payment on the website is not available yet;</strong> payment is normally collected <strong>on delivery</strong> (card terminal or cash in GEL) or by <strong>bank transfer</strong> where we agree that method, as described on our <a href="{% url 'shop:info_payment' %}" style="color:var(--accent);font-weight:600">Payment</a> page. We may refuse or cancel orders for stock, legal, or good-faith fraud-prevention reasons; in that case you will not owe payment for undelivered goods or we will refund amounts already received, as applicable.</p>
 </div>
 
 <div class="info-section">
   <h2 class="info-h2">6. Payment</h2>
-  <p class="info-prose">You can pay as described on <a href="{% url 'shop:info_payment' %}" style="color:var(--accent);font-weight:600">Payment</a>, including:</p>
+  <p class="info-prose">You can pay as described on <a href="{% url 'shop:info_payment' %}" style="color:var(--accent);font-weight:600">Payment</a>. At present that means in practice:</p>
   <ul class="info-ul" style="margin-top:10px">
-    <li><strong>Bank card on the website:</strong> You enter card details in our checkout environment provided by our payment partner. The partner processes the transaction under its licences and security rules (PCI DSS). We receive confirmation and references needed to fulfil the order, not your full card number.</li>
-    <li><strong>Other methods</strong> (e.g. card terminal on delivery, cash on delivery, bank transfer) where we offer them remain subject to the same order total and fiscal documentation rules.</li>
+    <li><strong>Pay on delivery:</strong> by <strong>bank card</strong> (courier POS terminal) or <strong>cash in GEL</strong>, unless we have agreed otherwise in writing.</li>
+    <li><strong>Bank transfer</strong> where we offer it for your order.</li>
+    <li><strong>Online card payment in checkout</strong> may be added later; until then, do not expect to enter card details on our website for immediate capture. When available, it will be operated by a licensed payment partner under its rules; we will update these terms and the Payment page.</li>
   </ul>
 </div>
 
