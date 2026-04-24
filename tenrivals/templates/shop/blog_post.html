@@ -94,11 +94,17 @@
     .carousel-controls{
       --carousel-accent:#141c2c;
       --carousel-muted:#9da4af;
-      display:flex;align-items:center;justify-content:center;gap:10px;padding-top:4px;
+      display:flex;align-items:center;justify-content:center;
+      width:100%;max-width:720px;margin:0 auto;
+      gap:clamp(18px,4vw,32px);
+      padding:8px clamp(12px,3vw,28px) 6px;
+      box-sizing:border-box;
     }
     .carousel-controls__arrow{
       border:none;background:transparent;color:var(--carousel-accent);cursor:pointer;
-      padding:0 4px;font-size:16px;line-height:1;font-weight:800;opacity:.78;
+      padding:6px clamp(10px,2.5vw,18px);font-size:17px;line-height:1;font-weight:800;
+      min-width:2.75rem;
+      opacity:.78;
       transform:translateX(0);
       transition:color .15s,opacity .15s,transform .15s ease;
     }
@@ -106,7 +112,7 @@
     .carousel-controls__arrow[data-rail-prev]:hover:not(:disabled){transform:translateX(-2px)}
     .carousel-controls__arrow[data-rail-next]:hover:not(:disabled){transform:translateX(2px)}
     .carousel-controls__arrow:disabled{opacity:.35;cursor:not-allowed}
-    .carousel-controls__dots{display:flex;align-items:center;gap:6px}
+    .carousel-controls__dots{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:12px 14px}
     .carousel-controls__dot{
       border:none;background:transparent;cursor:pointer;padding:0;
       width:8px;height:8px;min-width:8px;border-radius:50%;
