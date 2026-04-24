@@ -1,4 +1,5 @@
 {# Shared topbar + header row + catalog nav rail — embed inside parent <style> (no wrapper tag). #}
+  html{min-width:320px}
   /* Topbar (desktop; hidden on small screens — links live under Help in mobile drawer) */
   .topbar{background:#111; color:rgba(255,255,255,.7); font-size:12px}
   .topbar .topbar-row{display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:34px}
@@ -17,6 +18,14 @@
     padding:14px 0;
   }
   .header-toolbar{
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
+    gap:10px 12px;
+    flex-wrap:nowrap;
+    min-width:0;
+  }
+  .header-toolbar-cluster{
     display:flex;
     align-items:center;
     justify-content:flex-end;
@@ -94,6 +103,7 @@
   .shop-mobile-drawer-head,
   .shop-mobile-help-details,
   .shop-mobile-city-line{display:none}
+  .shop-mobile-ofm-cta{display:none}
 
   .shop-main-nav{
     background:#1a1a1a; position:relative; z-index:9999; width:100%;
@@ -156,15 +166,29 @@
   @media(max-width:959px){
     .topbar{display:none!important}
     .header-row{
-      grid-template-columns:1fr auto;
-      grid-template-areas:'brand tools' 'search search';
-      gap:10px 12px;
+      grid-template-columns:1fr;
+      grid-template-areas:'brand' 'toolbar' 'search';
+      gap:12px 16px;
       align-items:center;
     }
-    .header-row > .brand{grid-area:brand; justify-self:start; min-width:0}
+    .header-row > .brand{
+      grid-area:brand;
+      justify-self:center;
+      min-width:0;
+      width:100%;
+      display:flex;
+      justify-content:center;
+    }
     .header-row > .search{grid-area:search; width:100%; min-width:0}
-    .header-toolbar{grid-area:tools}
-    .site-header-menu-btn{display:inline-flex}
+    .header-toolbar{
+      grid-area:toolbar;
+      width:100%;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+    }
+    .header-toolbar-cluster{flex:1; justify-content:flex-end; min-width:0}
+    .site-header-menu-btn{display:inline-flex; flex-shrink:0}
     .shop-mobile-nav-scrim{
       display:block;
       position:fixed;
@@ -239,7 +263,7 @@
       display:block;
       border:1px solid rgba(255,255,255,.12);
       background:rgba(255,255,255,.04);
-      margin-bottom:10px;
+      margin:14px 0 10px;
     }
     .shop-mobile-help-summary{
       list-style:none;
@@ -276,6 +300,25 @@
       margin:0 0 6px;
       border-bottom:1px solid rgba(255,255,255,.1);
     }
+    .shop-main-nav .nav-link--primary{display:none!important}
+    .shop-mobile-ofm-cta{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      width:100%;
+      box-sizing:border-box;
+      margin:10px 0 4px;
+      padding:12px 14px;
+      font-size:12px;
+      font-weight:800;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      text-decoration:none !important;
+      color:#fff;
+      background:var(--accent);
+      border:1px solid rgba(255,255,255,.15);
+    }
+    .shop-mobile-ofm-cta:hover{background:var(--accent-dark);color:#fff}
     .shop-main-nav{border-top:none}
     .shop-main-nav .nav-row{
       flex-direction:column;

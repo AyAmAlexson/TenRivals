@@ -88,6 +88,37 @@
     .service-strip__item{padding:0}
     .service-strip__item + .service-strip__item{border-left:none;border-top:1px solid rgba(15,23,42,.18);padding-top:12px;margin-top:12px}
   }
+  .footer{background:#1a1a1a;color:rgba(255,255,255,.5)}
+  .footer-top{
+    padding:32px 0;
+    display:grid;
+    grid-template-columns:2fr 1fr 1fr 1fr;
+    gap:24px;
+  }
+  .footer h4{color:#fff;margin:0 0 12px;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.08em}
+  .footer a{display:block;padding:4px 0;color:rgba(255,255,255,.5);font-size:13px;transition:color .15s;text-decoration:none}
+  .footer a:hover{color:#fff}
+  .footer p{font-size:13px;line-height:1.5}
+  .footer-bottom{border-top:1px solid rgba(255,255,255,.08);padding:16px 0;font-size:12px;color:rgba(255,255,255,.3)}
+  @media(max-width:959px){
+    .footer-top{
+      grid-template-columns:1fr;
+      gap:32px;
+    }
+    .footer-col-brand{
+      display:flex;
+      flex-direction:column;
+      align-items:flex-start;
+      max-width:100%;
+    }
+    .footer .footer-cta-row{
+      flex-direction:column;
+      align-items:stretch;
+      width:100%;
+      max-width:320px;
+    }
+    .footer .footer-cta-row .btn{width:100%;justify-content:center;box-sizing:border-box}
+  }
 </style>
 <section class="service-strip" aria-label="Customer service highlights">
   <div class="container">

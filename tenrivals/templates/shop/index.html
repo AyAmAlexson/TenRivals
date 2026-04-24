@@ -418,13 +418,18 @@
 
     /* Responsive */
     @media(max-width:1024px){
-      .cat-rail{overflow-x:auto; -webkit-overflow-scrolling:touch; scroll-snap-type:x mandatory}
-      .cat-seg{flex:0 0 32%; min-width:140px; scroll-snap-align:start}
       .brands-marquee__track{animation-duration:62s}
     }
+    @media(max-width:959px){
+      .cat-strip{display:none!important}
+      .hero .hero-inner.container{
+        padding-left:max(20px, env(safe-area-inset-left, 0px));
+        padding-right:max(20px, env(safe-area-inset-right, 0px));
+      }
+      .hero-content{max-width:100%}
+    }
     @media(max-width:640px){
-      .cat-seg{flex:0 0 42%; min-width:132px; padding:10px 8px}
-      .footer-top{grid-template-columns:1fr 1fr}
+      .footer-top{grid-template-columns:1fr}
       .hero-nav{width:38px; height:38px}
       .product-rail__cell{flex-basis:78vw; min-width:78vw}
       .brand-logo-link{height:clamp(46px,14vw,58px);padding:0 4px}

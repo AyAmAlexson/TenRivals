@@ -67,6 +67,33 @@
     .catalog-bar__count{font-size:13px; font-weight:400; color:var(--muted); text-transform:none; white-space:nowrap}
     .catalog-bar__right{display:flex; align-items:center; gap:12px; flex-wrap:wrap}
     .preorder-layout{display:grid; grid-template-columns:minmax(220px, 260px) 1fr; gap:40px; align-items:start}
+    .catalog-filters-toggle{
+      display:none;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      width:100%;
+      padding:12px 16px;
+      margin:0 0 16px;
+      box-sizing:border-box;
+      font-family:inherit;
+      font-size:12px;
+      font-weight:800;
+      letter-spacing:.1em;
+      text-transform:uppercase;
+      color:var(--ink);
+      background:#fff;
+      border:1px solid var(--line);
+      cursor:pointer;
+      touch-action:manipulation;
+    }
+    .catalog-filters-toggle__chev{
+      display:inline-block;
+      font-size:10px;
+      line-height:1;
+      transition:transform .2s ease;
+    }
+    .preorder-filters-column.is-open .catalog-filters-toggle__chev{transform:rotate(180deg)}
     .preorder-filters{
       border:1px solid var(--line); background:#fff; padding:18px 16px;
       position:sticky; top:12px; align-self:start;
@@ -134,6 +161,9 @@
     @media(max-width:900px){
       .preorder-layout{grid-template-columns:1fr}
       .preorder-filters{position:static}
+      .catalog-filters-toggle{display:flex}
+      .preorder-filters-column:not(.is-open) .preorder-filters{display:none}
+      .preorder-filters-column.is-open .preorder-filters{display:block}
     }
     @media(max-width:768px){.container{padding:0 20px}}
     @media(max-width:640px){
@@ -186,7 +216,12 @@
     {% endif %}
 
     <div class="preorder-layout">
-      <aside class="preorder-filters" aria-label="Filters">
+      <div class="preorder-filters-column" id="catalog-filters-column">
+        <button type="button" class="catalog-filters-toggle" id="catalog-filters-toggle" aria-expanded="false" aria-controls="catalog-filters-aside">
+          <span>Filters</span>
+          <span class="catalog-filters-toggle__chev" aria-hidden="true">▼</span>
+        </button>
+        <aside class="preorder-filters" id="catalog-filters-aside" aria-label="Filters">
         <p class="preorder-filters-title">Filters</p>
 
         <div class="preorder-filter-group">
@@ -292,7 +327,8 @@
         </div>
         {% endif %}
         {% endif %}
-      </aside>
+        </aside>
+      </div>
 
       <div class="preorder-results">
         {% if browse_mode == 'preorder' %}
@@ -332,5 +368,29 @@
 
   {% include 'shop/includes/shop_footer.html' %}
   {% include 'shop/includes/shop_public_header_scripts.html' %}
+  <script>
+  (function () {
+    var col = document.getElementById('catalog-filters-column');
+    var btn = document.getElementById('catalog-filters-toggle');
+    if (!col || !btn) return;
+    var mq = window.matchMedia('(max-width:900px)');
+    function sync() {
+      if (mq.matches) {
+        btn.setAttribute('aria-expanded', col.classList.contains('is-open') ? 'true' : 'false');
+      } else {
+        col.classList.add('is-open');
+        btn.setAttribute('aria-expanded', 'true');
+      }
+    }
+    btn.addEventListener('click', function () {
+      if (!mq.matches) return;
+      col.classList.toggle('is-open');
+      sync();
+    });
+    if (mq.addEventListener) mq.addEventListener('change', sync);
+    else if (mq.addListener) mq.addListener(sync);
+    sync();
+  })();
+  </script>
 </body>
 </html>
