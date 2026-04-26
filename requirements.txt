@@ -19,7 +19,6 @@ Django==5.0.1
 django-allauth==0.57.0
 django-allauth-ui==0.2.0
 django-celery-beat==2.8.0
-django-debug-toolbar==5.0.1
 django-environ==0.11.2
 django-filter==23.5
 django-ratelimit==4.1.0
@@ -27,8 +26,6 @@ django-heroku==0.3.1
 django-storages[s3]==1.14.6
 django-timezone-field==7.1
 django-widget-tweaks==1.5.0
-environ==1.0
-Faker==33.3.1
 gunicorn==21.2.0
 h11==0.14.0
 httpcore==1.0.7
@@ -40,7 +37,6 @@ oauthlib==3.2.2
 packaging==23.2
 pillow==11.0.0
 prompt_toolkit==3.0.50
-psycopg2==2.9.10
 psycopg2-binary==2.9.10
 pycparser==2.21
 PyJWT==2.8.0
