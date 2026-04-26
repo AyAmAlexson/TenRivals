@@ -544,6 +544,14 @@ else:
 
 RATELIMIT_VIEW = 'tenrivals.error_views.ratelimit_response'
 RATELIMIT_ENABLE = env.bool('RATELIMIT_ENABLE', default=True)
+# When Redis (RATELIMIT_REDIS_URL) is misconfigured or unreachable, allow requests instead of 500.
+RATELIMIT_FAIL_OPEN_ON_REDIS_DOWN = env.bool(
+    'RATELIMIT_FAIL_OPEN_ON_REDIS_DOWN', default=True
+)
+
+from tenrivals.ratelimit_cache_patch import install as _install_ratelimit_redis_fail_open
+
+_install_ratelimit_redis_fail_open()
 
 _SENTRY_DSN = env.str('SENTRY_DSN', default='').strip()
 if _SENTRY_DSN:
