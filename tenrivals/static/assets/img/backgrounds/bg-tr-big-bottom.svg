@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 220" xml:space="preserve">
+  <style type="text/css">
+    .fill-surface{fill:#F2F6FC;}
+    .fill-accent{fill:#B20009;opacity:0.12;}
+  </style>
+  <path class="fill-surface" d="M0,0h1440v120c-120,28-240,42-360,42s-240-14-360-42S480,64,360,64S120,92,0,120V0z"/>
+  <path class="fill-accent" d="M0,180c160,24,320,40,480,40s320-16,480-40c160-24,320-40,480-40v80H0V180z"/>
+</svg>
