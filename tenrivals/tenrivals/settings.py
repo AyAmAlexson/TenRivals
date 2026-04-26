@@ -18,7 +18,6 @@ USE_S3 = env.bool('USE_S3', default=('DYNO' in os.environ))
 ALLOWED_HOSTS = [
     '127.0.0.1',
     'localhost',
-    '.herokuapp.com',
     'tenrivals.com',
     '.tenrivals.com',
 ]
@@ -27,8 +26,6 @@ if _EXTRA_ALLOWED:
     ALLOWED_HOSTS = [*ALLOWED_HOSTS, *_EXTRA_ALLOWED]
 
 CSRF_TRUSTED_ORIGINS = [
-    'https://ten-rivals-ee84d08ca066.herokuapp.com',
-    'https://ten-rivals.herokuapp.com',
     'http://localhost:8000',
     'http://127.0.0.1:8000',
     'http://localhost:80',
@@ -40,12 +37,6 @@ _EXTRA_CSRF = env.list('EXTRA_CSRF_TRUSTED_ORIGINS', default=[])
 if _EXTRA_CSRF:
     CSRF_TRUSTED_ORIGINS = [*CSRF_TRUSTED_ORIGINS, *_EXTRA_CSRF]
 
-# Heroku sets HEROKU_APP_NAME; CSRF Referer must match or POST forms return 403 (cart remove, login, etc.).
-_heroku_app = os.environ.get('HEROKU_APP_NAME', '').strip()
-if _heroku_app:
-    _heroku_origin = f'https://{_heroku_app}.herokuapp.com'
-    if _heroku_origin not in CSRF_TRUSTED_ORIGINS:
-        CSRF_TRUSTED_ORIGINS = [*CSRF_TRUSTED_ORIGINS, _heroku_origin]
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
