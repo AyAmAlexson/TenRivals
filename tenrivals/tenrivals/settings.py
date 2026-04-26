@@ -564,5 +564,6 @@ if _SENTRY_DSN:
         dsn=_SENTRY_DSN,
         integrations=[DjangoIntegration()],
         traces_sample_rate=env.float('SENTRY_TRACES_SAMPLE_RATE', default=0.05),
-        send_default_pii=False,
+        # Match Sentry wizard when SENTRY_SEND_DEFAULT_PII=true (headers, IP). Default off for storefront privacy.
+        send_default_pii=env.bool('SENTRY_SEND_DEFAULT_PII', default=False),
     )

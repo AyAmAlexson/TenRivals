@@ -13,3 +13,8 @@ def server_error(request):
 
 def ratelimit_response(request, exception):
     return render(request, 'errors/429.html', status=429)
+
+
+def sentry_debug_trigger(request):
+    """Intentional error to verify Sentry. Registered only when DEBUG is True."""
+    division_by_zero = 1 / 0

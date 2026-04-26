@@ -44,8 +44,11 @@ urlpatterns = [
 
 if settings.DEBUG:
     import debug_toolbar
+    from tenrivals.error_views import sentry_debug_trigger
+
     urlpatterns = [
         path('__debug__/', include(debug_toolbar.urls)),
+        path('sentry-debug/', sentry_debug_trigger),
     ] + urlpatterns
 
 handler404 = 'tenrivals.error_views.page_not_found'
