@@ -1,6 +1,7 @@
 from allauth.account.views import LoginView, SignupView
 from .forms import CustomLoginForm, CustomSignupForm
 from django.utils.decorators import method_decorator
+from django_ratelimit.decorators import ratelimit
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.urls import reverse, reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin,PermissionRequiredMixin, UserPassesTestMixin
@@ -106,6 +107,10 @@ def get_telegram_bot_instance():
         logger.warning("Telegram bot configuration is missing, cannot create instance.")
         return None
 
+@method_decorator(
+    ratelimit(key='ip', rate='30/m', method='POST', block=True),
+    name='dispatch',
+)
 class CustomLoginView(LoginView):
     form_class = CustomLoginForm
     template_name = 'account/login.html'
@@ -115,6 +120,10 @@ class CustomLoginView(LoginView):
         context['signup_url'] = reverse_lazy('account_signup')
         return context
 
+@method_decorator(
+    ratelimit(key='ip', rate='15/m', method='POST', block=True),
+    name='dispatch',
+)
 class CustomSignupView(SignupView):
     form_class = CustomSignupForm
     template_name = 'account/signup.html'

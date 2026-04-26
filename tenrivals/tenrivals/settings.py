@@ -3,7 +3,6 @@ import environ
 import django_heroku
 import dj_database_url
 import os
-import logging
 from django.contrib.messages import constants as messages
 from celery.schedules import crontab
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -18,12 +17,14 @@ USE_S3 = env.bool('USE_S3', default=('DYNO' in os.environ))
 
 ALLOWED_HOSTS = [
     '127.0.0.1',
+    'localhost',
     '.herokuapp.com',
-    'distinct-shrimp-slightly.ngrok-free.app',
     'tenrivals.com',
     '.tenrivals.com',
 ]
-
+_EXTRA_ALLOWED = env.list('EXTRA_ALLOWED_HOSTS', default=[])
+if _EXTRA_ALLOWED:
+    ALLOWED_HOSTS = [*ALLOWED_HOSTS, *_EXTRA_ALLOWED]
 
 CSRF_TRUSTED_ORIGINS = [
     'https://ten-rivals-ee84d08ca066.herokuapp.com',
@@ -32,10 +33,12 @@ CSRF_TRUSTED_ORIGINS = [
     'http://127.0.0.1:8000',
     'http://localhost:80',
     'http://127.0.0.1:80',
-    'https://distinct-shrimp-slightly.ngrok-free.app',
     'https://tenrivals.com',
     'https://www.tenrivals.com',
 ]
+_EXTRA_CSRF = env.list('EXTRA_CSRF_TRUSTED_ORIGINS', default=[])
+if _EXTRA_CSRF:
+    CSRF_TRUSTED_ORIGINS = [*CSRF_TRUSTED_ORIGINS, *_EXTRA_CSRF]
 
 # Heroku sets HEROKU_APP_NAME; CSRF Referer must match or POST forms return 403 (cart remove, login, etc.).
 _heroku_app = os.environ.get('HEROKU_APP_NAME', '').strip()
@@ -127,24 +130,27 @@ TEMPLATES = [
 WSGI_APPLICATION = 'tenrivals.wsgi.application'
 
 
-'''
-
-DATABASE_URL = env('DATABASE_URL')
-db_from_env = dj_database_url.config(default=DATABASE_URL)
-DATABASES = {'default': db_from_env}
-CONN_MAX_AGE = int(os.environ.get("CONN_MAX_AGE", 600))
-'''
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'tenrivals_local_dev',
-        'USER': 'am',
-        'PASSWORD': 'tyghbn67',
-        'HOST': 'localhost', 
-        'PORT': '5432', # 
+_CONN_MAX_AGE = int(os.environ.get('CONN_MAX_AGE', 600))
+_DATABASE_URL = env.str('DATABASE_URL', default='').strip()
+if _DATABASE_URL:
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=_DATABASE_URL,
+            conn_max_age=_CONN_MAX_AGE,
+            ssl_require=bool(os.environ.get('DYNO')),
+        )
     }
-}
-
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': env.str('PGDATABASE', default='tenrivals_local_dev'),
+            'USER': env.str('PGUSER', default='postgres'),
+            'PASSWORD': env.str('PGPASSWORD', default=''),
+            'HOST': env.str('PGHOST', default='localhost'),
+            'PORT': env.str('PGPORT', default='5432'),
+        }
+    }
 
 
 AUTHENTICATION_BACKENDS = [
@@ -178,8 +184,6 @@ LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
 USE_TZ = True
 USE_I18N = True
-
-USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images)
@@ -320,6 +324,22 @@ SERVER_EMAIL = env("SERVER_EMAIL", default=None) or (
 )
 ACCOUNT_EMAIL_SUBJECT_PREFIX = ""
 
+_ADMINS_RAW = env.str('DJANGO_ADMINS', default='').strip()
+ADMINS = []
+if _ADMINS_RAW:
+    for _part in _ADMINS_RAW.split(','):
+        _part = _part.strip()
+        if not _part:
+            continue
+        if '<' in _part and _part.endswith('>'):
+            _name, _, _rest = _part.partition('<')
+            _email = _rest[:-1].strip()
+            if _email:
+                ADMINS.append((_name.strip() or 'Admin', _email))
+        elif '@' in _part:
+            ADMINS.append(('Admin', _part))
+MANAGERS = ADMINS
+
 
 ACCOUNT_FORMS = {
     'signup': 'persons.forms.CustomSignupForm',
@@ -327,9 +347,13 @@ ACCOUNT_FORMS = {
 }
 
 
-django_heroku.settings(locals())
+# Do not let django-heroku replace ALLOWED_HOSTS with ['*'], duplicate WhiteNoise, or wipe LOGGING.
+django_heroku.settings(locals(), allowed_hosts=False, staticfiles=False, logging=False)
 
-logging.basicConfig(level=logging.DEBUG)
+_IS_HEROKU = 'DYNO' in os.environ
+_LOG_TO_FILE = env.bool('DJANGO_LOG_FILE', default=(not _IS_HEROKU and DEBUG))
+_APP_LOG_LEVEL = env.str('DJANGO_LOG_LEVEL', default='DEBUG' if DEBUG else 'INFO')
+_LOG_HANDLERS = ['console', 'file'] if _LOG_TO_FILE else ['console']
 
 LOGGING = {
     'version': 1,
@@ -359,44 +383,43 @@ LOGGING = {
     },
     'loggers': {
         'persons': {
-            'handlers': ['file', 'console'],
-            'level': 'DEBUG',
+            'handlers': _LOG_HANDLERS,
+            'level': _APP_LOG_LEVEL,
             'propagate': False,
         },
-        'rivals': {  # <--- Временно закомментируем этот блок
-            'handlers': ['file', 'console'],
-            'level': 'DEBUG',
+        'rivals': {
+            'handlers': _LOG_HANDLERS,
+            'level': _APP_LOG_LEVEL,
             'propagate': False,
         },
         'django': {
-            'handlers': ['console', 'file'],
+            'handlers': _LOG_HANDLERS,
             'level': 'INFO',
             'propagate': False,
         },
-        # Server errors (500): full traceback on stderr → visible in `heroku logs --tail`.
         'django.request': {
-            'handlers': ['console', 'file'],
+            'handlers': _LOG_HANDLERS,
             'level': 'ERROR',
             'propagate': False,
         },
         'botocore': {
-            'handlers': ['console', 'file'],
+            'handlers': _LOG_HANDLERS,
             'level': 'WARNING',
             'propagate': False,
         },
         'boto3': {
-            'handlers': ['console', 'file'],
+            'handlers': _LOG_HANDLERS,
             'level': 'WARNING',
             'propagate': False,
         },
         'urllib3': {
-             'handlers': ['console', 'file'],
-             'level': 'WARNING',
-             'propagate': False,
+            'handlers': _LOG_HANDLERS,
+            'level': 'WARNING',
+            'propagate': False,
         },
         'shop': {
-            'handlers': ['console', 'file'],
-            'level': 'DEBUG',
+            'handlers': _LOG_HANDLERS,
+            'level': _APP_LOG_LEVEL,
             'propagate': False,
         },
     },
@@ -452,10 +475,16 @@ CELERY_BEAT_SCHEDULE = {
 }
 
 
-SESSION_ENGINE = 'django.contrib.sessions.backends.db'  # или другой бэкенд по вашему выбору
-SESSION_COOKIE_AGE = 86400  # время жизни сессии в секундах (24 часа)
-SESSION_SAVE_EVERY_REQUEST = True  # сохранять сессию при каждом запросе
-SESSION_COOKIE_SECURE = False  # для локальной разработки
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+SESSION_COOKIE_AGE = 86400
+SESSION_SAVE_EVERY_REQUEST = env.bool('SESSION_SAVE_EVERY_REQUEST', default=False)
+_SESSION_SECURE_DEFAULT = not DEBUG
+SESSION_COOKIE_SECURE = env.bool(
+    'SESSION_COOKIE_SECURE', default=_SESSION_SECURE_DEFAULT
+)
+CSRF_COOKIE_SECURE = env.bool(
+    'CSRF_COOKIE_SECURE', default=_SESSION_SECURE_DEFAULT
+)
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 
 # Настройки для социальной аутентификации
@@ -504,5 +533,36 @@ PASSWORD_RESET_TELEGRAM_CODE_EXPIRY_MINUTES = 15
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 SECURE_SSL_REDIRECT = env.bool('SECURE_SSL_REDIRECT', default=True)
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
+SECURE_HSTS_SECONDS = env.int('SECURE_HSTS_SECONDS', default=0)
+SECURE_HSTS_INCLUDE_SUBDOMAINS = env.bool('SECURE_HSTS_INCLUDE_SUBDOMAINS', default=False)
+SECURE_HSTS_PRELOAD = env.bool('SECURE_HSTS_PRELOAD', default=False)
+
+_RATELIMIT_REDIS = env.str('RATELIMIT_REDIS_URL', default='').strip()
+if _RATELIMIT_REDIS:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+            'LOCATION': _RATELIMIT_REDIS,
+        }
+    }
+else:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        }
+    }
+
+RATELIMIT_VIEW = 'tenrivals.error_views.ratelimit_response'
+RATELIMIT_ENABLE = env.bool('RATELIMIT_ENABLE', default=True)
+
+_SENTRY_DSN = env.str('SENTRY_DSN', default='').strip()
+if _SENTRY_DSN:
+    import sentry_sdk
+    from sentry_sdk.integrations.django import DjangoIntegration
+
+    sentry_sdk.init(
+        dsn=_SENTRY_DSN,
+        integrations=[DjangoIntegration()],
+        traces_sample_rate=env.float('SENTRY_TRACES_SAMPLE_RATE', default=0.05),
+        send_default_pii=False,
+    )
