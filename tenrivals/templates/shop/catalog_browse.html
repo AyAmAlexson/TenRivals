@@ -170,6 +170,13 @@
       .footer-top{grid-template-columns:1fr}
     }
   </style>
+  {% if products %}
+    {% if browse_mode == 'preorder' %}
+      {% include 'includes/ga4_view_item_list.html' with ga4_products=products ga4_list_id='preorder' ga4_list_name='Preorder' %}
+    {% else %}
+      {% include 'includes/ga4_view_item_list.html' with ga4_products=products ga4_list_id='stock' ga4_list_name='In stock' %}
+    {% endif %}
+  {% endif %}
 </head>
 <body>
 {% include 'includes/google_tag_manager_body.html' %}

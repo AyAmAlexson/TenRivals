@@ -1,0 +1,7 @@
+{# GA4 site search — ga4_search_term #}
+{% if ga4_search_term %}
+<script>
+  window.dataLayer = window.dataLayer || [];
+  window.dataLayer.push({ event: 'search', search_term: '{{ ga4_search_term|escapejs }}' });
+</script>
+{% endif %}

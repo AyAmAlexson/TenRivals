@@ -7,6 +7,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   {% load static %}
   {% load catalog_tags %}
+  {% load l10n %}
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Saira:wght@400;600;800&family=Saira+Condensed:wght@400&display=swap" rel="stylesheet">
@@ -454,6 +455,11 @@
           data-requires-size="{% if pdp_requires_size_pick %}1{% else %}0{% endif %}"
           data-listing-qty="{{ stock_listing_qty }}"
           data-variant-label="{% if product.type == 'STRINGS' %}Gauge{% else %}Size{% endif %}"
+          data-ga4-item-id="{{ product.sku|default:product.pk }}"
+          data-ga4-item-name="{{ product.name|escape }}"
+          data-ga4-item-brand="{{ product.brand|default:''|escape }}"
+          data-ga4-item-category="{{ product.get_type_display|escape }}"
+          data-ga4-price="{{ product.primary_price|unlocalize }}"
         >
           <div class="pdp-qty" aria-label="Quantity">
             <button type="button" id="pdp-qty-minus" class="pdp-qty-btn" aria-label="Decrease quantity">−</button>
@@ -787,6 +793,31 @@
           })
         }).then(function(r) { return r.json(); }).then(function(data) {
           if (data.ok) {
+            var unit = parseFloat(bundle.getAttribute('data-ga4-price'));
+            if (!isNaN(unit)) {
+              var addedQty = (data.added && data.added.qty != null) ? parseInt(data.added.qty, 10) : qty;
+              if (isNaN(addedQty) || addedQty < 1) addedQty = qty;
+              var val = unit * addedQty;
+              window.dataLayer = window.dataLayer || [];
+              window.dataLayer.push({ ecommerce: null });
+              window.dataLayer.push({
+                event: 'add_to_cart',
+                currency: 'GEL',
+                value: val,
+                ecommerce: {
+                  currency: 'GEL',
+                  value: val,
+                  items: [{
+                    item_id: String(bundle.getAttribute('data-ga4-item-id') || ''),
+                    item_name: bundle.getAttribute('data-ga4-item-name') || '',
+                    item_brand: bundle.getAttribute('data-ga4-item-brand') || '',
+                    item_category: bundle.getAttribute('data-ga4-item-category') || '',
+                    price: unit,
+                    quantity: addedQty
+                  }]
+                }
+              });
+            }
             if (modalText) {
               const a = data.added || {};
               const parts = [];

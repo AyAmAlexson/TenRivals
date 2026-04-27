@@ -60,6 +60,18 @@
     @media(max-width:768px){.container{padding:0 20px}}
     @media(max-width:640px){.footer-top{grid-template-columns:1fr}}
   </style>
+  {% if q %}
+    {% include 'includes/ga4_search.html' with ga4_search_term=q %}
+    {% if products %}
+      {% if search_channel == 'preorder' %}
+        {% include 'includes/ga4_view_item_list.html' with ga4_products=products ga4_list_id='search_preorder' ga4_list_name='Search · Preorder' %}
+      {% elif search_channel == 'stock' %}
+        {% include 'includes/ga4_view_item_list.html' with ga4_products=products ga4_list_id='search_stock' ga4_list_name='Search · In stock' %}
+      {% else %}
+        {% include 'includes/ga4_view_item_list.html' with ga4_products=products ga4_list_id='search_all' ga4_list_name='Search · All products' %}
+      {% endif %}
+    {% endif %}
+  {% endif %}
 </head>
 <body>
 {% include 'includes/google_tag_manager_body.html' %}

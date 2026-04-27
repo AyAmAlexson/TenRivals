@@ -1,0 +1,27 @@
+{# GA4 begin_checkout — checkout_rows, checkout_total #}
+{% load l10n %}
+<script>
+  window.dataLayer = window.dataLayer || [];
+  window.dataLayer.push({ ecommerce: null });
+  window.dataLayer.push({
+    event: 'begin_checkout',
+    currency: 'GEL',
+    value: {{ checkout_total|unlocalize }},
+    ecommerce: {
+      currency: 'GEL',
+      value: {{ checkout_total|unlocalize }},
+      items: [
+        {% for row in checkout_rows %}
+        {
+          item_id: "{{ row.product.sku|default:row.product.pk|escapejs }}",
+          item_name: "{{ row.name|escapejs }}",
+          item_brand: "{{ row.product.brand|default:''|escapejs }}",
+          item_category: "{{ row.product.get_type_display|escapejs }}",
+          price: {{ row.unit_price|unlocalize }},
+          quantity: {{ row.qty }}
+        }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+      ]
+    }
+  });
+</script>

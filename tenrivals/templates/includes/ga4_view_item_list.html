@@ -1,0 +1,31 @@
+{# GA4 view_item_list — ga4_products, ga4_list_id, ga4_list_name #}
+{% load l10n %}
+{% if ga4_products %}
+<script>
+  window.dataLayer = window.dataLayer || [];
+  window.dataLayer.push({ ecommerce: null });
+  window.dataLayer.push({
+    event: 'view_item_list',
+    item_list_id: '{{ ga4_list_id|escapejs }}',
+    item_list_name: '{{ ga4_list_name|escapejs }}',
+    ecommerce: {
+      currency: 'GEL',
+      item_list_id: '{{ ga4_list_id|escapejs }}',
+      item_list_name: '{{ ga4_list_name|escapejs }}',
+      items: [
+        {% for p in ga4_products|slice:'0:50' %}
+        {
+          item_id: "{{ p.sku|default:p.pk|escapejs }}",
+          item_name: "{{ p.name|escapejs }}",
+          item_brand: "{{ p.brand|default:''|escapejs }}",
+          item_category: "{{ p.get_type_display|escapejs }}",
+          price: {{ p.primary_price|unlocalize }},
+          quantity: 1,
+          index: {{ forloop.counter0 }}
+        }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+      ]
+    }
+  });
+</script>
+{% endif %}
