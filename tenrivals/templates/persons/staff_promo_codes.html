@@ -1,0 +1,87 @@
+{% extends 'persons/staff_base.html' %}
+{% block title %}Promo codes — Staff — TR Shop{% endblock %}
+{% block page_heading %}{{ page_heading }}{% endblock %}
+{% block page_note %}<p class="page-note">{{ page_note }}</p>{% endblock %}
+{% block extra_head %}
+<style>
+  .staff-toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:16px}
+  .staff-toolbar form{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .staff-toolbar input,.staff-toolbar select{padding:6px 10px;border:1px solid var(--line);font-family:inherit;font-size:13px}
+  tr.clickable-row{cursor:pointer}
+  tr.clickable-row:hover td{background:#fafafa}
+  .mono{font-variant-numeric:tabular-nums}
+</style>
+{% endblock %}
+{% block content %}
+<div class="staff-toolbar">
+  <a class="btn btn--sm" href="{% url 'administration:staff_promo_new' %}">+ New promo code</a>
+  <form method="get" action="">
+    <input type="search" name="q" value="{{ filter_q }}" placeholder="Search code / title" maxlength="120">
+    <select name="active" aria-label="Active filter">
+      <option value="" {% if not filter_active %}selected{% endif %}>All statuses</option>
+      <option value="1" {% if filter_active == '1' %}selected{% endif %}>Manually active</option>
+      <option value="0" {% if filter_active == '0' %}selected{% endif %}>Manually inactive</option>
+    </select>
+    <select name="sort" aria-label="Sort">
+      <option value="sort_order" {% if filter_sort == 'sort_order' %}selected{% endif %}>Sort order</option>
+      <option value="code" {% if filter_sort == 'code' %}selected{% endif %}>Code A–Z</option>
+      <option value="-created" {% if filter_sort == '-created' %}selected{% endif %}>Newest</option>
+    </select>
+    <button type="submit" class="btn btn--sm btn--outline">Filter</button>
+  </form>
+</div>
+
+<div class="card">
+  <h2 class="card-title">Promo codes ({{ promos|length }})</h2>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Code</th>
+          <th>Title</th>
+          <th>Type</th>
+          <th>Scope</th>
+          <th>Status</th>
+          <th>Valid until</th>
+          <th class="mono">Uses</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in promos %}
+        <tr class="clickable-row" data-href="{% url 'administration:staff_promo_edit' p.pk %}">
+          <td class="mono"><strong>{{ p.code }}</strong></td>
+          <td>{{ p.title|default:"—" }}</td>
+          <td>{{ p.get_discount_type_display }}</td>
+          <td>{{ p.get_application_scope_display }}</td>
+          <td>
+            {% if not p.is_manually_active %}
+              Inactive
+            {% elif p.valid_until and now > p.valid_until %}
+              Expired
+            {% else %}
+              Active
+            {% endif %}
+            {% if p.single_use_globally %}· one-shot{% endif %}
+            {% if p.restricted_to_user_id %}· user-locked{% endif %}
+          </td>
+          <td>{% if p.valid_until %}{{ p.valid_until|date:"Y-m-d H:i" }}{% else %}—{% endif %}</td>
+          <td class="mono">{{ p.redemption_count }}{% if p.max_redemptions %} / {{ p.max_redemptions }}{% endif %}</td>
+          <td><a class="btn btn--sm btn--outline" href="{% url 'administration:staff_promo_edit' p.pk %}">Edit</a></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="8">No promo codes yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+<script>
+  document.querySelectorAll('tr.clickable-row[data-href]').forEach(function(row) {
+    row.addEventListener('click', function(e) {
+      if (e.target.closest('a,button,input')) return;
+      window.location = row.getAttribute('data-href');
+    });
+  });
+</script>
+{% endblock %}

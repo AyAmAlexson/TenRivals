@@ -49,6 +49,10 @@ urlpatterns = [
     path('staff/blog/new/', RedirectView.as_view(pattern_name='administration:staff_blog_new', permanent=False)),
     path('staff/blog/<int:post_id>/', RedirectView.as_view(pattern_name='administration:staff_blog_edit', permanent=False)),
     path('staff/banners/', RedirectView.as_view(pattern_name='administration:staff_home_banners', permanent=False)),
+    path(
+        'staff/promo-codes/',
+        RedirectView.as_view(pattern_name='administration:staff_promo_codes', permanent=False),
+    ),
 
     path('superuser/users/', views.redirect_legacy_superuser_users, name='superuser_users'),
     path(

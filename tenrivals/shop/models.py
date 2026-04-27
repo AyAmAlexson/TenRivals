@@ -1139,6 +1139,18 @@ class SalesOrder(models.Model):
         help_text=_('List of {"name": str, "gross": str|number} — VAT-inclusive amounts.'),
     )
     notes = models.TextField(blank=True)
+    promo_code_label = models.CharField(
+        max_length=64,
+        blank=True,
+        default='',
+        help_text=_('Promo code string applied at checkout (snapshot).'),
+    )
+    promo_discount_gross = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        help_text=_('VAT-inclusive promo discount (₾), subtracted from line subtotal.'),
+    )
 
     class Status(models.TextChoices):
         SUBMITTED = 'SUBMITTED', _('Submitted')
@@ -1216,3 +1228,155 @@ class SalesOrderLine(models.Model):
         if (self.variant_label or '').strip():
             return f'{base} / {self.variant_label}'
         return base
+
+
+class PromoCode(models.Model):
+    """Staff-configured checkout promo: fixed or percent off eligible cart subtotal."""
+
+    class DiscountType(models.TextChoices):
+        FIXED_GROSS = 'FIXED_GROSS', _('Fixed amount (₾)')
+        PERCENT = 'PERCENT', _('Percent of eligible subtotal')
+
+    class ApplicationScope(models.TextChoices):
+        ALL = 'ALL', _('Entire catalog')
+        PRODUCTS = 'PRODUCTS', _('Specific products (SKU)')
+        COLLECTIONS = 'COLLECTIONS', _('Specific collections')
+
+    code = models.CharField(
+        max_length=64,
+        unique=True,
+        db_index=True,
+        help_text=_('Case-insensitive; stored uppercase.'),
+    )
+    title = models.CharField(
+        max_length=160,
+        blank=True,
+        help_text=_('Internal label for staff (optional).'),
+    )
+    is_manually_active = models.BooleanField(
+        default=True,
+        db_index=True,
+        help_text=_('Turn off to deactivate regardless of dates.'),
+    )
+    discount_type = models.CharField(
+        max_length=16,
+        choices=DiscountType.choices,
+        default=DiscountType.PERCENT,
+    )
+    fixed_amount_gross = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text=_('For fixed type: amount to subtract (₾), capped by eligible subtotal and by % cap below.'),
+    )
+    fixed_cap_percent_of_eligible = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=Decimal('100.00'),
+        help_text=_('For fixed type: discount cannot exceed this % of eligible subtotal (default 100).'),
+    )
+    percent_off = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text=_('For percent type: 0–100.'),
+    )
+    percent_min_eligible_subtotal = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        help_text=_('For percent type: eligible subtotal must be at least this (₾).'),
+    )
+    valid_from = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text=_('If set, code is not valid before this instant (site timezone).'),
+    )
+    valid_until = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text=_('If set, code is not valid after this instant.'),
+    )
+    single_use_globally = models.BooleanField(
+        default=False,
+        help_text=_('If true, only one redemption ever (across all customers).'),
+    )
+    max_redemptions = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text=_('Optional cap on total redemptions; leave empty for unlimited (within dates).'),
+    )
+    restricted_to_user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='assigned_promo_codes',
+        help_text=_('If set, only this signed-in user may redeem the code.'),
+    )
+    application_scope = models.CharField(
+        max_length=16,
+        choices=ApplicationScope.choices,
+        default=ApplicationScope.ALL,
+    )
+    restricted_products = models.ManyToManyField(
+        'Product',
+        blank=True,
+        related_name='promo_codes_by_product',
+        help_text=_('When scope is “Specific products” — eligible SKUs.'),
+    )
+    restricted_collections = models.ManyToManyField(
+        'ProductCollection',
+        blank=True,
+        related_name='promo_codes_by_collection',
+        help_text=_('When scope is “Specific collections” — union of collection + group products.'),
+    )
+    sort_order = models.IntegerField(default=0, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['sort_order', 'code']
+        verbose_name = _('Promo code')
+        verbose_name_plural = _('Promo codes')
+
+    def __str__(self) -> str:
+        return self.code
+
+    def save(self, *args, **kwargs):
+        self.code = (self.code or '').strip().upper()
+        super().save(*args, **kwargs)
+
+
+class PromoRedemption(models.Model):
+    """One successful checkout application of a promo (audit + usage limits)."""
+
+    promo = models.ForeignKey(
+        PromoCode,
+        on_delete=models.CASCADE,
+        related_name='redemptions',
+    )
+    sales_order = models.ForeignKey(
+        SalesOrder,
+        on_delete=models.CASCADE,
+        related_name='promo_redemptions',
+    )
+    redeemed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='promo_redemptions',
+    )
+    discount_gross = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-id']
+        verbose_name = _('Promo redemption')
+        verbose_name_plural = _('Promo redemptions')
+
+    def __str__(self) -> str:
+        return f'{self.promo.code} → order {self.sales_order_id}'

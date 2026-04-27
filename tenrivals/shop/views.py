@@ -72,6 +72,8 @@ from .models import (
     ProductListing,
     ProductListingChannel,
     ProductType,
+    PromoCode,
+    PromoRedemption,
     Racket,
     SalesOrder,
     SalesOrderLine,
@@ -88,9 +90,11 @@ from .sales_order_stock import (
 from .sales_order_utils import (
     allocate_invoice_number,
     allocate_order_for_me_number,
+    gross_split_vat_net,
     line_amounts,
     product_unit_gross_price,
 )
+from .promo_codes import evaluate_promo_for_cart_rows, normalize_promo_code
 
 _PRODUCT_SUBCLASS_SELECT = (
     'shoe',
@@ -1206,6 +1210,13 @@ def product_edit(request, pk):
     )
 
 
+def _promo_eval_for_request(request, rows):
+    cart = get_cart(request)
+    code = cart.get('promo_code') or ''
+    user = request.user if getattr(request.user, 'is_authenticated', False) else None
+    return evaluate_promo_for_cart_rows(code=code, rows=rows, user=user)
+
+
 def cart(request):
     rows, subtotal = build_cart_page_rows(request)
     cart_data = get_cart(request)
@@ -1216,6 +1227,9 @@ def cart(request):
     saving = (initial_subtotal - subtotal).quantize(Decimal('0.01'))
     if saving < Decimal('0.00'):
         saving = Decimal('0.00')
+    ev = _promo_eval_for_request(request, rows)
+    promo_discount = ev.discount_gross if ev.ok else Decimal('0.00')
+    cart_total = (subtotal - promo_discount).quantize(Decimal('0.01'))
     return render(
         request,
         'shop/cart.html',
@@ -1225,8 +1239,8 @@ def cart(request):
             'cart_initial_subtotal': initial_subtotal,
             'cart_saving': saving,
             'cart_promo_code': cart_data.get('promo_code') or '',
-            'cart_discount': Decimal('0.00'),
-            'cart_total': subtotal,
+            'cart_discount': promo_discount,
+            'cart_total': cart_total,
             'saved_cart_ttl_days': CART_TTL_DAYS,
         },
     )
@@ -1305,8 +1319,21 @@ def cart_apply_promo(request):
     code = request.POST.get('promo', '')
     if not isinstance(code, str):
         code = str(code)
-    set_cart_promo(request, code)
-    messages.info(request, 'Promo code saved. Discounts will apply when checkout is available.')
+    rows, _subtotal = build_cart_page_rows(request)
+    user = request.user if getattr(request.user, 'is_authenticated', False) else None
+    ev = evaluate_promo_for_cart_rows(code=code, rows=rows, user=user)
+    if (code or '').strip() == '':
+        set_cart_promo(request, '')
+        messages.info(request, 'Promo code removed.')
+    elif ev.ok:
+        set_cart_promo(request, normalize_promo_code(code))
+        messages.success(
+            request,
+            f'Promo applied: −{ev.discount_gross} ₾ off eligible items.',
+        )
+    else:
+        set_cart_promo(request, '')
+        messages.error(request, ev.message or 'Promo could not be applied.')
     return redirect('shop:cart')
 
 
@@ -1488,15 +1515,35 @@ def _send_checkout_customer_submitted_email(
 
 def checkout(request):
     rows, subtotal = build_cart_page_rows(request)
-    discount = Decimal('0.00')
     if not rows:
         messages.error(request, 'Your cart is empty.')
         return redirect('shop:cart')
 
+    if request.method == 'POST' and request.POST.get('action') == 'apply_checkout_promo':
+        code = request.POST.get('promo', '')
+        if not isinstance(code, str):
+            code = str(code)
+        user = request.user if getattr(request.user, 'is_authenticated', False) else None
+        ev = evaluate_promo_for_cart_rows(code=code, rows=rows, user=user)
+        if (code or '').strip() == '':
+            set_cart_promo(request, '')
+            messages.info(request, 'Promo code removed.')
+        elif ev.ok:
+            set_cart_promo(request, normalize_promo_code(code))
+            messages.success(
+                request,
+                f'Promo applied: −{ev.discount_gross} ₾ off eligible items.',
+            )
+        else:
+            set_cart_promo(request, '')
+            messages.error(request, ev.message or 'Promo could not be applied.')
+        return redirect('shop:checkout')
+
     show_auth_gate = bool(
         not request.user.is_authenticated
         and request.GET.get('guest') != '1'
-        and request.POST.get('action') not in {'guest_continue', 'login', 'submit_order'}
+        and request.POST.get('action')
+        not in {'guest_continue', 'login', 'submit_order', 'apply_checkout_promo'}
     )
 
     if request.method == 'POST' and request.POST.get('action') == 'login':
@@ -1523,7 +1570,9 @@ def checkout(request):
         if contact['delivery_city'] == 'TBILISI'
         else 'Delivery cost for other cities is calculated separately.'
     )
-    total = subtotal
+    promo_ev = _promo_eval_for_request(request, rows)
+    discount = promo_ev.discount_gross if promo_ev.ok else Decimal('0.00')
+    total = (subtotal - discount).quantize(Decimal('0.01'))
 
     if request.method == 'POST' and request.POST.get('action') == 'submit_order':
         errors = _validate_checkout_contact(contact, is_authenticated=request.user.is_authenticated)
@@ -1531,6 +1580,17 @@ def checkout(request):
             for e in errors:
                 messages.error(request, e)
         else:
+            cart_code = (get_cart(request).get('promo_code') or '').strip()
+            ev_submit = evaluate_promo_for_cart_rows(
+                code=cart_code,
+                rows=rows,
+                user=request.user if request.user.is_authenticated else None,
+            )
+            if cart_code and not ev_submit.ok:
+                messages.error(request, ev_submit.message)
+                return redirect('shop:checkout')
+            discount = ev_submit.discount_gross if ev_submit.ok else Decimal('0.00')
+            total = (subtotal - discount).quantize(Decimal('0.01'))
             delivery_address = _compose_delivery_address(contact)
             payment_label = _checkout_payment_label(contact['payment_method'])
             is_guest = not request.user.is_authenticated
@@ -1642,8 +1702,6 @@ def checkout(request):
                         )
                         created_lines = []
                         gross_sum = Decimal('0.00')
-                        vat_sum = Decimal('0.00')
-                        net_sum = Decimal('0.00')
                         for r in rows:
                             unit = product_unit_gross_price(r['product'])
                             qty = int(r['qty'])
@@ -1662,13 +1720,53 @@ def checkout(request):
                             )
                             created_lines.append(line)
                             gross_sum += lg
-                            vat_sum += lv
-                            net_sum += ln
-                        order.gross_total = gross_sum.quantize(Decimal('0.01'))
-                        order.vat_total = vat_sum.quantize(Decimal('0.01'))
-                        order.net_total = net_sum.quantize(Decimal('0.01'))
-                        order.save(update_fields=['gross_total', 'vat_total', 'net_total', 'updated_at'])
+
+                        promo_d = Decimal('0.00')
+                        if cart_code and ev_submit.ok:
+                            promo_d = min(ev_submit.discount_gross, gross_sum).quantize(Decimal('0.01'))
+                            if ev_submit.promo_id:
+                                locked = PromoCode.objects.select_for_update().get(pk=ev_submit.promo_id)
+                                cnt = PromoRedemption.objects.filter(promo=locked).count()
+                                if locked.single_use_globally and cnt >= 1:
+                                    raise ValueError('This promo code is no longer available.')
+                                if (
+                                    locked.max_redemptions is not None
+                                    and cnt >= locked.max_redemptions
+                                ):
+                                    raise ValueError('This promo code is no longer available.')
+
+                        final_gross = (gross_sum - promo_d).quantize(Decimal('0.01'))
+                        if final_gross < Decimal('0'):
+                            final_gross = Decimal('0.00')
+                        net_o, vat_o = gross_split_vat_net(final_gross)
+                        order.promo_discount_gross = promo_d
+                        order.promo_code_label = (
+                            normalize_promo_code(cart_code) if cart_code and ev_submit.ok else ''
+                        )
+                        order.gross_total = final_gross
+                        order.vat_total = vat_o
+                        order.net_total = net_o
+                        order.save(
+                            update_fields=[
+                                'gross_total',
+                                'vat_total',
+                                'net_total',
+                                'promo_discount_gross',
+                                'promo_code_label',
+                                'updated_at',
+                            ]
+                        )
                         take_lines_from_stock(created_lines)
+
+                        if promo_d > Decimal('0.00') and ev_submit.ok and ev_submit.promo_id:
+                            PromoRedemption.objects.create(
+                                promo_id=ev_submit.promo_id,
+                                sales_order=order,
+                                redeemed_by=request.user
+                                if request.user.is_authenticated
+                                else None,
+                                discount_gross=promo_d,
+                            )
 
                         cart_data = get_cart(request)
                         cart_data['lines'] = []
@@ -1712,6 +1810,10 @@ def checkout(request):
             'delivery_note': delivery_note,
             'checkout_is_authenticated': request.user.is_authenticated,
             'saved_cart_ttl_days': CART_TTL_DAYS,
+            'checkout_cart_promo_code': get_cart(request).get('promo_code') or '',
+            'checkout_promo_discount': promo_ev.discount_gross
+            if promo_ev.ok
+            else Decimal('0.00'),
         },
     )
 

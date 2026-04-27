@@ -1,6 +1,7 @@
 from django.urls import path
 
 from . import views
+from . import staff_promo_views
 from shop import staff_sales_views
 
 app_name = "administration"
@@ -30,6 +31,18 @@ urlpatterns = [
         "collections/<int:collection_id>/",
         views.staff_collection_edit,
         name="staff_collection_edit",
+    ),
+    path("promo-codes/", staff_promo_views.staff_promo_codes, name="staff_promo_codes"),
+    path(
+        "promo-codes/new/",
+        staff_promo_views.staff_promo_edit,
+        {"promo_id": None},
+        name="staff_promo_new",
+    ),
+    path(
+        "promo-codes/<int:promo_id>/",
+        staff_promo_views.staff_promo_edit,
+        name="staff_promo_edit",
     ),
     path("order-for-me/", views.staff_order_for_me_list, name="staff_order_for_me_list"),
     path("order-for-me/new/", views.staff_order_for_me_edit, name="staff_order_for_me_new"),

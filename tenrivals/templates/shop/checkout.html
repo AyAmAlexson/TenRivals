@@ -150,6 +150,15 @@
 
       <aside class="card">
         <h2>Order summary</h2>
+        <div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px dashed var(--line)">
+          <label for="id_checkout_promo" style="display:block;font-size:12px;color:var(--muted);margin-bottom:6px">Promo code</label>
+          <form method="post" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="apply_checkout_promo">
+            <input id="id_checkout_promo" type="text" name="promo" value="{{ checkout_cart_promo_code }}" maxlength="64" autocomplete="off" placeholder="Code" style="flex:1;min-width:120px;padding:8px 10px;border:1px solid var(--line);font-family:inherit;font-size:14px">
+            <button type="submit" class="btn btn--outline" style="padding:8px 14px;font-size:11px">APPLY</button>
+          </form>
+        </div>
         {% for row in checkout_rows %}
         <div class="checkout-item">
           <div class="checkout-item__thumb">{% if row.product.main_image %}<img src="{{ row.product.main_image.url }}" alt="{{ row.name }}">{% endif %}</div>
@@ -160,7 +169,9 @@
         </div>
         {% endfor %}
         <div class="summary-line"><span>Subtotal</span><span>{{ checkout_subtotal }} ₾</span></div>
-        <div class="summary-line"><span>Discount</span><span>0.00 ₾</span></div>
+        {% if checkout_promo_discount > 0 %}
+        <div class="summary-line"><span>Promo{% if checkout_cart_promo_code %} ({{ checkout_cart_promo_code }}){% endif %}</span><span>−{{ checkout_promo_discount }} ₾</span></div>
+        {% endif %}
         <div class="summary-line summary-line--grand"><span>Total</span><span>{{ checkout_total }} ₾</span></div>
       </aside>
     </div>

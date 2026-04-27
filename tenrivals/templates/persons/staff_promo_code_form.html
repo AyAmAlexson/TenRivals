@@ -1,0 +1,131 @@
+{% extends 'persons/staff_base.html' %}
+{% block title %}{{ page_heading }} — Staff — TR Shop{% endblock %}
+{% block page_heading %}{{ page_heading }}{% endblock %}
+{% block content %}
+<p style="margin-bottom:16px"><a href="{% url 'administration:staff_promo_codes' %}" class="btn btn--sm btn--outline">← Back to promo codes</a></p>
+
+<form method="post" class="card" style="max-width:920px">
+  {% csrf_token %}
+  <h2 class="card-title">{% if is_create %}Create{% else %}Update{% endif %}</h2>
+
+  <div class="form-grid" style="display:grid;gap:14px;grid-template-columns:1fr 1fr">
+    <div>
+      <label for="id_code">Code *</label>
+      <input id="id_code" name="code" required maxlength="64" value="{% if promo %}{{ promo.code }}{% endif %}" class="form-control" style="text-transform:uppercase">
+    </div>
+    <div>
+      <label for="id_title">Staff title</label>
+      <input id="id_title" name="title" maxlength="160" value="{% if promo %}{{ promo.title }}{% endif %}" class="form-control">
+    </div>
+  </div>
+
+  <div style="margin-top:14px">
+    <label class="checkbox" style="display:flex;align-items:center;gap:8px;font-size:14px">
+      <input type="checkbox" name="is_manually_active" {% if not promo or promo.is_manually_active %}checked{% endif %}>
+      Manually active
+    </label>
+  </div>
+
+  <hr style="margin:20px 0;border:none;border-top:1px solid var(--line)">
+
+  <div class="form-grid" style="display:grid;gap:14px;grid-template-columns:1fr 1fr">
+    <div>
+      <label for="id_discount_type">Discount method</label>
+      <select id="id_discount_type" name="discount_type" class="form-control">
+        {% for val,label in discount_types %}
+        <option value="{{ val }}" {% if promo %}{% if promo.discount_type == val %}selected{% endif %}{% else %}{% if val == 'PERCENT' %}selected{% endif %}{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label for="id_application_scope">Applies to</label>
+      <select id="id_application_scope" name="application_scope" class="form-control">
+        {% for val,label in application_scopes %}
+        <option value="{{ val }}" {% if promo %}{% if promo.application_scope == val %}selected{% endif %}{% else %}{% if val == 'ALL' %}selected{% endif %}{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+
+  <p class="muted" style="margin:12px 0;font-size:13px">Fixed: amount in ₾, optional cap as % of eligible subtotal (default 100%). Percent: 0–100% of eligible lines; optional minimum eligible subtotal.</p>
+  <div class="form-grid" style="display:grid;gap:14px;grid-template-columns:repeat(3,1fr)">
+    <div>
+      <label for="id_fixed_amount">Fixed amount (₾)</label>
+      <input id="id_fixed_amount" name="fixed_amount_gross" class="form-control" value="{% if promo and promo.fixed_amount_gross is not None %}{{ promo.fixed_amount_gross }}{% endif %}">
+    </div>
+    <div>
+      <label for="id_fixed_cap">Fixed max % of eligible</label>
+      <input id="id_fixed_cap" name="fixed_cap_percent_of_eligible" class="form-control" value="{% if promo %}{{ promo.fixed_cap_percent_of_eligible }}{% else %}100{% endif %}">
+    </div>
+    <div>
+      <label for="id_percent_off">Percent off (%)</label>
+      <input id="id_percent_off" name="percent_off" class="form-control" value="{% if promo and promo.percent_off is not None %}{{ promo.percent_off }}{% endif %}">
+    </div>
+    <div>
+      <label for="id_percent_min">Min eligible subtotal (₾)</label>
+      <input id="id_percent_min" name="percent_min_eligible_subtotal" class="form-control" value="{% if promo %}{{ promo.percent_min_eligible_subtotal }}{% else %}0{% endif %}">
+    </div>
+  </div>
+
+  <hr style="margin:20px 0;border:none;border-top:1px solid var(--line)">
+
+  <div class="form-grid" style="display:grid;gap:14px;grid-template-columns:1fr 1fr">
+    <div>
+      <label for="id_valid_from">Valid from (optional, ISO)</label>
+      <input id="id_valid_from" name="valid_from" class="form-control" placeholder="2026-01-01T00:00" value="{% if promo and promo.valid_from %}{{ promo.valid_from|date:'Y-m-d' }}T{{ promo.valid_from|date:'H:i' }}{% endif %}">
+    </div>
+    <div>
+      <label for="id_valid_until">Valid until (optional, ISO)</label>
+      <input id="id_valid_until" name="valid_until" class="form-control" placeholder="2026-12-31T23:59" value="{% if promo and promo.valid_until %}{{ promo.valid_until|date:'Y-m-d' }}T{{ promo.valid_until|date:'H:i' }}{% endif %}">
+    </div>
+  </div>
+
+  <div class="form-grid" style="margin-top:14px;display:grid;gap:14px;grid-template-columns:1fr 1fr">
+    <div>
+      <label class="checkbox" style="display:flex;align-items:center;gap:8px;font-size:14px">
+        <input type="checkbox" name="single_use_globally" {% if promo and promo.single_use_globally %}checked{% endif %}>
+        Single use (one redemption total)
+      </label>
+    </div>
+    <div>
+      <label for="id_max_redemptions">Max redemptions (empty = unlimited)</label>
+      <input id="id_max_redemptions" name="max_redemptions" class="form-control" value="{% if promo and promo.max_redemptions %}{{ promo.max_redemptions }}{% endif %}">
+    </div>
+  </div>
+
+  <div style="margin-top:14px">
+    <label for="id_restricted_user">Restrict to user (optional)</label>
+    <select id="id_restricted_user" name="restricted_to_user" class="form-control">
+      <option value="">— Anyone (logged in required if set elsewhere) —</option>
+      {% for u in users %}
+      <option value="{{ u.pk }}" {% if promo and promo.restricted_to_user_id == u.pk %}selected{% endif %}>{{ u.email }} ({{ u.pk }})</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div style="margin-top:14px">
+    <label for="id_sort_order">Sort order (list)</label>
+    <input id="id_sort_order" name="sort_order" type="number" class="form-control" style="max-width:120px" value="{% if promo %}{{ promo.sort_order }}{% else %}0{% endif %}">
+  </div>
+
+  <hr style="margin:20px 0;border:none;border-top:1px solid var(--line)">
+  <h3 class="card-title" style="font-size:14px;margin-bottom:10px">Scope: products (hold Ctrl/Cmd to multi-select)</h3>
+  <select name="restricted_products" multiple size="12" class="form-control" style="min-height:220px;font-size:13px">
+    {% for p in products %}
+    <option value="{{ p.pk }}" {% if p.pk in promo_product_ids %}selected{% endif %}>{{ p.name }} — {{ p.pk }}{% if p.sku %} ({{ p.sku }}){% endif %}</option>
+    {% endfor %}
+  </select>
+
+  <h3 class="card-title" style="font-size:14px;margin:18px 0 10px">Scope: collections</h3>
+  <select name="restricted_collections" multiple size="8" class="form-control" style="min-height:160px;font-size:13px">
+    {% for c in collections %}
+    <option value="{{ c.pk }}" {% if c.pk in promo_collection_ids %}selected{% endif %}>{{ c.title }}</option>
+    {% endfor %}
+  </select>
+
+  <div style="margin-top:22px;display:flex;gap:10px;flex-wrap:wrap">
+    <button type="submit" class="btn">Save</button>
+    <a href="{% url 'administration:staff_promo_codes' %}" class="btn btn--outline">Cancel</a>
+  </div>
+</form>
+{% endblock %}
