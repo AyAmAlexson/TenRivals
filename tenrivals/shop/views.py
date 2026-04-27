@@ -337,8 +337,10 @@ def index(request):
         .filter(stock_listing_qty__gt=0)
         .distinct()
     )
-    featured_products = (
-        active_products.filter(featured_product=True).order_by('-created_at')[:5]
+    featured_products = list(
+        annotate_stock_listing_quantity(
+            active_products.filter(featured_product=True).order_by('-created_at')
+        )[:5]
     )
     new_arrivals = list(
         chain(
@@ -623,11 +625,14 @@ def product_search(request):
         products = filter_products_by_listing_channel(
             products, ProductListingChannel.STOCK
         )
-        products = annotate_stock_listing_quantity(products)
     elif channel == ProductListingChannel.PREORDER:
         products = filter_products_by_listing_channel(
             products, ProductListingChannel.PREORDER
         )
+
+    # Always annotate stock qty so product tiles can hide shelf prices when qty is 0
+    # (unscoped search used browse_mode "home" before and always showed prices).
+    products = annotate_stock_listing_quantity(products)
 
     products = order_products_by_effective_price(products)
     if channel == ProductListingChannel.STOCK:
@@ -637,7 +642,7 @@ def product_search(request):
         tile_mode = 'preorder'
         search_channel = 'preorder'
     else:
-        tile_mode = 'home'
+        tile_mode = 'stock'
         search_channel = ''
 
     return render(
