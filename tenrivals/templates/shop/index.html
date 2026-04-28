@@ -407,12 +407,17 @@
 
     /* Shop home FAQ — accordion (after Join the Rivals Community) */
     .shop-home-faq--embedded{
-      margin-top:40px;padding-top:36px;border-top:1px solid #d9e0e8;
+      --faq-accent:#4f46e5;
+      margin-top:44px;padding-top:8px;border-top:none;
       max-width:min(98ch, 920px);
+      position:relative;
     }
-    .shop-home-faq__intro{
-      font-size:15px;line-height:1.72;color:#475569;margin:0 0 22px;max-width:72ch;
-      text-transform:none;font-weight:400;
+    .shop-home-faq--embedded::before{
+      content:"";
+      display:block;height:5px;border-radius:3px;margin:0 0 28px;
+      max-width:100%;
+      background:linear-gradient(90deg,#4338ca 0%,#2563eb 42%,#7c3aed 100%);
+      box-shadow:0 2px 12px rgba(67,56,202,.35);
     }
     .shop-home-faq h2{
       font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
@@ -440,13 +445,13 @@
       transform:rotate(45deg);transition:transform .2s ease, border-color .15s;
     }
     .shop-home-faq__details[open] .shop-home-faq__summary::after{
-      margin-top:-2px;transform:rotate(225deg);border-color:var(--accent);
+      margin-top:-2px;transform:rotate(225deg);border-color:var(--faq-accent,#4f46e5);
     }
     .shop-home-faq__summary:hover::after{border-color:var(--ink)}
     .shop-home-faq__num{
       flex:0 0 22px;width:22px;height:22px;border-radius:50%;
-      background:color-mix(in srgb, var(--accent) 10%, #fff);
-      color:var(--accent);font-size:11px;font-weight:800;
+      background:#eef2ff;
+      color:var(--faq-accent,#4f46e5);font-size:11px;font-weight:800;
       display:flex;align-items:center;justify-content:center;line-height:1;margin-top:1px;
     }
     .shop-home-faq__qtext{flex:1;min-width:0}
@@ -460,7 +465,7 @@
 
     /* Headings */
     h1, h2, h3, h4, h5{font-family:'Saira', system-ui, sans-serif; font-weight:800; letter-spacing:.3px; text-transform:uppercase}
-    .shop-home-faq summary,.shop-home-faq p,.shop-home-faq__intro,.shop-home-faq__panel{text-transform:none}
+    .shop-home-faq summary,.shop-home-faq p,.shop-home-faq__panel{text-transform:none}
 
     /* Footer */
     footer{background:#1a1a1a; color:rgba(255,255,255,.5); margin-top:48px}
@@ -507,7 +512,8 @@
       .shop-about__list li{font-size:14px}
       .shop-about__community{margin-top:36px;padding:22px 18px 20px}
       .shop-about__closing{font-size:14px}
-      .shop-home-faq--embedded{margin-top:32px;padding-top:28px}
+      .shop-home-faq--embedded{margin-top:36px;padding-top:6px}
+      .shop-home-faq--embedded::before{margin-bottom:22px;height:4px}
       .shop-home-faq__summary{padding:12px 40px 12px 14px;font-size:13px}
       .shop-home-faq__panel{padding:0 14px 14px 44px;font-size:13px}
     }
@@ -751,10 +757,6 @@
       </div>
 
       <section class="shop-home-faq shop-home-faq--embedded" aria-labelledby="shop-home-faq-title">
-        <p class="shop-home-faq__intro">
-          This FAQ is designed to address the most common concerns of players in Tbilisi while reinforcing your brand&apos;s
-          &ldquo;Senior Partner&rdquo; authority.
-        </p>
         <h2 id="shop-home-faq-title">Frequently Asked Questions</h2>
         <div class="shop-home-faq__acc">
           <details class="shop-home-faq__details">
