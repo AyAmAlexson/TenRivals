@@ -62,20 +62,87 @@
     .cart-row-right{display:contents}
     .cart-grid-head,.cart-grid-row{
       display:grid;
-      grid-template-columns:minmax(140px,2.5fr) minmax(120px,1.05fr) minmax(56px,0.78fr) minmax(44px,0.48fr);
+      grid-template-columns:minmax(140px,2.55fr) minmax(108px,0.95fr) minmax(72px,0.82fr);
       gap:10px 12px;
-      align-items:center;
       padding:14px 12px;
       border-bottom:1px solid var(--line);
       font-size:14px;
     }
+    .cart-grid-head{align-items:end}
+    .cart-grid-row{align-items:start}
     .cart-grid-head{
       font-size:11px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:var(--muted);
     }
+    .cart-grid-cell--qty .cart-cell-body{display:flex;justify-content:flex-end}
     .cart-grid-head .num,.cart-grid-row .num{text-align:right; white-space:nowrap}
-    .cart-qty-form{display:flex; align-items:center; gap:8px; flex-wrap:wrap}
-    .cart-qty-form input[type="number"]{width:56px; min-height:40px; padding:6px 8px; border:1px solid var(--line); font-family:inherit; font-size:14px}
-    .cart-remove-form{display:inline}
+    .cart-qty-form{display:inline-flex; align-items:stretch; flex-wrap:nowrap; border:1px solid var(--line); background:#fff}
+    .cart-qty-form input[type="number"]{
+      width:52px;
+      min-height:40px;
+      padding:6px 8px;
+      border:none;
+      border-right:1px solid var(--line);
+      font-family:inherit;
+      font-size:14px;
+      border-radius:0;
+      background:transparent;
+      text-align:center;
+      -moz-appearance:textfield;
+    }
+    .cart-qty-form input[type="number"]::-webkit-outer-spin-button,
+    .cart-qty-form input[type="number"]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+    .cart-qty-update{
+      width:42px;
+      min-width:42px;
+      flex-shrink:0;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:0;
+      border:none;
+      background:#fff;
+      color:var(--ink);
+      cursor:pointer;
+      transition:background .15s,color .15s;
+      -webkit-appearance:none;
+      appearance:none;
+    }
+    .cart-qty-update:hover{background:#f8fafc;color:var(--accent)}
+    .cart-qty-update svg{display:block}
+    .cart-remove-form{margin:0;padding:0;display:block;width:100%}
+    .cart-remove-link{
+      display:block;
+      width:100%;
+      margin:0;
+      padding:0;
+      border:none;
+      background:none;
+      font-family:inherit;
+      font-size:12px;
+      font-weight:400;
+      line-height:1.3;
+      color:#2563eb;
+      text-align:left;
+      text-decoration:underline;
+      text-underline-offset:2px;
+      cursor:pointer;
+      -webkit-appearance:none;
+      appearance:none;
+    }
+    .cart-remove-link:hover{color:#1d4ed8}
+    .cart-qty-update:focus-visible,
+    .cart-remove-link:focus-visible{
+      outline:2px solid var(--accent);
+      outline-offset:2px;
+    }
+    .cart-item__lead{
+      display:flex;
+      flex-direction:column;
+      align-items:flex-start;
+      gap:6px;
+      flex-shrink:0;
+      width:64px;
+    }
     .cart-cell--label{display:none}
     .cart-cell-body{min-width:0}
     .cart-item__variant{
@@ -92,20 +159,6 @@
       color:var(--muted);
       font-weight:400;
     }
-    .btn--icon-remove{
-      width:44px;
-      min-width:44px;
-      height:44px;
-      padding:0;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      color:var(--muted);
-      border-color:var(--line);
-      background:transparent;
-    }
-    .btn--icon-remove:hover{color:var(--accent);border-color:var(--accent);background:rgba(178,0,9,.06)}
-    .btn--icon-remove svg{width:20px;height:20px;display:block}
     @media(max-width:720px){
       .cart-grid-head{display:none}
       .cart-sheet{
@@ -125,13 +178,12 @@
         min-height:0;
       }
       .cart-grid-row{
-        position:relative;
         display:flex;
         flex-wrap:nowrap;
         align-items:flex-start;
         justify-content:space-between;
         gap:12px 10px;
-        padding:14px 48px 14px 0;
+        padding:14px 0;
         margin:0;
         border:none;
         border-bottom:1px solid var(--line);
@@ -147,6 +199,7 @@
       }
       .cart-grid-cell--product .cart-cell-body{width:100%}
       .cart-item{align-items:flex-start;gap:10px}
+      .cart-item__lead{width:52px}
       .cart-item__thumb{width:52px;height:52px;flex-shrink:0}
       .cart-item__name{
         font-size:13px;
@@ -159,7 +212,8 @@
       }
       .cart-item__variant{font-size:11px;margin-top:3px}
       .cart-item__unit-price{font-size:12px;margin-top:4px}
-      .cart-grid-cell--num,.cart-grid-cell--qty,.cart-grid-cell--action{
+      .cart-remove-link{font-size:11px}
+      .cart-grid-cell--num,.cart-grid-cell--qty{
         padding:0;
         border:none;
         width:auto;
@@ -168,15 +222,9 @@
         font-size:14px;
         font-weight:600;
       }
-      .cart-grid-cell--qty .cart-qty-form{flex-wrap:nowrap;justify-content:flex-end;gap:6px}
-      .cart-grid-cell--qty .cart-qty-form input[type="number"]{width:48px;min-height:38px;font-size:13px}
-      .cart-grid-cell--qty .cart-qty-form .btn--sm{padding:6px 10px;font-size:9px}
-      .cart-grid-cell--action{
-        position:absolute;
-        top:10px;
-        right:0;
-      }
-      .cart-grid-cell--action .cart-cell-body{padding:0}
+      .cart-grid-cell--qty .cart-qty-form{justify-content:flex-end}
+      .cart-grid-cell--qty .cart-qty-form input[type="number"]{width:46px;min-height:38px;font-size:13px}
+      .cart-grid-cell--qty .cart-qty-update{width:40px;min-width:40px}
       .cart-grid-row .num{text-align:right}
     }
     .cart-empty{color:var(--muted); padding:40px 0; font-size:15px}
@@ -291,18 +339,26 @@
           <div>Product</div>
           <div>Qty</div>
           <div class="num">Line</div>
-          <div aria-hidden="true"></div>
         </div>
         {% for row in cart_rows %}
         <div class="cart-grid-row" role="row">
           <div class="cart-grid-cell cart-grid-cell--product">
             <div class="cart-cell-body">
               <div class="cart-item">
-                <a class="cart-item__thumb" href="{% url 'shop:product_detail' row.product.pk %}?channel=stock" aria-label="{{ row.name }}">
-                  {% if row.product.main_image %}
-                  <img src="{{ row.product.main_image.url }}" alt="{{ row.name }}">
-                  {% endif %}
-                </a>
+                <div class="cart-item__lead">
+                  <a class="cart-item__thumb" href="{% url 'shop:product_detail' row.product.pk %}?channel=stock" aria-label="{{ row.name }}">
+                    {% if row.product.main_image %}
+                    <img src="{{ row.product.main_image.url }}" alt="{{ row.name }}">
+                    {% endif %}
+                  </a>
+                  <form method="post" action="{% url 'shop:cart_remove_line' %}" class="cart-remove-form" data-cart-remove-form="1">
+                    {% csrf_token %}
+                    <input type="hidden" name="line_index" value="{{ row.index }}">
+                    <input type="hidden" name="product_id" value="{{ row.product.pk }}">
+                    <input type="hidden" name="variant" value="{{ row.variant_key }}">
+                    <button type="submit" class="cart-remove-link">Remove</button>
+                  </form>
+                </div>
                 <div class="cart-item__meta">
                   <a class="cart-item__name" href="{% url 'shop:product_detail' row.product.pk %}?channel=stock">{{ row.name }}</a>
                   {% if row.variant_label %}
@@ -319,31 +375,18 @@
                 <form method="post" action="{% url 'shop:cart_update_line' %}" class="cart-qty-form">
                   {% csrf_token %}
                   <input type="hidden" name="line_index" value="{{ row.index }}">
-                  <input type="number" name="qty" value="{{ row.qty }}" min="1" max="{{ row.max_qty }}" aria-label="Quantity">
-                  <button type="submit" class="btn btn--sm">UPDATE</button>
+                  <input type="number" name="qty" value="{{ row.qty }}" min="1" max="{{ row.max_qty }}" aria-label="Quantity" inputmode="numeric">
+                  <button type="submit" class="cart-qty-update" aria-label="Update quantity">
+                    <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="23 4 23 10 17 10"/>
+                      <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                    </svg>
+                  </button>
                 </form>
               </div>
             </div>
             <div class="cart-grid-cell cart-grid-cell--num cart-grid-cell--line num mono">
               <div class="cart-cell-body">{{ row.line_total }} ₾</div>
-            </div>
-            <div class="cart-grid-cell cart-grid-cell--action">
-              <div class="cart-cell-body">
-                <form method="post" action="{% url 'shop:cart_remove_line' %}" class="cart-remove-form" data-cart-remove-form="1">
-                  {% csrf_token %}
-                  <input type="hidden" name="line_index" value="{{ row.index }}">
-                  <input type="hidden" name="product_id" value="{{ row.product.pk }}">
-                  <input type="hidden" name="variant" value="{{ row.variant_key }}">
-                  <button type="submit" class="btn btn--outline btn--sm btn--icon-remove" aria-label="Remove from cart">
-                    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M3 6h18"/>
-                      <path d="M8 6V4h8v2"/>
-                      <path d="M19 6l-1 14H6L5 6"/>
-                      <path d="M10 11v6M14 11v6"/>
-                    </svg>
-                  </button>
-                </form>
-              </div>
             </div>
           </div>
         </div>
