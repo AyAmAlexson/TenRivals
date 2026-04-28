@@ -1492,7 +1492,7 @@ def _send_checkout_customer_submitted_email(
         'logo_url': logo_url,
         'company_name': 'Tennis Rivals Shop',
         'contact_tg': 'https://t.me/andyrivals',
-        'contact_email': 'anry.rivals@tenrivals.com',
+        'contact_email': 'andy.rivals@tenrivals.com',
         'contact_phone': '+995 591 288 967',
         'is_bank_transfer': (payment_label or '').strip().lower().startswith('bank transfer'),
         'bank': {
@@ -1518,6 +1518,10 @@ def checkout(request):
     if not rows:
         messages.error(request, 'Your cart is empty.')
         return redirect('shop:cart')
+
+    if request.method == 'POST' and request.POST.get('action') == 'guest_continue':
+        # PRG: persist guest path across refresh (otherwise show_auth_gate reopens on GET).
+        return redirect(f'{reverse("shop:checkout")}?guest=1')
 
     if request.method == 'POST' and request.POST.get('action') == 'apply_checkout_promo':
         code = request.POST.get('promo', '')
@@ -1619,11 +1623,7 @@ def checkout(request):
                 f'Comment: {contact["comment"]}\n'
                 f'Promo code: {(get_cart(request).get("promo_code") or "").strip()}\n'
                 f'Cart items:\n' + '\n'.join(cart_lines) + '\n'
-                f'Total GEL: {total}\n'
-            )
-            _send_checkout_email(
-                f'TR - NEW Checkout - {total} GEL',
-                raw_body,
+                f'Total GEL (cart preview): {total}\n'
             )
             stock_errors = validate_order_line_demands(
                 demands,
@@ -1781,7 +1781,10 @@ def checkout(request):
                                 f'Order: {order.invoice_number}\n'
                                 f'Customer: {customer.display_name()}\n'
                                 f'Total GEL: {order.gross_total}\n'
+                                f'Promo discount GEL: {order.promo_discount_gross}\n'
                                 f'Staff link: {staff_url}\n'
+                                f'\n--- Checkout form snapshot ---\n'
+                                f'{raw_body}'
                             ),
                         )
                         _send_checkout_customer_submitted_email(
@@ -1791,8 +1794,8 @@ def checkout(request):
                             contact=contact,
                             payment_label=payment_label,
                             subtotal=subtotal,
-                            discount=discount,
-                            total=total,
+                            discount=order.promo_discount_gross,
+                            total=order.gross_total,
                         )
                     return redirect('shop:checkout_success', order_id=order.pk)
                 except Exception as exc:

@@ -154,7 +154,7 @@ def _send_customer_order_confirmed_email(order: SalesOrder) -> None:
         'logo_url': logo_url,
         'company_name': 'Tennis Rivals Shop',
         'contact_tg': 'https://t.me/andyrivals',
-        'contact_email': 'anry.rivals@tenrivals.com',
+        'contact_email': 'andy.rivals@tenrivals.com',
         'contact_phone': '+995 591 288 967',
     }
     html = render_to_string('shop/emails/order_confirmed.html', ctx)

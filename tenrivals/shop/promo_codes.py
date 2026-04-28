@@ -24,6 +24,13 @@ class PromoEvaluation:
     applicable_subtotal: Decimal
     eligible_line_indices: list[int]
 
+    @property
+    def promo_id(self) -> int | None:
+        """``PromoCode`` PK when a row was loaded; ``None`` if no promo applies."""
+        if self.promo is None:
+            return None
+        return int(self.promo.pk)
+
 
 def normalize_promo_code(raw: str) -> str:
     if not isinstance(raw, str):
