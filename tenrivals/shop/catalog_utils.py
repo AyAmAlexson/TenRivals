@@ -65,7 +65,16 @@ FEATURED_STOCK_BRANDS: list[FeaturedStockBrand] = [
 
 
 def filter_products_by_listing_channel(qs, channel: str):
-    """Once any listing rows exist for a channel, public lists only show those products."""
+    """Restrict to products that have at least one ``ProductListing`` row for ``channel``.
+
+    Quantity is not checked here. For the **in-stock** grid, combine with
+    ``annotate_stock_listing_quantity`` + ``stock_listing_qty__gt=0`` so only real shelf
+    inventory appears (``STOCK.quantity`` is on-hand in Tbilisi).
+
+    **Preorder** vitrine rows use ``PREORDER`` with ``quantity == 0``; those products still
+    match the preorder channel filter and should show “coming soon” in preorder tiles, not
+    shelf pricing.
+    """
     if ProductListing.objects.filter(channel=channel).exists():
         return qs.filter(listings__channel=channel).distinct()
     return qs
@@ -78,7 +87,7 @@ def order_products_by_effective_price(qs):
 
 
 def annotate_stock_listing_quantity(qs):
-    """Per-product quantity on STOCK channel (0 if no row)."""
+    """Per-product quantity on the STOCK channel — physical units in Tbilisi (0 if no row)."""
     stock_sq = ProductListing.objects.filter(
         product_id=OuterRef('pk'),
         channel=ProductListingChannel.STOCK,
@@ -91,6 +100,20 @@ def annotate_stock_listing_quantity(qs):
     )
 
 
+def annotate_preorder_listing_quantity(qs):
+    """Per-product quantity on the PREORDER channel (0 if no row; 0 = vitrine / coming soon)."""
+    preorder_sq = ProductListing.objects.filter(
+        product_id=OuterRef('pk'),
+        channel=ProductListingChannel.PREORDER,
+    ).values('quantity')[:1]
+    return qs.annotate(
+        preorder_listing_qty=Coalesce(
+            Subquery(preorder_sq, output_field=models.PositiveIntegerField()),
+            Value(0),
+        )
+    )
+
+
 def stock_catalog_base_queryset():
     return filter_products_by_listing_channel(
         Product.objects.filter(is_active=True),
@@ -98,11 +121,17 @@ def stock_catalog_base_queryset():
     )
 
 
+def stock_catalog_in_stock_queryset():
+    """Storefront stock lists: has a STOCK listing row with quantity > 0."""
+    return annotate_stock_listing_quantity(stock_catalog_base_queryset()).filter(
+        stock_listing_qty__gt=0
+    )
+
+
 def top_stock_brands_by_listing_quantity(limit: int = 7) -> list[str]:
     """Brands with the highest total STOCK listing quantity (only qty > 0)."""
-    qs = annotate_stock_listing_quantity(stock_catalog_base_queryset())
-    qs = qs.exclude(brand__isnull=True).exclude(brand__exact='').filter(
-        stock_listing_qty__gt=0
+    qs = stock_catalog_in_stock_queryset().exclude(brand__isnull=True).exclude(
+        brand__exact=''
     )
     rows = (
         qs.values('brand')

@@ -788,7 +788,14 @@ class ProductListingChannel(models.TextChoices):
 
 
 class ProductListing(models.Model):
-    """Links a product to in-stock or preorder catalog with quantity (stock on hand)."""
+    """Per-channel availability for storefront merchandising.
+
+    * **STOCK** ``quantity`` — units physically in Tbilisi (real shelf stock). Drives
+      ``Product.in_stock`` via signals when this row changes.
+    * **PREORDER** ``quantity`` — preorder allocation / slots from suppliers. ``0`` means
+      vitrine / “coming soon” in the preorder catalog (indicative pricing, contact to order),
+      not on-hand inventory.
+    """
 
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='listings')
     channel = models.CharField(max_length=16, choices=ProductListingChannel.choices)

@@ -1,6 +1,6 @@
-{# p, request required. browse_mode: "stock" | "preorder" | "home" | omit (same as home). tile_fetch: optional int — first tiles on home rails get faster image hints. Shelf prices only when stock_listing_qty > 0; preorder channel still shows indicative (˜) prices when qty is 0. #}
+{# p, request required. browse_mode: "stock" | "preorder" | "home" | omit (same as home). tile_fetch: optional int — first tiles on home rails get faster image hints. STOCK qty = shelf in Tbilisi. PREORDER qty = preorder slots; 0 = vitrine (coming soon). Preorder catalog uses preorder_listing_qty for tile copy when annotated. #}
 <div class="product-tile">
-  {% with qty=p.stock_listing_qty|default:0 %}
+  {% with qty=p.stock_listing_qty|default:0 po=p.preorder_listing_qty|default:0 %}
   {% if user.is_staff %}
   <a href="{% url 'shop:product_edit' p.pk %}?{% if browse_mode == 'preorder' %}channel=preorder&{% else %}channel={% if qty > 0 %}stock{% else %}preorder{% endif %}&{% endif %}next={{ request.get_full_path|urlencode }}" class="product-tile__edit" title="Edit product" aria-label="Edit product">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 013 3L8 18l-4 1 1-4L16.5 3.5z"/></svg>
@@ -28,19 +28,23 @@
       <div class="product-tile__footer">
         <p class="product-tile__type">{{ p.get_type_display }}</p>
         <div class="product-tile__prices">
-          {% if qty > 0 %}
+          {% if browse_mode == 'preorder' %}
+            {% if po > 0 %}
+              {% if p.actual_price %}
+              <span class="product-tile__price">˜{{ p.margin_price }} ₾</span>
+              <span class="product-tile__price-old">{{ p.initial_price }} ₾</span>
+              {% else %}
+              <span class="product-tile__price">˜{{ p.margin_price }} ₾</span>
+              {% endif %}
+            {% else %}
+              <span class="product-tile__price-muted">Coming soon · Pre-order</span>
+            {% endif %}
+          {% elif qty > 0 %}
             {% if p.actual_price %}
             <span class="product-tile__price">{{ p.actual_price }} ₾</span>
             <span class="product-tile__price-old">{{ p.initial_price }} ₾</span>
             {% else %}
             <span class="product-tile__price">{{ p.initial_price }} ₾</span>
-            {% endif %}
-          {% elif browse_mode == 'preorder' %}
-            {% if p.actual_price %}
-            <span class="product-tile__price">˜{{ p.margin_price }} ₾</span>
-            <span class="product-tile__price-old">{{ p.initial_price }} ₾</span>
-            {% else %}
-            <span class="product-tile__price">˜{{ p.margin_price }} ₾</span>
             {% endif %}
           {% else %}
             <span class="product-tile__price-muted">Coming soon · Pre-order</span>

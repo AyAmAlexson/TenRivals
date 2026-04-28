@@ -420,6 +420,9 @@
         {% endif %}
         {% if pdp_mode == 'preorder' %}
         <p style="font-size:12px;color:var(--muted);margin:-12px 0 16px">Indicative price (±30 ₾). Final price when you confirm your order.</p>
+        {% if preorder_listing_qty == 0 %}
+        <p style="font-size:12px;color:var(--muted);margin:-8px 0 16px">This SKU is on the preorder list as coming soon (no preorder slots yet). Message us to register interest or ask for timing.</p>
+        {% endif %}
         {% endif %}
 
         {% if pdp_cart_enabled and pdp_requires_size_pick and pdp_variant_options %}

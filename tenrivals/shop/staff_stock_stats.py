@@ -8,7 +8,7 @@ from collections import defaultdict
 from decimal import Decimal
 from typing import Any
 
-from .catalog_utils import annotate_stock_listing_quantity, stock_catalog_base_queryset
+from .catalog_utils import stock_catalog_in_stock_queryset
 from .models import CourtSurface, Gender, Product, ProductType, Racket, Shoe
 from .size_inventory import normalize_sizes_to_qty_map, us_shoe_size_labels
 
@@ -33,10 +33,8 @@ def _stock_qty(p: Product) -> int:
 
 
 def stock_products_queryset():
-    """Active products in stock channel with listing qty annotation."""
-    qs = stock_catalog_base_queryset()
-    qs = annotate_stock_listing_quantity(qs)
-    qs = qs.filter(stock_listing_qty__gt=0)
+    """Active products in stock channel with on-hand qty > 0 (same as storefront)."""
+    qs = stock_catalog_in_stock_queryset()
     return qs.select_related(
         'category',
         'shoe',

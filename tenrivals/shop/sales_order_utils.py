@@ -60,12 +60,11 @@ def stock_listing_quantity(product_id: int) -> int:
 
 def stock_products_for_select():
     """Active products in stock channel with on-hand qty > 0 (same rules as storefront)."""
-    from .catalog_utils import annotate_stock_listing_quantity, stock_catalog_base_queryset
+    from .catalog_utils import stock_catalog_in_stock_queryset
 
-    qs = stock_catalog_base_queryset()
-    qs = annotate_stock_listing_quantity(qs)
+    qs = stock_catalog_in_stock_queryset()
     return (
-        qs.filter(stock_listing_qty__gt=0)
+        qs
         .order_by('brand', 'name')
         .select_related('shoe', 'racket', 'apparel', 'string')
     )

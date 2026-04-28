@@ -6,6 +6,7 @@ from .models import Customer, Product, ProductListing, ProductListingChannel
 
 
 def sync_product_in_stock_from_stock_listing(product_id: int) -> None:
+    # Shelf truth only: PREORDER rows (including qty 0 vitrine) do not affect Product.in_stock.
     row = (
         ProductListing.objects.filter(
             product_id=product_id,

@@ -37,11 +37,12 @@ from .cart_session import (
 )
 from .catalog_utils import (
     FEATURED_STOCK_BRANDS,
+    annotate_preorder_listing_quantity,
     annotate_stock_listing_quantity,
     distinct_brands_for_type,
     filter_products_by_listing_channel,
     order_products_by_effective_price,
-    stock_catalog_base_queryset,
+    stock_catalog_in_stock_queryset,
 )
 from .forms import (
     AccessoryForm,
@@ -208,6 +209,11 @@ def _stock_listing_quantity(product: Product) -> int:
     return int(row.quantity) if row else 0
 
 
+def _preorder_listing_quantity(product: Product) -> int:
+    row = product.listings.filter(channel=ProductListingChannel.PREORDER).first()
+    return int(row.quantity) if row else 0
+
+
 def _resolve_pdp_display_mode(request, product: Product) -> str:
     """'stock' | 'preorder' — drives breadcrumbs and price copy."""
     requested = _parse_listing_channel_param(
@@ -332,16 +338,10 @@ def index(request):
         *_PRODUCT_SUBCLASS_SELECT,
         'category',
     )
-    stock_products = (
-        annotate_stock_listing_quantity(
-            stock_catalog_base_queryset().select_related(
-                *_PRODUCT_SUBCLASS_SELECT,
-                'category',
-            )
-        )
-        .filter(stock_listing_qty__gt=0)
-        .distinct()
-    )
+    stock_products = stock_catalog_in_stock_queryset().select_related(
+        *_PRODUCT_SUBCLASS_SELECT,
+        'category',
+    ).distinct()
     featured_products = list(
         annotate_stock_listing_quantity(
             active_products.filter(featured_product=True).order_by('-created_at')
@@ -416,6 +416,7 @@ def product_detail(request, pk):
     )
     pdp_mode = _resolve_pdp_display_mode(request, product)
     stock_listing_qty = _stock_listing_quantity(product)
+    preorder_listing_qty = _preorder_listing_quantity(product)
     variant_opts = _pdp_variant_option_dicts(product)
     pdp_cart_enabled = (
         pdp_mode == 'stock'
@@ -456,6 +457,7 @@ def product_detail(request, pk):
             "pdp_og_image_url": pdp_og_image_url,
             "pdp_mode": pdp_mode,
             "stock_listing_qty": stock_listing_qty,
+            "preorder_listing_qty": preorder_listing_qty,
             "pdp_type_breadcrumb_label": _pdp_breadcrumb_type_label(product),
             "pdp_cart_enabled": pdp_cart_enabled,
             "pdp_requires_size_pick": pdp_requires_size_pick,
@@ -580,7 +582,7 @@ def _catalog_browse_context(
 
         if browse_mode == 'stock':
             shoe_brands = distinct_brands_for_type(
-                stock_catalog_base_queryset(), type_code
+                stock_catalog_in_stock_queryset(), type_code
             )
         else:
             shoe_brands = list(
@@ -597,7 +599,7 @@ def _catalog_browse_context(
     if show_racket_filters:
         if browse_mode == 'stock':
             racket_brands = distinct_brands_for_type(
-                stock_catalog_base_queryset(), ProductType.RACKET
+                stock_catalog_in_stock_queryset(), ProductType.RACKET
             )
         else:
             racket_brands = list(
@@ -648,6 +650,10 @@ def _catalog_browse_context(
     products = filter_products_by_listing_channel(products, channel)
     products = products.select_related(*_PRODUCT_SUBCLASS_SELECT, 'category')
     if browse_mode == 'stock':
+        products = annotate_stock_listing_quantity(products)
+        products = products.filter(stock_listing_qty__gt=0)
+    else:
+        products = annotate_preorder_listing_quantity(products)
         products = annotate_stock_listing_quantity(products)
     products = order_products_by_effective_price(products)
     products = products.order_by('-in_stock', '-sort_price', 'id')
@@ -824,9 +830,11 @@ def product_search(request):
             products, ProductListingChannel.PREORDER
         )
 
-    # Always annotate stock qty so product tiles can hide shelf prices when qty is 0
-    # (unscoped search used browse_mode "home" before and always showed prices).
+    # Stock + preorder annotations for tiles (shelf vs preorder vitrine).
+    products = annotate_preorder_listing_quantity(products)
     products = annotate_stock_listing_quantity(products)
+    if channel == ProductListingChannel.STOCK:
+        products = products.filter(stock_listing_qty__gt=0)
 
     products = order_products_by_effective_price(products)
     if channel == ProductListingChannel.STOCK:
@@ -870,7 +878,9 @@ def collection_detail(request, slug):
             ).select_related(*_PRODUCT_SUBCLASS_SELECT, 'category')
         )
         grp_products = order_products_by_effective_price(
-            annotate_stock_listing_quantity(grp_products)
+            annotate_stock_listing_quantity(grp_products).filter(
+                stock_listing_qty__gt=0
+            )
         )
         grp_ids = list(grp_products.values_list('pk', flat=True))
         union_ids.update(grp_ids)
@@ -886,13 +896,25 @@ def collection_detail(request, slug):
         Product.objects.filter(pk__in=union_ids, is_active=True)
         .select_related(*_PRODUCT_SUBCLASS_SELECT, 'category')
     )
-    all_products = list(order_products_by_effective_price(annotate_stock_listing_quantity(all_products)))
+    all_products = list(
+        order_products_by_effective_price(
+            annotate_stock_listing_quantity(all_products).filter(
+                stock_listing_qty__gt=0
+            )
+        )
+    )
     if not group_sections and collection.products.exists():
         fallback = (
             Product.objects.filter(pk__in=collection.products.values('pk'), is_active=True)
             .select_related(*_PRODUCT_SUBCLASS_SELECT, 'category')
         )
-        fallback = list(order_products_by_effective_price(annotate_stock_listing_quantity(fallback)))
+        fallback = list(
+            order_products_by_effective_price(
+                annotate_stock_listing_quantity(fallback).filter(
+                    stock_listing_qty__gt=0
+                )
+            )
+        )
         group_sections.append(
             {
                 'group': None,
