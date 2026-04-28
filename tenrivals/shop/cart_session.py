@@ -78,7 +78,8 @@ def _session_payload(request) -> dict[str, Any]:
     if not isinstance(raw, dict):
         return _default_cart()
     cleaned = _clean_lines(raw.get('lines'))
-    return {'lines': cleaned, 'promo_code': _clean_promo(raw.get('promo_code'))}
+    promo = _clean_promo(raw.get('promo_code')) if cleaned else ''
+    return {'lines': cleaned, 'promo_code': promo}
 
 
 def _save_session_payload(request, cart: dict[str, Any]) -> None:
@@ -109,7 +110,13 @@ def _load_user_cart_payload(user, *, create: bool = True) -> dict[str, Any]:
         for ln in cart.lines.order_by('id')
         if int(ln.qty or 0) > 0
     ]
-    return {'lines': _clean_lines(lines), 'promo_code': _clean_promo(cart.promo_code)}
+    cleaned = _clean_lines(lines)
+    promo_field = _clean_promo(cart.promo_code)
+    promo = promo_field if cleaned else ''
+    if not cleaned and promo_field:
+        cart.promo_code = ''
+        cart.save(update_fields=['promo_code', 'updated_at'])
+    return {'lines': cleaned, 'promo_code': promo}
 
 
 def _save_user_cart_payload(user, cart: dict[str, Any]) -> None:
@@ -159,6 +166,8 @@ def _merge_session_into_user_cart(request) -> None:
         'lines': _clean_lines(merged),
         'promo_code': _clean_promo(session_cart.get('promo_code') or user_cart.get('promo_code') or ''),
     }
+    if not merged_cart['lines']:
+        merged_cart['promo_code'] = ''
     _save_user_cart_payload(user, merged_cart)
     _clear_session_payload(request)
 
@@ -167,10 +176,23 @@ def get_cart(request) -> dict[str, Any]:
     if _is_authenticated(request):
         _merge_session_into_user_cart(request)
         return _load_user_cart_payload(request.user, create=True)
-    return _session_payload(request)
+    payload = _session_payload(request)
+    raw = request.session.get(SESSION_CART_KEY)
+    if (
+        isinstance(raw, dict)
+        and not payload['lines']
+        and _clean_promo(raw.get('promo_code'))
+    ):
+        _save_session_payload(request, payload)
+    return payload
 
 
 def save_cart(request, cart: dict[str, Any]) -> None:
+    cart['lines'] = _clean_lines(cart.get('lines') or [])
+    if not cart['lines']:
+        cart['promo_code'] = ''
+    else:
+        cart['promo_code'] = _clean_promo(cart.get('promo_code'))
     if _is_authenticated(request):
         _save_user_cart_payload(request.user, cart)
         _clear_session_payload(request)
