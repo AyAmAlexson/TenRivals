@@ -50,11 +50,13 @@
     .checkout-choice p{font-size:13px;line-height:1.5;color:var(--muted);margin:0 0 12px;max-width:48ch}
     .checkout-or{display:flex;align-items:center;gap:12px;margin:14px 0;font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
     .checkout-or::before,.checkout-or::after{content:"";flex:1;height:1px;background:var(--line)}
-    .checkout-promo-form{display:flex;flex-wrap:nowrap;align-items:stretch;border:1px solid var(--line);background:#fff;max-width:100%}
+    /* Promo row: must override global `input{width:100%}` or the field fills the row and APPLY wraps */
+    .checkout-promo-form{display:flex;flex-wrap:nowrap;align-items:stretch;border:1px solid var(--line);background:#fff;max-width:100%;width:100%}
     .checkout-promo-form input[type="text"]{
       flex:1 1 0;
       min-width:0;
-      width:0;
+      width:auto;
+      max-width:100%;
       padding:10px 12px;
       border:none;
       border-right:1px solid var(--line);
@@ -191,12 +193,10 @@
         <h2>Order summary</h2>
         <div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px dashed var(--line)">
           <label for="id_checkout_promo" style="display:block;font-size:12px;color:var(--muted);margin-bottom:6px">Promo code</label>
-          <form method="post" class="checkout-promo-form">
-            {% csrf_token %}
-            <input type="hidden" name="action" value="apply_checkout_promo">
+          <div class="checkout-promo-form">
             <input id="id_checkout_promo" type="text" name="promo" value="{{ checkout_cart_promo_code }}" maxlength="64" autocomplete="off" placeholder="Code">
-            <button type="submit" class="btn btn--outline">APPLY</button>
-          </form>
+            <button type="submit" class="btn btn--outline" name="action" value="apply_checkout_promo">APPLY</button>
+          </div>
         </div>
         {% for row in checkout_rows %}
         <div class="checkout-item">
