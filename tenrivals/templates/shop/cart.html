@@ -49,9 +49,10 @@
     /* CSS grid (not <table>) so <form> in cells is valid DOM in all browsers */
     .cart-sheet{width:100%; margin-bottom:28px; overflow-x:auto}
     .cart-grid-cell{min-width:0}
+    .cart-row-right{display:contents}
     .cart-grid-head,.cart-grid-row{
       display:grid;
-      grid-template-columns:minmax(160px,2.2fr) minmax(72px,0.9fr) minmax(72px,0.75fr) minmax(140px,1.1fr) minmax(72px,0.75fr) minmax(88px,0.65fr);
+      grid-template-columns:minmax(140px,2.35fr) minmax(56px,0.72fr) minmax(120px,1.05fr) minmax(56px,0.72fr) minmax(44px,0.5fr);
       gap:10px 12px;
       align-items:center;
       padding:14px 12px;
@@ -67,52 +68,78 @@
     .cart-remove-form{display:inline}
     .cart-cell--label{display:none}
     .cart-cell-body{min-width:0}
+    .cart-item__variant{
+      margin:4px 0 0;
+      font-size:12px;
+      line-height:1.35;
+      color:var(--muted);
+      font-weight:400;
+    }
+    .btn--icon-remove{
+      width:44px;
+      min-width:44px;
+      height:44px;
+      padding:0;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      color:var(--muted);
+      border-color:var(--line);
+      background:transparent;
+    }
+    .btn--icon-remove:hover{color:var(--accent);border-color:var(--accent);background:rgba(178,0,9,.06)}
+    .btn--icon-remove svg{width:20px;height:20px;display:block}
     @media(max-width:720px){
       .cart-grid-head{display:none}
-      .cart-cell--label{display:block}
       .cart-sheet{overflow-x:visible; margin-bottom:12px}
+      .cart-row-right{
+        display:flex;
+        flex-direction:column;
+        align-items:flex-end;
+        gap:8px;
+        flex-shrink:0;
+      }
       .cart-grid-row{
-        grid-template-columns:1fr;
-        gap:0;
-        padding:0;
-        margin:0 0 14px;
+        display:flex;
+        flex-wrap:nowrap;
+        align-items:flex-start;
+        justify-content:space-between;
+        gap:12px 14px;
+        padding:14px 12px;
+        margin:0 0 12px;
         border:1px solid var(--line);
-        border-radius:12px;
+        border-radius:10px;
         background:#fafbfc;
-        overflow:hidden;
       }
-      .cart-grid-cell{
-        display:grid;
-        grid-template-columns:minmax(100px, 34%) 1fr;
-        gap:6px 14px;
-        align-items:center;
-        padding:12px 14px;
-        border-bottom:1px solid var(--line);
-        font-size:14px;
-      }
-      .cart-grid-cell:last-child{border-bottom:none}
       .cart-grid-cell--product{
-        align-items:start;
-        padding-top:14px;
-        padding-bottom:14px;
+        flex:1 1 auto;
+        min-width:0;
+        padding:0;
+        border:none;
       }
-      .cart-grid-cell--product .cart-cell-body{align-self:center}
-      .cart-grid-row .cart-cell--label{
-        font-size:10px;
-        font-weight:800;
-        letter-spacing:.08em;
-        text-transform:uppercase;
-        color:var(--muted);
-        margin:0;
-        padding-top:2px;
+      .cart-grid-cell--product .cart-cell-body{width:100%}
+      .cart-item{align-items:flex-start;gap:10px}
+      .cart-item__thumb{width:52px;height:52px;flex-shrink:0}
+      .cart-item__name{
+        font-size:13px;
+        line-height:1.3;
+        display:-webkit-box;
+        -webkit-line-clamp:3;
+        -webkit-box-orient:vertical;
+        overflow:hidden;
+        line-clamp:3;
       }
-      .cart-grid-cell--num .cart-cell-body,
-      .cart-grid-cell--num .cart-cell-body .mono{text-align:right; justify-self:end; width:100%}
-      .cart-grid-cell--qty .cart-cell-body{width:100%}
-      .cart-grid-cell--qty .cart-qty-form{width:100%; justify-content:flex-start}
-      .cart-grid-cell--action .cart-cell-body{width:100%}
-      .cart-grid-cell--action .cart-remove-form .btn{width:100%}
-      .cart-grid-row .num{text-align:inherit}
+      .cart-item__variant{font-size:11px;margin-top:3px}
+      .cart-grid-cell--num,.cart-grid-cell--qty,.cart-grid-cell--action{
+        padding:0;
+        border:none;
+        width:auto;
+      }
+      .cart-grid-cell--num .cart-cell-body{font-size:13px;font-weight:600}
+      .cart-grid-cell--qty .cart-qty-form{flex-wrap:nowrap;justify-content:flex-end;gap:6px}
+      .cart-grid-cell--qty .cart-qty-form input[type="number"]{width:48px;min-height:38px;font-size:13px}
+      .cart-grid-cell--qty .cart-qty-form .btn--sm{padding:6px 10px;font-size:9px}
+      .cart-grid-row .num{text-align:right}
     }
     .cart-empty{color:var(--muted); padding:40px 0; font-size:15px}
     .cart-empty-state{
@@ -221,16 +248,14 @@
       <div class="cart-sheet">
         <div class="cart-grid-head" role="row">
           <div>Product</div>
-          <div>Variant</div>
           <div class="num">Price</div>
           <div>Qty</div>
           <div class="num">Line</div>
-          <div></div>
+          <div aria-hidden="true"></div>
         </div>
         {% for row in cart_rows %}
         <div class="cart-grid-row" role="row">
           <div class="cart-grid-cell cart-grid-cell--product">
-            <span class="cart-cell--label">Product</span>
             <div class="cart-cell-body">
               <div class="cart-item">
                 <a class="cart-item__thumb" href="{% url 'shop:product_detail' row.product.pk %}?channel=stock" aria-label="{{ row.name }}">
@@ -240,43 +265,47 @@
                 </a>
                 <div class="cart-item__meta">
                   <a class="cart-item__name" href="{% url 'shop:product_detail' row.product.pk %}?channel=stock">{{ row.name }}</a>
+                  {% if row.variant_label %}
+                  <p class="cart-item__variant">{{ row.variant_label }}</p>
+                  {% endif %}
                 </div>
               </div>
             </div>
           </div>
-          <div class="cart-grid-cell cart-grid-cell--text">
-            <span class="cart-cell--label">Variant</span>
-            <div class="cart-cell-body">{{ row.variant_label }}</div>
-          </div>
-          <div class="cart-grid-cell cart-grid-cell--num num mono">
-            <span class="cart-cell--label">Price</span>
-            <div class="cart-cell-body">{{ row.unit_price }} ₾</div>
-          </div>
-          <div class="cart-grid-cell cart-grid-cell--qty">
-            <span class="cart-cell--label">Qty</span>
-            <div class="cart-cell-body">
-              <form method="post" action="{% url 'shop:cart_update_line' %}" class="cart-qty-form">
-                {% csrf_token %}
-                <input type="hidden" name="line_index" value="{{ row.index }}">
-                <input type="number" name="qty" value="{{ row.qty }}" min="1" max="{{ row.max_qty }}" aria-label="Quantity">
-                <button type="submit" class="btn btn--sm">UPDATE</button>
-              </form>
+          <div class="cart-row-right">
+            <div class="cart-grid-cell cart-grid-cell--num num mono">
+              <div class="cart-cell-body">{{ row.unit_price }} ₾</div>
             </div>
-          </div>
-          <div class="cart-grid-cell cart-grid-cell--num num mono">
-            <span class="cart-cell--label">Line</span>
-            <div class="cart-cell-body">{{ row.line_total }} ₾</div>
-          </div>
-          <div class="cart-grid-cell cart-grid-cell--action">
-            <span class="cart-cell--label">Action</span>
-            <div class="cart-cell-body">
-              <form method="post" action="{% url 'shop:cart_remove_line' %}" class="cart-remove-form" data-cart-remove-form="1">
-                {% csrf_token %}
-                <input type="hidden" name="line_index" value="{{ row.index }}">
-                <input type="hidden" name="product_id" value="{{ row.product.pk }}">
-                <input type="hidden" name="variant" value="{{ row.variant_key }}">
-                <button type="submit" class="btn btn--outline btn--sm">REMOVE</button>
-              </form>
+            <div class="cart-grid-cell cart-grid-cell--qty">
+              <div class="cart-cell-body">
+                <form method="post" action="{% url 'shop:cart_update_line' %}" class="cart-qty-form">
+                  {% csrf_token %}
+                  <input type="hidden" name="line_index" value="{{ row.index }}">
+                  <input type="number" name="qty" value="{{ row.qty }}" min="1" max="{{ row.max_qty }}" aria-label="Quantity">
+                  <button type="submit" class="btn btn--sm">UPDATE</button>
+                </form>
+              </div>
+            </div>
+            <div class="cart-grid-cell cart-grid-cell--num num mono">
+              <div class="cart-cell-body">{{ row.line_total }} ₾</div>
+            </div>
+            <div class="cart-grid-cell cart-grid-cell--action">
+              <div class="cart-cell-body">
+                <form method="post" action="{% url 'shop:cart_remove_line' %}" class="cart-remove-form" data-cart-remove-form="1">
+                  {% csrf_token %}
+                  <input type="hidden" name="line_index" value="{{ row.index }}">
+                  <input type="hidden" name="product_id" value="{{ row.product.pk }}">
+                  <input type="hidden" name="variant" value="{{ row.variant_key }}">
+                  <button type="submit" class="btn btn--outline btn--sm btn--icon-remove" aria-label="Remove from cart">
+                    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M3 6h18"/>
+                      <path d="M8 6V4h8v2"/>
+                      <path d="M19 6l-1 14H6L5 6"/>
+                      <path d="M10 11v6M14 11v6"/>
+                    </svg>
+                  </button>
+                </form>
+              </div>
             </div>
           </div>
         </div>

@@ -96,6 +96,7 @@
     grid-template-columns:repeat(3,minmax(0,1fr));
     gap:0;
     padding:31px 0 29px;
+    text-align:center;
   }
   .service-strip__item{padding:0 18px}
   .service-strip__item + .service-strip__item{border-left:1px solid rgba(15,23,42,.18)}
@@ -117,9 +118,9 @@
   .service-strip__text a{display:inline;color:inherit;font-weight:700;padding:0}
   .service-strip + .footer{margin-top:0}
   @media(max-width:860px){
-    .service-strip__row{grid-template-columns:1fr;padding:18px 0}
-    .service-strip__item{padding:0}
-    .service-strip__item + .service-strip__item{border-left:none;border-top:1px solid rgba(15,23,42,.18);padding-top:12px;margin-top:12px}
+    .service-strip__row{grid-template-columns:1fr;padding:22px 0 20px;gap:16px 0}
+    .service-strip__item{padding:0 8px}
+    .service-strip__item + .service-strip__item{border-left:none;border-top:1px solid rgba(15,23,42,.18);padding-top:16px;margin-top:0}
   }
   .footer{background:#1a1a1a;color:rgba(255,255,255,.5)}
   .footer-top{
@@ -133,15 +134,25 @@
   .footer a:hover{color:#fff}
   .footer p{font-size:13px;line-height:1.5}
   .footer-bottom{border-top:1px solid rgba(255,255,255,.08);padding:16px 0;font-size:12px;color:rgba(255,255,255,.3)}
+  .footer-mid-row{display:contents}
   @media(max-width:959px){
     .footer-top{
       grid-template-columns:1fr;
       gap:0;
       padding:28px 0 20px;
     }
-    .footer-top > div:not(:first-child){
+    .footer-mid-row{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:20px 24px;
+      align-items:start;
+      margin-top:22px;
       padding-top:22px;
-      margin-top:18px;
+      border-top:1px solid rgba(255,255,255,.08);
+    }
+    .footer-col-contacts{
+      margin-top:22px;
+      padding-top:22px;
       border-top:1px solid rgba(255,255,255,.08);
     }
     .footer-col-brand{
@@ -151,12 +162,23 @@
       max-width:100%;
     }
     .footer .footer-cta-row{
-      flex-direction:column;
+      flex-direction:row;
+      flex-wrap:nowrap;
+      justify-content:center;
       align-items:stretch;
       width:100%;
       max-width:100%;
+      gap:8px;
     }
-    .footer .footer-cta-row .btn{width:100%;justify-content:center;box-sizing:border-box}
+    .footer .footer-cta-row .btn{
+      flex:1 1 0;
+      min-width:0;
+      padding-left:10px;
+      padding-right:10px;
+      font-size:10px;
+      justify-content:center;
+      box-sizing:border-box;
+    }
   }
   @media(max-width:640px){
     .footer{margin-top:36px}
@@ -194,15 +216,17 @@
         <p class="footer-brand-lead">Equipment and stories for players who want more from the game.</p>
         {% include 'shop/includes/shop_footer_ctas.html' %}
       </div>
-      <div>
-        <h4>Explore</h4>
-        {% include 'shop/includes/shop_footer_explore.html' %}
+      <div class="footer-mid-row">
+        <div>
+          <h4>Explore</h4>
+          {% include 'shop/includes/shop_footer_explore.html' %}
+        </div>
+        <div>
+          <h4>Help</h4>
+          {% include 'shop/includes/shop_info_nav_links.html' %}
+        </div>
       </div>
-      <div>
-        <h4>Help</h4>
-        {% include 'shop/includes/shop_info_nav_links.html' %}
-      </div>
-      <div>
+      <div class="footer-col-contacts">
         <h4>Contacts</h4>
         <a href="tel:+995591288967">+995 591 288 967</a>
         <a href="https://wa.me/995591288967" target="_blank" rel="noopener">WhatsApp</a>
