@@ -3,7 +3,7 @@
 from typing import NotRequired, TypedDict
 
 from django.db import models
-from django.db.models import OuterRef, Subquery, Sum, Value
+from django.db.models import Case, IntegerField, OuterRef, Q, Subquery, Sum, Value, When
 from django.db.models.functions import Coalesce
 
 from .models import Product, ProductListing, ProductListingChannel
@@ -67,13 +67,14 @@ FEATURED_STOCK_BRANDS: list[FeaturedStockBrand] = [
 def filter_products_by_listing_channel(qs, channel: str):
     """Restrict to products that have at least one ``ProductListing`` row for ``channel``.
 
-    Quantity is not checked here. For the **in-stock** grid, combine with
-    ``annotate_stock_listing_quantity`` + ``stock_listing_qty__gt=0`` so only real shelf
-    inventory appears (``STOCK.quantity`` is on-hand in Tbilisi).
+    Quantity is not checked here. For the **In stock** storefront grid, use
+    ``stock_catalog_storefront_queryset()`` or annotate ``stock_listing_qty`` then
+    ``filter(Q(stock_listing_qty__gt=0) | Q(in_stock=True))`` so on-hand units and
+    merchandised “In stock” vitrine rows (STOCK qty 0, checkbox on) both appear; use
+    ``annotate_stock_shelf_priority`` + ``order_by('-_shelf_first', ...)`` so shelf qty > 0
+    sort before vitrine.
 
-    **Preorder** vitrine rows use ``PREORDER`` with ``quantity == 0``; those products still
-    match the preorder channel filter and should show “coming soon” in preorder tiles, not
-    shelf pricing.
+    **Preorder** vitrine uses ``PREORDER`` with ``quantity == 0`` (separate tiles).
     """
     if ProductListing.objects.filter(channel=channel).exists():
         return qs.filter(listings__channel=channel).distinct()
@@ -122,9 +123,26 @@ def stock_catalog_base_queryset():
 
 
 def stock_catalog_in_stock_queryset():
-    """Storefront stock lists: has a STOCK listing row with quantity > 0."""
+    """Strict shelf inventory: STOCK channel listing with quantity > 0 (orders, staff stats)."""
     return annotate_stock_listing_quantity(stock_catalog_base_queryset()).filter(
         stock_listing_qty__gt=0
+    )
+
+
+def stock_catalog_storefront_queryset():
+    """In stock grid: on-hand (STOCK qty > 0) OR merchandised vitrine (``in_stock`` and STOCK qty 0)."""
+    qs = annotate_stock_listing_quantity(stock_catalog_base_queryset())
+    return qs.filter(Q(stock_listing_qty__gt=0) | Q(in_stock=True))
+
+
+def annotate_stock_shelf_priority(qs):
+    """1 = has on-hand STOCK qty; 0 = vitrine (qty 0). Order ``-_shelf_first`` to list shelf first."""
+    return qs.annotate(
+        _shelf_first=Case(
+            When(stock_listing_qty__gt=0, then=1),
+            default=0,
+            output_field=IntegerField(),
+        )
     )
 
 

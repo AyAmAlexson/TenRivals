@@ -6,7 +6,13 @@ from .models import Customer, Product, ProductListing, ProductListingChannel
 
 
 def sync_product_in_stock_from_stock_listing(product_id: int) -> None:
-    # Shelf truth only: PREORDER rows (including qty 0 vitrine) do not affect Product.in_stock.
+    """Sync ``Product.in_stock`` from the STOCK listing row.
+
+    * ``quantity > 0`` → force ``in_stock=True`` (on shelf).
+    * No STOCK row → ``in_stock=False``.
+    * ``quantity == 0`` → do **not** auto-clear ``in_stock`` so staff can keep the In stock
+      checkbox on for vitrine SKUs (shown in the stock grid after on-hand cards).
+    """
     row = (
         ProductListing.objects.filter(
             product_id=product_id,
@@ -15,8 +21,10 @@ def sync_product_in_stock_from_stock_listing(product_id: int) -> None:
         .only('quantity')
         .first()
     )
-    in_stock = bool(row and row.quantity > 0)
-    Product.objects.filter(pk=product_id).update(in_stock=in_stock)
+    if row and row.quantity > 0:
+        Product.objects.filter(pk=product_id).update(in_stock=True)
+    elif not row:
+        Product.objects.filter(pk=product_id).update(in_stock=False)
 
 
 @receiver(post_save, sender=ProductListing)

@@ -4,7 +4,7 @@ from django.urls import reverse
 
 from persons.account_display import account_initials_for_user
 
-from ..catalog_utils import distinct_brands_for_type, stock_catalog_in_stock_queryset
+from ..catalog_utils import distinct_brands_for_type, stock_catalog_storefront_queryset
 from ..models import ProductType
 
 register = template.Library()
@@ -48,7 +48,7 @@ def abs_site_href(url):
 
 @register.inclusion_tag('shop/includes/stock_catalog_nav.html')
 def stock_catalog_nav():
-    stock = stock_catalog_in_stock_queryset()
+    stock = stock_catalog_storefront_queryset()
 
     def b(tc):
         return distinct_brands_for_type(stock, tc)

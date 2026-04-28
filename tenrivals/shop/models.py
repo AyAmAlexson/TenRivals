@@ -790,8 +790,10 @@ class ProductListingChannel(models.TextChoices):
 class ProductListing(models.Model):
     """Per-channel availability for storefront merchandising.
 
-    * **STOCK** ``quantity`` — units physically in Tbilisi (real shelf stock). Drives
-      ``Product.in_stock`` via signals when this row changes.
+    * **STOCK** ``quantity`` — units physically in Tbilisi (real shelf stock). Signals set
+      ``Product.in_stock=True`` when ``quantity > 0`` and ``False`` when the STOCK row is
+      removed; ``quantity == 0`` does not clear the checkbox so staff can keep vitrine SKUs
+      in the In stock grid.
     * **PREORDER** ``quantity`` — preorder allocation / slots from suppliers. ``0`` means
       vitrine / “coming soon” in the preorder catalog (indicative pricing, contact to order),
       not on-hand inventory.

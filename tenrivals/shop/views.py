@@ -39,10 +39,11 @@ from .catalog_utils import (
     FEATURED_STOCK_BRANDS,
     annotate_preorder_listing_quantity,
     annotate_stock_listing_quantity,
+    annotate_stock_shelf_priority,
     distinct_brands_for_type,
     filter_products_by_listing_channel,
     order_products_by_effective_price,
-    stock_catalog_in_stock_queryset,
+    stock_catalog_storefront_queryset,
 )
 from .forms import (
     AccessoryForm,
@@ -230,6 +231,8 @@ def _resolve_pdp_display_mode(request, product: Product) -> str:
 
     if qty > 0 and on_stock:
         return 'stock'
+    if on_stock and bool(getattr(product, 'in_stock', False)) and qty == 0:
+        return 'stock'
     if on_preorder:
         return 'preorder'
     if on_stock:
@@ -338,10 +341,16 @@ def index(request):
         *_PRODUCT_SUBCLASS_SELECT,
         'category',
     )
-    stock_products = stock_catalog_in_stock_queryset().select_related(
-        *_PRODUCT_SUBCLASS_SELECT,
-        'category',
-    ).distinct()
+    stock_products = (
+        stock_catalog_storefront_queryset()
+        .select_related(*_PRODUCT_SUBCLASS_SELECT, 'category')
+        .distinct()
+    )
+    stock_products = order_products_by_effective_price(stock_products)
+    stock_products = annotate_stock_shelf_priority(stock_products)
+    stock_products = stock_products.order_by(
+        '-_shelf_first', '-in_stock', '-sort_price', 'id'
+    )
     featured_products = list(
         annotate_stock_listing_quantity(
             active_products.filter(featured_product=True).order_by('-created_at')
@@ -582,7 +591,7 @@ def _catalog_browse_context(
 
         if browse_mode == 'stock':
             shoe_brands = distinct_brands_for_type(
-                stock_catalog_in_stock_queryset(), type_code
+                stock_catalog_storefront_queryset(), type_code
             )
         else:
             shoe_brands = list(
@@ -599,7 +608,7 @@ def _catalog_browse_context(
     if show_racket_filters:
         if browse_mode == 'stock':
             racket_brands = distinct_brands_for_type(
-                stock_catalog_in_stock_queryset(), ProductType.RACKET
+                stock_catalog_storefront_queryset(), ProductType.RACKET
             )
         else:
             racket_brands = list(
@@ -651,12 +660,20 @@ def _catalog_browse_context(
     products = products.select_related(*_PRODUCT_SUBCLASS_SELECT, 'category')
     if browse_mode == 'stock':
         products = annotate_stock_listing_quantity(products)
-        products = products.filter(stock_listing_qty__gt=0)
+        products = products.filter(
+            Q(stock_listing_qty__gt=0) | Q(in_stock=True)
+        )
     else:
         products = annotate_preorder_listing_quantity(products)
         products = annotate_stock_listing_quantity(products)
     products = order_products_by_effective_price(products)
-    products = products.order_by('-in_stock', '-sort_price', 'id')
+    if browse_mode == 'stock':
+        products = annotate_stock_shelf_priority(products)
+        products = products.order_by(
+            '-_shelf_first', '-in_stock', '-sort_price', 'id'
+        )
+    else:
+        products = products.order_by('-in_stock', '-sort_price', 'id')
     type_tabs = [(choice.value, choice.label) for choice in ProductType]
 
     product_count = products.count()
@@ -834,10 +851,16 @@ def product_search(request):
     products = annotate_preorder_listing_quantity(products)
     products = annotate_stock_listing_quantity(products)
     if channel == ProductListingChannel.STOCK:
-        products = products.filter(stock_listing_qty__gt=0)
+        products = products.filter(
+            Q(stock_listing_qty__gt=0) | Q(in_stock=True)
+        )
 
     products = order_products_by_effective_price(products)
     if channel == ProductListingChannel.STOCK:
+        products = annotate_stock_shelf_priority(products)
+        products = products.order_by(
+            '-_shelf_first', '-in_stock', '-sort_price', 'id'
+        )
         tile_mode = 'stock'
         search_channel = 'stock'
     elif channel == ProductListingChannel.PREORDER:
@@ -879,8 +902,12 @@ def collection_detail(request, slug):
         )
         grp_products = order_products_by_effective_price(
             annotate_stock_listing_quantity(grp_products).filter(
-                stock_listing_qty__gt=0
+                Q(stock_listing_qty__gt=0) | Q(in_stock=True)
             )
+        )
+        grp_products = annotate_stock_shelf_priority(grp_products)
+        grp_products = grp_products.order_by(
+            '-_shelf_first', '-in_stock', '-sort_price', 'id'
         )
         grp_ids = list(grp_products.values_list('pk', flat=True))
         union_ids.update(grp_ids)
@@ -896,24 +923,28 @@ def collection_detail(request, slug):
         Product.objects.filter(pk__in=union_ids, is_active=True)
         .select_related(*_PRODUCT_SUBCLASS_SELECT, 'category')
     )
-    all_products = list(
-        order_products_by_effective_price(
-            annotate_stock_listing_quantity(all_products).filter(
-                stock_listing_qty__gt=0
-            )
+    all_products = order_products_by_effective_price(
+        annotate_stock_listing_quantity(all_products).filter(
+            Q(stock_listing_qty__gt=0) | Q(in_stock=True)
         )
+    )
+    all_products = annotate_stock_shelf_priority(all_products)
+    all_products = list(
+        all_products.order_by('-_shelf_first', '-in_stock', '-sort_price', 'id')
     )
     if not group_sections and collection.products.exists():
         fallback = (
             Product.objects.filter(pk__in=collection.products.values('pk'), is_active=True)
             .select_related(*_PRODUCT_SUBCLASS_SELECT, 'category')
         )
-        fallback = list(
-            order_products_by_effective_price(
-                annotate_stock_listing_quantity(fallback).filter(
-                    stock_listing_qty__gt=0
-                )
+        fallback = order_products_by_effective_price(
+            annotate_stock_listing_quantity(fallback).filter(
+                Q(stock_listing_qty__gt=0) | Q(in_stock=True)
             )
+        )
+        fallback = annotate_stock_shelf_priority(fallback)
+        fallback = list(
+            fallback.order_by('-_shelf_first', '-in_stock', '-sort_price', 'id')
         )
         group_sections.append(
             {

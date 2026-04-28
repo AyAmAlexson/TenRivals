@@ -76,7 +76,7 @@ def brand_to_slug(brand: str) -> str:
 
 def early_brand_lists_for_catalog(browse_mode: str, type_code: str | None) -> tuple[list[str], list[str]]:
     """Shoe brands list, racket brands list (one may be empty) for path slug matching."""
-    from .catalog_utils import distinct_brands_for_type, stock_catalog_in_stock_queryset
+    from .catalog_utils import distinct_brands_for_type, stock_catalog_storefront_queryset
     from .models import Product
 
     if not type_code:
@@ -84,7 +84,7 @@ def early_brand_lists_for_catalog(browse_mode: str, type_code: str | None) -> tu
     if type_code in SHOE_TYPES:
         if browse_mode == 'stock':
             shoe_brands = distinct_brands_for_type(
-                stock_catalog_in_stock_queryset(), type_code
+                stock_catalog_storefront_queryset(), type_code
             )
         else:
             shoe_brands = list(
@@ -99,7 +99,7 @@ def early_brand_lists_for_catalog(browse_mode: str, type_code: str | None) -> tu
     if type_code == ProductType.RACKET:
         if browse_mode == 'stock':
             racket_brands = distinct_brands_for_type(
-                stock_catalog_in_stock_queryset(), ProductType.RACKET
+                stock_catalog_storefront_queryset(), ProductType.RACKET
             )
         else:
             racket_brands = list(

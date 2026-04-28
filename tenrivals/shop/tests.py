@@ -9,6 +9,7 @@ from persons.account_display import account_initials_for_user
 from shop.catalog_utils import (
     annotate_preorder_listing_quantity,
     stock_catalog_in_stock_queryset,
+    stock_catalog_storefront_queryset,
 )
 from shop.models import Product, ProductListing, ProductListingChannel, ProductType
 from shop.promo_codes import PromoEvaluation
@@ -71,14 +72,26 @@ class AnnotatePreorderListingQuantityTests(TestCase):
 
 
 class StockCatalogInStockQuerysetTests(TestCase):
-    def test_excludes_stock_listing_with_zero_quantity(self):
+    def test_strict_in_stock_excludes_zero_unless_storefront(self):
         zero = Product.objects.create(
             type=ProductType.ACCESSORIES,
             name='Zero shelf',
             initial_price=Decimal('10.00'),
+            in_stock=False,
         )
         ProductListing.objects.create(
             product=zero,
+            channel=ProductListingChannel.STOCK,
+            quantity=0,
+        )
+        vitrine = Product.objects.create(
+            type=ProductType.ACCESSORIES,
+            name='Vitrine',
+            initial_price=Decimal('9.00'),
+            in_stock=True,
+        )
+        ProductListing.objects.create(
+            product=vitrine,
             channel=ProductListingChannel.STOCK,
             quantity=0,
         )
@@ -92,13 +105,19 @@ class StockCatalogInStockQuerysetTests(TestCase):
             channel=ProductListingChannel.STOCK,
             quantity=3,
         )
-        ids = set(stock_catalog_in_stock_queryset().values_list('pk', flat=True))
-        self.assertNotIn(zero.pk, ids)
-        self.assertIn(positive.pk, ids)
+        strict = set(stock_catalog_in_stock_queryset().values_list('pk', flat=True))
+        self.assertNotIn(zero.pk, strict)
+        self.assertNotIn(vitrine.pk, strict)
+        self.assertIn(positive.pk, strict)
+
+        storefront = set(stock_catalog_storefront_queryset().values_list('pk', flat=True))
+        self.assertNotIn(zero.pk, storefront)
+        self.assertIn(vitrine.pk, storefront)
+        self.assertIn(positive.pk, storefront)
 
 
 class ProductListingInStockSyncTests(TestCase):
-    def test_stock_quantity_zero_sets_in_stock_false(self):
+    def test_stock_quantity_zero_does_not_clear_in_stock_checkbox(self):
         p = Product.objects.create(
             type=ProductType.ACCESSORIES,
             name='Test item',
@@ -111,7 +130,7 @@ class ProductListingInStockSyncTests(TestCase):
             quantity=0,
         )
         p.refresh_from_db()
-        self.assertFalse(p.in_stock)
+        self.assertTrue(p.in_stock)
 
     def test_stock_quantity_positive_sets_in_stock_true(self):
         p = Product.objects.create(
@@ -129,5 +148,23 @@ class ProductListingInStockSyncTests(TestCase):
         self.assertTrue(p.in_stock)
         row.quantity = 0
         row.save(update_fields=['quantity'])
+        p.refresh_from_db()
+        self.assertTrue(p.in_stock)
+
+    def test_no_stock_listing_sets_in_stock_false(self):
+        p = Product.objects.create(
+            type=ProductType.ACCESSORIES,
+            name='No listing',
+            initial_price=Decimal('10.00'),
+            in_stock=True,
+        )
+        row = ProductListing.objects.create(
+            product=p,
+            channel=ProductListingChannel.STOCK,
+            quantity=1,
+        )
+        p.refresh_from_db()
+        self.assertTrue(p.in_stock)
+        row.delete()
         p.refresh_from_db()
         self.assertFalse(p.in_stock)
