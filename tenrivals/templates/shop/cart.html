@@ -30,6 +30,16 @@
       padding-left:max(20px, env(safe-area-inset-left));
       padding-right:max(20px, env(safe-area-inset-right));
     }
+    main.container.cart-page{
+      padding-left:max(24px, env(safe-area-inset-left));
+      padding-right:max(24px, env(safe-area-inset-right));
+    }
+    @media(max-width:720px){
+      main.container.cart-page{
+        padding-left:max(22px, 12px + env(safe-area-inset-left));
+        padding-right:max(22px, 12px + env(safe-area-inset-right));
+      }
+    }
     h1{font-family:'Saira', system-ui, sans-serif; font-weight:800; letter-spacing:.3px; text-transform:uppercase; font-size:22px; margin:0 0 8px}
     {% include 'shop/includes/shop_public_header_styles.html' %}
     .btn{display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:10px 20px; text-decoration:none; color:#fff; background:var(--accent); font-weight:800; font-family:inherit; font-size:11px; text-transform:uppercase; letter-spacing:.1em; border:none; border-radius:0; cursor:pointer; transition:background .15s}
@@ -52,7 +62,7 @@
     .cart-row-right{display:contents}
     .cart-grid-head,.cart-grid-row{
       display:grid;
-      grid-template-columns:minmax(140px,2.35fr) minmax(56px,0.72fr) minmax(120px,1.05fr) minmax(56px,0.72fr) minmax(44px,0.5fr);
+      grid-template-columns:minmax(140px,2.5fr) minmax(120px,1.05fr) minmax(56px,0.78fr) minmax(44px,0.48fr);
       gap:10px 12px;
       align-items:center;
       padding:14px 12px;
@@ -75,6 +85,13 @@
       color:var(--muted);
       font-weight:400;
     }
+    .cart-item__unit-price{
+      margin:6px 0 0;
+      font-size:13px;
+      line-height:1.35;
+      color:var(--muted);
+      font-weight:400;
+    }
     .btn--icon-remove{
       width:44px;
       min-width:44px;
@@ -91,26 +108,37 @@
     .btn--icon-remove svg{width:20px;height:20px;display:block}
     @media(max-width:720px){
       .cart-grid-head{display:none}
-      .cart-sheet{overflow-x:visible; margin-bottom:12px}
+      .cart-sheet{
+        overflow-x:visible;
+        margin-bottom:8px;
+        margin-left:0;
+        margin-right:0;
+      }
       .cart-row-right{
         display:flex;
         flex-direction:column;
         align-items:flex-end;
-        gap:8px;
+        justify-content:flex-start;
+        gap:10px;
         flex-shrink:0;
+        padding-top:2px;
+        min-height:0;
       }
       .cart-grid-row{
+        position:relative;
         display:flex;
         flex-wrap:nowrap;
         align-items:flex-start;
         justify-content:space-between;
-        gap:12px 14px;
-        padding:14px 12px;
-        margin:0 0 12px;
-        border:1px solid var(--line);
-        border-radius:10px;
-        background:#fafbfc;
+        gap:12px 10px;
+        padding:14px 48px 14px 0;
+        margin:0;
+        border:none;
+        border-bottom:1px solid var(--line);
+        border-radius:0;
+        background:transparent;
       }
+      .cart-grid-head + .cart-grid-row{border-top:1px solid var(--line)}
       .cart-grid-cell--product{
         flex:1 1 auto;
         min-width:0;
@@ -130,15 +158,25 @@
         line-clamp:3;
       }
       .cart-item__variant{font-size:11px;margin-top:3px}
+      .cart-item__unit-price{font-size:12px;margin-top:4px}
       .cart-grid-cell--num,.cart-grid-cell--qty,.cart-grid-cell--action{
         padding:0;
         border:none;
         width:auto;
       }
-      .cart-grid-cell--num .cart-cell-body{font-size:13px;font-weight:600}
+      .cart-grid-cell--line .cart-cell-body{
+        font-size:14px;
+        font-weight:600;
+      }
       .cart-grid-cell--qty .cart-qty-form{flex-wrap:nowrap;justify-content:flex-end;gap:6px}
       .cart-grid-cell--qty .cart-qty-form input[type="number"]{width:48px;min-height:38px;font-size:13px}
       .cart-grid-cell--qty .cart-qty-form .btn--sm{padding:6px 10px;font-size:9px}
+      .cart-grid-cell--action{
+        position:absolute;
+        top:10px;
+        right:0;
+      }
+      .cart-grid-cell--action .cart-cell-body{padding:0}
       .cart-grid-row .num{text-align:right}
     }
     .cart-empty{color:var(--muted); padding:40px 0; font-size:15px}
@@ -169,6 +207,9 @@
       .cart-layout{grid-template-columns:1fr; gap:28px}
     }
     .cart-side{border:1px solid var(--line); padding:20px; border-radius:12px; background:#fff}
+    @media(max-width:720px){
+      .cart-side{margin-top:12px}
+    }
     .cart-side h2{font-size:11px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin:0 0 14px}
     .cart-promo{display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap; align-items:stretch}
     .cart-promo input{flex:1; min-width:140px; padding:10px 12px; border:1px solid var(--line); font-family:inherit; font-size:14px}
@@ -248,7 +289,6 @@
       <div class="cart-sheet">
         <div class="cart-grid-head" role="row">
           <div>Product</div>
-          <div class="num">Price</div>
           <div>Qty</div>
           <div class="num">Line</div>
           <div aria-hidden="true"></div>
@@ -268,14 +308,12 @@
                   {% if row.variant_label %}
                   <p class="cart-item__variant">{{ row.variant_label }}</p>
                   {% endif %}
+                  <p class="cart-item__unit-price mono">{{ row.unit_price }} ₾</p>
                 </div>
               </div>
             </div>
           </div>
           <div class="cart-row-right">
-            <div class="cart-grid-cell cart-grid-cell--num num mono">
-              <div class="cart-cell-body">{{ row.unit_price }} ₾</div>
-            </div>
             <div class="cart-grid-cell cart-grid-cell--qty">
               <div class="cart-cell-body">
                 <form method="post" action="{% url 'shop:cart_update_line' %}" class="cart-qty-form">
@@ -286,7 +324,7 @@
                 </form>
               </div>
             </div>
-            <div class="cart-grid-cell cart-grid-cell--num num mono">
+            <div class="cart-grid-cell cart-grid-cell--num cart-grid-cell--line num mono">
               <div class="cart-cell-body">{{ row.line_total }} ₾</div>
             </div>
             <div class="cart-grid-cell cart-grid-cell--action">
