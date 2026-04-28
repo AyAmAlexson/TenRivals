@@ -43,17 +43,60 @@ def product_listing_post_delete_sync_in_stock(sender, instance, **kwargs):
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
 def create_retail_customer_for_new_user(sender, instance, created, **kwargs):
-    """Mirror site registration into Customer (optional FK to user)."""
+    """Mirror site registration into Customer (optional FK to user).
+
+    If the same email already has a guest checkout ``Customer`` (``user`` is null), link that
+    row to the new account instead of creating a duplicate — ``SalesOrder`` history stays on
+    one customer record.
+    """
     if not created:
         return
     if Customer.objects.filter(user_id=instance.pk).exists():
         return
+    email = (instance.email or '').strip()
+    if email:
+        guest = (
+            Customer.objects.filter(user__isnull=True, email__iexact=email)
+            .order_by('pk')
+            .first()
+        )
+        if guest:
+            guest.user = instance
+            fn = (instance.first_name or '').strip()
+            ln = (instance.last_name or '').strip()
+            if fn:
+                guest.first_name = fn
+            if ln:
+                guest.last_name = ln
+            mob = (instance.mobile or '').strip()
+            if mob:
+                guest.phone = mob
+            tg = (getattr(instance, 'telegram', None) or '').strip()
+            if tg:
+                guest.tg_account = tg
+            guest.email = email
+            guest.newsletter_opt_in = guest.newsletter_opt_in or bool(
+                getattr(instance, 'newsletter_opt_in', False)
+            )
+            guest.save(
+                update_fields=[
+                    'user',
+                    'first_name',
+                    'last_name',
+                    'phone',
+                    'email',
+                    'tg_account',
+                    'newsletter_opt_in',
+                    'updated_at',
+                ]
+            )
+            return
     Customer.objects.create(
         user=instance,
         first_name=(instance.first_name or '').strip() or 'Customer',
         last_name=(instance.last_name or '').strip(),
         phone=(instance.mobile or '').strip(),
-        email=(instance.email or '').strip(),
+        email=email,
         tg_account=(getattr(instance, 'telegram', None) or '').strip(),
         newsletter_opt_in=bool(getattr(instance, 'newsletter_opt_in', False)),
         address='',

@@ -2,6 +2,7 @@ from decimal import Decimal
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
+from django.contrib.auth import get_user_model
 from django.test import TestCase
 
 from persons.account_display import account_initials_for_user
@@ -11,8 +12,44 @@ from shop.catalog_utils import (
     stock_catalog_in_stock_queryset,
     stock_catalog_storefront_queryset,
 )
-from shop.models import Product, ProductListing, ProductListingChannel, ProductType
+from shop.models import Customer, Product, ProductListing, ProductListingChannel, ProductType
 from shop.promo_codes import PromoEvaluation
+
+
+class RetailCustomerGuestLinkTests(TestCase):
+    def test_registration_links_existing_guest_customer_by_email(self):
+        guest = Customer.objects.create(
+            first_name='Guest',
+            last_name='Buyer',
+            email='merge-test@example.com',
+            phone='555',
+        )
+        self.assertIsNone(guest.user_id)
+        User = get_user_model()
+        User.objects.create_user(
+            email='merge-test@example.com',
+            password='secret-secret',
+            first_name='Reg',
+            last_name='User',
+        )
+        guest.refresh_from_db()
+        self.assertIsNotNone(guest.user_id)
+        self.assertEqual(
+            Customer.objects.filter(email__iexact='merge-test@example.com').count(),
+            1,
+        )
+
+    def test_registration_creates_customer_when_no_guest_row(self):
+        User = get_user_model()
+        User.objects.create_user(
+            email='fresh-customer@example.com',
+            password='secret-secret',
+            first_name='Only',
+            last_name='New',
+        )
+        c = Customer.objects.get(user__email='fresh-customer@example.com')
+        self.assertEqual(c.first_name, 'Only')
+        self.assertEqual(Customer.objects.filter(email__iexact='fresh-customer@example.com').count(), 1)
 
 
 class PromoEvaluationPropertyTests(TestCase):

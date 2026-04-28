@@ -1,7 +1,7 @@
 {% extends 'persons/staff_base.html' %}
 {% block title %}Customers — Staff | Tenrivals{% endblock %}
 {% block page_heading %}{{ page_heading }}{% endblock %}
-{% block page_note %}<p class="page-note">Retail customers (POS). Registered site users get a linked customer record automatically.</p>{% endblock %}
+{% block page_note %}<p class="page-note">Retail customers (POS). <strong>Guest</strong> = no site account (<code>user</code> empty), usually from guest checkout. <strong>Registered</strong> = linked site user. New signups with the same email as an existing guest row are linked to that customer automatically (no duplicate).</p>{% endblock %}
 {% block extra_head %}
 <style>
   .confirm-overlay{
@@ -38,6 +38,7 @@
           <th>Telegram</th>
           <th>Phone</th>
           <th>Email</th>
+          <th>Account</th>
           <th>Newsletter</th>
           <th>Address</th>
           <th>Actions</th>
@@ -53,6 +54,14 @@
           <td class="mono">{{ c.tg_account|default:"—" }}</td>
           <td class="mono">{{ c.phone|default:"—" }}</td>
           <td>{{ c.email|default:"—" }}</td>
+          <td>
+            {% if c.user_id %}
+            <span class="badge badge--yes" title="Linked site user ID {{ c.user_id }}">Registered</span>
+            <span class="mono" style="font-size:12px;color:var(--muted)">#{{ c.user_id }}</span>
+            {% else %}
+            <span class="badge badge--no">Guest</span>
+            {% endif %}
+          </td>
           <td>{% if c.newsletter_opt_in %}<span class="badge badge--yes">Yes</span>{% else %}<span class="badge badge--no">No</span>{% endif %}</td>
           <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="{{ c.address }}">{{ c.address|default:"—"|truncatechars:40 }}</td>
           <td>
@@ -66,7 +75,7 @@
           </td>
         </tr>
         {% empty %}
-        <tr><td colspan="10" style="color:var(--muted)">No customers found.</td></tr>
+        <tr><td colspan="11" style="color:var(--muted)">No customers found.</td></tr>
         {% endfor %}
       </tbody>
     </table>

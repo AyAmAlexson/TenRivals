@@ -229,7 +229,7 @@ def _product_queryset_for_order(instance: SalesOrder | None):
 @user_passes_test(_staff_ok)
 def staff_customers(request):
     q = (request.GET.get('q') or '').strip()
-    qs = Customer.objects.all().order_by('last_name', 'first_name', 'id')
+    qs = Customer.objects.select_related('user').order_by('last_name', 'first_name', 'id')
     if q:
         qs = qs.filter(
             Q(first_name__icontains=q)
