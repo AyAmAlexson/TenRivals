@@ -251,9 +251,9 @@ def catalog_seo_texts(
 
     head_subject = f'{gender_txt}{type_label}'.strip()
     if brand_txt:
-        head_subject = f'{head_subject} — {brand_txt}'
+        head_subject = f'{head_subject} · {brand_txt}'
     if surf_txt:
-        head_subject = f'{head_subject} — {surf_txt}'
+        head_subject = f'{head_subject} · {surf_txt}'
 
     title = f'{head_subject} | {SITE_NAME} — {mode_short}'
     if len(title) > 72:
@@ -261,9 +261,9 @@ def catalog_seo_texts(
 
     h1 = head_subject or 'Tennis equipment'
     if browse_mode == 'stock':
-        h1 = f'{h1} — shop in {CITY_COUNTRY}'
+        h1 = f'{h1} · shop in {CITY_COUNTRY}'
     else:
-        h1 = f'{h1} — preorder to {CITY_COUNTRY}'
+        h1 = f'{h1} · preorder to {CITY_COUNTRY}'
 
     desc_bits = [
         f'{SITE_NAME} online tennis store in {CITY_COUNTRY}.',

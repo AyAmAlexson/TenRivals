@@ -22,7 +22,7 @@
     .btn--outline{background:#fff;color:var(--accent);border:1px solid var(--accent)}
     .btn--outline:hover{background:var(--accent);color:#fff}
     .success-panel{max-width:400px;margin:0 auto;text-align:center}
-    .success-title{font-size:28px;line-height:1.08;font-weight:800;letter-spacing:.08em;text-transform:uppercase;margin:0 0 8px}
+    .success-title{font-size:clamp(20px,2.8vw,24px);line-height:1.1;font-weight:800;letter-spacing:.08em;text-transform:uppercase;margin:0 0 8px}
     .success-sub{font-size:16px;color:var(--muted);margin:0 0 18px}
     .success-kpis{
       width:100%;
@@ -41,7 +41,7 @@
     .success-card p:last-child{margin-bottom:0}
     .actions{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap;justify-content:center}
     @media(max-width:420px){
-      .success-title{font-size:24px}
+      .success-title{font-size:20px}
       .success-sub{font-size:15px}
       .success-kpi__value{font-size:22px}
     }

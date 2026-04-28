@@ -141,14 +141,9 @@
     .preorder-notice .btn{padding:8px 18px; font-size:11px}
     .preorder-notice__actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-left:auto}
     .catalog-seo-h1{
-      font-size:clamp(20px,2.8vw,26px);font-weight:800;line-height:1.2;margin:0 0 18px;
-      letter-spacing:.02em;color:var(--ink);text-transform:none;max-width:70ch;
+      font-size:clamp(17px,2.35vw,22px);font-weight:800;line-height:1.22;margin:0 0 18px;
+      letter-spacing:.06em;color:var(--ink);text-transform:uppercase;max-width:70ch;
     }
-    .catalog-faq{margin:40px 0 0;padding-top:28px;border-top:1px solid var(--line)}
-    .catalog-faq h2{font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 0 16px}
-    .catalog-faq details{border:1px solid var(--line);background:#fafafa;margin:0 0 10px;padding:12px 14px}
-    .catalog-faq summary{cursor:pointer;font-weight:700;font-size:14px;color:var(--ink)}
-    .catalog-faq p{margin:10px 0 0;font-size:14px;line-height:1.6;color:#334155;font-weight:400}
     .collection-strip{margin:0 0 28px}
     .collection-strip__head{display:flex;align-items:baseline;justify-content:space-between;gap:14px;margin:0 0 14px}
     .collection-strip__title{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
@@ -382,50 +377,6 @@
           </div>
         </div>
         {% endif %}
-
-        <section class="catalog-faq" aria-labelledby="catalog-faq-heading">
-          <h2 id="catalog-faq-heading">Frequently asked questions</h2>
-          {% if browse_mode == 'preorder' %}
-          <details>
-            <summary>How do I preorder tennis gear from the EU or USA to Georgia?</summary>
-            <p>
-              Pick a model in the preorder catalog, then message us on Telegram. We confirm the exact quote,
-              lead time, and official import into Georgia before you pay. Tenrivals is based in <strong>Tbilisi</strong>
-              and ships across <strong>Georgia</strong>.
-            </p>
-          </details>
-          {% else %}
-          <details>
-            <summary>Do you offer free delivery in Tbilisi?</summary>
-            <p>
-              Yes — <strong>in-stock</strong> orders include <strong>free delivery in Tbilisi</strong>. For other cities in Georgia,
-              ask us for a courier quote before checkout.
-            </p>
-          </details>
-          {% endif %}
-          <details>
-            <summary>Which brands do you carry?</summary>
-            <p>
-              Wilson, HEAD, Babolat, Prince, and more — rackets, shoes, strings, bags, and accessories.
-              Use the type tabs above or visit <a href="{% url 'shop:brands' %}">All our brands</a>.
-            </p>
-          </details>
-          <details>
-            <summary>Where is Tenrivals located?</summary>
-            <p>
-              We are an online tennis shop serving <strong>Tbilisi, Georgia</strong>, with local stock and
-              <strong>preorder from the EU and USA</strong> with official customs clearance.
-            </p>
-          </details>
-        </section>
-
-        <p style="margin:24px 0 0;font-size:14px;line-height:1.55;color:var(--muted);max-width:62ch">
-          Need help choosing a racket or shoe size? Message us on
-          <a href="https://wa.me/995591288967" style="color:var(--accent);font-weight:700" target="_blank" rel="noopener">WhatsApp</a>
-          or
-          <a href="https://www.instagram.com/tennis_rivals_shop/" style="color:var(--accent);font-weight:700" target="_blank" rel="noopener">Instagram</a>
-          — we answer daily from Tbilisi.
-        </p>
       </div>
     </div>
   </main>

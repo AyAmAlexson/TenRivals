@@ -74,8 +74,8 @@
     }
     .hero-content{max-width:min(520px, 92vw)}
     .hero-tagline{
-      font-size:clamp(28px,4.2vw,46px); line-height:1.08; color:#fff; margin:0 0 14px;
-      letter-spacing:.06em; font-weight:800; text-transform:uppercase;
+      font-size:clamp(22px,3.4vw,38px); line-height:1.08; color:#fff; margin:0 0 14px;
+      letter-spacing:.08em; font-weight:800; text-transform:uppercase;
     }
     .hero-sub{font-size:15px; color:rgba(255,255,255,.72); margin:0 0 22px; line-height:1.55; text-transform:none; font-weight:400}
     .hero-cta-row{display:flex; flex-wrap:wrap; align-items:center; gap:12px 20px}
@@ -405,8 +405,40 @@
     .shop-about__closing{margin:18px 0 0;font-size:15px;line-height:1.78;color:var(--ink);text-transform:none;max-width:72ch}
     .shop-about__closing:first-of-type{margin-top:0}
 
+    /* Shop home FAQ (GEO / authority) */
+    .shop-home-faq{padding:44px 0 52px;border-top:1px solid var(--line);background:#f8fafc}
+    .shop-home-faq__intro{
+      font-size:15px;line-height:1.72;color:#475569;margin:0 0 26px;max-width:72ch;
+      text-transform:none;font-weight:400;
+    }
+    .shop-home-faq h2{
+      font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
+      color:var(--muted);margin:0 0 22px;
+    }
+    .shop-home-faq__list{margin:0;padding:0;list-style:none;counter-reset:shopfaq}
+    .shop-home-faq__item{
+      counter-increment:shopfaq;border:1px solid var(--line);background:#fff;
+      margin:0 0 12px;padding:16px 18px 18px;position:relative;
+    }
+    .shop-home-faq__item::before{
+      content:counter(shopfaq) ".";
+      position:absolute;left:18px;top:16px;
+      font-size:12px;font-weight:800;letter-spacing:.06em;color:var(--accent);
+    }
+    .shop-home-faq__q{
+      margin:0 0 10px;padding-left:28px;
+      font-size:15px;font-weight:800;line-height:1.35;color:var(--ink);
+      letter-spacing:.02em;text-transform:none;
+    }
+    .shop-home-faq__a{
+      margin:0;padding-left:28px;
+      font-size:14px;line-height:1.68;color:#334155;font-weight:400;text-transform:none;
+    }
+    .shop-home-faq__a a{color:var(--accent);font-weight:700}
+
     /* Headings */
     h1, h2, h3, h4, h5{font-family:'Saira', system-ui, sans-serif; font-weight:800; letter-spacing:.3px; text-transform:uppercase}
+    .shop-home-faq h3,.shop-home-faq p,.shop-home-faq__intro{text-transform:none}
 
     /* Footer */
     footer{background:#1a1a1a; color:rgba(255,255,255,.5); margin-top:48px}
@@ -631,6 +663,48 @@
       </div>
     </section>
     {% endif %}
+
+    <section class="shop-home-faq" aria-labelledby="shop-home-faq-title">
+      <p class="shop-home-faq__intro">
+        This FAQ is designed to address the most common concerns of players in Tbilisi while reinforcing your brand&apos;s
+        &ldquo;Senior Partner&rdquo; authority.
+      </p>
+      <h2 id="shop-home-faq-title">Frequently Asked Questions</h2>
+      <ol class="shop-home-faq__list">
+        <li class="shop-home-faq__item">
+          <h3 class="shop-home-faq__q">Do you offer free delivery in Tbilisi?</h3>
+          <p class="shop-home-faq__a">Yes, any in-stock order includes free delivery within Tbilisi (0₾). Whether it&apos;s a high-end racket or just a single pack of overgrips, we&apos;ll bring it to your door. For other cities in Georgia, just contact us, and we&apos;ll provide a quick courier quote before you checkout.</p>
+        </li>
+        <li class="shop-home-faq__item">
+          <h3 class="shop-home-faq__q">Which brands do you carry?</h3>
+          <p class="shop-home-faq__a">We offer a curated selection of world leaders like Wilson, HEAD, and Babolat, alongside &ldquo;hidden gems&rdquo; favored by pro-players, such as Solinco, Prince, and Toroline. From rackets and shoes to strings and accessories &mdash; if it&apos;s on our shelves, it&apos;s because we trust its performance. Use the category tabs above or visit our <a href="{% url 'shop:brands' %}">All Brands</a> page.</p>
+        </li>
+        <li class="shop-home-faq__item">
+          <h3 class="shop-home-faq__q">Are the products original? Do I get a receipt?</h3>
+          <p class="shop-home-faq__a">Absolutely. We operate 100% &ldquo;in the white.&rdquo; Every item in our stock is sourced directly from official distributors or trusted global retailers. Every purchase includes an official fiscal receipt (RS.ge), which serves as your guarantee of authenticity and quality.</p>
+        </li>
+        <li class="shop-home-faq__item">
+          <h3 class="shop-home-faq__q">Can you help me choose a racket if I&apos;m a beginner?</h3>
+          <p class="shop-home-faq__a">That is exactly what we are here for. We don&apos;t just &ldquo;sell boxes&rdquo;, we consult. As players ourselves, we analyze your NTRP level, playstyle, and goals to recommend a racket that will help you grow. Feel free to DM us for a personalized gear audit.</p>
+        </li>
+        <li class="shop-home-faq__item">
+          <h3 class="shop-home-faq__q">How does the Global Pre-Order service work?</h3>
+          <p class="shop-home-faq__a">If you need something that isn&apos;t in our local stock (like a rare grip size or a specific brand from the US/EU), just send us a link. We will provide an official quote including shipping and customs. We handle all the paperwork and logistics, and you pay locally upon delivery.</p>
+        </li>
+        <li class="shop-home-faq__item">
+          <h3 class="shop-home-faq__q">What happens if the shoes or clothes don&apos;t fit?</h3>
+          <p class="shop-home-faq__a">We offer a &ldquo;Two-Size Delivery&rdquo; service. If you are unsure about your size, let us know, and we will bring two adjacent sizes for you to try on at the moment of delivery. You only pay for what fits perfectly.</p>
+        </li>
+        <li class="shop-home-faq__item">
+          <h3 class="shop-home-faq__q">Do you have a physical store where I can see the gear?</h3>
+          <p class="shop-home-faq__a">We are an online-first shop to keep our prices fair and our delivery fast. However, we are deeply involved in the Tbilisi tennis scene. You can often find us at the City Sport, or Mziuri courts. If you want to see a specific racket before buying, we can arrange a meeting at a court near you.</p>
+        </li>
+        <li class="shop-home-faq__item">
+          <h3 class="shop-home-faq__q">Do you provide stringing services?</h3>
+          <p class="shop-home-faq__a">While we specialize in high-performance strings like Toroline and Solinco, we can also recommend the best stringing professionals in Tbilisi and help you choose the right tension for your specific racket and game style.</p>
+        </li>
+      </ol>
+    </section>
 
     </div>
   </main>
