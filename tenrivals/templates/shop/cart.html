@@ -56,25 +56,91 @@
     .cart-flash--success{background:#f0fdf4; border-color:#bbf7d0; color:#166534}
     .cart-flash--error,.cart-flash--warning{background:#fef2f2; border-color:#fecaca; color:#991b1b}
     .cart-flash--info,.cart-flash--debug{background:#eff6ff; border-color:#bfdbfe; color:#1e40af}
-    /* CSS grid (not <table>) so <form> in cells is valid DOM in all browsers */
-    .cart-sheet{width:100%; margin-bottom:28px; overflow-x:auto}
-    .cart-grid-cell{min-width:0}
-    .cart-row-right{display:contents}
-    .cart-grid-head,.cart-grid-row{
-      display:grid;
-      grid-template-columns:minmax(140px,2.55fr) minmax(108px,0.95fr) minmax(72px,0.82fr);
-      gap:10px 12px;
-      padding:14px 12px;
+    .cart-sheet{
+      width:100%;
+      margin-bottom:28px;
+      overflow-x:auto;
+      --cart-thumb:64px;
+      --cart-thumb-gap:14px;
+    }
+    @media(max-width:720px){
+      .cart-sheet{--cart-thumb:52px;--cart-thumb-gap:12px}
+    }
+    .cart-sheet-head{
       border-bottom:1px solid var(--line);
+      padding:10px 12px 12px;
+      font-size:11px;
+      font-weight:800;
+      letter-spacing:.1em;
+      text-transform:uppercase;
+      color:var(--muted);
+    }
+    .cart-sheet-head__main{
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap:12px;
+    }
+    .cart-sheet-head__gutter{
+      flex:0 0 calc(var(--cart-thumb) + var(--cart-thumb-gap));
+      width:calc(var(--cart-thumb) + var(--cart-thumb-gap));
+      max-width:calc(var(--cart-thumb) + var(--cart-thumb-gap));
+    }
+    .cart-sheet-head__product{flex:1;min-width:0}
+    .cart-sheet-head__right{
+      display:flex;
+      flex-direction:column;
+      align-items:flex-end;
+      justify-content:flex-end;
+      gap:6px;
+      flex-shrink:0;
+    }
+    .cart-sheet-head__line{text-align:right;white-space:nowrap}
+    .cart-line{
+      border-bottom:1px solid var(--line);
+      padding:14px 12px;
       font-size:14px;
     }
-    .cart-grid-head{align-items:end}
-    .cart-grid-row{align-items:start}
-    .cart-grid-head{
-      font-size:11px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:var(--muted);
+    .cart-sheet-head + .cart-line{border-top:1px solid var(--line)}
+    .cart-line__main{
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap:12px;
     }
-    .cart-grid-cell--qty .cart-cell-body{display:flex;justify-content:flex-end}
-    .cart-grid-head .num,.cart-grid-row .num{text-align:right; white-space:nowrap}
+    .cart-line__left{
+      display:flex;
+      align-items:flex-end;
+      gap:var(--cart-thumb-gap);
+      min-width:0;
+      flex:1;
+    }
+    .cart-line__text{min-width:0;padding-bottom:1px}
+    .cart-line__right{
+      display:flex;
+      flex-direction:column;
+      align-items:flex-end;
+      justify-content:flex-end;
+      gap:8px;
+      flex-shrink:0;
+    }
+    .cart-line__line-total{
+      font-weight:600;
+      white-space:nowrap;
+      font-variant-numeric:tabular-nums;
+      text-align:right;
+    }
+    .cart-line__sub{
+      margin-top:4px;
+      padding-top:2px;
+      min-height:1.15em;
+      margin-left:calc(var(--cart-thumb) + var(--cart-thumb-gap));
+    }
+    .cart-line__sub .cart-remove-form{
+      display:inline-block;
+      width:auto;
+      margin:0;
+    }
     .cart-qty-form{display:inline-flex; align-items:stretch; flex-wrap:nowrap; border:1px solid var(--line); background:#fff}
     .cart-qty-form input[type="number"]{
       width:52px;
@@ -109,18 +175,16 @@
     }
     .cart-qty-update:hover{background:#f8fafc;color:var(--accent)}
     .cart-qty-update svg{display:block}
-    .cart-remove-form{margin:0;padding:0;display:block;width:100%}
     .cart-remove-link{
-      display:block;
-      width:100%;
+      display:inline;
       margin:0;
       padding:0;
       border:none;
       background:none;
       font-family:inherit;
-      font-size:12px;
+      font-size:11px;
       font-weight:400;
-      line-height:1.3;
+      line-height:1.2;
       color:#2563eb;
       text-align:left;
       text-decoration:underline;
@@ -135,16 +199,6 @@
       outline:2px solid var(--accent);
       outline-offset:2px;
     }
-    .cart-item__lead{
-      display:flex;
-      flex-direction:column;
-      align-items:flex-start;
-      gap:6px;
-      flex-shrink:0;
-      width:64px;
-    }
-    .cart-cell--label{display:none}
-    .cart-cell-body{min-width:0}
     .cart-item__variant{
       margin:4px 0 0;
       font-size:12px;
@@ -160,47 +214,14 @@
       font-weight:400;
     }
     @media(max-width:720px){
-      .cart-grid-head{display:none}
       .cart-sheet{
         overflow-x:visible;
         margin-bottom:8px;
         margin-left:0;
         margin-right:0;
       }
-      .cart-row-right{
-        display:flex;
-        flex-direction:column;
-        align-items:flex-end;
-        justify-content:flex-start;
-        gap:10px;
-        flex-shrink:0;
-        padding-top:2px;
-        min-height:0;
-      }
-      .cart-grid-row{
-        display:flex;
-        flex-wrap:nowrap;
-        align-items:flex-start;
-        justify-content:space-between;
-        gap:12px 10px;
-        padding:14px 0;
-        margin:0;
-        border:none;
-        border-bottom:1px solid var(--line);
-        border-radius:0;
-        background:transparent;
-      }
-      .cart-grid-head + .cart-grid-row{border-top:1px solid var(--line)}
-      .cart-grid-cell--product{
-        flex:1 1 auto;
-        min-width:0;
-        padding:0;
-        border:none;
-      }
-      .cart-grid-cell--product .cart-cell-body{width:100%}
-      .cart-item{align-items:flex-start;gap:10px}
-      .cart-item__lead{width:52px}
-      .cart-item__thumb{width:52px;height:52px;flex-shrink:0}
+      .cart-sheet-head{padding-left:0;padding-right:0}
+      .cart-line{padding:14px 0}
       .cart-item__name{
         font-size:13px;
         line-height:1.3;
@@ -212,20 +233,8 @@
       }
       .cart-item__variant{font-size:11px;margin-top:3px}
       .cart-item__unit-price{font-size:12px;margin-top:4px}
-      .cart-remove-link{font-size:11px}
-      .cart-grid-cell--num,.cart-grid-cell--qty{
-        padding:0;
-        border:none;
-        width:auto;
-      }
-      .cart-grid-cell--line .cart-cell-body{
-        font-size:14px;
-        font-weight:600;
-      }
-      .cart-grid-cell--qty .cart-qty-form{justify-content:flex-end}
-      .cart-grid-cell--qty .cart-qty-form input[type="number"]{width:46px;min-height:38px;font-size:13px}
-      .cart-grid-cell--qty .cart-qty-update{width:40px;min-width:40px}
-      .cart-grid-row .num{text-align:right}
+      .cart-qty-form input[type="number"]{width:46px;min-height:38px;font-size:13px}
+      .cart-qty-update{width:40px;min-width:40px}
     }
     .cart-empty{color:var(--muted); padding:40px 0; font-size:15px}
     .cart-empty-state{
@@ -281,13 +290,17 @@
     .cart-checkout-cta{width:100%; margin-top:20px; min-height:48px}
     .cart-side-note{margin-top:12px; font-size:12px; color:var(--muted); line-height:1.55}
     .mono{font-variant-numeric:tabular-nums}
-    .cart-item{display:flex; align-items:center; gap:12px}
     .cart-item__thumb{
-      width:64px; height:64px; border:1px solid var(--line); background:#fff;
-      display:flex; align-items:center; justify-content:center; flex-shrink:0;
+      width:var(--cart-thumb);
+      height:var(--cart-thumb);
+      border:1px solid var(--line);
+      background:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      flex-shrink:0;
     }
     .cart-item__thumb img{width:100%; height:100%; object-fit:contain}
-    .cart-item__meta{min-width:0}
     .cart-item__name{font-weight:600}
     .cart-confirm-overlay{
       position:fixed; inset:0; background:rgba(0,0,0,.45); display:none;
@@ -335,61 +348,58 @@
     {% else %}
     <div class="cart-layout">
       <div class="cart-sheet">
-        <div class="cart-grid-head" role="row">
-          <div>Product</div>
-          <div>Qty</div>
-          <div class="num">Line</div>
+        <div class="cart-sheet-head" role="row">
+          <div class="cart-sheet-head__main">
+            <span class="cart-sheet-head__gutter" aria-hidden="true"></span>
+            <span class="cart-sheet-head__product">Product</span>
+            <div class="cart-sheet-head__right">
+              <span>Qty</span>
+              <span class="cart-sheet-head__line num">Line</span>
+            </div>
+          </div>
         </div>
         {% for row in cart_rows %}
-        <div class="cart-grid-row" role="row">
-          <div class="cart-grid-cell cart-grid-cell--product">
-            <div class="cart-cell-body">
-              <div class="cart-item">
-                <div class="cart-item__lead">
-                  <a class="cart-item__thumb" href="{% url 'shop:product_detail' row.product.pk %}?channel=stock" aria-label="{{ row.name }}">
-                    {% if row.product.main_image %}
-                    <img src="{{ row.product.main_image.url }}" alt="{{ row.name }}">
-                    {% endif %}
-                  </a>
-                  <form method="post" action="{% url 'shop:cart_remove_line' %}" class="cart-remove-form" data-cart-remove-form="1">
-                    {% csrf_token %}
-                    <input type="hidden" name="line_index" value="{{ row.index }}">
-                    <input type="hidden" name="product_id" value="{{ row.product.pk }}">
-                    <input type="hidden" name="variant" value="{{ row.variant_key }}">
-                    <button type="submit" class="cart-remove-link">Remove</button>
-                  </form>
-                </div>
-                <div class="cart-item__meta">
-                  <a class="cart-item__name" href="{% url 'shop:product_detail' row.product.pk %}?channel=stock">{{ row.name }}</a>
-                  {% if row.variant_label %}
-                  <p class="cart-item__variant">{{ row.variant_label }}</p>
-                  {% endif %}
-                  <p class="cart-item__unit-price mono">{{ row.unit_price }} ₾</p>
-                </div>
+        <article class="cart-line" role="row" aria-labelledby="cart-item-name-{{ forloop.counter0 }}-{{ row.product.pk }}">
+          <div class="cart-line__main">
+            <div class="cart-line__left">
+              <a class="cart-item__thumb" href="{% url 'shop:product_detail' row.product.pk %}?channel=stock" aria-label="{{ row.name }}">
+                {% if row.product.main_image %}
+                <img src="{{ row.product.main_image.url }}" alt="{{ row.name }}">
+                {% endif %}
+              </a>
+              <div class="cart-line__text">
+                <a class="cart-item__name" id="cart-item-name-{{ forloop.counter0 }}-{{ row.product.pk }}" href="{% url 'shop:product_detail' row.product.pk %}?channel=stock">{{ row.name }}</a>
+                {% if row.variant_label %}
+                <p class="cart-item__variant">{{ row.variant_label }}</p>
+                {% endif %}
+                <p class="cart-item__unit-price mono">{{ row.unit_price }} ₾</p>
               </div>
             </div>
-          </div>
-          <div class="cart-row-right">
-            <div class="cart-grid-cell cart-grid-cell--qty">
-              <div class="cart-cell-body">
-                <form method="post" action="{% url 'shop:cart_update_line' %}" class="cart-qty-form">
-                  {% csrf_token %}
-                  <input type="hidden" name="line_index" value="{{ row.index }}">
-                  <input type="number" name="qty" value="{{ row.qty }}" min="1" max="{{ row.max_qty }}" aria-label="Quantity" inputmode="numeric">
-                  <button type="submit" class="cart-qty-update" aria-label="Update quantity">
-                    <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <polyline points="23 4 23 10 17 10"/>
-                      <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
-                    </svg>
-                  </button>
-                </form>
-              </div>
-            </div>
-            <div class="cart-grid-cell cart-grid-cell--num cart-grid-cell--line num mono">
-              <div class="cart-cell-body">{{ row.line_total }} ₾</div>
+            <div class="cart-line__right">
+              <form method="post" action="{% url 'shop:cart_update_line' %}" class="cart-qty-form">
+                {% csrf_token %}
+                <input type="hidden" name="line_index" value="{{ row.index }}">
+                <input type="number" name="qty" value="{{ row.qty }}" min="1" max="{{ row.max_qty }}" aria-label="Quantity" inputmode="numeric">
+                <button type="submit" class="cart-qty-update" aria-label="Update quantity">
+                  <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="23 4 23 10 17 10"/>
+                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                  </svg>
+                </button>
+              </form>
+              <div class="cart-line__line-total mono">{{ row.line_total }} ₾</div>
             </div>
           </div>
-        </div>
+          <div class="cart-line__sub">
+            <form method="post" action="{% url 'shop:cart_remove_line' %}" class="cart-remove-form" data-cart-remove-form="1">
+              {% csrf_token %}
+              <input type="hidden" name="line_index" value="{{ row.index }}">
+              <input type="hidden" name="product_id" value="{{ row.product.pk }}">
+              <input type="hidden" name="variant" value="{{ row.variant_key }}">
+              <button type="submit" class="cart-remove-link">Remove</button>
+            </form>
+          </div>
+        </article>
         {% endfor %}
       </div>
       <aside class="cart-side">
