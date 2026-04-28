@@ -4,7 +4,7 @@
 <head>
   {% include 'includes/google_tag_gtag.html' %}
   <meta charset="utf-8">
-  <title>{% trans "Confirm Email Address" %} — TR Shop</title>
+  <title>{% trans "Confirm Email Address" %} | Tenrivals</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -33,13 +33,13 @@
   {% include 'includes/google_tag_manager_body.html' %}
   <div class="auth-header">
     <a href="{% url 'shop:index' %}">
-      <img src="{% static 'assets/img/TR Logo 25/TR 25 LOGO HOR RED.svg' %}" alt="TR Shop">
+      <img src="{% static 'assets/img/TR Logo 25/TR 25 LOGO HOR RED.svg' %}" alt="Tenrivals">
     </a>
   </div>
   <div class="auth-wrap">
     <div class="auth-card">
       <h1>{% trans "Confirm Email Address" %}</h1>
-      <div class="subtitle">TR Shop account</div>
+      <div class="subtitle">Tenrivals account</div>
 
       {% if confirmation %}
         {% user_display confirmation.email_address.user as user_display %}

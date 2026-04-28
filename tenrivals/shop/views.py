@@ -1245,7 +1245,7 @@ def shop_info_page(request, page_key: str):
         context['seo_meta_description'] = (
             'Pay on delivery with card or cash in GEL, bank transfer for clubs, '
             'free delivery in Tbilisi on in-stock items, shipping across Georgia. '
-            'Preorder from the EU/USA with official import — Tenrivals TR Shop.'
+            'Preorder from the EU/USA with official import — Tenrivals.'
         )
         context['schema_org_json'] = json.dumps(site_organization_json_ld(request))
     if page_key == 'sitemap':

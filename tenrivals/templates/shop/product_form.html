@@ -5,7 +5,7 @@
   {% include 'includes/google_tag_gtag.html' %}
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% if is_edit %}Edit product{% else %}Add product{% endif %} — TR Shop</title>
+  <title>{% if is_edit %}Edit product{% else %}Add product{% endif %} | Tenrivals</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Saira:wght@400;600;800&family=Saira+Condensed:wght@400&display=swap" rel="stylesheet">
@@ -110,7 +110,7 @@
 
   <header class="mast">
     <div class="mast-inner">
-      <a class="brand" href="{% url 'shop:index' %}"><img class="logo" src="{% static 'assets/img/TR Logo 25/TR 25 LOGO HOR RED.svg' %}" alt="TR Shop"></a>
+      <a class="brand" href="{% url 'shop:index' %}"><img class="logo" src="{% static 'assets/img/TR Logo 25/TR 25 LOGO HOR RED.svg' %}" alt="Tenrivals"></a>
       {% if is_edit and object.pk %}<span class="sub">ID {{ object.pk }}</span>{% endif %}
     </div>
   </header>

@@ -1,6 +1,6 @@
 {% extends 'shop/base_marketing.html' %}
 {% load static %}
-{% block title %}{{ collection.title }} — TR Shop{% endblock %}
+{% block title %}{{ collection.title }} | Tenrivals{% endblock %}
 {% block extra_head %}
   {% if collection.banner_image %}
   <link rel="preload" as="image" href="{{ collection.banner_image.url }}" fetchpriority="high">

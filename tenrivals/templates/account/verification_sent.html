@@ -4,7 +4,7 @@
 <head>
   {% include 'includes/google_tag_gtag.html' %}
   <meta charset="utf-8">
-  <title>{% trans "Verify Your Email Address" %} — TR Shop</title>
+  <title>{% trans "Verify Your Email Address" %} | Tenrivals</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -31,13 +31,13 @@
   {% include 'includes/google_tag_manager_body.html' %}
   <div class="auth-header">
     <a href="{% url 'shop:index' %}">
-      <img src="{% static 'assets/img/TR Logo 25/TR 25 LOGO HOR RED.svg' %}" alt="TR Shop">
+      <img src="{% static 'assets/img/TR Logo 25/TR 25 LOGO HOR RED.svg' %}" alt="Tenrivals">
     </a>
   </div>
   <div class="auth-wrap">
     <div class="auth-card">
       <h1>{% trans "Verify Your Email Address" %}</h1>
-      <div class="subtitle">TR Shop account</div>
+      <div class="subtitle">Tenrivals account</div>
       <p>{% blocktrans %}We have sent you a verification email. Open the link in that message to finish signing up. If you do not see it, check your spam folder.{% endblocktrans %}</p>
       <p>{% blocktrans %}Contact us if you do not receive the email within a few minutes.{% endblocktrans %}</p>
       <div class="auth-footer-text">
