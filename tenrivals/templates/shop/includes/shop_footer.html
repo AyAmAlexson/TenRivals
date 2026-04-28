@@ -11,6 +11,10 @@
   /* Sticky footer: main grows on short pages; fixed gap before footer on long pages (auto margin alone collapses to 0). */
   body > main{flex:1 0 auto}
   .footer{margin-top:48px;flex-shrink:0}
+  .footer > .container{
+    padding-left:max(20px, env(safe-area-inset-left));
+    padding-right:max(20px, env(safe-area-inset-right));
+  }
   /* Brand column: logo row height tracks section headers (EXPLORE / HELP / …) */
   .footer-col-brand{display:flex;flex-direction:column}
   .footer-brand-heading-row{
@@ -49,8 +53,37 @@
   }
   @media(max-width:640px){
     .footer-line-brand-mark img{height:24px;max-width:min(100%,200px);transform:translateY(-4px)}
-    .footer-bottom-inner{flex-direction:column;align-items:flex-start}
-    .footer-bottom-inner .footer-legal-row--inline{width:100%}
+    .footer-bottom-inner{
+      flex-direction:column;
+      align-items:stretch;
+      gap:14px;
+    }
+    .footer-bottom-copy{text-align:center;font-size:11px;line-height:1.45;color:rgba(255,255,255,.38)}
+    .footer-bottom-inner .footer-legal-row--inline{
+      width:100%;
+      display:grid;
+      grid-template-columns:repeat(2, minmax(0, 1fr));
+      gap:4px 12px;
+      overflow-x:visible;
+      flex-wrap:unset;
+      padding:12px 0 4px;
+      margin:0;
+      border-top:1px solid rgba(255,255,255,.1);
+    }
+    .footer-bottom-inner .footer-legal-row--inline a{
+      white-space:normal;
+      font-size:10px;
+      letter-spacing:.06em;
+      line-height:1.35;
+      padding:10px 4px;
+      text-align:center;
+      border:1px solid rgba(255,255,255,.1);
+      background:rgba(255,255,255,.03);
+    }
+  }
+  .service-strip .container{
+    padding-left:max(20px, env(safe-area-inset-left));
+    padding-right:max(20px, env(safe-area-inset-right));
   }
   .service-strip{
     background:linear-gradient(15deg,#28A4DA 0%,#2F86FF 100%);
@@ -103,7 +136,13 @@
   @media(max-width:959px){
     .footer-top{
       grid-template-columns:1fr;
-      gap:32px;
+      gap:0;
+      padding:28px 0 20px;
+    }
+    .footer-top > div:not(:first-child){
+      padding-top:22px;
+      margin-top:18px;
+      border-top:1px solid rgba(255,255,255,.08);
     }
     .footer-col-brand{
       display:flex;
@@ -115,9 +154,13 @@
       flex-direction:column;
       align-items:stretch;
       width:100%;
-      max-width:320px;
+      max-width:100%;
     }
     .footer .footer-cta-row .btn{width:100%;justify-content:center;box-sizing:border-box}
+  }
+  @media(max-width:640px){
+    .footer{margin-top:36px}
+    .footer-bottom{padding:18px 0 max(20px, env(safe-area-inset-bottom))}
   }
 </style>
 <section class="service-strip" aria-label="Customer service highlights">
