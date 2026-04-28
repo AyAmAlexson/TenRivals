@@ -1,0 +1,27 @@
+{% load catalog_tags %}
+{# Optional: og_title, og_description, og_image_static_path (under static/), og_image_url (full absolute URL, overrides static) #}
+{% with t=og_title|default:"Tenrivals | Tennis shop, Tbilisi, Georgia" d=og_description|default:"Tennis equipment in Tbilisi, Georgia — in-stock Wilson, HEAD, Babolat, Prince; preorder from the EU and USA. Free delivery in Tbilisi." img_rel=og_image_static_path|default:"assets/img/og/tenrivals-shop-share.png" %}
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Tenrivals">
+<meta property="og:title" content="{{ t }}">
+<meta property="og:description" content="{{ d }}">
+{% if og_url %}
+<meta property="og:url" content="{{ og_url }}">
+{% else %}
+<meta property="og:url" content="{{ request.build_absolute_uri }}">
+{% endif %}
+{% if og_image_url %}
+<meta property="og:image" content="{{ og_image_url }}">
+{% else %}
+<meta property="og:image" content="{% absolute_static_uri request img_rel %}">
+{% endif %}
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ t }}">
+<meta name="twitter:description" content="{{ d }}">
+{% if og_image_url %}
+<meta name="twitter:image" content="{{ og_image_url }}">
+{% else %}
+<meta name="twitter:image" content="{% absolute_static_uri request img_rel %}">
+{% endif %}
+{% endwith %}

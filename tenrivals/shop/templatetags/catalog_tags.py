@@ -1,4 +1,5 @@
 from django import template
+from django.templatetags.static import static as static_url
 from django.urls import reverse
 
 from persons.account_display import account_initials_for_user
@@ -7,6 +8,14 @@ from ..catalog_utils import distinct_brands_for_type, stock_catalog_base_queryse
 from ..models import ProductType
 
 register = template.Library()
+
+
+@register.simple_tag
+def absolute_static_uri(request, relative_static_path: str) -> str:
+    """Absolute URL to a file under STATIC_URL (for og:image, etc.)."""
+    rel = (relative_static_path or '').strip().lstrip('/')
+    path = static_url(rel)
+    return request.build_absolute_uri(path)
 
 
 @register.filter(name='dict_get')

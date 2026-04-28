@@ -411,6 +411,9 @@ def product_detail(request, pk):
         f = getattr(product, name)
         if f:
             gallery.append(f.url)
+    pdp_og_image_url = (
+        request.build_absolute_uri(gallery[0]) if gallery else ""
+    )
     pdp_mode = _resolve_pdp_display_mode(request, product)
     stock_listing_qty = _stock_listing_quantity(product)
     variant_opts = _pdp_variant_option_dicts(product)
@@ -450,6 +453,7 @@ def product_detail(request, pk):
         {
             "product": product,
             "pdp_gallery": gallery,
+            "pdp_og_image_url": pdp_og_image_url,
             "pdp_mode": pdp_mode,
             "stock_listing_qty": stock_listing_qty,
             "pdp_type_breadcrumb_label": _pdp_breadcrumb_type_label(product),
