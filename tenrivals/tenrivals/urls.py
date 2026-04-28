@@ -52,4 +52,5 @@ if settings.DEBUG:
     ] + urlpatterns
 
 handler404 = 'tenrivals.error_views.page_not_found'
+handler403 = 'tenrivals.error_views.permission_denied'
 handler500 = 'tenrivals.error_views.server_error'

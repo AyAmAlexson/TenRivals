@@ -70,7 +70,7 @@ def on_player_save(sender, instance, **kwargs):
     """
     Действие при сохранении объекта Player.
     """
-    player_onboarding = PlayerOnboarding.objects.get(player=instance)
+    player_onboarding, _ = PlayerOnboarding.objects.get_or_create(player=instance)
     if instance.first_name not in [None, '']:
         player_onboarding.ob_first_name = True
     if instance.last_name not in [None, '']:

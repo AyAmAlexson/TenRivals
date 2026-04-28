@@ -96,6 +96,7 @@ if DEBUG:
 
 APPEND_SLASH = True
 ROOT_URLCONF = 'tenrivals.urls'
+CSRF_FAILURE_VIEW = 'tenrivals.error_views.csrf_failure'
 
 TEMPLATES = [
     {

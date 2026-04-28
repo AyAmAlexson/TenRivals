@@ -71,13 +71,18 @@ class Player(models.Model):
             self.first_name = self.user.first_name
             self.last_name = self.user.last_name
 
-        from .models import PlayerOnboarding
-        ob, ob_created = PlayerOnboarding.objects.get_or_create(player=self)
-        pss, pss_created = PlayerSeasonStats.objects.get_or_create(player=self, season=current_season(), week=current_week())
-        pcs, pcs_created = PlayerCurrentStats.objects.get_or_create(player=self)
-        
         super().save(*args, **kwargs)
-        # Инвалидируем кэш при изменении
+
+        # Related rows need a persisted Player (pk). get_or_create(player=unsaved) raises
+        # "Model instances passed to related filters must be saved."
+        from .models import PlayerOnboarding
+
+        PlayerOnboarding.objects.get_or_create(player=self)
+        PlayerSeasonStats.objects.get_or_create(
+            player=self, season=current_season(), week=current_week()
+        )
+        PlayerCurrentStats.objects.get_or_create(player=self)
+
         cache.delete(f'player_name_{self.pk}')
 
 

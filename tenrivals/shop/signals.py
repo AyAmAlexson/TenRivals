@@ -1,8 +1,35 @@
 from django.conf import settings
-from django.db.models.signals import post_save
+from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
-from .models import Customer
+from .models import Customer, Product, ProductListing, ProductListingChannel
+
+
+def sync_product_in_stock_from_stock_listing(product_id: int) -> None:
+    row = (
+        ProductListing.objects.filter(
+            product_id=product_id,
+            channel=ProductListingChannel.STOCK,
+        )
+        .only('quantity')
+        .first()
+    )
+    in_stock = bool(row and row.quantity > 0)
+    Product.objects.filter(pk=product_id).update(in_stock=in_stock)
+
+
+@receiver(post_save, sender=ProductListing)
+def product_listing_post_save_sync_in_stock(sender, instance, **kwargs):
+    if instance.channel != ProductListingChannel.STOCK:
+        return
+    sync_product_in_stock_from_stock_listing(instance.product_id)
+
+
+@receiver(post_delete, sender=ProductListing)
+def product_listing_post_delete_sync_in_stock(sender, instance, **kwargs):
+    if instance.channel != ProductListingChannel.STOCK:
+        return
+    sync_product_in_stock_from_stock_listing(instance.product_id)
 
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)

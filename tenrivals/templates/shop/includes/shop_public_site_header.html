@@ -1,4 +1,4 @@
-{% load static %}
+{% load static catalog_tags %}
 {# Shop storefront header + mobile drawer. Optional context: search_channel (stock|preorder) for scoped search. #}
 <div class="topbar">
   <div class="container">
@@ -44,7 +44,7 @@
           <div class="auth">
             {% if user.is_authenticated %}
             <div class="user-menu">
-              <button type="button" class="user-avatar" aria-haspopup="true" aria-expanded="false">{{ user.first_name|make_list|first|default:"?" }}{{ user.last_name|make_list|first|default:"?" }}</button>
+              <button type="button" class="user-avatar" aria-haspopup="true" aria-expanded="false">{{ user|account_initials }}</button>
               <div class="user-dropdown">
                 <a href="{% url 'persons:account_details' %}">Account</a>
                 <a href="{% url 'persons:shop_order_history' %}">Order history</a>

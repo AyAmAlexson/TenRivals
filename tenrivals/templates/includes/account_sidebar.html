@@ -1,7 +1,8 @@
+{% load catalog_tags %}
 {# Expects: active_nav — 'profile' | 'orders' | 'order_for_me' #}
 <aside class="sidebar">
-  <div class="sidebar-avatar">{{ user.first_name|make_list|first|default:"?" }}{{ user.last_name|make_list|first|default:"?" }}</div>
-  <div class="sidebar-name">{{ user.first_name }} {{ user.last_name }}</div>
+  <div class="sidebar-avatar">{{ user|account_initials }}</div>
+  <div class="sidebar-name">{% if user.first_name or user.last_name %}{{ user.first_name }} {{ user.last_name }}{% else %}{{ user.email }}{% endif %}</div>
   <div class="sidebar-email">{{ user.email }}</div>
   <nav class="sidebar-nav">
     <a href="{% url 'persons:account_details' %}" class="{% if active_nav == 'profile' %}active{% endif %}">Personal Info</a>

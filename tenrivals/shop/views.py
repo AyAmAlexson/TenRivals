@@ -95,6 +95,7 @@ from .sales_order_utils import (
     product_unit_gross_price,
 )
 from .promo_codes import evaluate_promo_for_cart_rows, normalize_promo_code
+from .email_links import absolute_url_for_email
 
 _PRODUCT_SUBCLASS_SELECT = (
     'shoe',
@@ -1446,11 +1447,10 @@ def _send_checkout_customer_submitted_email(
     recipient = (contact.get('email') or order.customer.email or '').strip()
     if not recipient:
         return
-    website = (getattr(settings, 'WEBSITE_URL', '') or '').rstrip('/')
     logo_rel = '/static/assets/img/tr_footer_line_frame148.svg'
-    logo_url = f'{website}{logo_rel}' if website else request.build_absolute_uri(logo_rel)
+    logo_url = absolute_url_for_email(logo_rel, request)
     history_path = reverse('persons:shop_order_history')
-    history_url = f'{website}{history_path}' if website else request.build_absolute_uri(history_path)
+    history_url = absolute_url_for_email(history_path, request)
     initial_subtotal = sum(
         (Decimal(str(r['product'].initial_price)) * Decimal(int(r['qty'])) for r in rows),
         Decimal('0.00'),
@@ -1465,7 +1465,7 @@ def _send_checkout_customer_submitted_email(
         if p and getattr(p, 'main_image', None):
             try:
                 rel = p.main_image.url
-                thumb_url = f'{website}{rel}' if website and rel.startswith('/') else rel
+                thumb_url = absolute_url_for_email(rel, request)
             except Exception:
                 thumb_url = ''
         email_rows.append(

@@ -11,6 +11,15 @@ def server_error(request):
     return render(request, 'errors/500.html', status=500)
 
 
+def permission_denied(request, exception=None):
+    return render(request, 'errors/403.html', status=403)
+
+
+def csrf_failure(request, reason=''):
+    """Branded 403 for CSRF verification failures (see CSRF_FAILURE_VIEW)."""
+    return render(request, 'errors/403.html', status=403)
+
+
 def ratelimit_response(request, exception):
     return render(request, 'errors/429.html', status=429)
 

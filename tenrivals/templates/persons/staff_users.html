@@ -71,7 +71,7 @@
                 <th>Super</th>
                 <th>Active</th>
                 <th>Joined</th>
-                <th>Verification</th>
+                <th>Email</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -89,16 +89,7 @@
                     {% endif %}
                   </div>
                 </td>
-                <td>
-                  <div class="cell-inline">
-                    <span class="cell-text">{% if u.telegram_username_display %}{{ u.telegram_username_display }}{% else %}—{% endif %}</span>
-                    {% if u.is_telegram_verified %}
-                    <span class="feather-ic feather-ic--ok" title="Telegram verified" aria-label="Telegram verified"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
-                    {% else %}
-                    <span class="feather-ic feather-ic--no" title="Telegram not verified" aria-label="Telegram not verified"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span>
-                    {% endif %}
-                  </div>
-                </td>
+                <td>{% if u.telegram %}@{{ u.telegram }}{% else %}—{% endif %}</td>
                 <td>{{ u.first_name }} {{ u.last_name }}</td>
                 <td>{% if u.is_staff %}<span class="badge badge--yes">Yes</span>{% else %}<span class="badge badge--no">No</span>{% endif %}</td>
                 <td>{% if u.is_superuser %}<span class="badge badge--yes">Yes</span>{% else %}<span class="badge badge--no">No</span>{% endif %}</td>
@@ -113,21 +104,7 @@
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22 6 12 13 2 6"/></svg>
                       </button>
                     </form>
-                    {% endif %}
-                    {% if not u.is_telegram_verified %}
-                      {% if u.pk == request.user.pk %}
-                      <a href="{% url 'persons:verify_telegram' %}" class="icon-btn icon-btn--accent" title="Verify Telegram" aria-label="Verify Telegram">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                      </a>
-                      {% elif u.telegram_username_display or u.telegram %}
-                      <span class="icon-btn icon-btn--ghost" title="User must log in and open Verify Telegram" aria-label="Telegram verification requires user login">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
-                      </span>
-                      {% else %}
-                      <span style="font-size:11px;color:var(--muted)" title="No Telegram handle">—</span>
-                      {% endif %}
-                    {% endif %}
-                    {% if u.is_primary_email_verified and u.is_telegram_verified %}
+                    {% else %}
                     <span style="font-size:11px;color:var(--muted)">—</span>
                     {% endif %}
                   </div>

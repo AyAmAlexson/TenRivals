@@ -375,27 +375,26 @@
 
         <hr class="pdp-divider">
 
+        {% if pdp_mode == 'stock' and stock_listing_qty <= 0 %}
+        {% elif pdp_mode == 'stock' %}
         <div class="pdp-prices">
-          {% if pdp_mode == 'stock' %}
-            {% if stock_listing_qty > 0 %}
-              {% if product.actual_price %}
-              <span class="pdp-price-old">{{ product.initial_price }} ₾</span>
-              <span class="pdp-price">{{ product.actual_price }} ₾</span>
-              {% else %}
-              <span class="pdp-price">{{ product.initial_price }} ₾</span>
-              {% endif %}
-            {% else %}
-              <span class="pdp-price-muted">Coming soon · Pre-order</span>
-            {% endif %}
+          {% if product.actual_price %}
+          <span class="pdp-price-old">{{ product.initial_price }} ₾</span>
+          <span class="pdp-price">{{ product.actual_price }} ₾</span>
           {% else %}
-            {% if product.actual_price %}
-            <span class="pdp-price-old">{{ product.initial_price }} ₾</span>
-            <span class="pdp-price">˜{{ product.margin_price }} ₾</span>
-            {% else %}
-            <span class="pdp-price">˜{{ product.margin_price }} ₾</span>
-            {% endif %}
+          <span class="pdp-price">{{ product.initial_price }} ₾</span>
           {% endif %}
         </div>
+        {% else %}
+        <div class="pdp-prices">
+          {% if product.actual_price %}
+          <span class="pdp-price-old">{{ product.initial_price }} ₾</span>
+          <span class="pdp-price">˜{{ product.margin_price }} ₾</span>
+          {% else %}
+          <span class="pdp-price">˜{{ product.margin_price }} ₾</span>
+          {% endif %}
+        </div>
+        {% endif %}
         {% if pdp_mode == 'preorder' %}
         <p style="font-size:12px;color:var(--muted);margin:-12px 0 16px">Indicative price (±30 ₾). Final price when you confirm your order.</p>
         {% endif %}
@@ -459,7 +458,7 @@
           data-ga4-item-name="{{ product.name|escape }}"
           data-ga4-item-brand="{{ product.brand|default:''|escape }}"
           data-ga4-item-category="{{ product.get_type_display|escape }}"
-          data-ga4-price="{{ product.primary_price|unlocalize }}"
+          data-ga4-price="{% if pdp_mode == 'stock' and stock_listing_qty <= 0 %}{% else %}{{ product.primary_price|unlocalize }}{% endif %}"
         >
           <div class="pdp-qty" aria-label="Quantity">
             <button type="button" id="pdp-qty-minus" class="pdp-qty-btn" aria-label="Decrease quantity">−</button>
@@ -470,10 +469,12 @@
         </div>
         {% endif %}
         <div class="pdp-ask-row">
-          {% if pdp_mode == 'stock' and stock_listing_qty == 0 %}
+          {% if pdp_mode == 'stock' and stock_listing_qty <= 0 %}
           <a class="btn btn--ask-tg" href="{% url 'shop:order_for_me' %}">ORDER FOR ME</a>
-          {% endif %}
           <a class="btn btn--outline btn--ask-tg" href="https://t.me/tennis_rivals_shop_tbilisi?direct" target="_blank" rel="noopener">ASK A QUESTION</a>
+          {% else %}
+          <a class="btn btn--outline btn--ask-tg" href="https://t.me/tennis_rivals_shop_tbilisi?direct" target="_blank" rel="noopener">ASK A QUESTION</a>
+          {% endif %}
         </div>
 
         <div class="pdp-shipping">

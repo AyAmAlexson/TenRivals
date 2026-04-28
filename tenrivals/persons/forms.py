@@ -18,6 +18,8 @@ from allauth.account.utils import filter_users_by_email, send_email_confirmation
 from django.contrib import messages
 from django.contrib.auth.password_validation import validate_password
 
+from .account_display import normalize_telegram_username
+
 logger = logging.getLogger(__name__)
 
 class CustomLoginForm(LoginForm):
@@ -43,6 +45,69 @@ class CustomLoginForm(LoginForm):
 
 
 class CustomSignupForm(SignupForm):
+    field_order = [
+        'first_name',
+        'last_name',
+        'mobile',
+        'email',
+        'password1',
+        'password2',
+        'telegram',
+        'terms_accepted',
+        'newsletter_opt_in',
+    ]
+
+    first_name = forms.CharField(
+        label=_('First name'),
+        max_length=150,
+        required=True,
+        widget=forms.TextInput(
+            attrs={
+                'class': 'form-control form-control-solid',
+                'placeholder': _('First name'),
+                'autocomplete': 'given-name',
+            }
+        ),
+    )
+    last_name = forms.CharField(
+        label=_('Last name'),
+        max_length=150,
+        required=True,
+        widget=forms.TextInput(
+            attrs={
+                'class': 'form-control form-control-solid',
+                'placeholder': _('Last name'),
+                'autocomplete': 'family-name',
+            }
+        ),
+    )
+    mobile = forms.CharField(
+        label=_('Phone'),
+        max_length=15,
+        required=True,
+        widget=forms.TextInput(
+            attrs={
+                'class': 'form-control form-control-solid',
+                'placeholder': _('+995 …'),
+                'autocomplete': 'tel',
+                'inputmode': 'tel',
+            }
+        ),
+    )
+    telegram = forms.CharField(
+        label=_('Telegram'),
+        max_length=32,
+        required=False,
+        widget=forms.TextInput(
+            attrs={
+                'class': 'form-control form-control-solid telegram-handle-input',
+                'placeholder': _('username'),
+                'autocomplete': 'off',
+                'spellcheck': 'false',
+            }
+        ),
+    )
+
     terms_accepted = forms.BooleanField(
         label=_('I have read and agree to the Terms, Privacy Policy, and Cookie Policy'),
         required=True,
@@ -64,28 +129,69 @@ class CustomSignupForm(SignupForm):
     def __init__(self, *args, **kwargs):
         super(CustomSignupForm, self).__init__(*args, **kwargs)
         self.fields['email'].widget = forms.EmailInput(
-            attrs={'class': 'form-control form-control-solid',
-                   'placeholder': 'Email address',
-                   'autofocus': True}
+            attrs={
+                'class': 'form-control form-control-solid',
+                'placeholder': 'Email address',
+                'autocomplete': 'email',
+            }
         )
         self.fields['password1'].widget = forms.PasswordInput(
-            attrs={'class': 'form-control form-control-solid',
-                   'placeholder': 'Password'}
+            attrs={'class': 'form-control form-control-solid', 'placeholder': 'Password'}
         )
         self.fields['password2'].widget = forms.PasswordInput(
-            attrs={'class': 'form-control form-control-solid',
-                   'placeholder': 'Password (Again)'}
+            attrs={'class': 'form-control form-control-solid', 'placeholder': 'Password (Again)'}
         )
         self.fields['email'].label = 'Email'
         self.fields['password1'].label = 'Password'
         self.fields['password2'].label = 'Confirm Password'
-        # Match previous signup UX: newsletter pre-checked unless user opts out.
         self.fields['newsletter_opt_in'].initial = True
+        self.fields['first_name'].widget.attrs['autofocus'] = True
+        self.fields['email'].widget.attrs.pop('autofocus', None)
+
+    def clean_first_name(self):
+        v = (self.cleaned_data.get('first_name') or '').strip()
+        if not v:
+            raise forms.ValidationError(_('This field is required.'))
+        return v
+
+    def clean_last_name(self):
+        v = (self.cleaned_data.get('last_name') or '').strip()
+        if not v:
+            raise forms.ValidationError(_('This field is required.'))
+        return v
+
+    def clean_mobile(self):
+        v = (self.cleaned_data.get('mobile') or '').strip()
+        if not v:
+            raise forms.ValidationError(_('This field is required.'))
+        return v
+
+    def clean_telegram(self):
+        tg = normalize_telegram_username(self.cleaned_data.get('telegram'))
+        if not tg:
+            return ''
+        if CustomUser.objects.filter(telegram__iexact=tg).exists():
+            raise forms.ValidationError(
+                _('This Telegram username is already linked to an account.')
+            )
+        return tg
 
     def save(self, request):
         user = super(CustomSignupForm, self).save(request)
+        user.first_name = self.cleaned_data.get('first_name', '').strip()
+        user.last_name = self.cleaned_data.get('last_name', '').strip()
+        user.mobile = self.cleaned_data.get('mobile', '').strip()
+        user.telegram = self.cleaned_data.get('telegram') or ''
         user.newsletter_opt_in = self.cleaned_data.get('newsletter_opt_in', False)
-        user.save(update_fields=['newsletter_opt_in'])
+        user.save(
+            update_fields=[
+                'first_name',
+                'last_name',
+                'mobile',
+                'telegram',
+                'newsletter_opt_in',
+            ]
+        )
         return user
 
     class Meta:
@@ -418,5 +524,20 @@ class AccountUpdateForm(forms.ModelForm):
             'first_name': forms.TextInput(attrs={'placeholder': 'First name'}),
             'last_name': forms.TextInput(attrs={'placeholder': 'Last name'}),
             'mobile': forms.TextInput(attrs={'placeholder': '+995 ...'}),
-            'telegram': forms.TextInput(attrs={'placeholder': '@username'}),
+            'telegram': forms.TextInput(
+                attrs={'placeholder': 'username', 'class': 'telegram-handle-input', 'spellcheck': 'false'}
+            ),
         }
+
+    def clean_telegram(self):
+        tg = normalize_telegram_username(self.cleaned_data.get('telegram'))
+        if not tg:
+            return ''
+        qs = CustomUser.objects.filter(telegram__iexact=tg)
+        if self.instance and self.instance.pk:
+            qs = qs.exclude(pk=self.instance.pk)
+        if qs.exists():
+            raise forms.ValidationError(
+                'This Telegram username is already linked to another account.'
+            )
+        return tg

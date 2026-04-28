@@ -1,10 +1,21 @@
 from django import template
 from django.urls import reverse
 
+from persons.account_display import account_initials_for_user
+
 from ..catalog_utils import distinct_brands_for_type, stock_catalog_base_queryset
 from ..models import ProductType
 
 register = template.Library()
+
+
+@register.filter(name='account_initials')
+def account_initials(user):
+    if not user:
+        return '?'
+    if getattr(user, 'is_authenticated', False) is not True:
+        return '?'
+    return account_initials_for_user(user)
 
 
 @register.filter(name='abs_site_href')

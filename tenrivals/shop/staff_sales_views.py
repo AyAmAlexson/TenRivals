@@ -45,6 +45,7 @@ from .sales_order_utils import (
     stock_products_for_select,
 )
 from .staff_sales_forms import CustomerForm, SalesOrderForm, SalesOrderLineFormSet
+from .email_links import absolute_url_for_email
 
 
 def _staff_ok(user):
@@ -134,11 +135,10 @@ def _send_customer_order_confirmed_email(order: SalesOrder) -> None:
     recipient = (order.customer.email or '').strip()
     if not recipient:
         return
-    website = (getattr(settings, 'WEBSITE_URL', '') or '').rstrip('/')
     logo_rel = '/static/assets/img/tr_footer_line_frame148.svg'
-    logo_url = f'{website}{logo_rel}' if website else logo_rel
+    logo_url = absolute_url_for_email(logo_rel, request=None)
     history_path = reverse('persons:shop_order_history')
-    history_url = f'{website}{history_path}' if website else history_path
+    history_url = absolute_url_for_email(history_path, request=None)
     rows = [
         {
             'name': line.invoice_display_label(),
