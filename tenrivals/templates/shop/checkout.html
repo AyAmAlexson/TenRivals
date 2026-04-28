@@ -44,6 +44,38 @@
     .checkout-item__thumb{width:52px;height:52px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center}
     .checkout-item__thumb img{width:100%;height:100%;object-fit:contain}
     .checkout-item__meta{font-size:13px}
+    .checkout-step1-intro{font-size:14px;line-height:1.55;color:var(--ink);margin:0 0 16px;max-width:52ch}
+    .checkout-choice{border:1px solid var(--line);padding:16px 14px;background:#fafbfc}
+    .checkout-choice h3{font-size:13px;font-weight:600;letter-spacing:.02em;text-transform:none;color:var(--ink);margin:0 0 8px}
+    .checkout-choice p{font-size:13px;line-height:1.5;color:var(--muted);margin:0 0 12px;max-width:48ch}
+    .checkout-or{display:flex;align-items:center;gap:12px;margin:14px 0;font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+    .checkout-or::before,.checkout-or::after{content:"";flex:1;height:1px;background:var(--line)}
+    .checkout-promo-form{display:flex;flex-wrap:nowrap;align-items:stretch;border:1px solid var(--line);background:#fff;max-width:100%}
+    .checkout-promo-form input[type="text"]{
+      flex:1 1 0;
+      min-width:0;
+      width:0;
+      padding:10px 12px;
+      border:none;
+      border-right:1px solid var(--line);
+      font-family:inherit;
+      font-size:14px;
+      border-radius:0;
+    }
+    .checkout-promo-form .btn{
+      flex-shrink:0;
+      align-self:stretch;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:8px 16px;
+      font-size:11px;
+      border:none;
+      border-radius:0;
+      box-shadow:none;
+    }
+    .checkout-promo-form .btn--outline{border:none}
+    .checkout-promo-form .btn--outline:hover{background:var(--accent);color:#fff}
   </style>
   {% include 'includes/ga4_begin_checkout.html' %}
 </head>
@@ -62,28 +94,35 @@
     <div class="grid">
       <div>
         <section class="card">
-          <h2>1. Customer.</h2>
+          <h2>1. Account</h2>
           {% if not checkout_is_authenticated and show_auth_gate %}
-          <p style="margin-bottom:12px;font-size:14px">Choose how you want to continue checkout.</p>
-          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+          <p class="checkout-step1-intro">Choose one path below. You can complete checkout either with an account (order history saved to your profile) or as a guest (order updates go to the email you enter later).</p>
+          <div class="checkout-choice">
+            <h3>Sign in or register</h3>
+            <p>Log in with your email and password to link this order to your account and keep order history in one place. New customer? Use the Register link to sign up.</p>
+            <div class="row">
+              <div>
+                <label for="id_login_email">Email</label>
+                <input id="id_login_email" type="email" name="login_email" autocomplete="email">
+              </div>
+              <div>
+                <label for="id_login_password">Password</label>
+                <input id="id_login_password" type="password" name="login_password" autocomplete="current-password">
+              </div>
+            </div>
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px">
+              <button class="btn btn--outline" type="submit" name="action" value="login">LOGIN</button>
+              <a href="{% url 'account_signup' %}" style="font-size:13px;color:var(--muted)">No account? Register</a>
+            </div>
+          </div>
+          <div class="checkout-or">Or</div>
+          <div class="checkout-choice">
+            <h3>Continue as guest</h3>
+            <p>No account needed. We will send order confirmation and updates to the email address you provide in the next step.</p>
             <button class="btn" type="submit" name="action" value="guest_continue">CONTINUE AS GUEST</button>
           </div>
-          <div class="row">
-            <div>
-              <label for="id_login_email">Email</label>
-              <input id="id_login_email" type="email" name="login_email" autocomplete="email">
-            </div>
-            <div>
-              <label for="id_login_password">Password</label>
-              <input id="id_login_password" type="password" name="login_password" autocomplete="current-password">
-            </div>
-          </div>
-          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px">
-            <button class="btn btn--outline" type="submit" name="action" value="login">LOGIN</button>
-            <a href="{% url 'account_signup' %}" style="font-size:13px;color:var(--muted)">No account? Register</a>
-          </div>
           {% elif not checkout_is_authenticated %}
-          <p style="font-size:14px">Guest mode selected. You can still <a href="{% url 'account_login' %}" style="color:var(--accent)">log in</a> or <a href="{% url 'account_signup' %}" style="color:var(--accent)">register</a>.</p>
+          <p style="font-size:14px;line-height:1.5">You are checking out as a guest. Order details will be emailed to you. You can still <a href="{% url 'account_login' %}" style="color:var(--accent);font-weight:600">log in</a> or <a href="{% url 'account_signup' %}" style="color:var(--accent);font-weight:600">create an account</a> anytime.</p>
           {% else %}
           <p style="font-size:14px;margin-bottom:6px">Logged in as {{ user.get_full_name|default:user.email }}.</p>
           <p style="font-size:14px;color:var(--muted)">Your account details are used for the contact step below.</p>
@@ -152,11 +191,11 @@
         <h2>Order summary</h2>
         <div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px dashed var(--line)">
           <label for="id_checkout_promo" style="display:block;font-size:12px;color:var(--muted);margin-bottom:6px">Promo code</label>
-          <form method="post" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <form method="post" class="checkout-promo-form">
             {% csrf_token %}
             <input type="hidden" name="action" value="apply_checkout_promo">
-            <input id="id_checkout_promo" type="text" name="promo" value="{{ checkout_cart_promo_code }}" maxlength="64" autocomplete="off" placeholder="Code" style="flex:1;min-width:120px;padding:8px 10px;border:1px solid var(--line);font-family:inherit;font-size:14px">
-            <button type="submit" class="btn btn--outline" style="padding:8px 14px;font-size:11px">APPLY</button>
+            <input id="id_checkout_promo" type="text" name="promo" value="{{ checkout_cart_promo_code }}" maxlength="64" autocomplete="off" placeholder="Code">
+            <button type="submit" class="btn btn--outline">APPLY</button>
           </form>
         </div>
         {% for row in checkout_rows %}
