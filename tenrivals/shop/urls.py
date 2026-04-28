@@ -17,7 +17,29 @@ urlpatterns = [
     path('checkout/', views.checkout, name='checkout'),
     path('checkout/success/<int:order_id>/', views.checkout_success, name='checkout_success'),
     path('search/', views.product_search, name='product_search'),
+    path(
+        'stock/<slug:type_slug>/<slug:brand_slug>/<slug:surface_slug>/',
+        views.stock,
+        name='stock_catalog_shoe',
+    ),
+    path(
+        'stock/<slug:type_slug>/<slug:brand_slug>/',
+        views.stock,
+        name='stock_catalog_brand',
+    ),
+    path('stock/<slug:type_slug>/', views.stock, name='stock_catalog_type'),
     path('stock/', views.stock, name='stock'),
+    path(
+        'preorder/<slug:type_slug>/<slug:brand_slug>/<slug:surface_slug>/',
+        views.preorder,
+        name='preorder_catalog_shoe',
+    ),
+    path(
+        'preorder/<slug:type_slug>/<slug:brand_slug>/',
+        views.preorder,
+        name='preorder_catalog_brand',
+    ),
+    path('preorder/<slug:type_slug>/', views.preorder, name='preorder_catalog_type'),
     path('brands/', views.brands, name='brands'),
     path('order-for-me/', views.order_for_me_create, name='order_for_me'),
     path('collections/<slug:slug>/', views.collection_detail, name='collection_detail'),
@@ -35,6 +57,18 @@ urlpatterns = [
     path('legal/accessibility/', views.shop_info_page, {'page_key': 'accessibility'}, name='legal_accessibility'),
     path('legal/cookies/', views.shop_info_page, {'page_key': 'cookies'}, name='legal_cookies'),
     path('legal/sitemap/', views.shop_info_page, {'page_key': 'sitemap'}, name='legal_sitemap'),
+    path(
+        'guides/how-to-choose-racket-weight/',
+        views.shop_guide,
+        {'slug': 'racket-weight'},
+        name='guide_racket_weight',
+    ),
+    path(
+        'guides/clay-court-shoes-tbilisi/',
+        views.shop_guide,
+        {'slug': 'clay-shoes-tbilisi'},
+        name='guide_clay_shoes',
+    ),
     path(
         'items_list_for_Laen',
         RedirectView.as_view(

@@ -1,0 +1,61 @@
+{% extends 'shop/info/layout.html' %}
+{% block title %}{{ seo_page_title }}{% endblock %}
+{% block extra_head %}
+{{ block.super }}
+{% if seo_meta_description %}
+<meta name="description" content="{{ seo_meta_description }}">
+{% endif %}
+{% if schema_org_json %}
+<script type="application/ld+json">{{ schema_org_json|safe }}</script>
+{% endif %}
+{% endblock %}
+{% block info_main %}
+<header class="info-hero">
+  <h1 class="info-hero__h1">Clay-court tennis shoes for Tbilisi clubs</h1>
+  <p class="info-hero__lead">
+    Georgian outdoor courts are often har-tru or slow hard — you still want a <strong>herringbone-style outsole</strong>
+    for grip and slides. Here is what to look for when you buy tennis shoes in <strong>Tbilisi</strong> or
+    <strong>preorder from the EU</strong> through Tenrivals.
+  </p>
+</header>
+
+<div class="info-section">
+  <h2 class="info-h2">Outsole pattern</h2>
+  <p class="info-prose">
+    True <strong>clay</strong> patterns use full herringbone so clay releases from the grooves. Many &ldquo;all-court&rdquo;
+    shoes work on local courts, but dedicated clay soles feel safer on loose top dressing.
+  </p>
+</div>
+
+<div class="info-section">
+  <h2 class="info-h2">Upper &amp; durability</h2>
+  <p class="info-prose">
+    Sliding wears the medial forefoot — look for reinforced toe bumpers (HEAD, Wilson, Babolat, ASICS, Nike, adidas all
+    offer clay-specific lines). If you train daily, rotate two pairs to extend life.
+  </p>
+</div>
+
+<div class="info-section">
+  <h2 class="info-h2">Browse shoes (stock &amp; preorder)</h2>
+  <p class="info-prose">
+    In-stock:
+    <a href="{% url 'shop:stock_catalog_type' 'mens-shoes' %}" style="color:var(--accent);font-weight:600">Men&apos;s shoes</a>,
+    <a href="{% url 'shop:stock_catalog_type' 'womens-shoes' %}" style="color:var(--accent);font-weight:600">Women&apos;s shoes</a>,
+    <a href="{% url 'shop:stock_catalog_type' 'junior-shoes' %}" style="color:var(--accent);font-weight:600">Junior shoes</a>.
+    Filter by surface tab <strong>Clay</strong> when you open a category. For EU-only colourways, switch to
+    <a href="{% url 'shop:preorder_catalog_type' 'mens-shoes' %}" style="color:var(--accent);font-weight:600">Preorder</a>.
+  </p>
+</div>
+
+<div class="info-section">
+  <h2 class="info-h2">FAQ</h2>
+  <div class="info-card">
+    <p class="info-card__title">Which shoe for Tbilisi clay in spring?</p>
+    <p class="info-prose">Pick a clay-patterned sole; bring a spare pair if courts are damp — traction changes with moisture.</p>
+  </div>
+  <div class="info-card">
+    <p class="info-card__title">Is delivery free in Tbilisi?</p>
+    <p class="info-prose">Yes for qualifying <strong>in-stock</strong> orders — see our <a href="{% url 'shop:info_payment' %}" style="color:var(--accent);font-weight:600">Payment &amp; delivery</a> page.</p>
+  </div>
+</div>
+{% endblock %}

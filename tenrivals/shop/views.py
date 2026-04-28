@@ -356,6 +356,8 @@ def index(request):
             )[:1],
         )
     )
+    from .seo_catalog import site_organization_json_ld
+
     return render(
         request,
         'shop/index.html',
@@ -367,6 +369,16 @@ def index(request):
             'featured_products': featured_products,
             'new_arrivals': new_arrivals,
             'featured_stock_brands': FEATURED_STOCK_BRANDS,
+            'seo_page_title': (
+                'Tennis Rivals Shop — Tennis rackets, shoes & strings in Tbilisi, '
+                'Georgia | Tenrivals'
+            ),
+            'seo_meta_description': (
+                'Buy tennis equipment in Tbilisi, Georgia: in-stock Wilson, HEAD, Babolat, '
+                'Prince; preorder from the EU and USA with official import. Free delivery '
+                'in Tbilisi, shipping across Georgia. Tenrivals online store.'
+            ),
+            'schema_org_json': json.dumps(site_organization_json_ld(request)),
         },
     )
 
@@ -411,6 +423,27 @@ def product_detail(request, pk):
     pdp_requires_size_pick = bool(
         pdp_cart_enabled and product_requires_variant(product) and variant_opts
     )
+    from .seo_catalog import (
+        pdp_meta_description,
+        pdp_product_json_ld,
+        pdp_seo_title,
+        site_organization_json_ld,
+    )
+
+    price_ld = None
+    if pdp_mode == 'stock' and stock_listing_qty > 0:
+        price_ld = product.primary_price
+    elif pdp_mode == 'preorder':
+        price_ld = product.margin_price
+    org_ld = site_organization_json_ld(request)
+    prod_ld = pdp_product_json_ld(
+        request,
+        product,
+        pdp_mode=pdp_mode,
+        stock_qty=stock_listing_qty,
+        price_value=price_ld,
+    )
+    schema_org_json = json.dumps([org_ld, prod_ld], default=str)
     return render(
         request,
         "shop/product_detail.html",
@@ -424,11 +457,25 @@ def product_detail(request, pk):
             "pdp_requires_size_pick": pdp_requires_size_pick,
             "pdp_variant_options_json": json.dumps(variant_opts),
             "pdp_variant_options": variant_opts,
+            "seo_page_title": pdp_seo_title(
+                product, pdp_mode=pdp_mode, stock_qty=stock_listing_qty
+            ),
+            "seo_meta_description": pdp_meta_description(
+                product, pdp_mode=pdp_mode, stock_qty=stock_listing_qty
+            ),
+            "schema_org_json": schema_org_json,
         },
     )
 
 
-def _catalog_browse_context(request, browse_mode: str):
+def _catalog_browse_context(
+    request,
+    browse_mode: str,
+    *,
+    path_type_slug: str | None = None,
+    path_brand_slug: str | None = None,
+    path_surface_slug: str | None = None,
+):
     if browse_mode not in ('preorder', 'stock'):
         raise ValueError(browse_mode)
     channel = (
@@ -445,6 +492,41 @@ def _catalog_browse_context(request, browse_mode: str):
     surface_filter = request.GET.get('surf', 'all')
     shoe_brand = request.GET.get('sbrand', 'all')
     racket_brand = request.GET.get('brand', 'all')
+
+    from .seo_catalog import (
+        SHOE_TYPES as SEO_SHOE_TYPES,
+        brand_to_slug,
+        catalog_canonical_path,
+        catalog_seo_texts,
+        early_brand_lists_for_catalog,
+        match_brand_from_slug,
+        shoe_brand_tab_href,
+        shoe_surface_tab_href,
+        site_organization_json_ld,
+        surf_query_to_surface_slug,
+        SURFACE_SLUG_TO_SURF,
+        TYPE_SLUG_TO_CODE,
+        type_code_to_slug,
+        type_slug_to_code,
+    )
+
+    if path_type_slug:
+        ptc = type_slug_to_code(path_type_slug)
+        if ptc:
+            type_code = ptc
+    if path_surface_slug and type_code in SEO_SHOE_TYPES:
+        sf = SURFACE_SLUG_TO_SURF.get((path_surface_slug or '').lower())
+        if sf:
+            surface_filter = sf
+    shoe_early, racket_early = early_brand_lists_for_catalog(browse_mode, type_code)
+    if path_brand_slug and type_code in SEO_SHOE_TYPES:
+        m = match_brand_from_slug(path_brand_slug, shoe_early)
+        if m:
+            shoe_brand = m
+    elif path_brand_slug and type_code == ProductType.RACKET:
+        m = match_brand_from_slug(path_brand_slug, racket_early)
+        if m:
+            racket_brand = m
     racket_weight = request.GET.get('w', 'all')
     racket_head = request.GET.get('head', 'all')
     racket_pattern = request.GET.get('pat', 'all')
@@ -580,6 +662,102 @@ def _catalog_browse_context(request, browse_mode: str):
             # Local/staging DB can lag behind migrations; keep stock page available.
             storefront_collections = []
 
+    active_type_slug = None
+    if type_code == CATALOG_ACCESSORIES_EQUIPMENT_TYPE:
+        active_type_slug = 'accessories-equipment'
+    elif type_code:
+        active_type_slug = type_code_to_slug(type_code)
+
+    brand_slug_canon = None
+    surface_slug_canon = None
+    if type_code in SEO_SHOE_TYPES and shoe_brand != 'all' and surface_filter != 'all':
+        brand_slug_canon = brand_to_slug(shoe_brand)
+        surface_slug_canon = surf_query_to_surface_slug(surface_filter)
+    elif type_code in SEO_SHOE_TYPES and shoe_brand != 'all':
+        brand_slug_canon = brand_to_slug(shoe_brand)
+    elif type_code == ProductType.RACKET and racket_brand != 'all':
+        brand_slug_canon = brand_to_slug(racket_brand)
+
+    seo_texts = catalog_seo_texts(
+        browse_mode,
+        type_code=type_code,
+        racket_brand=racket_brand or 'all',
+        shoe_brand=shoe_brand or 'all',
+        surface_active=surface_filter,
+        gender_filter=gender_filter,
+        product_count=product_count,
+    )
+    canonical_rel = catalog_canonical_path(
+        browse_mode,
+        type_slug=active_type_slug,
+        brand_slug=brand_slug_canon,
+        surface_slug=surface_slug_canon,
+    )
+    seo_canonical_url = request.build_absolute_uri(canonical_rel)
+    schema_org_json = json.dumps(site_organization_json_ld(request))
+    slug_for_type = {str(v): sk for sk, v in TYPE_SLUG_TO_CODE.items()}
+
+    shoe_surface_tabs: list[dict[str, object]] = []
+    shoe_brand_tabs: list[dict[str, object]] = []
+    if show_shoe_filters:
+        surf_pairs = [
+            ('all', 'All'),
+            ('clay', 'Clay'),
+            ('hard', 'Hard'),
+            ('allcourt', 'AllCourt'),
+            ('grass', 'Grass'),
+            ('padel', 'Padel'),
+        ]
+        for surf_val, label in surf_pairs:
+            shoe_surface_tabs.append(
+                {
+                    'surf': surf_val,
+                    'label': label,
+                    'href': shoe_surface_tab_href(
+                        browse_mode,
+                        type_slug=active_type_slug,
+                        type_code=type_code,
+                        shoe_brand=shoe_brand,
+                        surface=surf_val,
+                        catalog_brand=catalog_brand,
+                    ),
+                    'is_active': (
+                        (surface_filter == surf_val)
+                        if surf_val != 'all'
+                        else surface_filter in ('all', '', None)
+                    ),
+                }
+            )
+        shoe_brand_tabs.append(
+            {
+                'label': 'All brands',
+                'href': shoe_brand_tab_href(
+                    browse_mode,
+                    type_slug=active_type_slug,
+                    type_code=type_code,
+                    shoe_brand='all',
+                    surface=surface_filter,
+                    catalog_brand=catalog_brand,
+                ),
+                'is_active': shoe_brand == 'all',
+            }
+        )
+        for b in shoe_brands:
+            shoe_brand_tabs.append(
+                {
+                    'label': b,
+                    'href': shoe_brand_tab_href(
+                        browse_mode,
+                        type_slug=active_type_slug,
+                        type_code=type_code,
+                        shoe_brand=b,
+                        surface=surface_filter,
+                        catalog_brand=catalog_brand,
+                    ),
+                    'is_active': shoe_brand == b,
+                }
+            )
+
     return {
         'browse_mode': browse_mode,
         'product_count': product_count,
@@ -588,6 +766,7 @@ def _catalog_browse_context(request, browse_mode: str):
         'products': products,
         'active_tab': active_tab,
         'active_type_code': type_code,
+        'active_type_slug': active_type_slug,
         'show_shoe_filters': show_shoe_filters,
         'gender_active': gender_filter,
         'surface_active': surface_filter,
@@ -603,6 +782,12 @@ def _catalog_browse_context(request, browse_mode: str):
         'catalog_brand': catalog_brand,
         'cbrand_qs': f'&cbrand={quote(catalog_brand)}' if catalog_brand else '',
         'storefront_collections': storefront_collections,
+        'seo_canonical_url': seo_canonical_url,
+        'schema_org_json': schema_org_json,
+        'slug_for_type': slug_for_type,
+        'shoe_surface_tabs': shoe_surface_tabs,
+        'shoe_brand_tabs': shoe_brand_tabs,
+        **seo_texts,
     }
 
 
@@ -727,19 +912,31 @@ def collection_detail(request, slug):
     )
 
 
-def stock(request):
+def stock(request, type_slug=None, brand_slug=None, surface_slug=None):
     return render(
         request,
         'shop/catalog_browse.html',
-        _catalog_browse_context(request, 'stock'),
+        _catalog_browse_context(
+            request,
+            'stock',
+            path_type_slug=type_slug,
+            path_brand_slug=brand_slug,
+            path_surface_slug=surface_slug,
+        ),
     )
 
 
-def preorder(request):
+def preorder(request, type_slug=None, brand_slug=None, surface_slug=None):
     return render(
         request,
         'shop/catalog_browse.html',
-        _catalog_browse_context(request, 'preorder'),
+        _catalog_browse_context(
+            request,
+            'preorder',
+            path_type_slug=type_slug,
+            path_brand_slug=brand_slug,
+            path_surface_slug=surface_slug,
+        ),
     )
 
 
@@ -1038,7 +1235,19 @@ def shop_info_page(request, page_key: str):
     template = _SHOP_STATIC_PAGE_TEMPLATES.get(page_key)
     if template is None:
         raise Http404('Page not found')
-    context = {}
+    context: dict = {}
+    if page_key == 'payment':
+        from .seo_catalog import site_organization_json_ld
+
+        context['seo_page_title'] = (
+            'Payment & delivery — tennis shop in Tbilisi, Georgia | Tenrivals'
+        )
+        context['seo_meta_description'] = (
+            'Pay on delivery with card or cash in GEL, bank transfer for clubs, '
+            'free delivery in Tbilisi on in-stock items, shipping across Georgia. '
+            'Preorder from the EU/USA with official import — Tenrivals TR Shop.'
+        )
+        context['schema_org_json'] = json.dumps(site_organization_json_ld(request))
     if page_key == 'sitemap':
         try:
             from .models import ProductCollection
@@ -1834,5 +2043,42 @@ def checkout_success(request, order_id: int):
             'payment_method': (order.payment_method or '').strip(),
             'show_transfer': 'transfer' in (order.payment_method or '').lower(),
             'show_cod': 'delivery' in (order.payment_method or '').lower(),
+        },
+    )
+
+
+_GUIDE_PAGES = {
+    'racket-weight': {
+        'template': 'shop/guides/how_to_choose_racket_weight.html',
+        'title': 'How to choose tennis racket weight — guide for players in Tbilisi, Georgia | Tenrivals',
+        'meta': (
+            'Light vs heavy tennis rackets: swingweight, arm comfort, and level. '
+            'Tenrivals shop in Tbilisi — in-stock and EU preorder with official import to Georgia.'
+        ),
+    },
+    'clay-shoes-tbilisi': {
+        'template': 'shop/guides/clay_court_shoes_tbilisi.html',
+        'title': 'Clay-court tennis shoes in Tbilisi — what to buy | Tenrivals',
+        'meta': (
+            'Herringbone outsoles, durability on Georgian clay courts, and brands (HEAD, Wilson, '
+            'Babolat). Buy in Tbilisi with free city delivery or preorder from the EU via Tenrivals.'
+        ),
+    },
+}
+
+
+def shop_guide(request, slug: str):
+    meta = _GUIDE_PAGES.get(slug)
+    if not meta:
+        raise Http404
+    from .seo_catalog import site_organization_json_ld
+
+    return render(
+        request,
+        meta['template'],
+        {
+            'seo_page_title': meta['title'],
+            'seo_meta_description': meta['meta'],
+            'schema_org_json': json.dumps(site_organization_json_ld(request)),
         },
     )

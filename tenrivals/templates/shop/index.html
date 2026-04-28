@@ -3,8 +3,9 @@
 <head>
   {% include 'includes/google_tag_gtag.html' %}
   <meta charset="utf-8">
-  <title>TR Shop</title>
+  <title>{{ seo_page_title|default:"TR Shop" }}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="{{ seo_meta_description|default_if_none:'' }}">
   {% load static %}
   {% load catalog_tags %}
   <!-- Fonts -->
@@ -464,6 +465,9 @@
     .btn--outline:hover{background:var(--accent); color:#fff}
     .build-version{position:fixed; top:8px; right:12px; font-size:10px; color:rgba(255,255,255,.25); z-index:99999; pointer-events:none}
   </style>
+  {% if schema_org_json %}
+  <script type="application/ld+json">{{ schema_org_json|safe }}</script>
+  {% endif %}
 </head>
 <body>
 {% include 'includes/google_tag_manager_body.html' %}

@@ -1,9 +1,23 @@
 {% extends 'shop/info/layout.html' %}
-{% block title %}Payment — TR Shop{% endblock %}
+{% block title %}{{ seo_page_title|default:"Payment — TR Shop" }}{% endblock %}
+{% block extra_head %}
+{{ block.super }}
+{% if seo_meta_description %}
+<meta name="description" content="{{ seo_meta_description }}">
+{% endif %}
+{% if schema_org_json %}
+<script type="application/ld+json">{{ schema_org_json|safe }}</script>
+{% endif %}
+{% endblock %}
 {% block info_main %}
 <header class="info-hero">
-  <h1 class="info-hero__h1">Transparency You Can Trust — 100% Official</h1>
-  <p class="info-hero__lead">Transparency is one of the three pillars of Tennis Rivals. In a market often filled with &ldquo;grey&rdquo; imports and unofficial deals, we choose to do things the right way. We operate 100% &ldquo;in the white,&rdquo; paying our taxes and contributing to the local Georgian economy.</p>
+  <h1 class="info-hero__h1">Payment &amp; delivery in Tbilisi and across Georgia</h1>
+  <p class="info-hero__lead">
+    Tenrivals is a tennis equipment shop in <strong>Tbilisi, Georgia</strong>. We sell in-stock items with
+    <strong>free delivery in Tbilisi</strong>, arrange couriers across the country, and run
+    <strong>preorders from the EU and USA</strong> with official customs clearance. Every sale is backed by
+    <strong>100% official documentation</strong> — no grey imports.
+  </p>
 </header>
 
 <div class="info-section">
@@ -24,5 +38,34 @@
     <li><strong>Bank transfer:</strong> Where we offer it (e.g. club purchases or pre-orders), we provide an official invoice with bank details for a direct transfer before or after delivery, as agreed.</li>
   </ul>
   <p class="info-prose" style="margin-top:18px">All prices on the website are listed in <strong>GEL (Georgian Lari)</strong> and include all applicable taxes. For legal terms of purchase (when the contract is formed, refunds, etc.), see <a href="{% url 'shop:legal_terms' %}" style="color:var(--accent);font-weight:600">Terms &amp; conditions</a>.</p>
+</div>
+
+<div class="info-section">
+  <h2 class="info-h2">Delivery in Tbilisi &amp; Georgia</h2>
+  <p class="info-prose">
+    <strong>In-stock</strong> orders are packed in Tbilisi. City customers get <strong>free delivery inside Tbilisi</strong>.
+    For Batumi, Kutaisi, and other regions we use trusted couriers — ask us for timing and cost before you confirm.
+  </p>
+  <p class="info-prose" style="margin-top:14px">
+    <strong>Preorder from the EU or USA</strong> is quoted separately: we confirm landed cost, timeline, and customs paperwork
+    before you commit. That keeps imports transparent for players and clubs across Georgia.
+  </p>
+  <p class="info-prose" style="margin-top:14px">More detail: <a href="{% url 'shop:info_delivery' %}" style="color:var(--accent);font-weight:600">Delivery policy</a>.</p>
+</div>
+
+<div class="info-section">
+  <h2 class="info-h2">Common questions</h2>
+  <div class="info-card">
+    <p class="info-card__title">How do I preorder from the EU?</p>
+    <p class="info-prose">Use the <a href="{% url 'shop:preorder' %}" style="color:var(--accent);font-weight:600">Preorder</a> catalog or Telegram. We lock the price after our supplier confirms availability.</p>
+  </div>
+  <div class="info-card">
+    <p class="info-card__title">Is delivery free in Tbilisi?</p>
+    <p class="info-prose">Yes for <strong>in-stock</strong> orders. Custom quotes apply for heavy pallets or same-day rush requests.</p>
+  </div>
+  <div class="info-card">
+    <p class="info-card__title">Can I pay with card online?</p>
+    <p class="info-prose">Not yet on the website — use card-on-delivery, cash, or bank transfer as described above.</p>
+  </div>
 </div>
 {% endblock %}

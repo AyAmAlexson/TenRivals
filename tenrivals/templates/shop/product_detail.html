@@ -3,8 +3,9 @@
 <head>
   {% include 'includes/google_tag_gtag.html' %}
   <meta charset="utf-8">
-  <title>{{ product.name }} — TR Shop</title>
+  <title>{{ seo_page_title|default:product.name }}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="{{ seo_meta_description|default_if_none:'' }}">
   {% load static %}
   {% load catalog_tags %}
   {% load l10n %}
@@ -289,8 +290,24 @@
       .breadcrumb{font-size:12px; overflow-wrap:anywhere}
     }
     .build-version{position:fixed; top:8px; right:12px; font-size:10px; color:rgba(255,255,255,.25); z-index:99999; pointer-events:none}
+    .pdp-faq{margin:40px 0 0;padding-top:28px;border-top:1px solid var(--line)}
+    .pdp-faq h2{font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 0 16px}
+    .pdp-faq details{border:1px solid var(--line);background:#fafafa;margin:0 0 10px;padding:12px 14px}
+    .pdp-faq summary{cursor:pointer;font-weight:700;font-size:14px;color:var(--ink)}
+    .pdp-faq p{margin:10px 0 0;font-size:14px;line-height:1.6;color:#334155;font-weight:400}
+    .pdp-geo{margin:28px 0 0;padding:18px 18px 16px;border:1px solid var(--line);background:#f8fafc}
+    .pdp-geo h2{font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 0 12px}
+    .pdp-geo dl{margin:0;font-size:14px;line-height:1.65;color:#334155}
+    .pdp-geo dt{font-weight:800;color:var(--ink);margin:10px 0 2px}
+    .pdp-geo dt:first-child{margin-top:0}
+    .pdp-geo dd{margin:0;font-weight:400}
+    .pdp-cta-chat{margin:20px 0 0;padding:14px 16px;border:1px dashed var(--line);font-size:14px;line-height:1.55;color:var(--muted)}
+    .pdp-cta-chat a{color:var(--accent);font-weight:700}
   </style>
   {% include 'includes/datalayer_view_item.html' %}
+  {% if schema_org_json %}
+  <script type="application/ld+json">{{ schema_org_json|safe }}</script>
+  {% endif %}
 </head>
 <body>
 {% include 'includes/google_tag_manager_body.html' %}
@@ -302,7 +319,17 @@
       <a href="{% url 'shop:index' %}">Home</a><span>/</span>
       {% if pdp_mode == 'stock' %}
       <a href="{% url 'shop:stock' %}">Stock</a><span>/</span>
+      {% if product.type == 'RACKET' %}
+      <a href="{% url 'shop:stock_catalog_type' 'rackets' %}">{{ pdp_type_breadcrumb_label }}</a><span>/</span>
+      {% elif product.type == 'M_SHOES' %}
+      <a href="{% url 'shop:stock_catalog_type' 'mens-shoes' %}">{{ pdp_type_breadcrumb_label }}</a><span>/</span>
+      {% elif product.type == 'W_SHOES' %}
+      <a href="{% url 'shop:stock_catalog_type' 'womens-shoes' %}">{{ pdp_type_breadcrumb_label }}</a><span>/</span>
+      {% elif product.type == 'J_SHOES' %}
+      <a href="{% url 'shop:stock_catalog_type' 'junior-shoes' %}">{{ pdp_type_breadcrumb_label }}</a><span>/</span>
+      {% else %}
       <a href="{% url 'shop:stock' %}?type={{ product.type }}">{{ pdp_type_breadcrumb_label }}</a><span>/</span>
+      {% endif %}
       {% else %}
       <a href="{% url 'shop:order_for_me' %}">Order for me</a><span>/</span>
       <a href="{% url 'shop:order_for_me' %}">{{ pdp_type_breadcrumb_label }}</a><span>/</span>
@@ -578,6 +605,57 @@
       <button type="button" class="pdp-lightbox__arrow pdp-lightbox__arrow--next" aria-label="Next image">&#8250;</button>
     </div>
     {% endif %}
+
+    <section class="pdp-geo" aria-labelledby="pdp-geo-heading">
+      <h2 id="pdp-geo-heading">Quick facts (Tbilisi, Georgia)</h2>
+      <dl>
+        <dt>Brand</dt><dd>{{ product.brand|default:"—" }}</dd>
+        <dt>Model</dt><dd>{{ product.name }}</dd>
+        <dt>Where to buy</dt>
+        <dd>
+          {% if pdp_mode == 'stock' and stock_listing_qty > 0 %}
+          {{ product.brand }} {{ product.name }} is available in our Tenrivals online shop with delivery in Tbilisi and across Georgia.
+          {% elif pdp_mode == 'stock' %}
+          Ask us on Telegram about {{ product.name }} in Tbilisi — we can source it or suggest alternatives.
+          {% else %}
+          Yes — Tenrivals offers preorder of {{ product.brand }} {{ product.name }} from Europe to Georgia with official customs clearance.
+          {% endif %}
+        </dd>
+      </dl>
+    </section>
+
+    <p class="pdp-cta-chat">
+      Need sizing or a custom quote? Message us on
+      <a href="https://wa.me/995591288967" target="_blank" rel="noopener">WhatsApp</a>
+      or
+      <a href="https://www.instagram.com/tennis_rivals_shop/" target="_blank" rel="noopener">Instagram</a>
+      — we help players in Tbilisi pick gear every day.
+    </p>
+
+    <section class="pdp-faq" aria-labelledby="pdp-faq-heading">
+      <h2 id="pdp-faq-heading">Common questions</h2>
+      <details>
+        <summary>Where can I buy {{ product.brand|default:"this" }} {{ product.name }} in Tbilisi?</summary>
+        <p>
+          You can order through Tenrivals — we ship within Tbilisi (free city delivery on in-stock items) and arrange delivery across Georgia.
+          {% if pdp_mode == 'preorder' %}Preorder models are quoted after we confirm availability with our EU suppliers.{% endif %}
+        </p>
+      </details>
+      <details>
+        <summary>Can I preorder this item from the EU?</summary>
+        <p>
+          {% if pdp_mode == 'preorder' %}
+          Yes. This listing is on our preorder catalog: we import officially into Georgia and confirm the final price before you pay.
+          {% else %}
+          If it is not in stock, use <a href="{% url 'shop:order_for_me' %}">Order for me</a> or Telegram — we often source the same model from the EU.
+          {% endif %}
+        </p>
+      </details>
+      <details>
+        <summary>How much is delivery in Tbilisi?</summary>
+        <p>In-stock orders include <strong>free delivery in Tbilisi</strong>. For other cities in Georgia, ask us for a courier quote before checkout.</p>
+      </details>
+    </section>
 
     <div id="pdp-cart-modal" class="pdp-modal" hidden>
       <div class="pdp-modal__backdrop" data-close-modal tabindex="-1"></div>

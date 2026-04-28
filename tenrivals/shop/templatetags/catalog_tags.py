@@ -9,6 +9,13 @@ from ..models import ProductType
 register = template.Library()
 
 
+@register.filter(name='dict_get')
+def dict_get(mapping, key):
+    if not mapping:
+        return ''
+    return mapping.get(str(key), '')
+
+
 @register.filter(name='account_initials')
 def account_initials(user):
     if not user:

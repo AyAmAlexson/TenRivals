@@ -1,0 +1,63 @@
+{% extends 'shop/info/layout.html' %}
+{% block title %}{{ seo_page_title }}{% endblock %}
+{% block extra_head %}
+{{ block.super }}
+{% if seo_meta_description %}
+<meta name="description" content="{{ seo_meta_description }}">
+{% endif %}
+{% if schema_org_json %}
+<script type="application/ld+json">{{ schema_org_json|safe }}</script>
+{% endif %}
+{% endblock %}
+{% block info_main %}
+<header class="info-hero">
+  <h1 class="info-hero__h1">How to choose tennis racket weight in Tbilisi</h1>
+  <p class="info-hero__lead">
+    A short, practical guide for club players in <strong>Tbilisi and Georgia</strong>: how racket mass relates to
+    power, control, and arm comfort — and how Tenrivals can help you try models we keep in stock or
+    <strong>preorder from the EU</strong>.
+  </p>
+</header>
+
+<div class="info-section">
+  <h2 class="info-h2">Why weight matters</h2>
+  <p class="info-prose">
+    Heavier frames (roughly <strong>300&nbsp;g and up</strong> strung) usually absorb more vibration and plough through
+    the ball on defense. Lighter frames (<strong>under 285&nbsp;g</strong>) accelerate faster for whippy topspin and
+    quick reactions at net. Spec sheets list <strong>unstrung</strong> weight — add about 15–20&nbsp;g for strings and
+    dampener.
+  </p>
+</div>
+
+<div class="info-section">
+  <h2 class="info-h2">Match weight to your game</h2>
+  <ul class="info-ul">
+    <li><strong>Beginners / juniors moving to adult frames:</strong> start toward the light end for easier timing.</li>
+    <li><strong>All-court intermediates:</strong> mid-weight rackets (≈285–305&nbsp;g strung) balance stability and manoeuvrability.</li>
+    <li><strong>Advanced baseliners:</strong> often prefer heavier heads or higher swingweight even if static weight is moderate.</li>
+  </ul>
+</div>
+
+<div class="info-section">
+  <h2 class="info-h2">Shop rackets in Tbilisi</h2>
+  <p class="info-prose">
+    Browse our in-stock
+    <a href="{% url 'shop:stock_catalog_type' 'rackets' %}" style="color:var(--accent);font-weight:600">tennis rackets</a>
+    with <strong>free delivery in Tbilisi</strong>. If you need a special Wilson, HEAD, or Babolat build, use
+    <a href="{% url 'shop:preorder_catalog_type' 'rackets' %}" style="color:var(--accent);font-weight:600">Preorder</a>
+    or <a href="{% url 'shop:order_for_me' %}" style="color:var(--accent);font-weight:600">Order for me</a>.
+  </p>
+</div>
+
+<div class="info-section">
+  <h2 class="info-h2">Quick questions</h2>
+  <div class="info-card">
+    <p class="info-card__title">Can I preorder a heavier pro stock frame?</p>
+    <p class="info-prose">Often yes — message us on Telegram with target weight, balance, and grip size.</p>
+  </div>
+  <div class="info-card">
+    <p class="info-card__title">Do you deliver outside Tbilisi?</p>
+    <p class="info-prose">Yes — we ship across <strong>Georgia</strong> via courier; ask for a quote before checkout.</p>
+  </div>
+</div>
+{% endblock %}

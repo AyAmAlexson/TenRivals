@@ -6,7 +6,9 @@
   {% include 'includes/google_tag_gtag.html' %}
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% if browse_mode == 'preorder' %}TR Shop — Preorder{% else %}TR Shop — In stock{% endif %}</title>
+  <title>{{ seo_page_title|default:"TR Shop" }}</title>
+  <meta name="description" content="{{ seo_meta_description|default_if_none:'' }}">
+  <link rel="canonical" href="{{ seo_canonical_url }}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Saira:wght@400;600;800&family=Saira+Condensed:wght@400&display=swap" rel="stylesheet">
@@ -138,6 +140,15 @@
     .preorder-notice span{color:var(--ink); font-size:13px; font-weight:400; text-transform:none; line-height:1.45; flex:1; min-width:200px}
     .preorder-notice .btn{padding:8px 18px; font-size:11px}
     .preorder-notice__actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-left:auto}
+    .catalog-seo-h1{
+      font-size:clamp(20px,2.8vw,26px);font-weight:800;line-height:1.2;margin:0 0 18px;
+      letter-spacing:.02em;color:var(--ink);text-transform:none;max-width:70ch;
+    }
+    .catalog-faq{margin:40px 0 0;padding-top:28px;border-top:1px solid var(--line)}
+    .catalog-faq h2{font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 0 16px}
+    .catalog-faq details{border:1px solid var(--line);background:#fafafa;margin:0 0 10px;padding:12px 14px}
+    .catalog-faq summary{cursor:pointer;font-weight:700;font-size:14px;color:var(--ink)}
+    .catalog-faq p{margin:10px 0 0;font-size:14px;line-height:1.6;color:#334155;font-weight:400}
     .collection-strip{margin:0 0 28px}
     .collection-strip__head{display:flex;align-items:baseline;justify-content:space-between;gap:14px;margin:0 0 14px}
     .collection-strip__title{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
@@ -176,6 +187,9 @@
     {% else %}
       {% include 'includes/ga4_view_item_list.html' with ga4_products=products ga4_list_id='stock' ga4_list_name='In stock' %}
     {% endif %}
+  {% endif %}
+  {% if schema_org_json %}
+  <script type="application/ld+json">{{ schema_org_json|safe }}</script>
   {% endif %}
 </head>
 <body>
@@ -235,21 +249,23 @@
           <span class="preorder-filter-label" id="preorder-filter-type">Product type</span>
           <div class="preorder-tabs" role="group" aria-labelledby="preorder-filter-type">
             {% if browse_mode == 'stock' %}
-            <a class="preorder-tab {% if active_tab == 'all' or active_tab|slice:':7' == 'cbrand:' %}active{% endif %}" href="?{% if catalog_brand %}cbrand={{ catalog_brand|urlencode }}{% endif %}">All in stock</a>
-            <a class="preorder-tab {% if active_tab == 'type:RACKET' %}active{% endif %}" href="?type=RACKET{{ cbrand_qs }}">Rackets</a>
-            <a class="preorder-tab {% if active_tab == 'type:M_SHOES' %}active{% endif %}" href="?type=M_SHOES{{ cbrand_qs }}">Men&apos;s shoes</a>
-            <a class="preorder-tab {% if active_tab == 'type:W_SHOES' %}active{% endif %}" href="?type=W_SHOES{{ cbrand_qs }}">Women&apos;s shoes</a>
-            <a class="preorder-tab {% if active_tab == 'type:BAGS' %}active{% endif %}" href="?type=BAGS{{ cbrand_qs }}">Bags</a>
-            <a class="preorder-tab {% if active_tab == 'type:BALLS' %}active{% endif %}" href="?type=BALLS{{ cbrand_qs }}">Balls</a>
-            <a class="preorder-tab {% if active_tab == 'type:STRINGS' %}active{% endif %}" href="?type=STRINGS{{ cbrand_qs }}">Strings</a>
-            <a class="preorder-tab {% if active_tab == 'type:GRIPS' %}active{% endif %}" href="?type=GRIPS{{ cbrand_qs }}">Grips</a>
-            <a class="preorder-tab {% if active_tab == 'type:DAMPENERS' %}active{% endif %}" href="?type=DAMPENERS{{ cbrand_qs }}">Dampeners</a>
-            <a class="preorder-tab {% if active_tab == 'type:ACCESSORIES' %}active{% endif %}" href="?type=ACCESSORIES{{ cbrand_qs }}">Accessories</a>
+            <a class="preorder-tab {% if active_tab == 'all' or active_tab|slice:':7' == 'cbrand:' %}active{% endif %}" href="{% url 'shop:stock' %}{% if catalog_brand %}?cbrand={{ catalog_brand|urlencode }}{% endif %}">All in stock</a>
+            <a class="preorder-tab {% if active_tab == 'type:RACKET' %}active{% endif %}" href="{% url 'shop:stock_catalog_type' 'rackets' %}{% if catalog_brand %}?cbrand={{ catalog_brand|urlencode }}{% endif %}">Rackets</a>
+            <a class="preorder-tab {% if active_tab == 'type:M_SHOES' %}active{% endif %}" href="{% url 'shop:stock_catalog_type' 'mens-shoes' %}{% if catalog_brand %}?cbrand={{ catalog_brand|urlencode }}{% endif %}">Men&apos;s shoes</a>
+            <a class="preorder-tab {% if active_tab == 'type:W_SHOES' %}active{% endif %}" href="{% url 'shop:stock_catalog_type' 'womens-shoes' %}{% if catalog_brand %}?cbrand={{ catalog_brand|urlencode }}{% endif %}">Women&apos;s shoes</a>
+            <a class="preorder-tab {% if active_tab == 'type:BAGS' %}active{% endif %}" href="{% url 'shop:stock_catalog_type' 'bags' %}{% if catalog_brand %}?cbrand={{ catalog_brand|urlencode }}{% endif %}">Bags</a>
+            <a class="preorder-tab {% if active_tab == 'type:BALLS' %}active{% endif %}" href="{% url 'shop:stock_catalog_type' 'balls' %}{% if catalog_brand %}?cbrand={{ catalog_brand|urlencode }}{% endif %}">Balls</a>
+            <a class="preorder-tab {% if active_tab == 'type:STRINGS' %}active{% endif %}" href="{% url 'shop:stock_catalog_type' 'strings' %}{% if catalog_brand %}?cbrand={{ catalog_brand|urlencode }}{% endif %}">Strings</a>
+            <a class="preorder-tab {% if active_tab == 'type:GRIPS' %}active{% endif %}" href="{% url 'shop:stock_catalog_type' 'grips' %}{% if catalog_brand %}?cbrand={{ catalog_brand|urlencode }}{% endif %}">Grips</a>
+            <a class="preorder-tab {% if active_tab == 'type:DAMPENERS' %}active{% endif %}" href="{% url 'shop:stock_catalog_type' 'dampeners' %}{% if catalog_brand %}?cbrand={{ catalog_brand|urlencode }}{% endif %}">Dampeners</a>
+            <a class="preorder-tab {% if active_tab == 'type:ACCESSORIES' %}active{% endif %}" href="{% url 'shop:stock_catalog_type' 'accessories' %}{% if catalog_brand %}?cbrand={{ catalog_brand|urlencode }}{% endif %}">Accessories</a>
             {% endif %}
             {% for code, label in type_tabs %}
               {% if code != 'OTHER' and code != 'ACCESSORIES' and code != 'GRIPS' and code != 'STRINGS' and code != 'DAMPENERS' %}
                 {% if browse_mode != 'stock' and code == 'RACKET' or browse_mode != 'stock' and code == 'M_SHOES' or browse_mode != 'stock' and code == 'W_SHOES' %}
-                <a class="preorder-tab {% if active_tab == 'type:'|add:code %}active{% endif %}" href="?type={{ code }}{{ cbrand_qs }}">{{ label }}</a>
+                {% with ts=slug_for_type|dict_get:code %}
+                <a class="preorder-tab {% if active_tab == 'type:'|add:code %}active{% endif %}" href="{% if ts %}{% url 'shop:preorder_catalog_type' ts %}{% if catalog_brand %}?cbrand={{ catalog_brand|urlencode }}{% endif %}{% else %}?type={{ code }}{% if catalog_brand %}&amp;cbrand={{ catalog_brand|urlencode }}{% endif %}{% endif %}">{{ label }}</a>
+                {% endwith %}
                 {% endif %}
               {% endif %}
             {% endfor %}
@@ -271,9 +287,9 @@
         <div class="preorder-filter-group">
           <span class="preorder-filter-label" id="preorder-filter-racket-brand">Racket brand</span>
           <div class="preorder-tabs" role="group" aria-labelledby="preorder-filter-racket-brand">
-            <a class="preorder-tab {% if racket_brand_active == 'all' %}active{% endif %}" href="?type={{ active_type_code }}&brand=all&w={{ racket_weight_active }}&head={{ racket_head_active }}&pat={{ racket_pattern_active }}{{ cbrand_qs }}">All brands</a>
+            <a class="preorder-tab {% if racket_brand_active == 'all' %}active{% endif %}" href="{% if browse_mode == 'stock' and active_type_slug %}{% url 'shop:stock_catalog_type' active_type_slug %}{% if catalog_brand %}?cbrand={{ catalog_brand|urlencode }}{% endif %}{% else %}?type={{ active_type_code }}&brand=all&w={{ racket_weight_active }}&head={{ racket_head_active }}&pat={{ racket_pattern_active }}{{ cbrand_qs }}{% endif %}">All brands</a>
             {% for b in racket_brands %}
-              <a class="preorder-tab {% if racket_brand_active == b %}active{% endif %}" href="?type={{ active_type_code }}&brand={{ b|urlencode }}&w={{ racket_weight_active }}&head={{ racket_head_active }}&pat={{ racket_pattern_active }}{{ cbrand_qs }}">{{ b }}</a>
+              <a class="preorder-tab {% if racket_brand_active == b %}active{% endif %}" href="{% if browse_mode == 'stock' and active_type_slug %}{% url 'shop:stock_catalog_brand' active_type_slug b|slugify %}{% if racket_weight_active != 'all' or racket_head_active != 'all' or racket_pattern_active != 'all' %}?w={{ racket_weight_active }}&amp;head={{ racket_head_active }}&amp;pat={{ racket_pattern_active }}{% endif %}{% if catalog_brand %}{% if racket_weight_active != 'all' or racket_head_active != 'all' or racket_pattern_active != 'all' %}&amp;{% else %}?{% endif %}cbrand={{ catalog_brand|urlencode }}{% endif %}{% else %}?type={{ active_type_code }}&brand={{ b|urlencode }}&w={{ racket_weight_active }}&head={{ racket_head_active }}&pat={{ racket_pattern_active }}{{ cbrand_qs }}{% endif %}">{{ b }}</a>
             {% endfor %}
           </div>
         </div>
@@ -314,21 +330,17 @@
         <div class="preorder-filter-group">
           <span class="preorder-filter-label" id="preorder-filter-surface">Shoe surface</span>
           <div class="preorder-tabs" role="group" aria-labelledby="preorder-filter-surface">
-            <a class="preorder-tab {% if surface_active == 'all' %}active{% endif %}" href="?type={{ active_type_code }}&surf=all&sbrand={{ shoe_brand_active|default:'all' }}{{ cbrand_qs }}">All</a>
-            <a class="preorder-tab {% if surface_active == 'clay' %}active{% endif %}" href="?type={{ active_type_code }}&surf=clay&sbrand={{ shoe_brand_active|default:'all' }}{{ cbrand_qs }}">Clay</a>
-            <a class="preorder-tab {% if surface_active == 'hard' %}active{% endif %}" href="?type={{ active_type_code }}&surf=hard&sbrand={{ shoe_brand_active|default:'all' }}{{ cbrand_qs }}">Hard</a>
-            <a class="preorder-tab {% if surface_active == 'allcourt' %}active{% endif %}" href="?type={{ active_type_code }}&surf=allcourt&sbrand={{ shoe_brand_active|default:'all' }}{{ cbrand_qs }}">AllCourt</a>
-            <a class="preorder-tab {% if surface_active == 'grass' %}active{% endif %}" href="?type={{ active_type_code }}&surf=grass&sbrand={{ shoe_brand_active|default:'all' }}{{ cbrand_qs }}">Grass</a>
-            <a class="preorder-tab {% if surface_active == 'padel' %}active{% endif %}" href="?type={{ active_type_code }}&surf=padel&sbrand={{ shoe_brand_active|default:'all' }}{{ cbrand_qs }}">Padel</a>
+            {% for tab in shoe_surface_tabs %}
+            <a class="preorder-tab {% if tab.is_active %}active{% endif %}" href="{{ tab.href }}">{{ tab.label }}</a>
+            {% endfor %}
           </div>
         </div>
         {% if shoe_brands %}
         <div class="preorder-filter-group">
           <span class="preorder-filter-label" id="preorder-filter-shoe-brand">Shoe brand</span>
           <div class="preorder-tabs" role="group" aria-labelledby="preorder-filter-shoe-brand">
-            <a class="preorder-tab {% if shoe_brand_active == 'all' %}active{% endif %}" href="?type={{ active_type_code }}&surf={{ surface_active }}&sbrand=all{{ cbrand_qs }}">All brands</a>
-            {% for b in shoe_brands %}
-              <a class="preorder-tab {% if shoe_brand_active == b %}active{% endif %}" href="?type={{ active_type_code }}&surf={{ surface_active }}&sbrand={{ b|urlencode }}{{ cbrand_qs }}">{{ b }}</a>
+            {% for tab in shoe_brand_tabs %}
+            <a class="preorder-tab {% if tab.is_active %}active{% endif %}" href="{{ tab.href }}">{{ tab.label }}</a>
             {% endfor %}
           </div>
         </div>
@@ -338,6 +350,7 @@
       </div>
 
       <div class="preorder-results">
+        <h1 class="catalog-seo-h1">{{ seo_page_h1 }}</h1>
         {% if browse_mode == 'preorder' %}
         <div class="preorder-notice">
           <span>The price is indicative (±30 ₾). Fixed upon order confirmation.</span>
@@ -369,6 +382,50 @@
           </div>
         </div>
         {% endif %}
+
+        <section class="catalog-faq" aria-labelledby="catalog-faq-heading">
+          <h2 id="catalog-faq-heading">Frequently asked questions</h2>
+          {% if browse_mode == 'preorder' %}
+          <details>
+            <summary>How do I preorder tennis gear from the EU or USA to Georgia?</summary>
+            <p>
+              Pick a model in the preorder catalog, then message us on Telegram. We confirm the exact quote,
+              lead time, and official import into Georgia before you pay. Tenrivals is based in <strong>Tbilisi</strong>
+              and ships across <strong>Georgia</strong>.
+            </p>
+          </details>
+          {% else %}
+          <details>
+            <summary>Do you offer free delivery in Tbilisi?</summary>
+            <p>
+              Yes — <strong>in-stock</strong> orders include <strong>free delivery in Tbilisi</strong>. For other cities in Georgia,
+              ask us for a courier quote before checkout.
+            </p>
+          </details>
+          {% endif %}
+          <details>
+            <summary>Which brands do you carry?</summary>
+            <p>
+              Wilson, HEAD, Babolat, Prince, and more — rackets, shoes, strings, bags, and accessories.
+              Use the type tabs above or visit <a href="{% url 'shop:brands' %}">All our brands</a>.
+            </p>
+          </details>
+          <details>
+            <summary>Where is Tenrivals located?</summary>
+            <p>
+              We are an online tennis shop serving <strong>Tbilisi, Georgia</strong>, with local stock and
+              <strong>preorder from the EU and USA</strong> with official customs clearance.
+            </p>
+          </details>
+        </section>
+
+        <p style="margin:24px 0 0;font-size:14px;line-height:1.55;color:var(--muted);max-width:62ch">
+          Need help choosing a racket or shoe size? Message us on
+          <a href="https://wa.me/995591288967" style="color:var(--accent);font-weight:700" target="_blank" rel="noopener">WhatsApp</a>
+          or
+          <a href="https://www.instagram.com/tennis_rivals_shop/" style="color:var(--accent);font-weight:700" target="_blank" rel="noopener">Instagram</a>
+          — we answer daily from Tbilisi.
+        </p>
       </div>
     </div>
   </main>
