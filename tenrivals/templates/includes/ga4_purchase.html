@@ -1,4 +1,4 @@
-{# GA4 purchase — order (SalesOrder with lines + product) #}
+{# GA4 purchase — SalesOrder: value = gross_total (after promo). coupon + promo_discount when a code was applied. #}
 {% load l10n %}
 <script>
   window.dataLayer = window.dataLayer || [];
@@ -8,10 +8,14 @@
     transaction_id: '{{ order.invoice_number|escapejs }}',
     currency: 'GEL',
     value: {{ order.gross_total|unlocalize }},
+    promo_discount: {{ order.promo_discount_gross|unlocalize }}{% if order.promo_code_label %},
+    coupon: '{{ order.promo_code_label|escapejs }}'{% endif %},
     ecommerce: {
       transaction_id: '{{ order.invoice_number|escapejs }}',
       currency: 'GEL',
       value: {{ order.gross_total|unlocalize }},
+      promo_discount: {{ order.promo_discount_gross|unlocalize }}{% if order.promo_code_label %},
+      coupon: '{{ order.promo_code_label|escapejs }}'{% endif %},
       items: [
         {% for line in order.lines.all %}
         {

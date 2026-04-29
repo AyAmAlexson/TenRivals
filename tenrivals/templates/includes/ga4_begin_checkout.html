@@ -1,4 +1,4 @@
-{# GA4 begin_checkout — checkout_rows, checkout_total #}
+{# GA4 begin_checkout — checkout_total after promo; checkout_cart_promo_code / checkout_promo_discount from view. #}
 {% load l10n %}
 <script>
   window.dataLayer = window.dataLayer || [];
@@ -7,9 +7,13 @@
     event: 'begin_checkout',
     currency: 'GEL',
     value: {{ checkout_total|unlocalize }},
+    promo_discount: {{ checkout_promo_discount|unlocalize }}{% if checkout_cart_promo_code %},
+    coupon: '{{ checkout_cart_promo_code|escapejs }}'{% endif %},
     ecommerce: {
       currency: 'GEL',
       value: {{ checkout_total|unlocalize }},
+      promo_discount: {{ checkout_promo_discount|unlocalize }}{% if checkout_cart_promo_code %},
+      coupon: '{{ checkout_cart_promo_code|escapejs }}'{% endif %},
       items: [
         {% for row in checkout_rows %}
         {
