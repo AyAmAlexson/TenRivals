@@ -145,7 +145,7 @@
       font-size:clamp(17px,2.35vw,22px);font-weight:800;line-height:1.22;margin:0 0 18px;
       letter-spacing:.06em;color:var(--ink);text-transform:uppercase;max-width:70ch;
     }
-    .collection-strip{margin:0 0 28px}
+    .collection-strip{margin:32px 0 0}
     .collection-strip__head{display:flex;align-items:baseline;justify-content:space-between;gap:14px;margin:0 0 14px}
     .collection-strip__title{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
     .collection-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
@@ -206,31 +206,6 @@
         {% endif %}
       </div>
     </div>
-
-    {% if browse_mode == 'stock' and storefront_collections %}
-    <section class="collection-strip" aria-label="Collections">
-      <div class="collection-strip__head">
-        <p class="collection-strip__title">Collections</p>
-      </div>
-      <div class="collection-grid">
-        {% for coll in storefront_collections %}
-        <a class="collection-card" href="{% url 'shop:collection_detail' coll.slug %}">
-          <div class="collection-card__media">
-            {% if coll.banner_image %}
-            <img src="{{ coll.banner_image.url }}" alt="{{ coll.title }}" loading="lazy" decoding="async" sizes="120px">
-            {% endif %}
-          </div>
-          <div class="collection-card__body">
-            <h3 class="collection-card__title">{{ coll.title }}</h3>
-            <p class="collection-card__meta">
-              {% if coll.description %}{{ coll.description|striptags|truncatewords:18 }}{% else %}Curated selection from in stock and coming soon items.{% endif %}
-            </p>
-          </div>
-        </a>
-        {% endfor %}
-      </div>
-    </section>
-    {% endif %}
 
     <div class="preorder-layout">
       <div class="preorder-filters-column" id="catalog-filters-column">
@@ -369,6 +344,30 @@
         <p style="grid-column:1/-1">No products to display.</p>
       {% endfor %}
         </div>
+        {% if browse_mode == 'stock' and storefront_collections %}
+        <section class="collection-strip" aria-label="Collections">
+          <div class="collection-strip__head">
+            <p class="collection-strip__title">Collections</p>
+          </div>
+          <div class="collection-grid">
+            {% for coll in storefront_collections %}
+            <a class="collection-card" href="{% url 'shop:collection_detail' coll.slug %}">
+              <div class="collection-card__media">
+                {% if coll.banner_image %}
+                <img src="{{ coll.banner_image.url }}" alt="{{ coll.title }}" loading="lazy" decoding="async" sizes="120px">
+                {% endif %}
+              </div>
+              <div class="collection-card__body">
+                <h3 class="collection-card__title">{{ coll.title }}</h3>
+                <p class="collection-card__meta">
+                  {% if coll.description %}{{ coll.description|striptags|truncatewords:18 }}{% else %}Curated selection from in stock and coming soon items.{% endif %}
+                </p>
+              </div>
+            </a>
+            {% endfor %}
+          </div>
+        </section>
+        {% endif %}
         {% if browse_mode == 'stock' %}
         <div class="preorder-notice preorder-notice--stock" style="margin:20px 0 0">
           <span>Items in stock in Tbilisi. Text us, if you want something you can&apos;t find here.</span>
