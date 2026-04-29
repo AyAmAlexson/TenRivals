@@ -1,4 +1,4 @@
-from allauth.account.views import LoginView, SignupView
+from allauth.account.views import ConfirmEmailView as AllauthConfirmEmailView, LoginView, SignupView
 from .forms import CustomLoginForm, CustomSignupForm
 from django.utils.decorators import method_decorator
 from django_ratelimit.decorators import ratelimit
@@ -49,7 +49,7 @@ import hashlib
 import hmac
 from django.utils.encoding import force_str
 import logging
-from django.http import JsonResponse
+from django.http import HttpResponsePermanentRedirect, HttpResponseRedirect, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods, require_POST
 import json
@@ -132,6 +132,29 @@ class CustomSignupView(SignupView):
         context = super().get_context_data(**kwargs)
         context['login_url'] = reverse_lazy('account_login')
         return context
+
+
+class ConfirmEmailWithGtmView(AllauthConfirmEmailView):
+    """
+    With ACCOUNT_CONFIRM_EMAIL_ON_GET, allauth confirms on GET and returns a redirect,
+    so GTM never loads. Return a short HTML page (with GTM) that JS-redirects instead.
+    """
+
+    def get(self, *args, **kwargs):
+        response = super().get(*args, **kwargs)
+        if getattr(settings, 'ACCOUNT_CONFIRM_EMAIL_ON_GET', False) and isinstance(
+            response, (HttpResponseRedirect, HttpResponsePermanentRedirect)
+        ):
+            redirect_url = response.url
+            if redirect_url:
+                return render(
+                    self.request,
+                    'account/email_confirmation_redirecting.html',
+                    {'redirect_url': redirect_url},
+                    status=200,
+                )
+        return response
+
 
 class AccountDetailView(LoginRequiredMixin, UpdateView):
     model = CustomUser

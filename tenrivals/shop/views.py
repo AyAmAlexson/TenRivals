@@ -379,7 +379,7 @@ def index(request):
             'new_arrivals': new_arrivals,
             'featured_stock_brands': FEATURED_STOCK_BRANDS,
             'seo_page_title': (
-                'Tennis Rivals Shop — Tennis rackets, shoes & strings in Tbilisi, '
+                'Tennis Rivals Shop - Tennis rackets, shoes & strings in Tbilisi, '
                 'Georgia | Tenrivals'
             ),
             'seo_meta_description': (

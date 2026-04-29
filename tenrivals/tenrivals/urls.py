@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.sitemaps.views import sitemap
-from django.urls import path, include
-from persons.views import CustomLoginView, CustomSignupView
+from django.urls import path, include, re_path
+from persons.views import ConfirmEmailWithGtmView, CustomLoginView, CustomSignupView
 from django.conf.urls.static import static
 from django.conf import settings
 from django.views.generic import RedirectView
@@ -36,6 +36,12 @@ urlpatterns = [
     # Must be before allauth.urls so /accounts/login|signup use Custom* views (rate limits, forms).
     path('accounts/login/', CustomLoginView.as_view(), name='account_login'),
     path('accounts/signup/', CustomSignupView.as_view(), name='account_signup'),
+    # Same path as allauth confirm-email; registered first so analytics can run before redirect.
+    re_path(
+        r'^accounts/confirm-email/(?P<key>[-:\w]+)/$',
+        ConfirmEmailWithGtmView.as_view(),
+        name='tenrivals_confirm_email',
+    ),
     path('accounts/', include('allauth.urls')),
     path('administration/', include(('persons.administration_urls', 'administration'), namespace='administration')),
     path('persons/', include('persons.urls')),
