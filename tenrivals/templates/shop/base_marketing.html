@@ -73,6 +73,24 @@
 
     @media(max-width:1024px){.container{padding:0 24px}.footer-top{grid-template-columns:1fr 1fr}}
     @media(max-width:640px){.footer-top{grid-template-columns:1fr}.container{padding:0 20px}.marketing-main{padding:32px 0 48px}}
+    /* Main content only: stronger horizontal inset than generic .container (Bootstrap also styles .container from styles.css). */
+    main.container.marketing-main{
+      padding-left:max(32px, env(safe-area-inset-left, 0px));
+      padding-right:max(32px, env(safe-area-inset-right, 0px));
+      box-sizing:border-box;
+    }
+    @media(max-width:1024px){
+      main.container.marketing-main{
+        padding-left:max(24px, env(safe-area-inset-left, 0px));
+        padding-right:max(24px, env(safe-area-inset-right, 0px));
+      }
+    }
+    @media(max-width:640px){
+      main.container.marketing-main{
+        padding-left:max(24px, calc(env(safe-area-inset-left, 0px) + 12px));
+        padding-right:max(24px, calc(env(safe-area-inset-right, 0px) + 12px));
+      }
+    }
     {% block extra_css %}{% endblock %}
   </style>
   {% block extra_head %}{% endblock %}
