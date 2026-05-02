@@ -5,10 +5,9 @@
   <h1 class="info-hero__h1">Site map</h1>
   <p class="info-hero__lead">
     Quick links across Tennis Rivals Shop. For the full product catalogue, use the navigation bar or
-    <a href="{% url 'shop:stock' %}" style="color:var(--accent);font-weight:600">In stock</a> /
-    <a href="{% url 'shop:preorder' %}" style="color:var(--accent);font-weight:600">Preorder</a>.
+    <a href="{% url 'shop:stock' %}" style="color:var(--accent);font-weight:600">In stock</a>.
     Search engines can use the
-    <a href="/sitemap.xml" style="color:var(--accent);font-weight:600">XML sitemap</a>.
+    <a href="{% url 'sitemap_xml' %}" style="color:var(--accent);font-weight:600">XML sitemap</a>.
   </p>
 </header>
 
@@ -25,7 +24,6 @@
   <ul class="info-ul">
     <li><a href="{% url 'shop:index' %}" style="color:var(--accent);font-weight:600">Shop home</a></li>
     <li><a href="{% url 'shop:stock' %}" style="color:var(--accent);font-weight:600">In stock</a></li>
-    <li><a href="{% url 'shop:preorder' %}" style="color:var(--accent);font-weight:600">Preorder</a></li>
     <li><a href="{% url 'shop:brands' %}" style="color:var(--accent);font-weight:600">All our brands</a></li>
     <li><a href="{% url 'shop:order_for_me' %}" style="color:var(--accent);font-weight:600">Order for me</a></li>
     <li><a href="{% url 'shop:blog_index' %}" style="color:var(--accent);font-weight:600">Blog</a></li>

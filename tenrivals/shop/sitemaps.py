@@ -15,7 +15,6 @@ class ShopStaticSitemap(Sitemap):
         return [
             'shop:index',
             'shop:stock',
-            'shop:preorder',
             'shop:brands',
             'shop:order_for_me',
             'shop:blog_index',
