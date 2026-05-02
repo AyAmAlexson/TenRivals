@@ -19,6 +19,8 @@ class ShopStaticSitemap(Sitemap):
             'shop:brands',
             'shop:order_for_me',
             'shop:blog_index',
+            'shop:guide_racket_weight',
+            'shop:guide_clay_shoes',
             'shop:product_search',
             'shop:cart',
             'shop:checkout',
