@@ -23,7 +23,7 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_POST
 from django.utils.translation import gettext as _
 
-from .site_locale import shop_reverse
+from .site_locale import django_lang_for_site_locale, shop_reverse
 
 from .cart_session import (
     CART_TTL_DAYS,
@@ -342,7 +342,10 @@ _MAX_HOME_FEATURED_BLOG = 12
 
 
 def index(request):
-    hero_content = HomeHeroContent.load()
+    hero_row = HomeHeroContent.load()
+    hero_text = hero_row.localized_strings(
+        django_lang_for_site_locale(getattr(request, 'site_locale', None))
+    )
     hero_slides = list(HomeHeroSlide.objects.all()[:5])
     promo_banners = list(HomePromoBanner.objects.all()[:5])
     featured_blog_posts = list(
@@ -385,7 +388,7 @@ def index(request):
         request,
         'shop/index.html',
         {
-            'hero_content': hero_content,
+            'hero_text': hero_text,
             'hero_slides': hero_slides,
             'promo_banners': promo_banners,
             'featured_blog_posts': featured_blog_posts,

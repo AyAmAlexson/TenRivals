@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from decimal import Decimal
 
 from django.conf import settings
@@ -421,6 +422,18 @@ class HomePromoStripSettings(models.Model):
         return obj
 
 
+@dataclass(frozen=True)
+class HomeHeroLocalizedStrings:
+    """Storefront hero overlay copy resolved for one Django language code (en / ru / ka)."""
+
+    headline: str
+    subtext: str
+    cta_label: str
+    cta_url: str
+    secondary_link_label: str
+    secondary_link_url: str
+
+
 class HomeHeroContent(models.Model):
     """Singleton (pk=1): headline, subcopy, CTA + secondary link overlaid on the home hero carousel."""
 
@@ -439,6 +452,26 @@ class HomeHeroContent(models.Model):
     cta_url = models.CharField(max_length=500, default='/shop/preorder')
     secondary_link_label = models.CharField(max_length=120, blank=True)
     secondary_link_url = models.CharField(max_length=500, blank=True)
+    headline_ru = models.TextField(
+        blank=True,
+        default='',
+        help_text=_('Russian (ge_ru). Empty = use English fields above.'),
+    )
+    subtext_ru = models.TextField(blank=True, default='')
+    cta_label_ru = models.CharField(max_length=120, blank=True, default='')
+    cta_url_ru = models.CharField(max_length=500, blank=True, default='')
+    secondary_link_label_ru = models.CharField(max_length=120, blank=True, default='')
+    secondary_link_url_ru = models.CharField(max_length=500, blank=True, default='')
+    headline_ka = models.TextField(
+        blank=True,
+        default='',
+        help_text=_('Georgian (ge_ka). Empty = use English fields above.'),
+    )
+    subtext_ka = models.TextField(blank=True, default='')
+    cta_label_ka = models.CharField(max_length=120, blank=True, default='')
+    cta_url_ka = models.CharField(max_length=500, blank=True, default='')
+    secondary_link_label_ka = models.CharField(max_length=120, blank=True, default='')
+    secondary_link_url_ka = models.CharField(max_length=500, blank=True, default='')
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -456,6 +489,46 @@ class HomeHeroContent(models.Model):
             defaults={},
         )
         return obj
+
+    def localized_strings(self, django_language_code: str | None) -> HomeHeroLocalizedStrings:
+        """Resolve hero copy for storefront language; empty locale-specific fields fall back to English."""
+
+        code = (django_language_code or 'en').lower().partition('-')[0]
+
+        def _coalesce(local: str, base: str) -> str:
+            s = (local or '').strip()
+            return s if s else (base or '').strip()
+
+        if code == 'ru':
+            return HomeHeroLocalizedStrings(
+                headline=_coalesce(self.headline_ru, self.headline),
+                subtext=_coalesce(self.subtext_ru, self.subtext),
+                cta_label=_coalesce(self.cta_label_ru, self.cta_label),
+                cta_url=_coalesce(self.cta_url_ru, self.cta_url),
+                secondary_link_label=_coalesce(
+                    self.secondary_link_label_ru, self.secondary_link_label
+                ),
+                secondary_link_url=_coalesce(self.secondary_link_url_ru, self.secondary_link_url),
+            )
+        if code == 'ka':
+            return HomeHeroLocalizedStrings(
+                headline=_coalesce(self.headline_ka, self.headline),
+                subtext=_coalesce(self.subtext_ka, self.subtext),
+                cta_label=_coalesce(self.cta_label_ka, self.cta_label),
+                cta_url=_coalesce(self.cta_url_ka, self.cta_url),
+                secondary_link_label=_coalesce(
+                    self.secondary_link_label_ka, self.secondary_link_label
+                ),
+                secondary_link_url=_coalesce(self.secondary_link_url_ka, self.secondary_link_url),
+            )
+        return HomeHeroLocalizedStrings(
+            headline=(self.headline or '').strip(),
+            subtext=(self.subtext or '').strip(),
+            cta_label=(self.cta_label or '').strip(),
+            cta_url=(self.cta_url or '').strip(),
+            secondary_link_label=(self.secondary_link_label or '').strip(),
+            secondary_link_url=(self.secondary_link_url or '').strip(),
+        )
 
 
 class HomeHeroSlide(models.Model):

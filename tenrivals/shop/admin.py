@@ -97,17 +97,64 @@ class HomePromoStripSettingsAdmin(admin.ModelAdmin):
 @admin.register(HomeHeroContent)
 class HomeHeroContentAdmin(admin.ModelAdmin):
     list_display = ("id", "headline", "cta_label", "updated_at")
+    fieldsets = (
+        (
+            "English (default / fallback)",
+            {
+                "fields": (
+                    "headline",
+                    "subtext",
+                    "cta_label",
+                    "cta_url",
+                    "secondary_link_label",
+                    "secondary_link_url",
+                )
+            },
+        ),
+        (
+            "Russian (ge_ru)",
+            {
+                "classes": ("collapse",),
+                "fields": (
+                    "headline_ru",
+                    "subtext_ru",
+                    "cta_label_ru",
+                    "cta_url_ru",
+                    "secondary_link_label_ru",
+                    "secondary_link_url_ru",
+                ),
+            },
+        ),
+        (
+            "Georgian (ge_ka)",
+            {
+                "classes": ("collapse",),
+                "fields": (
+                    "headline_ka",
+                    "subtext_ka",
+                    "cta_label_ka",
+                    "cta_url_ka",
+                    "secondary_link_label_ka",
+                    "secondary_link_url_ka",
+                ),
+            },
+        ),
+    )
 
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
-        form.base_fields["cta_url"].help_text = (
+        path_help = (
             "Path from site root (leading /) or full https URL, e.g. "
             "/shop/stock/?type=RACKET — type codes are RACKET, M_SHOES, W_SHOES, … "
             "(not “RACKETS”)."
         )
-        form.base_fields["secondary_link_url"].help_text = (
-            "Same as primary URL: prefer /shop/… from the domain root."
-        )
+        link_help = "Same as primary URL: prefer /shop/… from the domain root."
+        for key, field in form.base_fields.items():
+            if key.endswith("_url") or key.endswith("_url_ru") or key.endswith("_url_ka"):
+                if "secondary" in key:
+                    field.help_text = link_help
+                elif "cta_url" in key:
+                    field.help_text = path_help
         return form
 
     def has_add_permission(self, request):

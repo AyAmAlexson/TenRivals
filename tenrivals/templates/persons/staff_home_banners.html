@@ -22,42 +22,107 @@
   .confirm-modal__title{margin:0 0 10px;font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
   .confirm-modal__text{margin:0 0 14px;font-size:14px;color:var(--muted);line-height:1.5}
   .confirm-modal__actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+  .hero-lang-details{margin-bottom:14px;border:1px solid var(--line);padding:12px;border-radius:4px;background:var(--card-bg,var(--surface,#fff))}
+  .hero-lang-summary{cursor:pointer;list-style:none;font-family:inherit;font-weight:800;font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+  .hero-lang-details summary::-webkit-details-marker{display:none}
 </style>
 {% endblock %}
 {% block content %}
 
 <div class="card" style="margin-bottom:28px">
-  <h2 class="card-title">Hero — headline & text (same for all slides)</h2>
+  <h2 class="card-title">Hero — headline & text by language</h2>
+  <p class="page-note" style="margin-top:-6px">English is the default storefront copy. Russian and Georgian override <code>ge_ru</code> and <code>ge_ka</code> when filled; leave blank to fall back to English. URLs are optional per language.</p>
   <form method="post" action="{% url 'administration:staff_home_banners' %}">
     {% csrf_token %}
     <input type="hidden" name="action" value="save_hero_content">
-    <div class="form-grid form-grid--wide">
-      <div class="form-group">
-        <label for="id_headline">Headline</label>
-        <textarea id="id_headline" name="headline" rows="3" class="form-control">{{ hero_content.headline }}</textarea>
-        <p class="muted">Line breaks become new lines on the storefront.</p>
+    <details class="hero-lang-details" open>
+      <summary class="hero-lang-summary">English (default · ge_en)</summary>
+      <div class="form-grid form-grid--wide" style="margin-top:14px">
+        <div class="form-group">
+          <label for="id_headline_en">Headline</label>
+          <textarea id="id_headline_en" name="headline_en" rows="3" class="form-control">{{ hero_content.headline }}</textarea>
+          <p class="muted">Line breaks become new lines on the storefront.</p>
+        </div>
+        <div class="form-group">
+          <label for="id_subtext_en">Text under headline</label>
+          <textarea id="id_subtext_en" name="subtext_en" rows="4" class="form-control">{{ hero_content.subtext }}</textarea>
+        </div>
+        <div class="form-group">
+          <label for="id_cta_label_en">Primary button label</label>
+          <input id="id_cta_label_en" name="cta_label_en" type="text" class="form-control" value="{{ hero_content.cta_label }}" maxlength="120">
+        </div>
+        <div class="form-group">
+          <label for="id_cta_url_en">Primary button URL</label>
+          <input id="id_cta_url_en" name="cta_url_en" type="text" class="form-control" value="{{ hero_content.cta_url }}" maxlength="500" placeholder="/shop/preorder or https://…">
+        </div>
+        <div class="form-group">
+          <label for="id_secondary_link_label_en">Secondary link label</label>
+          <input id="id_secondary_link_label_en" name="secondary_link_label_en" type="text" class="form-control" value="{{ hero_content.secondary_link_label }}" maxlength="120">
+        </div>
+        <div class="form-group">
+          <label for="id_secondary_link_url_en">Secondary link URL</label>
+          <input id="id_secondary_link_url_en" name="secondary_link_url_en" type="text" class="form-control" value="{{ hero_content.secondary_link_url }}" maxlength="500">
+        </div>
       </div>
-      <div class="form-group">
-        <label for="id_subtext">Text under headline</label>
-        <textarea id="id_subtext" name="subtext" rows="4" class="form-control">{{ hero_content.subtext }}</textarea>
+    </details>
+    <details class="hero-lang-details">
+      <summary class="hero-lang-summary">Russian (ge_ru)</summary>
+      <div class="form-grid form-grid--wide" style="margin-top:14px">
+        <div class="form-group">
+          <label for="id_headline_ru">Headline</label>
+          <textarea id="id_headline_ru" name="headline_ru" rows="3" class="form-control">{{ hero_content.headline_ru }}</textarea>
+        </div>
+        <div class="form-group">
+          <label for="id_subtext_ru">Text under headline</label>
+          <textarea id="id_subtext_ru" name="subtext_ru" rows="4" class="form-control">{{ hero_content.subtext_ru }}</textarea>
+        </div>
+        <div class="form-group">
+          <label for="id_cta_label_ru">Primary button label</label>
+          <input id="id_cta_label_ru" name="cta_label_ru" type="text" class="form-control" value="{{ hero_content.cta_label_ru }}" maxlength="120">
+        </div>
+        <div class="form-group">
+          <label for="id_cta_url_ru">Primary button URL (optional)</label>
+          <input id="id_cta_url_ru" name="cta_url_ru" type="text" class="form-control" value="{{ hero_content.cta_url_ru }}" maxlength="500">
+        </div>
+        <div class="form-group">
+          <label for="id_secondary_link_label_ru">Secondary link label</label>
+          <input id="id_secondary_link_label_ru" name="secondary_link_label_ru" type="text" class="form-control" value="{{ hero_content.secondary_link_label_ru }}" maxlength="120">
+        </div>
+        <div class="form-group">
+          <label for="id_secondary_link_url_ru">Secondary link URL (optional)</label>
+          <input id="id_secondary_link_url_ru" name="secondary_link_url_ru" type="text" class="form-control" value="{{ hero_content.secondary_link_url_ru }}" maxlength="500">
+        </div>
       </div>
-      <div class="form-group">
-        <label for="id_cta_label">Primary button label</label>
-        <input id="id_cta_label" name="cta_label" type="text" class="form-control" value="{{ hero_content.cta_label }}" maxlength="120">
+    </details>
+    <details class="hero-lang-details">
+      <summary class="hero-lang-summary">Georgian (ge_ka)</summary>
+      <div class="form-grid form-grid--wide" style="margin-top:14px">
+        <div class="form-group">
+          <label for="id_headline_ka">Headline</label>
+          <textarea id="id_headline_ka" name="headline_ka" rows="3" class="form-control">{{ hero_content.headline_ka }}</textarea>
+        </div>
+        <div class="form-group">
+          <label for="id_subtext_ka">Text under headline</label>
+          <textarea id="id_subtext_ka" name="subtext_ka" rows="4" class="form-control">{{ hero_content.subtext_ka }}</textarea>
+        </div>
+        <div class="form-group">
+          <label for="id_cta_label_ka">Primary button label</label>
+          <input id="id_cta_label_ka" name="cta_label_ka" type="text" class="form-control" value="{{ hero_content.cta_label_ka }}" maxlength="120">
+        </div>
+        <div class="form-group">
+          <label for="id_cta_url_ka">Primary button URL (optional)</label>
+          <input id="id_cta_url_ka" name="cta_url_ka" type="text" class="form-control" value="{{ hero_content.cta_url_ka }}" maxlength="500">
+        </div>
+        <div class="form-group">
+          <label for="id_secondary_link_label_ka">Secondary link label</label>
+          <input id="id_secondary_link_label_ka" name="secondary_link_label_ka" type="text" class="form-control" value="{{ hero_content.secondary_link_label_ka }}" maxlength="120">
+        </div>
+        <div class="form-group">
+          <label for="id_secondary_link_url_ka">Secondary link URL (optional)</label>
+          <input id="id_secondary_link_url_ka" name="secondary_link_url_ka" type="text" class="form-control" value="{{ hero_content.secondary_link_url_ka }}" maxlength="500">
+        </div>
       </div>
-      <div class="form-group">
-        <label for="id_cta_url">Primary button URL</label>
-        <input id="id_cta_url" name="cta_url" type="text" class="form-control" value="{{ hero_content.cta_url }}" maxlength="500" placeholder="/shop/preorder or https://…">
-      </div>
-      <div class="form-group">
-        <label for="id_secondary_link_label">Secondary link label</label>
-        <input id="id_secondary_link_label" name="secondary_link_label" type="text" class="form-control" value="{{ hero_content.secondary_link_label }}" maxlength="120">
-      </div>
-      <div class="form-group">
-        <label for="id_secondary_link_url">Secondary link URL</label>
-        <input id="id_secondary_link_url" name="secondary_link_url" type="text" class="form-control" value="{{ hero_content.secondary_link_url }}" maxlength="500">
-      </div>
-    </div>
+    </details>
     <button type="submit" class="btn" style="margin-top:16px">Save hero text</button>
   </form>
 </div>

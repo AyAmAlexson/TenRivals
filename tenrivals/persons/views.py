@@ -1217,16 +1217,38 @@ def staff_home_banners(request):
         action = request.POST.get("action")
         if action == "save_hero_content":
             h = HomeHeroContent.load()
-            h.headline = (request.POST.get("headline") or "").strip()
-            h.subtext = (request.POST.get("subtext") or "").strip()
-            h.cta_label = (request.POST.get("cta_label") or "").strip()[:120]
-            h.cta_url = (request.POST.get("cta_url") or "").strip()[:500]
-            h.secondary_link_label = (request.POST.get("secondary_link_label") or "").strip()[
-                :120
+            h.headline = (request.POST.get("headline_en") or "").strip()
+            h.subtext = (request.POST.get("subtext_en") or "").strip()
+            h.cta_label = (request.POST.get("cta_label_en") or "").strip()[:120]
+            h.cta_url = (request.POST.get("cta_url_en") or "").strip()[:500]
+            h.secondary_link_label = (
+                (request.POST.get("secondary_link_label_en") or "").strip()[:120]
+            )
+            h.secondary_link_url = (request.POST.get("secondary_link_url_en") or "").strip()[
+                :500
             ]
-            h.secondary_link_url = (request.POST.get("secondary_link_url") or "").strip()[:500]
+            h.headline_ru = (request.POST.get("headline_ru") or "").strip()
+            h.subtext_ru = (request.POST.get("subtext_ru") or "").strip()
+            h.cta_label_ru = (request.POST.get("cta_label_ru") or "").strip()[:120]
+            h.cta_url_ru = (request.POST.get("cta_url_ru") or "").strip()[:500]
+            h.secondary_link_label_ru = (
+                (request.POST.get("secondary_link_label_ru") or "").strip()[:120]
+            )
+            h.secondary_link_url_ru = (
+                (request.POST.get("secondary_link_url_ru") or "").strip()[:500]
+            )
+            h.headline_ka = (request.POST.get("headline_ka") or "").strip()
+            h.subtext_ka = (request.POST.get("subtext_ka") or "").strip()
+            h.cta_label_ka = (request.POST.get("cta_label_ka") or "").strip()[:120]
+            h.cta_url_ka = (request.POST.get("cta_url_ka") or "").strip()[:500]
+            h.secondary_link_label_ka = (
+                (request.POST.get("secondary_link_label_ka") or "").strip()[:120]
+            )
+            h.secondary_link_url_ka = (
+                (request.POST.get("secondary_link_url_ka") or "").strip()[:500]
+            )
             h.save()
-            messages.success(request, "Hero headline, text, and links saved.")
+            messages.success(request, "Hero text and links saved for all languages.")
             return redirect("administration:staff_home_banners")
         if action == "add_hero_slide":
             if HomeHeroSlide.objects.count() >= _MAX_HERO_SLIDES:
@@ -1348,8 +1370,8 @@ def staff_home_banners(request):
             "max_hero_slides": _MAX_HERO_SLIDES,
             "max_promo_banners": _MAX_HOME_PROMO_BANNERS,
             "page_heading": "Shop home",
-            "page_note": "Hero and promo carousel: up to 5 slides each. "
-            "Blog management moved to the Blog staff tab.",
+            "page_note": "Hero and promo carousel: up to 5 slides each. Hero overlay copy is editable per language "
+            "(English, Russian, Georgian) below. Blog management moved to the Blog staff tab.",
         },
     )
 
