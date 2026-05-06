@@ -51,8 +51,9 @@ coverage.xml
 .pytest_cache/
 cover/
 
-# Translations
+# Translations (binary catalogs: keep shop django.mo in repo — Heroku often has no gettext)
 *.mo
+!tenrivals/locale/*/LC_MESSAGES/django.mo
 *.pot
 
 # Django stuff:
