@@ -1,8 +1,7 @@
-{% load catalog_tags %}
 {% extends "errors/base_error.html" %}
 {% block title %}Access denied{% endblock %}
 {% block body %}
 <h1>Access denied</h1>
 <p>You do not have permission to view this page.</p>
-<p><a class="btn" href="{% shop_url 'shop:index' %}">Back to shop</a></p>
+<p><a class="btn" href="{{ shop_index_url }}">Back to shop</a></p>
 {% endblock %}

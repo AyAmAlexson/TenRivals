@@ -1,8 +1,7 @@
-{% load catalog_tags %}
 {% extends "errors/base_error.html" %}
 {% block title %}Page not found{% endblock %}
 {% block body %}
 <h1>Page not found</h1>
 <p>The page you requested does not exist or has been moved.</p>
-<p><a class="btn" href="{% shop_url 'shop:index' %}">Back to shop</a></p>
+<p><a class="btn" href="{{ shop_index_url }}">Back to shop</a></p>
 {% endblock %}

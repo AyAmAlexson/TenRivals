@@ -17,11 +17,15 @@ def shop_i18n(request):
         ACTIVE_SHOP_SITE_LOCALES,
         django_lang_for_site_locale,
         normalize_site_locale,
+        safe_shop_reverse,
     )
 
     sl = getattr(request, 'site_locale', None)
     eff = normalize_site_locale(sl)
     lang = django_lang_for_site_locale(eff)
+    shop_index_url = safe_shop_reverse('shop:index', site_locale=eff)
+    if shop_index_url == '/':
+        shop_index_url = f'/{eff}/shop/'
 
     labels = (
         ('ge_en', 'EN', 'English'),
@@ -49,6 +53,7 @@ def shop_i18n(request):
         'shop_site_locale_effective': eff,
         'shop_site_lang': lang,
         'shop_html_lang': lang,
+        'shop_index_url': shop_index_url,
         'shop_language_toggle_short': short_self,
         'shop_language_toggle_native': native_self,
         'shop_language_switch_options': opts,
