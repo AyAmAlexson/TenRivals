@@ -57,6 +57,8 @@ def surf_query_to_surface_slug(surf: str) -> str | None:
 
 SITE_NAME = 'Tenrivals'
 CITY_COUNTRY = 'Tbilisi, Georgia'
+# Link previews (WhatsApp, Telegram, etc.) truncate titles; keep SITE_NAME at the start.
+PDP_SEO_TITLE_MAX_LEN = 72
 
 
 def type_slug_to_code(slug: str | None) -> str | None:
@@ -526,17 +528,34 @@ def shoe_brand_tab_href(
 
 
 def pdp_seo_title(product, *, pdp_mode: str, stock_qty: int) -> str:
+    """Document + Open Graph title: brand first, then product; trim long names only.
+
+    Older format put ``| Tenrivals`` at the end and sliced ``[:70]``, which cut the shop name
+    in messengers.
+    """
     brand = (product.brand or '').strip()
     name = (product.name or '').strip()
-    kind = product.get_type_display()
+    product_line = ' '.join(p for p in (brand, name) if p).strip()
+    if not product_line:
+        product_line = (product.get_type_display() or '').strip()
+
     if pdp_mode == 'stock' and stock_qty > 0:
-        tail = f'buy in Tbilisi, Georgia | {SITE_NAME}'
+        suffix = 'In stock · Tbilisi'
     elif pdp_mode == 'stock':
-        tail = f'order in Tbilisi | {SITE_NAME}'
+        suffix = 'Tbilisi'
     else:
-        tail = f'preorder from EU to Georgia | {SITE_NAME}'
-    core = f'{kind} {brand} {name}'.strip()
-    return f'{core} — {tail}'[:70]
+        suffix = 'Preorder EU → Georgia'
+
+    head = f'{SITE_NAME} — '
+    tail = f' · {suffix}'
+    max_len = PDP_SEO_TITLE_MAX_LEN
+    room = max_len - len(head) - len(tail)
+    if room < 12:
+        room = 12
+    pl = product_line
+    if len(pl) > room:
+        pl = pl[: room - 1].rstrip(' ·—,;') + '…'
+    return head + pl + tail
 
 
 def pdp_meta_description(product, *, pdp_mode: str, stock_qty: int) -> str:
