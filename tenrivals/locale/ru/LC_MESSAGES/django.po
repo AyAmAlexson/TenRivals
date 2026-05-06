@@ -1,0 +1,56 @@
+# Russian translations — Tenrivals shop storefront (partial homepage + SEO strings).
+#
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+
+msgid "Tennis Rivals Shop - Tennis rackets, shoes & strings in Tbilisi, Georgia | Tenrivals"
+msgstr "Tennis Rivals Shop — теннисные ракетки, обувь и струны в Тбилиси, Грузия | Tenrivals"
+
+msgid "Buy tennis equipment in Tbilisi, Georgia: in-stock Wilson, HEAD, Babolat, Prince; preorder from the EU and USA with official import. Free delivery in Tbilisi, shipping across Georgia. Tenrivals online store."
+msgstr "Покупайте теннисную экипировку в Тбилиси (Грузия): в наличии Wilson, HEAD, Babolat, Prince; предзаказ из ЕС и США с официальным оформлением импорта. Бесплатная доставка по Тбилиси, отправка по Грузии. Интернет‑магазин Tenrivals."
+
+msgid "Free delivery in Tbilisi"
+msgstr "Бесплатная доставка по Тбилиси"
+
+msgid "Pre-order from US & EU with official customs clearance"
+msgstr "Предзаказ из США и ЕС с официальным таможенным оформлением"
+
+msgid "Shop categories"
+msgstr "Категории магазина"
+
+msgid "Rackets"
+msgstr "Ракетки"
+
+msgid "Shoes"
+msgstr "Обувь"
+
+msgid "Bags"
+msgstr "Сумки"
+
+msgid "Clothing"
+msgstr "Одежда"
+
+msgid "Balls"
+msgstr "Мячи"
+
+msgid "Accessories"
+msgstr "Аксессуары"
+
+msgid "Featured Products"
+msgstr "Избранные товары"
+
+msgid "View all"
+msgstr "Смотреть все"
+
+msgid "New Arrivals"
+msgstr "Новинки"
+
+msgid "Featured Stories"
+msgstr "Истории"
+
+msgid "Our Brands"
+msgstr "Наши бренды"
+
+msgid "Featured tennis brands"
+msgstr "Подборка теннисных брендов"

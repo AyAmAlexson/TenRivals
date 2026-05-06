@@ -4,15 +4,19 @@ from django.urls import path, include, re_path
 from persons.views import ConfirmEmailWithGtmView, CustomLoginView, CustomSignupView
 from django.conf.urls.static import static
 from django.conf import settings
-from django.views.generic import RedirectView
-
 from shop.sitemaps import (
     BlogPostSitemap,
     ProductCollectionSitemap,
     ProductSitemap,
     ShopStaticSitemap,
 )
+from shop.site_locale import ACTIVE_SITE_LOCALE_PATTERN
 from shop.views import robots_txt
+from shop.views_locale import (
+    shop_legacy_path_redirect,
+    shop_root_locale_redirect,
+    set_shop_site_locale,
+)
 
 _SHOP_SITEMAPS = {
     'static': ShopStaticSitemap,
@@ -21,7 +25,7 @@ _SHOP_SITEMAPS = {
     'collections': ProductCollectionSitemap,
 }
 
-# Shop-first: root redirects to shop, but all league routes available for auth/nav
+# Shop storefront under /<locale>/shop/..., legacy /shop → redirect, language switcher endpoint.
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('robots.txt', robots_txt),
@@ -31,8 +35,15 @@ urlpatterns = [
         {'sitemaps': _SHOP_SITEMAPS},
         name='sitemap_xml',
     ),
-    path('', RedirectView.as_view(pattern_name='shop:index', permanent=False)),
-    path('shop/', include('shop.urls')),
+    path(
+        'shop/set-lang/<slug:site_locale>/',
+        set_shop_site_locale,
+        name='shop_set_site_locale',
+    ),
+    re_path(rf'^(?P<site_locale>{ACTIVE_SITE_LOCALE_PATTERN})/shop/', include('shop.urls')),
+    path('shop/', shop_legacy_path_redirect),
+    re_path(r'^shop/(?P<path_rest>.+)/$', shop_legacy_path_redirect),
+    path('', shop_root_locale_redirect),
     # Must be before allauth.urls so /accounts/login|signup use Custom* views (rate limits, forms).
     path('accounts/login/', CustomLoginView.as_view(), name='account_login'),
     path('accounts/signup/', CustomSignupView.as_view(), name='account_signup'),

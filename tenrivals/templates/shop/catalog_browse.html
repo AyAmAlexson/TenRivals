@@ -196,13 +196,13 @@
     <div class="catalog-bar">
       <div class="catalog-bar__left">
         <ul class="catalog-bar__tabs">
-          <li><a class="catalog-bar__tab {% if browse_mode == 'stock' %}is-active{% endif %}" href="{% url 'shop:stock' %}">In Stock</a></li>
+          <li><a class="catalog-bar__tab {% if browse_mode == 'stock' %}is-active{% endif %}" href="{% shop_url 'shop:stock' %}">In Stock</a></li>
         </ul>
         <span class="catalog-bar__count">{{ product_count }} product{{ product_count|pluralize }}</span>
       </div>
       <div class="catalog-bar__right">
         {% if user.is_staff %}
-        <a href="{% url 'shop:product_create' %}" class="btn btn--outline" style="padding:8px 16px;font-size:11px">Add Product</a>
+        <a href="{% shop_url 'shop:product_create' %}" class="btn btn--outline" style="padding:8px 16px;font-size:11px">Add Product</a>
         {% endif %}
       </div>
     </div>
@@ -220,22 +220,22 @@
           <span class="preorder-filter-label" id="preorder-filter-type">Product type</span>
           <div class="preorder-tabs" role="group" aria-labelledby="preorder-filter-type">
             {% if browse_mode == 'stock' %}
-            <a class="preorder-tab {% if active_tab == 'all' or active_tab|slice:':7' == 'cbrand:' %}active{% endif %}" href="{% url 'shop:stock' %}{% if catalog_brand %}?cbrand={{ catalog_brand|urlencode }}{% endif %}">All in stock</a>
-            <a class="preorder-tab {% if active_tab == 'type:RACKET' %}active{% endif %}" href="{% url 'shop:stock_catalog_type' 'rackets' %}{% if catalog_brand %}?cbrand={{ catalog_brand|urlencode }}{% endif %}">Rackets</a>
-            <a class="preorder-tab {% if active_tab == 'type:M_SHOES' %}active{% endif %}" href="{% url 'shop:stock_catalog_type' 'mens-shoes' %}{% if catalog_brand %}?cbrand={{ catalog_brand|urlencode }}{% endif %}">Men&apos;s shoes</a>
-            <a class="preorder-tab {% if active_tab == 'type:W_SHOES' %}active{% endif %}" href="{% url 'shop:stock_catalog_type' 'womens-shoes' %}{% if catalog_brand %}?cbrand={{ catalog_brand|urlencode }}{% endif %}">Women&apos;s shoes</a>
-            <a class="preorder-tab {% if active_tab == 'type:BAGS' %}active{% endif %}" href="{% url 'shop:stock_catalog_type' 'bags' %}{% if catalog_brand %}?cbrand={{ catalog_brand|urlencode }}{% endif %}">Bags</a>
-            <a class="preorder-tab {% if active_tab == 'type:BALLS' %}active{% endif %}" href="{% url 'shop:stock_catalog_type' 'balls' %}{% if catalog_brand %}?cbrand={{ catalog_brand|urlencode }}{% endif %}">Balls</a>
-            <a class="preorder-tab {% if active_tab == 'type:STRINGS' %}active{% endif %}" href="{% url 'shop:stock_catalog_type' 'strings' %}{% if catalog_brand %}?cbrand={{ catalog_brand|urlencode }}{% endif %}">Strings</a>
-            <a class="preorder-tab {% if active_tab == 'type:GRIPS' %}active{% endif %}" href="{% url 'shop:stock_catalog_type' 'grips' %}{% if catalog_brand %}?cbrand={{ catalog_brand|urlencode }}{% endif %}">Grips</a>
-            <a class="preorder-tab {% if active_tab == 'type:DAMPENERS' %}active{% endif %}" href="{% url 'shop:stock_catalog_type' 'dampeners' %}{% if catalog_brand %}?cbrand={{ catalog_brand|urlencode }}{% endif %}">Dampeners</a>
-            <a class="preorder-tab {% if active_tab == 'type:ACCESSORIES' %}active{% endif %}" href="{% url 'shop:stock_catalog_type' 'accessories' %}{% if catalog_brand %}?cbrand={{ catalog_brand|urlencode }}{% endif %}">Accessories</a>
+            <a class="preorder-tab {% if active_tab == 'all' or active_tab|slice:':7' == 'cbrand:' %}active{% endif %}" href="{% shop_url 'shop:stock' %}{% if catalog_brand %}?cbrand={{ catalog_brand|urlencode }}{% endif %}">All in stock</a>
+            <a class="preorder-tab {% if active_tab == 'type:RACKET' %}active{% endif %}" href="{% shop_url 'shop:stock_catalog_type' 'rackets' %}{% if catalog_brand %}?cbrand={{ catalog_brand|urlencode }}{% endif %}">Rackets</a>
+            <a class="preorder-tab {% if active_tab == 'type:M_SHOES' %}active{% endif %}" href="{% shop_url 'shop:stock_catalog_type' 'mens-shoes' %}{% if catalog_brand %}?cbrand={{ catalog_brand|urlencode }}{% endif %}">Men&apos;s shoes</a>
+            <a class="preorder-tab {% if active_tab == 'type:W_SHOES' %}active{% endif %}" href="{% shop_url 'shop:stock_catalog_type' 'womens-shoes' %}{% if catalog_brand %}?cbrand={{ catalog_brand|urlencode }}{% endif %}">Women&apos;s shoes</a>
+            <a class="preorder-tab {% if active_tab == 'type:BAGS' %}active{% endif %}" href="{% shop_url 'shop:stock_catalog_type' 'bags' %}{% if catalog_brand %}?cbrand={{ catalog_brand|urlencode }}{% endif %}">Bags</a>
+            <a class="preorder-tab {% if active_tab == 'type:BALLS' %}active{% endif %}" href="{% shop_url 'shop:stock_catalog_type' 'balls' %}{% if catalog_brand %}?cbrand={{ catalog_brand|urlencode }}{% endif %}">Balls</a>
+            <a class="preorder-tab {% if active_tab == 'type:STRINGS' %}active{% endif %}" href="{% shop_url 'shop:stock_catalog_type' 'strings' %}{% if catalog_brand %}?cbrand={{ catalog_brand|urlencode }}{% endif %}">Strings</a>
+            <a class="preorder-tab {% if active_tab == 'type:GRIPS' %}active{% endif %}" href="{% shop_url 'shop:stock_catalog_type' 'grips' %}{% if catalog_brand %}?cbrand={{ catalog_brand|urlencode }}{% endif %}">Grips</a>
+            <a class="preorder-tab {% if active_tab == 'type:DAMPENERS' %}active{% endif %}" href="{% shop_url 'shop:stock_catalog_type' 'dampeners' %}{% if catalog_brand %}?cbrand={{ catalog_brand|urlencode }}{% endif %}">Dampeners</a>
+            <a class="preorder-tab {% if active_tab == 'type:ACCESSORIES' %}active{% endif %}" href="{% shop_url 'shop:stock_catalog_type' 'accessories' %}{% if catalog_brand %}?cbrand={{ catalog_brand|urlencode }}{% endif %}">Accessories</a>
             {% endif %}
             {% for code, label in type_tabs %}
               {% if code != 'OTHER' and code != 'ACCESSORIES' and code != 'GRIPS' and code != 'STRINGS' and code != 'DAMPENERS' %}
                 {% if browse_mode != 'stock' and code == 'RACKET' or browse_mode != 'stock' and code == 'M_SHOES' or browse_mode != 'stock' and code == 'W_SHOES' %}
                 {% with ts=slug_for_type|dict_get:code %}
-                <a class="preorder-tab {% if active_tab == 'type:'|add:code %}active{% endif %}" href="{% if ts %}{% url 'shop:preorder_catalog_type' ts %}{% if catalog_brand %}?cbrand={{ catalog_brand|urlencode }}{% endif %}{% else %}?type={{ code }}{% if catalog_brand %}&amp;cbrand={{ catalog_brand|urlencode }}{% endif %}{% endif %}">{{ label }}</a>
+                <a class="preorder-tab {% if active_tab == 'type:'|add:code %}active{% endif %}" href="{% if ts %}{% shop_url 'shop:preorder_catalog_type' ts %}{% if catalog_brand %}?cbrand={{ catalog_brand|urlencode }}{% endif %}{% else %}?type={{ code }}{% if catalog_brand %}&amp;cbrand={{ catalog_brand|urlencode }}{% endif %}{% endif %}">{{ label }}</a>
                 {% endwith %}
                 {% endif %}
               {% endif %}
@@ -258,9 +258,9 @@
         <div class="preorder-filter-group">
           <span class="preorder-filter-label" id="preorder-filter-racket-brand">Racket brand</span>
           <div class="preorder-tabs" role="group" aria-labelledby="preorder-filter-racket-brand">
-            <a class="preorder-tab {% if racket_brand_active == 'all' %}active{% endif %}" href="{% if browse_mode == 'stock' and active_type_slug %}{% url 'shop:stock_catalog_type' active_type_slug %}{% if catalog_brand %}?cbrand={{ catalog_brand|urlencode }}{% endif %}{% else %}?type={{ active_type_code }}&brand=all&w={{ racket_weight_active }}&head={{ racket_head_active }}&pat={{ racket_pattern_active }}{{ cbrand_qs }}{% endif %}">All brands</a>
+            <a class="preorder-tab {% if racket_brand_active == 'all' %}active{% endif %}" href="{% if browse_mode == 'stock' and active_type_slug %}{% shop_url 'shop:stock_catalog_type' active_type_slug %}{% if catalog_brand %}?cbrand={{ catalog_brand|urlencode }}{% endif %}{% else %}?type={{ active_type_code }}&brand=all&w={{ racket_weight_active }}&head={{ racket_head_active }}&pat={{ racket_pattern_active }}{{ cbrand_qs }}{% endif %}">All brands</a>
             {% for b in racket_brands %}
-              <a class="preorder-tab {% if racket_brand_active == b %}active{% endif %}" href="{% if browse_mode == 'stock' and active_type_slug %}{% url 'shop:stock_catalog_brand' active_type_slug b|slugify %}{% if racket_weight_active != 'all' or racket_head_active != 'all' or racket_pattern_active != 'all' %}?w={{ racket_weight_active }}&amp;head={{ racket_head_active }}&amp;pat={{ racket_pattern_active }}{% endif %}{% if catalog_brand %}{% if racket_weight_active != 'all' or racket_head_active != 'all' or racket_pattern_active != 'all' %}&amp;{% else %}?{% endif %}cbrand={{ catalog_brand|urlencode }}{% endif %}{% else %}?type={{ active_type_code }}&brand={{ b|urlencode }}&w={{ racket_weight_active }}&head={{ racket_head_active }}&pat={{ racket_pattern_active }}{{ cbrand_qs }}{% endif %}">{{ b }}</a>
+              <a class="preorder-tab {% if racket_brand_active == b %}active{% endif %}" href="{% if browse_mode == 'stock' and active_type_slug %}{% shop_url 'shop:stock_catalog_brand' active_type_slug b|slugify %}{% if racket_weight_active != 'all' or racket_head_active != 'all' or racket_pattern_active != 'all' %}?w={{ racket_weight_active }}&amp;head={{ racket_head_active }}&amp;pat={{ racket_pattern_active }}{% endif %}{% if catalog_brand %}{% if racket_weight_active != 'all' or racket_head_active != 'all' or racket_pattern_active != 'all' %}&amp;{% else %}?{% endif %}cbrand={{ catalog_brand|urlencode }}{% endif %}{% else %}?type={{ active_type_code }}&brand={{ b|urlencode }}&w={{ racket_weight_active }}&head={{ racket_head_active }}&pat={{ racket_pattern_active }}{{ cbrand_qs }}{% endif %}">{{ b }}</a>
             {% endfor %}
           </div>
         </div>
@@ -332,7 +332,7 @@
           <span>Items in stock in Tbilisi. Text us, if you want something you can&apos;t find here.</span>
           <div class="preorder-notice__actions">
             <a href="https://t.me/tennis_rivals_shop_tbilisi" class="btn">Contact us</a>
-            <a href="{% url 'shop:order_for_me' %}" class="btn">Order for me</a>
+            <a href="{% shop_url 'shop:order_for_me' %}" class="btn">Order for me</a>
           </div>
         </div>
         {% endif %}
@@ -351,7 +351,7 @@
           </div>
           <div class="collection-grid">
             {% for coll in storefront_collections %}
-            <a class="collection-card" href="{% url 'shop:collection_detail' coll.slug %}">
+            <a class="collection-card" href="{% shop_url 'shop:collection_detail' coll.slug %}">
               <div class="collection-card__media">
                 {% if coll.banner_image %}
                 <img src="{{ coll.banner_image.url }}" alt="{{ coll.title }}" loading="lazy" decoding="async" sizes="120px">
@@ -373,7 +373,7 @@
           <span>Items in stock in Tbilisi. Text us, if you want something you can&apos;t find here.</span>
           <div class="preorder-notice__actions">
             <a href="https://t.me/tennis_rivals_shop_tbilisi" class="btn">Contact us</a>
-            <a href="{% url 'shop:order_for_me' %}" class="btn">Order for me</a>
+            <a href="{% shop_url 'shop:order_for_me' %}" class="btn">Order for me</a>
           </div>
         </div>
         {% endif %}

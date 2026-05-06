@@ -1,9 +1,10 @@
+{% load catalog_tags %}
 {# Short Explore column — full catalog lives in header nav #}
-<a href="{% url 'shop:index' %}">Shop home</a>
-<a href="{% url 'shop:stock' %}?type=RACKET">Rackets</a>
-<a href="{% url 'shop:stock' %}?type=M_SHOES">Shoes</a>
-<a href="{% url 'shop:stock' %}?type=M_APP">Apparel</a>
-<a href="{% url 'shop:stock' %}?type=BAGS">Bags &amp; covers</a>
-<a href="{% url 'shop:stock' %}?type=BALLS">Balls</a>
-<a href="{% url 'shop:stock' %}?type=ACC_GEAR">Accessories &amp; equipment</a>
-<a href="{% url 'shop:stock' %}?type=DAMPENERS">Dampeners</a>
+<a href="{% shop_url 'shop:index' %}">Shop home</a>
+<a href="{% shop_url 'shop:stock' %}?type=RACKET">Rackets</a>
+<a href="{% shop_url 'shop:stock' %}?type=M_SHOES">Shoes</a>
+<a href="{% shop_url 'shop:stock' %}?type=M_APP">Apparel</a>
+<a href="{% shop_url 'shop:stock' %}?type=BAGS">Bags &amp; covers</a>
+<a href="{% shop_url 'shop:stock' %}?type=BALLS">Balls</a>
+<a href="{% shop_url 'shop:stock' %}?type=ACC_GEAR">Accessories &amp; equipment</a>
+<a href="{% shop_url 'shop:stock' %}?type=DAMPENERS">Dampeners</a>

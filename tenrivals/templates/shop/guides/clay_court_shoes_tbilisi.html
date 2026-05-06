@@ -1,3 +1,4 @@
+{% load catalog_tags %}
 {% extends 'shop/info/layout.html' %}
 {% block title %}{{ seo_page_title }}{% endblock %}
 {% block extra_head %}
@@ -39,11 +40,11 @@
   <h2 class="info-h2">Browse shoes (stock &amp; preorder)</h2>
   <p class="info-prose">
     In-stock:
-    <a href="{% url 'shop:stock_catalog_type' 'mens-shoes' %}" style="color:var(--accent);font-weight:600">Men&apos;s shoes</a>,
-    <a href="{% url 'shop:stock_catalog_type' 'womens-shoes' %}" style="color:var(--accent);font-weight:600">Women&apos;s shoes</a>,
-    <a href="{% url 'shop:stock_catalog_type' 'junior-shoes' %}" style="color:var(--accent);font-weight:600">Junior shoes</a>.
+    <a href="{% shop_url 'shop:stock_catalog_type' 'mens-shoes' %}" style="color:var(--accent);font-weight:600">Men&apos;s shoes</a>,
+    <a href="{% shop_url 'shop:stock_catalog_type' 'womens-shoes' %}" style="color:var(--accent);font-weight:600">Women&apos;s shoes</a>,
+    <a href="{% shop_url 'shop:stock_catalog_type' 'junior-shoes' %}" style="color:var(--accent);font-weight:600">Junior shoes</a>.
     Filter by surface tab <strong>Clay</strong> when you open a category. For EU-only colourways, switch to
-    <a href="{% url 'shop:preorder_catalog_type' 'mens-shoes' %}" style="color:var(--accent);font-weight:600">Preorder</a>.
+    <a href="{% shop_url 'shop:preorder_catalog_type' 'mens-shoes' %}" style="color:var(--accent);font-weight:600">Preorder</a>.
   </p>
 </div>
 {% endblock %}

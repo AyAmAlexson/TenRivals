@@ -190,7 +190,7 @@
 <div class="blog-article-outer">
 <article class="article-shell" itemscope itemtype="https://schema.org/Article">
   <nav class="article-nav" aria-label="Blog">
-    <a class="article-back" href="{% url 'shop:blog_index' %}">← All stories</a>
+    <a class="article-back" href="{% shop_url 'shop:blog_index' %}">← All stories</a>
   </nav>
 
   {% if post.hero_image %}
@@ -229,7 +229,7 @@
             <div class="article-products__track-wrap" data-product-rail-wrap>
               <div class="article-products__grid" data-product-rail>
                 {% for p in sec.products %}
-                <a class="article-product-card" href="{% url 'shop:product_detail' p.pk %}">
+                <a class="article-product-card" href="{% shop_url 'shop:product_detail' p.pk %}">
                   <div class="article-product-card__media">
                     {% if p.image_1 %}<img src="{{ p.image_1.url }}" alt="{{ p.name }}" loading="lazy" decoding="async" sizes="168px">{% endif %}
                   </div>

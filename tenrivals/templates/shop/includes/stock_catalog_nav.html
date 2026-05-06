@@ -1,3 +1,4 @@
+{% load catalog_tags %}
 {# Stock catalog links → shop:stock (in-stock channel). Wrap with .nav-row in parent. #}
   <div class="dropdown">
     <a class="nav-link dropdown-toggle" href="{{ catalog_url }}?type=RACKET">Rackets</a>
@@ -160,5 +161,5 @@
       </div>
     </div>
   </div>
-  <a class="nav-link" href="{% url 'shop:blog_index' %}">Blog</a>
-  <a class="nav-link nav-link--primary" href="{% url 'shop:order_for_me' %}">Order for me</a>
+  <a class="nav-link" href="{% shop_url 'shop:blog_index' %}">Blog</a>
+  <a class="nav-link nav-link--primary" href="{% shop_url 'shop:order_for_me' %}">Order for me</a>

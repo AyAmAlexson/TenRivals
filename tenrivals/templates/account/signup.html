@@ -1,3 +1,4 @@
+{% load catalog_tags %}
 {% load i18n static account socialaccount %}
 <!doctype html>
 <html lang="en">
@@ -60,7 +61,7 @@
 <body>
   {% include 'includes/google_tag_manager_body.html' %}
   <div class="auth-header">
-    <a href="{% url 'shop:index' %}">
+    <a href="{% shop_url 'shop:index' %}">
       <img src="{% static 'assets/img/TR Logo 25/TR 25 LOGO HOR RED.svg' %}" alt="Tenrivals">
     </a>
   </div>
@@ -133,12 +134,12 @@
           {{ form.terms_accepted }}
           <label for="{{ form.terms_accepted.id_for_label }}">
             {% trans "I have read and agree to the" %}
-            <a href="{% url 'shop:legal_terms' %}" target="_blank" rel="noopener">{% trans "Terms and conditions" %}</a>,
-            <a href="{% url 'shop:legal_privacy' %}" target="_blank" rel="noopener">{% trans "Privacy policy" %}</a>,
+            <a href="{% shop_url 'shop:legal_terms' %}" target="_blank" rel="noopener">{% trans "Terms and conditions" %}</a>,
+            <a href="{% shop_url 'shop:legal_privacy' %}" target="_blank" rel="noopener">{% trans "Privacy policy" %}</a>,
             {% trans "and" %}
-            <a href="{% url 'shop:legal_cookies' %}" target="_blank" rel="noopener">{% trans "Cookie policy" %}</a>.
+            <a href="{% shop_url 'shop:legal_cookies' %}" target="_blank" rel="noopener">{% trans "Cookie policy" %}</a>.
             {% trans "Payment is on delivery (card or cash) or by bank transfer where offered; online card checkout is not available yet — see" %}
-            <a href="{% url 'shop:info_payment' %}" target="_blank" rel="noopener">{% trans "Payment" %}</a>.
+            <a href="{% shop_url 'shop:info_payment' %}" target="_blank" rel="noopener">{% trans "Payment" %}</a>.
           </label>
         </div>
         {% if form.terms_accepted.errors %}<div class="field-error" style="margin-top:-6px;margin-bottom:10px">{{ form.terms_accepted.errors }}</div>{% endif %}

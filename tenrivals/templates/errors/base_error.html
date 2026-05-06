@@ -1,3 +1,4 @@
+{% load catalog_tags %}
 {% load static %}
 <!doctype html>
 <html lang="en">
@@ -25,7 +26,7 @@
 </head>
 <body>
   <div class="error-wrap">
-    <a href="{% url 'shop:index' %}">
+    <a href="{% shop_url 'shop:index' %}">
       <img src="{% static 'assets/img/TR Logo 25/TR 25 LOGO HOR RED.svg' %}" width="220" height="auto" alt="Tennis Rivals Shop">
     </a>
     {% block body %}{% endblock %}

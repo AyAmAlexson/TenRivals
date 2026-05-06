@@ -15,7 +15,7 @@ class CustomUserAdmin(BaseUserAdmin):
         ('Permissions', {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
         ('Important dates', {'fields': ('last_login', 'date_joined')}),
         ('Status', {'fields': ('is_player', 'is_author', 'is_test_user', 'is_telegram_verified')}),
-        ('Preferences', {'fields': ('preferred_city', 'preferred_geo')}),
+        ('Preferences', {'fields': ('preferred_city', 'preferred_geo', 'preferred_site_locale')}),
     )
 
     add_fieldsets = (

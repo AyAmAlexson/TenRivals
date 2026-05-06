@@ -1,3 +1,4 @@
+{% load catalog_tags %}
 {% extends 'persons/staff_base.html' %}
 {% block title %}{{ page_heading }} — Staff | Tenrivals{% endblock %}
 {% block page_heading %}{{ page_heading }}{% endblock %}
@@ -41,7 +42,7 @@
   </div>
   {% endif %}
   <div class="staff-toolbar" style="flex-wrap:wrap;gap:10px 14px;align-items:center">
-    <a class="btn btn--sm" href="{% url 'shop:product_create' %}?channel={{ listing_channel }}&next={{ request.get_full_path|urlencode }}">Add product</a>
+    <a class="btn btn--sm" href="{% shop_url 'shop:product_create' %}?channel={{ listing_channel }}&next={{ request.get_full_path|urlencode }}">Add product</a>
     <form method="post" action="" style="display:inline" onsubmit="return confirm('Create a catalog row (qty 0) for every active product that does not have one in this channel?');">
       {% csrf_token %}
       <input type="hidden" name="action" value="backfill_listings">
@@ -97,7 +98,7 @@
             <td>{{ row.quantity }}</td>
             <td>
               <div class="action-icons">
-                <a class="icon-btn" href="{% url 'shop:product_detail' row.product.pk %}?channel={{ listing_channel }}" target="_blank" rel="noopener noreferrer" title="Open product in shop" aria-label="Open product in shop">
+                <a class="icon-btn" href="{% shop_url 'shop:product_detail' row.product.pk %}?channel={{ listing_channel }}" target="_blank" rel="noopener noreferrer" title="Open product in shop" aria-label="Open product in shop">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M14 3h7v7"></path>
                     <path d="M10 14 21 3"></path>
@@ -107,7 +108,7 @@
                     <path d="M3 3l7 7"></path>
                   </svg>
                 </a>
-                <a class="icon-btn icon-btn--accent" href="{% url 'shop:product_edit' row.product.pk %}?channel={{ listing_channel }}&next={{ request.get_full_path|urlencode }}" title="Edit product" aria-label="Edit product">
+                <a class="icon-btn icon-btn--accent" href="{% shop_url 'shop:product_edit' row.product.pk %}?channel={{ listing_channel }}&next={{ request.get_full_path|urlencode }}" title="Edit product" aria-label="Edit product">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
                 </a>
                 <form id="remove-listing-{{ row.pk }}" method="post" action="" style="display:inline">

@@ -5,8 +5,9 @@ from __future__ import annotations
 from decimal import Decimal
 from urllib.parse import quote, urlencode
 
-from django.urls import reverse
 from django.utils.text import slugify
+
+from .site_locale import shop_reverse
 
 from .models import CourtSurface, Gender, ProductType
 
@@ -151,54 +152,68 @@ def build_stock_catalog_path(
     type_slug: str | None,
     brand_slug: str | None = None,
     surface_slug: str | None = None,
+    *,
+    site_locale: str | None = None,
 ) -> str:
     if not type_slug:
-        return reverse('shop:stock')
+        return shop_reverse('shop:stock', site_locale=site_locale)
     tc = type_slug_to_code(type_slug)
     if not tc:
-        return reverse('shop:stock')
+        return shop_reverse('shop:stock', site_locale=site_locale)
     if tc in SHOE_TYPES and brand_slug and surface_slug:
-        return reverse(
+        return shop_reverse(
             'shop:stock_catalog_shoe',
-            kwargs={
-                'type_slug': type_slug,
-                'brand_slug': brand_slug,
-                'surface_slug': surface_slug,
-            },
+            site_locale=site_locale,
+            type_slug=type_slug,
+            brand_slug=brand_slug,
+            surface_slug=surface_slug,
         )
     if brand_slug:
-        return reverse(
+        return shop_reverse(
             'shop:stock_catalog_brand',
-            kwargs={'type_slug': type_slug, 'brand_slug': brand_slug},
+            site_locale=site_locale,
+            type_slug=type_slug,
+            brand_slug=brand_slug,
         )
-    return reverse('shop:stock_catalog_type', kwargs={'type_slug': type_slug})
+    return shop_reverse(
+        'shop:stock_catalog_type',
+        site_locale=site_locale,
+        type_slug=type_slug,
+    )
 
 
 def build_preorder_catalog_path(
     type_slug: str | None,
     brand_slug: str | None = None,
     surface_slug: str | None = None,
+    *,
+    site_locale: str | None = None,
 ) -> str:
     if not type_slug:
-        return reverse('shop:preorder')
+        return shop_reverse('shop:preorder', site_locale=site_locale)
     tc = type_slug_to_code(type_slug)
     if not tc:
-        return reverse('shop:preorder')
+        return shop_reverse('shop:preorder', site_locale=site_locale)
     if tc in SHOE_TYPES and brand_slug and surface_slug:
-        return reverse(
+        return shop_reverse(
             'shop:preorder_catalog_shoe',
-            kwargs={
-                'type_slug': type_slug,
-                'brand_slug': brand_slug,
-                'surface_slug': surface_slug,
-            },
+            site_locale=site_locale,
+            type_slug=type_slug,
+            brand_slug=brand_slug,
+            surface_slug=surface_slug,
         )
     if brand_slug:
-        return reverse(
+        return shop_reverse(
             'shop:preorder_catalog_brand',
-            kwargs={'type_slug': type_slug, 'brand_slug': brand_slug},
+            site_locale=site_locale,
+            type_slug=type_slug,
+            brand_slug=brand_slug,
         )
-    return reverse('shop:preorder_catalog_type', kwargs={'type_slug': type_slug})
+    return shop_reverse(
+        'shop:preorder_catalog_type',
+        site_locale=site_locale,
+        type_slug=type_slug,
+    )
 
 
 def catalog_canonical_path(
@@ -207,10 +222,15 @@ def catalog_canonical_path(
     type_slug: str | None,
     brand_slug: str | None,
     surface_slug: str | None,
+    site_locale: str | None = None,
 ) -> str:
     if browse_mode == 'preorder':
-        return build_preorder_catalog_path(type_slug, brand_slug, surface_slug)
-    return build_stock_catalog_path(type_slug, brand_slug, surface_slug)
+        return build_preorder_catalog_path(
+            type_slug, brand_slug, surface_slug, site_locale=site_locale
+        )
+    return build_stock_catalog_path(
+        type_slug, brand_slug, surface_slug, site_locale=site_locale
+    )
 
 
 def catalog_seo_texts(
@@ -313,12 +333,16 @@ def shoe_surface_tab_href(
     shoe_brand: str,
     surface: str,
     catalog_brand: str,
+    site_locale: str | None = None,
 ) -> str:
     """Relative URL for a shoe surface tab (SEO path when type + brand + surface allow)."""
     shoe_brand = shoe_brand or 'all'
     surface = surface or 'all'
     if not type_code or type_code not in SHOE_TYPES:
-        base = reverse('shop:preorder' if browse_mode == 'preorder' else 'shop:stock')
+        base = shop_reverse(
+            'shop:preorder' if browse_mode == 'preorder' else 'shop:stock',
+            site_locale=site_locale,
+        )
         params: dict[str, str] = {}
         if type_code:
             params['type'] = type_code
@@ -329,7 +353,10 @@ def shoe_surface_tab_href(
         return append_cbrand_query(append_query(base, params), catalog_brand)
 
     if not type_slug:
-        base = reverse('shop:preorder' if browse_mode == 'preorder' else 'shop:stock')
+        base = shop_reverse(
+            'shop:preorder' if browse_mode == 'preorder' else 'shop:stock',
+            site_locale=site_locale,
+        )
         params = {'type': type_code}
         if surface != 'all':
             params['surf'] = surface
@@ -344,23 +371,26 @@ def shoe_surface_tab_href(
 
     if stock:
         if sb and path_surface:
-            u = reverse(
+            u = shop_reverse(
                 'shop:stock_catalog_shoe',
-                kwargs={
-                    'type_slug': ts,
-                    'brand_slug': brand_to_slug(sb),
-                    'surface_slug': path_surface,
-                },
+                site_locale=site_locale,
+                type_slug=ts,
+                brand_slug=brand_to_slug(sb),
+                surface_slug=path_surface,
             )
         elif sb:
-            u = reverse(
+            u = shop_reverse(
                 'shop:stock_catalog_brand',
-                kwargs={'type_slug': ts, 'brand_slug': brand_to_slug(sb)},
+                site_locale=site_locale,
+                type_slug=ts,
+                brand_slug=brand_to_slug(sb),
             )
             if surface != 'all':
                 u = append_query(u, {'surf': surface})
         else:
-            u = reverse('shop:stock_catalog_type', kwargs={'type_slug': ts})
+            u = shop_reverse(
+                'shop:stock_catalog_type', site_locale=site_locale, type_slug=ts
+            )
             extra: dict[str, str] = {}
             if surface != 'all':
                 extra['surf'] = surface
@@ -369,23 +399,28 @@ def shoe_surface_tab_href(
             u = append_query(u, extra)
     else:
         if sb and path_surface:
-            u = reverse(
+            u = shop_reverse(
                 'shop:preorder_catalog_shoe',
-                kwargs={
-                    'type_slug': ts,
-                    'brand_slug': brand_to_slug(sb),
-                    'surface_slug': path_surface,
-                },
+                site_locale=site_locale,
+                type_slug=ts,
+                brand_slug=brand_to_slug(sb),
+                surface_slug=path_surface,
             )
         elif sb:
-            u = reverse(
+            u = shop_reverse(
                 'shop:preorder_catalog_brand',
-                kwargs={'type_slug': ts, 'brand_slug': brand_to_slug(sb)},
+                site_locale=site_locale,
+                type_slug=ts,
+                brand_slug=brand_to_slug(sb),
             )
             if surface != 'all':
                 u = append_query(u, {'surf': surface})
         else:
-            u = reverse('shop:preorder_catalog_type', kwargs={'type_slug': ts})
+            u = shop_reverse(
+                'shop:preorder_catalog_type',
+                site_locale=site_locale,
+                type_slug=ts,
+            )
             extra = {}
             if surface != 'all':
                 extra['surf'] = surface
@@ -403,12 +438,16 @@ def shoe_brand_tab_href(
     shoe_brand: str,
     surface: str,
     catalog_brand: str,
+    site_locale: str | None = None,
 ) -> str:
     """Relative URL for a shoe brand tab."""
     shoe_brand = shoe_brand or 'all'
     surface = surface or 'all'
     if not type_code or type_code not in SHOE_TYPES:
-        base = reverse('shop:preorder' if browse_mode == 'preorder' else 'shop:stock')
+        base = shop_reverse(
+            'shop:preorder' if browse_mode == 'preorder' else 'shop:stock',
+            site_locale=site_locale,
+        )
         params: dict[str, str] = {}
         if type_code:
             params['type'] = type_code
@@ -419,7 +458,10 @@ def shoe_brand_tab_href(
         return append_cbrand_query(append_query(base, params), catalog_brand)
 
     if not type_slug:
-        base = reverse('shop:preorder' if browse_mode == 'preorder' else 'shop:stock')
+        base = shop_reverse(
+            'shop:preorder' if browse_mode == 'preorder' else 'shop:stock',
+            site_locale=site_locale,
+        )
         params = {'type': type_code, 'surf': surface}
         if shoe_brand != 'all':
             params['sbrand'] = shoe_brand
@@ -432,44 +474,52 @@ def shoe_brand_tab_href(
 
     if stock:
         if sb and path_surface:
-            u = reverse(
+            u = shop_reverse(
                 'shop:stock_catalog_shoe',
-                kwargs={
-                    'type_slug': ts,
-                    'brand_slug': brand_to_slug(sb),
-                    'surface_slug': path_surface,
-                },
+                site_locale=site_locale,
+                type_slug=ts,
+                brand_slug=brand_to_slug(sb),
+                surface_slug=path_surface,
             )
         elif sb:
-            u = reverse(
+            u = shop_reverse(
                 'shop:stock_catalog_brand',
-                kwargs={'type_slug': ts, 'brand_slug': brand_to_slug(sb)},
+                site_locale=site_locale,
+                type_slug=ts,
+                brand_slug=brand_to_slug(sb),
             )
             if surface != 'all':
                 u = append_query(u, {'surf': surface})
         else:
-            u = reverse('shop:stock_catalog_type', kwargs={'type_slug': ts})
+            u = shop_reverse(
+                'shop:stock_catalog_type', site_locale=site_locale, type_slug=ts
+            )
             if surface != 'all':
                 u = append_query(u, {'surf': surface})
     else:
         if sb and path_surface:
-            u = reverse(
+            u = shop_reverse(
                 'shop:preorder_catalog_shoe',
-                kwargs={
-                    'type_slug': ts,
-                    'brand_slug': brand_to_slug(sb),
-                    'surface_slug': path_surface,
-                },
+                site_locale=site_locale,
+                type_slug=ts,
+                brand_slug=brand_to_slug(sb),
+                surface_slug=path_surface,
             )
         elif sb:
-            u = reverse(
+            u = shop_reverse(
                 'shop:preorder_catalog_brand',
-                kwargs={'type_slug': ts, 'brand_slug': brand_to_slug(sb)},
+                site_locale=site_locale,
+                type_slug=ts,
+                brand_slug=brand_to_slug(sb),
             )
             if surface != 'all':
                 u = append_query(u, {'surf': surface})
         else:
-            u = reverse('shop:preorder_catalog_type', kwargs={'type_slug': ts})
+            u = shop_reverse(
+                'shop:preorder_catalog_type',
+                site_locale=site_locale,
+                type_slug=ts,
+            )
             if surface != 'all':
                 u = append_query(u, {'surf': surface})
     return append_cbrand_query(u, catalog_brand)
@@ -545,7 +595,13 @@ def pdp_product_json_ld(
         'image': images[:8] if images else None,
         'offers': {
             '@type': 'Offer',
-            'url': request.build_absolute_uri(f'/shop/product/{product.pk}/'),
+            'url': request.build_absolute_uri(
+                shop_reverse(
+                    'shop:product_detail',
+                    product.pk,
+                    site_locale=getattr(request, 'site_locale', None),
+                )
+            ),
             'priceCurrency': 'GEL',
             'availability': avail,
             'seller': {'@type': 'Organization', 'name': SITE_NAME},
@@ -562,14 +618,19 @@ def pdp_product_json_ld(
 def site_organization_json_ld(request) -> dict:
     from django.conf import settings
 
-    base = (getattr(settings, 'WEBSITE_URL', '') or '').rstrip('/') or ''
-    url = base + '/' if base else request.build_absolute_uri('/')
+    configured_root = (getattr(settings, 'WEBSITE_URL', '') or '').rstrip('/')
+    store_path = shop_reverse('shop:index', site_locale=getattr(request, 'site_locale', None))
+    if configured_root:
+        store_url = f'{configured_root}{store_path}'
+    else:
+        store_url = request.build_absolute_uri(store_path)
+
     return {
         '@context': 'https://schema.org',
         '@type': 'Store',
         'name': f'{SITE_NAME} Tennis Shop',
         'description': f'Online tennis equipment store in Tbilisi, Georgia. In-stock catalog, preorder from EU/USA, free delivery in Tbilisi.',
-        'url': url.rstrip('/') + '/shop/',
+        'url': store_url,
         'telephone': '+995591288967',
         'email': 'andy.rivals@tenrivals.com',
         'areaServed': {'@type': 'City', 'name': 'Tbilisi', 'containedInPlace': {'@type': 'Country', 'name': 'Georgia'}},

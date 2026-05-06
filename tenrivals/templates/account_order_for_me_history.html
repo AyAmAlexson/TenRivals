@@ -1,3 +1,4 @@
+{% load catalog_tags %}
 {% load static %}
 <!doctype html>
 <html lang="en">
@@ -122,7 +123,7 @@
             {% else %}
             <div class="order-empty">
               You have no Order for me requests yet.<br><br>
-              <a href="{% url 'shop:order_for_me' %}">Create your first request</a>
+              <a href="{% shop_url 'shop:order_for_me' %}">Create your first request</a>
             </div>
             {% endif %}
           </div>

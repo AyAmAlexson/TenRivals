@@ -1,3 +1,4 @@
+{% load catalog_tags %}
 {% extends 'shop/info/layout.html' %}
 {% block title %}Company information | Tenrivals{% endblock %}
 {% block info_main %}
@@ -52,7 +53,7 @@
     <dt>Telegram</dt>
     <dd><a href="https://t.me/tennis_rivals_shop_tbilisi" target="_blank" rel="noopener">@tennis_rivals_shop_tbilisi</a></dd>
   </dl>
-  <p class="info-prose" style="margin-top:14px">We are <strong>online-first</strong>. Pickup and hand delivery are described on <a href="{% url 'shop:info_delivery' %}" style="color:var(--accent);font-weight:600">Delivery</a> and <a href="{% url 'shop:info_contacts' %}" style="color:var(--accent);font-weight:600">Contacts</a>.</p>
+  <p class="info-prose" style="margin-top:14px">We are <strong>online-first</strong>. Pickup and hand delivery are described on <a href="{% shop_url 'shop:info_delivery' %}" style="color:var(--accent);font-weight:600">Delivery</a> and <a href="{% shop_url 'shop:info_contacts' %}" style="color:var(--accent);font-weight:600">Contacts</a>.</p>
 </div>
 
 <p class="info-prose" style="margin-top:24px;font-size:14px;color:var(--muted)">Last updated: April 2026.</p>

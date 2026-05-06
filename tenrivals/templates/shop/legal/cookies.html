@@ -1,9 +1,10 @@
+{% load catalog_tags %}
 {% extends 'shop/info/layout.html' %}
 {% block title %}Cookie policy | Tenrivals{% endblock %}
 {% block info_main %}
 <header class="info-hero">
   <h1 class="info-hero__h1">Cookie policy</h1>
-  <p class="info-hero__lead">How Tennis Rivals Shop uses cookies and similar technologies on this website. This policy should be read together with our <a href="{% url 'shop:legal_privacy' %}" style="color:var(--accent);font-weight:600">Privacy policy</a>.</p>
+  <p class="info-hero__lead">How Tennis Rivals Shop uses cookies and similar technologies on this website. This policy should be read together with our <a href="{% shop_url 'shop:legal_privacy' %}" style="color:var(--accent);font-weight:600">Privacy policy</a>.</p>
 </header>
 
 <div class="info-section">

@@ -21,6 +21,9 @@ from django.utils.html import strip_tags
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_POST
+from django.utils.translation import gettext as _
+
+from .site_locale import shop_reverse
 
 from .cart_session import (
     CART_TTL_DAYS,
@@ -137,6 +140,17 @@ _CATALOG_ACCESSORIES_EQUIPMENT_TYPES = frozenset(
         ProductType.STRINGS,
     }
 )
+
+
+def _shop_redirect(request, viewname: str, *args, **kwargs):
+    return redirect(
+        shop_reverse(
+            viewname,
+            *args,
+            site_locale=getattr(request, 'site_locale', None),
+            **kwargs,
+        )
+    )
 
 
 def _form_class_for_product_type(type_code: str | None):
@@ -289,7 +303,7 @@ def _redirect_after_product_form_save(request, product, form):
         'stock' if ch == ProductListingChannel.STOCK else 'preorder'
     )
     return redirect(
-        f'{reverse("shop:product_detail", args=[product.pk])}?channel={channel_q}'
+        f'{shop_reverse("shop:product_detail", product.pk, site_locale=request.site_locale)}?channel={channel_q}'
     )
 
 
@@ -378,11 +392,11 @@ def index(request):
             'featured_products': featured_products,
             'new_arrivals': new_arrivals,
             'featured_stock_brands': FEATURED_STOCK_BRANDS,
-            'seo_page_title': (
+            'seo_page_title': _(
                 'Tennis Rivals Shop - Tennis rackets, shoes & strings in Tbilisi, '
                 'Georgia | Tenrivals'
             ),
-            'seo_meta_description': (
+            'seo_meta_description': _(
                 'Buy tennis equipment in Tbilisi, Georgia: in-stock Wilson, HEAD, Babolat, '
                 'Prince; preorder from the EU and USA with official import. Free delivery '
                 'in Tbilisi, shipping across Georgia. Tenrivals online store.'
@@ -493,6 +507,7 @@ def _catalog_browse_context(
 ):
     if browse_mode not in ('preorder', 'stock'):
         raise ValueError(browse_mode)
+    site_loc = getattr(request, 'site_locale', None)
     channel = (
         ProductListingChannel.PREORDER
         if browse_mode == 'preorder'
@@ -719,6 +734,7 @@ def _catalog_browse_context(
         type_slug=active_type_slug,
         brand_slug=brand_slug_canon,
         surface_slug=surface_slug_canon,
+        site_locale=site_loc,
     )
     seo_canonical_url = request.build_absolute_uri(canonical_rel)
     schema_org_json = json.dumps(site_organization_json_ld(request))
@@ -747,6 +763,7 @@ def _catalog_browse_context(
                         shoe_brand=shoe_brand,
                         surface=surf_val,
                         catalog_brand=catalog_brand,
+                        site_locale=site_loc,
                     ),
                     'is_active': (
                         (surface_filter == surf_val)
@@ -765,6 +782,7 @@ def _catalog_browse_context(
                     shoe_brand='all',
                     surface=surface_filter,
                     catalog_brand=catalog_brand,
+                    site_locale=site_loc,
                 ),
                 'is_active': shoe_brand == 'all',
             }
@@ -780,6 +798,7 @@ def _catalog_browse_context(
                         shoe_brand=b,
                         surface=surface_filter,
                         catalog_brand=catalog_brand,
+                        site_locale=site_loc,
                     ),
                     'is_active': shoe_brand == b,
                 }
@@ -1160,7 +1179,7 @@ def order_for_me_create(request):
                 )
             order = OrderForMe.objects.prefetch_related('items').get(pk=order.pk)
             _send_order_for_me_staff_email(request, order)
-            return redirect(f'{reverse("shop:order_for_me")}?' + urlencode({'submitted': '1'}))
+            return redirect(f'{shop_reverse("shop:order_for_me", site_locale=request.site_locale)}?' + urlencode({'submitted': '1'}))
 
     return render(
         request,
@@ -1371,8 +1390,8 @@ def product_create(request):
     edit_channel = _parse_listing_channel_param(channel_raw)
     type_code = request.GET.get('type')
     pick_type_qs = _product_create_pick_type_qs(return_next, channel_raw)
-    form_back_url = _safe_internal_redirect(request, return_next) or reverse(
-        'shop:stock'
+    form_back_url = _safe_internal_redirect(request, return_next) or shop_reverse(
+        'shop:stock', site_locale=getattr(request, 'site_locale', None)
     )
 
     if request.method == 'GET' and not type_code:
@@ -1390,7 +1409,7 @@ def product_create(request):
 
     type_labels = dict(ProductType.choices)
     if request.method == 'GET' and type_code not in type_labels:
-        base = reverse('shop:product_create')
+        base = shop_reverse('shop:product_create', site_locale=getattr(request, 'site_locale', None))
         if pick_type_qs:
             return redirect(f'{base}?{pick_type_qs}')
         return redirect(base)
@@ -1449,7 +1468,7 @@ def product_edit(request, pk):
                     except Exception:
                         pass
             base.delete()
-            return redirect(reverse('shop:stock'))
+            return redirect(shop_reverse('shop:stock', site_locale=request.site_locale))
         form = FormClass(request.POST, request.FILES, instance=instance)
         if form.is_valid():
             obj = form.save()
@@ -1472,7 +1491,10 @@ def product_edit(request, pk):
             'return_next': return_next,
             'edit_channel': request.GET.get('channel', ''),
             'form_back_url': _safe_internal_redirect(request, return_next)
-            or reverse('shop:stock'),
+            or shop_reverse(
+                'shop:stock',
+                site_locale=getattr(request, 'site_locale', None),
+            ),
         },
     )
 
@@ -1540,13 +1562,13 @@ def cart_update_line(request):
         qty = int(request.POST.get('qty', ''))
     except (TypeError, ValueError):
         messages.error(request, 'Invalid quantity.')
-        return redirect('shop:cart')
+        return _shop_redirect(request, 'shop:cart')
     ok, msg = set_line_qty(request, idx, qty)
     if ok:
         messages.success(request, msg)
     else:
         messages.error(request, msg)
-    return redirect('shop:cart')
+    return _shop_redirect(request, 'shop:cart')
 
 
 @require_POST
@@ -1578,7 +1600,7 @@ def cart_remove_line(request, line_index=None):
         messages.info(request, 'Item removed.')
     else:
         messages.warning(request, 'Could not remove that item. Try refreshing the page.')
-    return redirect('shop:cart')
+    return _shop_redirect(request, 'shop:cart')
 
 
 @require_POST
@@ -1601,7 +1623,7 @@ def cart_apply_promo(request):
     else:
         set_cart_promo(request, '')
         messages.error(request, ev.message or 'Promo could not be applied.')
-    return redirect('shop:cart')
+    return _shop_redirect(request, 'shop:cart')
 
 
 _CHECKOUT_EMAILS = [
@@ -1783,11 +1805,11 @@ def checkout(request):
     rows, subtotal = build_cart_page_rows(request)
     if not rows:
         messages.error(request, 'Your cart is empty.')
-        return redirect('shop:cart')
+        return _shop_redirect(request, 'shop:cart')
 
     if request.method == 'POST' and request.POST.get('action') == 'guest_continue':
         # PRG: persist guest path across refresh (otherwise show_auth_gate reopens on GET).
-        return redirect(f'{reverse("shop:checkout")}?guest=1')
+        return redirect(f'{shop_reverse("shop:checkout", site_locale=request.site_locale)}?guest=1')
 
     if request.method == 'POST' and request.POST.get('action') == 'apply_checkout_promo':
         code = request.POST.get('promo', '')
@@ -1807,7 +1829,7 @@ def checkout(request):
         else:
             set_cart_promo(request, '')
             messages.error(request, ev.message or 'Promo could not be applied.')
-        return redirect('shop:checkout')
+        return _shop_redirect(request, 'shop:checkout')
 
     show_auth_gate = bool(
         not request.user.is_authenticated
@@ -1825,7 +1847,7 @@ def checkout(request):
             show_auth_gate = True
         else:
             login(request, user)
-            return redirect('shop:checkout')
+            return _shop_redirect(request, 'shop:checkout')
 
     contact = _build_checkout_contact(request)
     initial_contact = _checkout_initial_contact(request)
@@ -1858,7 +1880,7 @@ def checkout(request):
             )
             if cart_code and not ev_submit.ok:
                 messages.error(request, ev_submit.message)
-                return redirect('shop:checkout')
+                return _shop_redirect(request, 'shop:checkout')
             discount = ev_submit.discount_gross if ev_submit.ok else Decimal('0.00')
             total = (subtotal - discount).quantize(Decimal('0.01'))
             delivery_address = _compose_delivery_address(contact)
@@ -2063,7 +2085,7 @@ def checkout(request):
                             discount=order.promo_discount_gross,
                             total=order.gross_total,
                         )
-                    return redirect('shop:checkout_success', order_id=order.pk)
+                    return _shop_redirect(request, 'shop:checkout_success', order_id=order.pk)
                 except Exception as exc:
                     messages.error(request, f'Could not submit order: {exc}')
 

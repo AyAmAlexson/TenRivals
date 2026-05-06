@@ -1,3 +1,4 @@
+{% load catalog_tags %}
 {% load i18n static %}
 <!doctype html>
 <html lang="en">
@@ -35,7 +36,7 @@
 <body>
   {% include 'includes/google_tag_manager_body.html' %}
   <div class="auth-header">
-    <a href="{% url 'shop:index' %}">
+    <a href="{% shop_url 'shop:index' %}">
       <img src="{% static 'assets/img/TR Logo 25/TR 25 LOGO HOR RED.svg' %}" alt="Tenrivals">
     </a>
   </div>
@@ -46,7 +47,7 @@
       <p class="msg">{% trans "Are you sure you want to sign out?" %}</p>
       <form method="POST" action="{% url 'account_logout' %}">
         {% csrf_token %}
-        <a class="btn-cancel" href="{% url 'shop:index' %}">{% trans "Cancel" %}</a>
+        <a class="btn-cancel" href="{% shop_url 'shop:index' %}">{% trans "Cancel" %}</a>
         <button class="btn-submit" type="submit">{% trans "Sign Out" %}</button>
       </form>
     </div>

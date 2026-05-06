@@ -1,0 +1,56 @@
+# Georgian translations — Tenrivals shop storefront (partial homepage + SEO strings).
+#
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+
+msgid "Tennis Rivals Shop - Tennis rackets, shoes & strings in Tbilisi, Georgia | Tenrivals"
+msgstr "Tennis Rivals Shop — ტენისის რაკეტები, ფეხსაცმელი და ბაგირები თბილისში, საქართველო | Tenrivals"
+
+msgid "Buy tennis equipment in Tbilisi, Georgia: in-stock Wilson, HEAD, Babolat, Prince; preorder from the EU and USA with official import. Free delivery in Tbilisi, shipping across Georgia. Tenrivals online store."
+msgstr "შეიძინეთ ტენისის აღჭურვილობა თბილისში (საქართველო): საწყობში Wilson, HEAD, Babolat, Prince; წინასწარი შეკვეთა ევროპიდან და აშშ-დან ოფიციალური საბაჟო გადაწყვეტით. უფასო მიწოდება თბილისში, გზავნა საქართველოში. Tenrivals-ის ონლაინ მაღაზია."
+
+msgid "Free delivery in Tbilisi"
+msgstr "უფასო მიწოდება თბილისში"
+
+msgid "Pre-order from US & EU with official customs clearance"
+msgstr "წინასწარი შეკვეთა აშშ-დან და ევროპიდან ოფიციალური საბაჟო გასავლით"
+
+msgid "Shop categories"
+msgstr "მაღაზიის კატეგორიები"
+
+msgid "Rackets"
+msgstr "რაკეტები"
+
+msgid "Shoes"
+msgstr "ფეხსაცმელი"
+
+msgid "Bags"
+msgstr "ჩანთები"
+
+msgid "Clothing"
+msgstr "ტანსაცმელი"
+
+msgid "Balls"
+msgstr "ბურთები"
+
+msgid "Accessories"
+msgstr "აქსესუარები"
+
+msgid "Featured Products"
+msgstr "რჩეული პროდუქტები"
+
+msgid "View all"
+msgstr "იხილეთ ყველა"
+
+msgid "New Arrivals"
+msgstr "ახალი შემოსული"
+
+msgid "Featured Stories"
+msgstr "რჩეული სტატიები"
+
+msgid "Our Brands"
+msgstr "ჩვენი ბრენდები"
+
+msgid "Featured tennis brands"
+msgstr "ტენისის ბრენდები"

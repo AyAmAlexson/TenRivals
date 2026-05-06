@@ -1,3 +1,4 @@
+{% load catalog_tags %}
 {% load static %}
 <!doctype html>
 <html lang="en">
@@ -130,7 +131,7 @@
               <div class="order-empty">
                 No orders yet. When you place an order, completed orders will appear here.
                 <br><br>
-                <a href="{% url 'shop:stock' %}">Go to In Stock</a>
+                <a href="{% shop_url 'shop:stock' %}">Go to In Stock</a>
               </div>
             {% endif %}
           </div>

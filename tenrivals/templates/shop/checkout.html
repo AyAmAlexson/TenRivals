@@ -86,7 +86,7 @@
 {% include 'shop/includes/shop_public_site_header.html' with search_channel='stock' %}
 
 <main class="container checkout">
-  <p style="margin-bottom:14px"><a href="{% url 'shop:cart' %}" style="color:var(--muted);font-size:13px">← Back to cart</a></p>
+  <p style="margin-bottom:14px"><a href="{% shop_url 'shop:cart' %}" style="color:var(--muted);font-size:13px">← Back to cart</a></p>
   {% if user.is_authenticated %}
   <p style="margin:0 0 12px;color:var(--muted);font-size:13px">Saved cart is kept for {{ saved_cart_ttl_days }} days since last activity.</p>
   {% endif %}
@@ -176,7 +176,7 @@
 
         <section class="card">
           <h2>4. Payment Method</h2>
-          <p class="hint" style="margin-bottom:12px">You are not charged on the website. Pay when your order arrives (card terminal or cash) or by bank transfer if you select that option — see <a href="{% url 'shop:info_payment' %}" style="color:var(--accent);font-weight:700">Payment</a> for details.</p>
+          <p class="hint" style="margin-bottom:12px">You are not charged on the website. Pay when your order arrives (card terminal or cash) or by bank transfer if you select that option — see <a href="{% shop_url 'shop:info_payment' %}" style="color:var(--accent);font-weight:700">Payment</a> for details.</p>
           <label class="radio"><input type="radio" name="payment_method" value="COD" {% if checkout_contact.payment_method == 'COD' %}checked{% endif %}> <span>Payment on delivery</span></label>
           <label class="radio"><input type="radio" name="payment_method" value="TRANSFER" {% if checkout_contact.payment_method == 'TRANSFER' %}checked{% endif %}> <span>Bank transfer to TBC account</span></label>
           <label class="radio"><input type="radio" value="CARD" disabled> <span>Online card payment — coming soon</span></label>

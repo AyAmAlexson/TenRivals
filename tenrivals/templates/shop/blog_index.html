@@ -1,3 +1,4 @@
+{% load catalog_tags %}
 {% extends 'shop/base_marketing.html' %}
 {% block title %}Blog | Tenrivals{% endblock %}
 {% block extra_css %}
@@ -13,13 +14,13 @@
     <h1 class="blog-page-title">Stories</h1>
     <p class="blog-section-title" style="margin:0;font-weight:400;text-transform:none">Guides, gear notes, and updates from Tennis Rivals.</p>
   </div>
-  <a class="btn btn--outline" href="{% url 'shop:index' %}">← Shop home</a>
+  <a class="btn btn--outline" href="{% shop_url 'shop:index' %}">← Shop home</a>
 </div>
 
 {% if blog_posts %}
 <div class="blog-grid">
   {% for post in blog_posts %}
-  <a class="blog-card" href="{% url 'shop:blog_post' slug=post.slug %}">
+  <a class="blog-card" href="{% shop_url 'shop:blog_post' slug=post.slug %}">
     <div class="blog-card__media">
       {% if post.teaser_image %}
       <img src="{{ post.teaser_image.url }}" alt="" decoding="async" sizes="(max-width:1100px) 50vw, 33vw"{% if post.teaser_image.width and post.teaser_image.height %} width="{{ post.teaser_image.width }}" height="{{ post.teaser_image.height }}"{% endif %}{% if forloop.counter0 < 4 %} fetchpriority="low"{% else %} loading="lazy"{% endif %}>

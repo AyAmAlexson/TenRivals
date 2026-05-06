@@ -1,9 +1,10 @@
+{% load catalog_tags %}
 {% extends 'shop/info/layout.html' %}
 {% block title %}Privacy policy | Tenrivals{% endblock %}
 {% block info_main %}
 <header class="info-hero">
   <h1 class="info-hero__h1">Privacy policy</h1>
-  <p class="info-hero__lead">How Tennis Rivals Shop collects and uses personal data when you use our website, account, or checkout. We target customers in Georgia and process data under the Law of Georgia on Personal Data Protection and related rules. Online card payment on the site is not live yet; payment is usually taken on delivery or by bank transfer as described on <a href="{% url 'shop:info_payment' %}" style="color:var(--accent);font-weight:600">Payment</a>.</p>
+  <p class="info-hero__lead">How Tennis Rivals Shop collects and uses personal data when you use our website, account, or checkout. We target customers in Georgia and process data under the Law of Georgia on Personal Data Protection and related rules. Online card payment on the site is not live yet; payment is usually taken on delivery or by bank transfer as described on <a href="{% shop_url 'shop:info_payment' %}" style="color:var(--accent);font-weight:600">Payment</a>.</p>
 </header>
 
 <div class="info-callout">
@@ -12,7 +13,7 @@
 
 <div class="info-section">
   <h2 class="info-h2">1. Data controller</h2>
-  <p class="info-prose">The controller is <strong>IE Andrey Molodenko</strong> (individual entrepreneur; identification code 100382729), operator of Tennis Rivals Shop, address: Georgia, Tbilisi, E. Bejanishvili Street 23, apt. 19. Contact: <a href="mailto:andy.rivals@tenrivals.com">andy.rivals@tenrivals.com</a> and the channels on our <a href="{% url 'shop:info_contacts' %}" style="color:var(--accent);font-weight:600">Contacts</a> page.</p>
+  <p class="info-prose">The controller is <strong>IE Andrey Molodenko</strong> (individual entrepreneur; identification code 100382729), operator of Tennis Rivals Shop, address: Georgia, Tbilisi, E. Bejanishvili Street 23, apt. 19. Contact: <a href="mailto:andy.rivals@tenrivals.com">andy.rivals@tenrivals.com</a> and the channels on our <a href="{% shop_url 'shop:info_contacts' %}" style="color:var(--accent);font-weight:600">Contacts</a> page.</p>
 </div>
 
 <div class="info-section">
@@ -22,7 +23,7 @@
     <li><strong>Account &amp; identity:</strong> name, email, phone (if provided), login identifiers.</li>
     <li><strong>Orders &amp; checkout:</strong> delivery address, cart contents, order references, payment method choice, and messages you add at checkout. <strong>We do not collect card numbers through the website checkout today</strong> (online card capture is not enabled). If you pay <strong>by card on delivery</strong>, the courier&rsquo;s terminal or bank handles card data under their rules; we may receive transaction references and amounts needed for receipts and accounting. For <strong>bank transfers</strong>, we process account and reference data needed to match your payment.</li>
     <li><strong>Communications:</strong> messages you send us (email, social channels we monitor for support).</li>
-    <li><strong>Technical data:</strong> IP address, device/browser type, pages viewed, timestamps — from server logs and, if enabled, analytics cookies (see our <a href="{% url 'shop:legal_cookies' %}" style="color:var(--accent);font-weight:600">Cookie policy</a>).</li>
+    <li><strong>Technical data:</strong> IP address, device/browser type, pages viewed, timestamps — from server logs and, if enabled, analytics cookies (see our <a href="{% shop_url 'shop:legal_cookies' %}" style="color:var(--accent);font-weight:600">Cookie policy</a>).</li>
   </ul>
 </div>
 
@@ -53,7 +54,7 @@
 
 <div class="info-section">
   <h2 class="info-h2">8. Cookies</h2>
-  <p class="info-prose">We use cookies and similar technologies as described in our <a href="{% url 'shop:legal_cookies' %}" style="color:var(--accent);font-weight:600">Cookie policy</a>.</p>
+  <p class="info-prose">We use cookies and similar technologies as described in our <a href="{% shop_url 'shop:legal_cookies' %}" style="color:var(--accent);font-weight:600">Cookie policy</a>.</p>
 </div>
 
 <div class="info-section">

@@ -312,23 +312,23 @@
 
   <main class="container">
     <div class="breadcrumb">
-      <a href="{% url 'shop:index' %}">Home</a><span>/</span>
+      <a href="{% shop_url 'shop:index' %}">Home</a><span>/</span>
       {% if pdp_mode == 'stock' %}
-      <a href="{% url 'shop:stock' %}">Stock</a><span>/</span>
+      <a href="{% shop_url 'shop:stock' %}">Stock</a><span>/</span>
       {% if product.type == 'RACKET' %}
-      <a href="{% url 'shop:stock_catalog_type' 'rackets' %}">{{ pdp_type_breadcrumb_label }}</a><span>/</span>
+      <a href="{% shop_url 'shop:stock_catalog_type' 'rackets' %}">{{ pdp_type_breadcrumb_label }}</a><span>/</span>
       {% elif product.type == 'M_SHOES' %}
-      <a href="{% url 'shop:stock_catalog_type' 'mens-shoes' %}">{{ pdp_type_breadcrumb_label }}</a><span>/</span>
+      <a href="{% shop_url 'shop:stock_catalog_type' 'mens-shoes' %}">{{ pdp_type_breadcrumb_label }}</a><span>/</span>
       {% elif product.type == 'W_SHOES' %}
-      <a href="{% url 'shop:stock_catalog_type' 'womens-shoes' %}">{{ pdp_type_breadcrumb_label }}</a><span>/</span>
+      <a href="{% shop_url 'shop:stock_catalog_type' 'womens-shoes' %}">{{ pdp_type_breadcrumb_label }}</a><span>/</span>
       {% elif product.type == 'J_SHOES' %}
-      <a href="{% url 'shop:stock_catalog_type' 'junior-shoes' %}">{{ pdp_type_breadcrumb_label }}</a><span>/</span>
+      <a href="{% shop_url 'shop:stock_catalog_type' 'junior-shoes' %}">{{ pdp_type_breadcrumb_label }}</a><span>/</span>
       {% else %}
-      <a href="{% url 'shop:stock' %}?type={{ product.type }}">{{ pdp_type_breadcrumb_label }}</a><span>/</span>
+      <a href="{% shop_url 'shop:stock' %}?type={{ product.type }}">{{ pdp_type_breadcrumb_label }}</a><span>/</span>
       {% endif %}
       {% else %}
-      <a href="{% url 'shop:order_for_me' %}">Order for me</a><span>/</span>
-      <a href="{% url 'shop:order_for_me' %}">{{ pdp_type_breadcrumb_label }}</a><span>/</span>
+      <a href="{% shop_url 'shop:order_for_me' %}">Order for me</a><span>/</span>
+      <a href="{% shop_url 'shop:order_for_me' %}">{{ pdp_type_breadcrumb_label }}</a><span>/</span>
       {% endif %}
       <span style="color:var(--ink)">{{ product.name }}</span>
     </div>
@@ -358,7 +358,7 @@
       <div class="pdp-cell pdp-cell--buy">
       <div class="pdp-buy">
         {% if user.is_staff %}
-        <p style="margin-bottom:10px"><a href="{% url 'shop:product_edit' product.pk %}" class="btn btn--outline" style="padding:8px 16px;font-size:13px">Edit product</a></p>
+        <p style="margin-bottom:10px"><a href="{% shop_url 'shop:product_edit' product.pk %}" class="btn btn--outline" style="padding:8px 16px;font-size:13px">Edit product</a></p>
         {% endif %}
         <div class="pdp-brand">{{ product.brand|default:"—" }}</div>
         <h1 class="pdp-title">{{ product.name }}</h1>
@@ -476,7 +476,7 @@
           class="pdp-add-row"
           id="pdp-add-bundle"
           data-product-id="{{ product.pk }}"
-          data-add-url="{% url 'shop:cart_add' %}"
+          data-add-url="{% shop_url 'shop:cart_add' %}"
           data-requires-size="{% if pdp_requires_size_pick %}1{% else %}0{% endif %}"
           data-listing-qty="{{ stock_listing_qty }}"
           data-variant-label="{% if product.type == 'STRINGS' %}Gauge{% else %}Size{% endif %}"
@@ -496,7 +496,7 @@
         {% endif %}
         <div class="pdp-ask-row">
           {% if pdp_mode == 'stock' and stock_listing_qty <= 0 %}
-          <a class="btn btn--ask-tg" href="{% url 'shop:order_for_me' %}">ORDER FOR ME</a>
+          <a class="btn btn--ask-tg" href="{% shop_url 'shop:order_for_me' %}">ORDER FOR ME</a>
           <a class="btn btn--outline btn--ask-tg" href="https://t.me/tennis_rivals_shop_tbilisi?direct" target="_blank" rel="noopener">ASK A QUESTION</a>
           {% else %}
           <a class="btn btn--outline btn--ask-tg" href="https://t.me/tennis_rivals_shop_tbilisi?direct" target="_blank" rel="noopener">ASK A QUESTION</a>
@@ -643,7 +643,7 @@
         <p class="pdp-modal__text" id="pdp-cart-modal-text"></p>
         <div class="pdp-modal__actions">
           <button type="button" class="btn btn--outline" data-close-modal>CONTINUE SHOPPING</button>
-          <a class="btn" href="{% url 'shop:cart' %}">VIEW CART</a>
+          <a class="btn" href="{% shop_url 'shop:cart' %}">VIEW CART</a>
         </div>
       </div>
     </div>

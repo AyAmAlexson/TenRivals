@@ -1,3 +1,4 @@
+{% load catalog_tags %}
 <!doctype html>
 {% load static %}
 <html lang="en">
@@ -43,7 +44,7 @@
       <a href="{{ form_back_url }}" class="tb-btn" title="Back" aria-label="Back">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M15 18L9 12l6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </a>
-      <a href="{% url 'shop:index' %}"><img class="logo" src="{% static 'assets/img/TR Logo 25/TR 25 LOGO HOR RED.svg' %}" alt="Tenrivals"></a>
+      <a href="{% shop_url 'shop:index' %}"><img class="logo" src="{% static 'assets/img/TR Logo 25/TR 25 LOGO HOR RED.svg' %}" alt="Tenrivals"></a>
     </div>
   </header>
 
@@ -52,7 +53,7 @@
     <p class="lead">Choose a product type first. You will get the correct fields (shoe sizes, racket grips, balls, etc.).</p>
     <div class="pick-grid">
       {% for value, label in product_types %}
-      <a class="pick-card" href="{% url 'shop:product_create' %}?type={{ value }}{% if pick_type_qs %}&amp;{{ pick_type_qs }}{% endif %}">
+      <a class="pick-card" href="{% shop_url 'shop:product_create' %}?type={{ value }}{% if pick_type_qs %}&amp;{{ pick_type_qs }}{% endif %}">
         {{ label }}
         <small>Opens the dedicated form for this type</small>
       </a>

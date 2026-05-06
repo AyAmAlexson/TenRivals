@@ -10,6 +10,6 @@
     <a href="{% url 'persons:order_for_me_history' %}" class="{% if active_nav == 'order_for_me' %}active{% endif %}">Order for me</a>
     <a href="{% url 'account_change_password' %}">Change Password</a>
     <a href="{% url 'persons:change_email' %}">Change Email</a>
-    <a href="{% url 'shop:index' %}">Back to Shop</a>
+    <a href="{% shop_url 'shop:index' %}">Back to Shop</a>
   </nav>
 </aside>

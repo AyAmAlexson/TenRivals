@@ -1,12 +1,12 @@
+{% load static catalog_tags i18n %}
 <!doctype html>
-<html lang="en">
+<html lang="{{ shop_html_lang|default:'en' }}">
 <head>
   {% include 'includes/google_tag_gtag.html' %}
   <meta charset="utf-8">
   <title>{{ seo_page_title|default:"Tenrivals | Tennis shop, Tbilisi, Georgia" }}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="{{ seo_meta_description|default_if_none:'' }}">
-  {% load static catalog_tags %}
   {% include 'includes/shop_og_meta.html' with og_title=seo_page_title og_description=seo_meta_description %}
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -582,18 +582,18 @@
 
   <div class="shop-home-mid">
   <!-- Announcement banner -->
-  <div class="announce-bar">Free delivery in Tbilisi &nbsp;|&nbsp; Pre-order from US & EU with official customs clearance</div>
+  <div class="announce-bar">{% trans "Free delivery in Tbilisi" %} &nbsp;|&nbsp; {% trans "Pre-order from US & EU with official customs clearance" %}</div>
 
   <!-- Category navigation -->
   <div class="cat-strip">
     <div class="container">
-      <nav class="cat-rail" aria-label="Shop categories">
-        <a class="cat-seg cat-seg--red" href="{% url 'shop:stock' %}?type=RACKET"><span class="cat-seg__label">Rackets</span></a>
-        <a class="cat-seg cat-seg--teal" href="{% url 'shop:stock' %}?type=M_SHOES"><span class="cat-seg__label">Shoes</span></a>
-        <a class="cat-seg cat-seg--blue" href="{% url 'shop:stock' %}?type=BAGS"><span class="cat-seg__label">Bags</span></a>
-        <a class="cat-seg cat-seg--navy" href="{% url 'shop:stock' %}?type=M_APP"><span class="cat-seg__label">Clothing</span></a>
-        <a class="cat-seg cat-seg--slate" href="{% url 'shop:stock' %}?type=BALLS"><span class="cat-seg__label">Balls</span></a>
-        <a class="cat-seg cat-seg--magenta" href="{% url 'shop:stock' %}?type=ACC_GEAR"><span class="cat-seg__label">Accessories</span></a>
+      <nav class="cat-rail" aria-label="{% trans 'Shop categories' %}">
+        <a class="cat-seg cat-seg--red" href="{% shop_url 'shop:stock' %}?type=RACKET"><span class="cat-seg__label">{% trans "Rackets" %}</span></a>
+        <a class="cat-seg cat-seg--teal" href="{% shop_url 'shop:stock' %}?type=M_SHOES"><span class="cat-seg__label">{% trans "Shoes" %}</span></a>
+        <a class="cat-seg cat-seg--blue" href="{% shop_url 'shop:stock' %}?type=BAGS"><span class="cat-seg__label">{% trans "Bags" %}</span></a>
+        <a class="cat-seg cat-seg--navy" href="{% shop_url 'shop:stock' %}?type=M_APP"><span class="cat-seg__label">{% trans "Clothing" %}</span></a>
+        <a class="cat-seg cat-seg--slate" href="{% shop_url 'shop:stock' %}?type=BALLS"><span class="cat-seg__label">{% trans "Balls" %}</span></a>
+        <a class="cat-seg cat-seg--magenta" href="{% shop_url 'shop:stock' %}?type=ACC_GEAR"><span class="cat-seg__label">{% trans "Accessories" %}</span></a>
       </nav>
     </div>
   </div>
@@ -601,7 +601,7 @@
   <main class="shop-home-main">
     <div class="container shop-home-main__inner">
     <section class="section">
-      <div class="section-head"><h2>Featured Products</h2><a href="{% url 'shop:stock' %}">View all &rarr;</a></div>
+      <div class="section-head"><h2>{% trans "Featured Products" %}</h2><a href="{% shop_url 'shop:stock' %}">{% trans "View all" %} &rarr;</a></div>
       <div class="product-rail-wrap" data-product-rail>
         <div class="product-rail"><div class="product-rail__track">
           {% for p in featured_products %}
@@ -648,7 +648,7 @@
     {% endif %}
 
     <section class="section">
-      <div class="section-head"><h2>New Arrivals</h2><a href="{% url 'shop:stock' %}">View all &rarr;</a></div>
+      <div class="section-head"><h2>{% trans "New Arrivals" %}</h2><a href="{% shop_url 'shop:stock' %}">{% trans "View all" %} &rarr;</a></div>
       <div class="product-rail-wrap" data-product-rail>
         <div class="product-rail"><div class="product-rail__track">
           {% for p in new_arrivals %}
@@ -665,12 +665,12 @@
 
     {% if featured_blog_posts %}
     <section class="section featured-stories-block">
-      <div class="section-head"><h2>Featured Stories</h2><a href="{% url 'shop:blog_index' %}">View all &rarr;</a></div>
+      <div class="section-head"><h2>{% trans "Featured Stories" %}</h2><a href="{% shop_url 'shop:blog_index' %}">{% trans "View all" %} &rarr;</a></div>
       <div class="product-rail-wrap" data-product-rail>
         <div class="product-rail"><div class="product-rail__track story-rail__track">
           {% for post in featured_blog_posts %}
           <div class="product-rail__cell story-rail__cell">
-            <a class="story-card" href="{% url 'shop:blog_post' slug=post.slug %}">
+            <a class="story-card" href="{% shop_url 'shop:blog_post' slug=post.slug %}">
               {% if post.teaser_image %}
               <div class="story-card__media">
                 <img src="{{ post.teaser_image.url }}" alt="{{ post.title }}" decoding="async" sizes="(max-width:640px) 78vw, 320px"{% if post.teaser_image.width and post.teaser_image.height %} width="{{ post.teaser_image.width }}" height="{{ post.teaser_image.height }}"{% endif %}{% if forloop.counter0 < 2 %} fetchpriority="low"{% else %} loading="lazy"{% endif %}>
@@ -701,20 +701,20 @@
 
   <section class="brands-strip">
     <div class="container">
-      <div class="section-head"><h2>Our Brands</h2><a href="{% url 'shop:brands' %}">View all &rarr;</a></div>
-      <div class="brands-marquee" aria-label="Featured tennis brands">
+      <div class="section-head"><h2>{% trans "Our Brands" %}</h2><a href="{% shop_url 'shop:brands' %}">{% trans "View all" %} &rarr;</a></div>
+      <div class="brands-marquee" aria-label="{% trans 'Featured tennis brands' %}">
         <div class="brands-marquee__track">
           <ul class="brands-marquee__sequence">
             {% for row in featured_stock_brands %}
             <li>
-              <a class="brand-logo-link" style="--brand-optical-scale: {{ row.logo_optical_scale|default:1 }}" href="{% url 'shop:stock' %}?cbrand={{ row.stock_brand|urlencode }}" title="Shop {{ row.label }} in stock">
+              <a class="brand-logo-link" style="--brand-optical-scale: {{ row.logo_optical_scale|default:1 }}" href="{% shop_url 'shop:stock' %}?cbrand={{ row.stock_brand|urlencode }}" title="Shop {{ row.label }} in stock">
                 <img src="{% static row.logo %}" alt="{{ row.label }}" width="280" height="64" loading="lazy" decoding="async">
               </a>
             </li>
             {% endfor %}
             {% for row in featured_stock_brands %}
             <li aria-hidden="true">
-              <a class="brand-logo-link" style="--brand-optical-scale: {{ row.logo_optical_scale|default:1 }}" href="{% url 'shop:stock' %}?cbrand={{ row.stock_brand|urlencode }}" tabindex="-1" title="Shop {{ row.label }} in stock">
+              <a class="brand-logo-link" style="--brand-optical-scale: {{ row.logo_optical_scale|default:1 }}" href="{% shop_url 'shop:stock' %}?cbrand={{ row.stock_brand|urlencode }}" tabindex="-1" title="Shop {{ row.label }} in stock">
                 <img src="{% static row.logo %}" alt="" width="280" height="64" loading="lazy" decoding="async">
               </a>
             </li>
@@ -769,7 +769,7 @@
           <details class="shop-home-faq__details">
             <summary class="shop-home-faq__summary"><span class="shop-home-faq__num" aria-hidden="true">2</span><span class="shop-home-faq__qtext">Which brands do you carry?</span></summary>
             <div class="shop-home-faq__panel">
-              <p>We offer a curated selection of world leaders like Wilson, HEAD, and Babolat, alongside &ldquo;hidden gems&rdquo; favored by pro-players, such as Solinco, Prince, and Toroline. From rackets and shoes to strings and accessories &mdash; if it&apos;s on our shelves, it&apos;s because we trust its performance. Use the category tabs above or visit our <a href="{% url 'shop:brands' %}">All Brands</a> page.</p>
+              <p>We offer a curated selection of world leaders like Wilson, HEAD, and Babolat, alongside &ldquo;hidden gems&rdquo; favored by pro-players, such as Solinco, Prince, and Toroline. From rackets and shoes to strings and accessories &mdash; if it&apos;s on our shelves, it&apos;s because we trust its performance. Use the category tabs above or visit our <a href="{% shop_url 'shop:brands' %}">All Brands</a> page.</p>
             </div>
           </details>
           <details class="shop-home-faq__details">

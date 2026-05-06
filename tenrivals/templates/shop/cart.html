@@ -330,7 +330,7 @@
   {% include 'shop/includes/shop_public_site_header.html' with search_channel='stock' %}
 
   <main class="container cart-page">
-    <p class="cart-back"><a href="{% url 'shop:stock' %}">← Back to shop</a></p>
+    <p class="cart-back"><a href="{% shop_url 'shop:stock' %}">← Back to shop</a></p>
     <h1>Cart</h1>
     {% if user.is_authenticated %}
     <p class="cart-lede">Saved cart is kept for {{ saved_cart_ttl_days }} days since last activity.</p>
@@ -344,7 +344,7 @@
     <section class="cart-empty-state" aria-labelledby="cart-empty-title">
       <h2 id="cart-empty-title">Your cart is empty</h2>
       <p>Add something from our in-stock catalog and come back here to submit your order.</p>
-      <a href="{% url 'shop:stock' %}" class="btn">GO TO STOCK</a>
+      <a href="{% shop_url 'shop:stock' %}" class="btn">GO TO STOCK</a>
     </section>
     {% else %}
     <div class="cart-layout">
@@ -363,13 +363,13 @@
         <article class="cart-line" role="row" aria-labelledby="cart-item-name-{{ forloop.counter0 }}-{{ row.product.pk }}">
           <div class="cart-line__main">
             <div class="cart-line__left">
-              <a class="cart-item__thumb" href="{% url 'shop:product_detail' row.product.pk %}?channel=stock" aria-label="{{ row.name }}">
+              <a class="cart-item__thumb" href="{% shop_url 'shop:product_detail' row.product.pk %}?channel=stock" aria-label="{{ row.name }}">
                 {% if row.product.main_image %}
                 <img src="{{ row.product.main_image.url }}" alt="{{ row.name }}">
                 {% endif %}
               </a>
               <div class="cart-line__text">
-                <a class="cart-item__name" id="cart-item-name-{{ forloop.counter0 }}-{{ row.product.pk }}" href="{% url 'shop:product_detail' row.product.pk %}?channel=stock">{{ row.name }}</a>
+                <a class="cart-item__name" id="cart-item-name-{{ forloop.counter0 }}-{{ row.product.pk }}" href="{% shop_url 'shop:product_detail' row.product.pk %}?channel=stock">{{ row.name }}</a>
                 {% if row.variant_label %}
                 <p class="cart-item__variant">{{ row.variant_label }}</p>
                 {% endif %}
@@ -377,7 +377,7 @@
               </div>
             </div>
             <div class="cart-line__right">
-              <form method="post" action="{% url 'shop:cart_update_line' %}" class="cart-qty-form">
+              <form method="post" action="{% shop_url 'shop:cart_update_line' %}" class="cart-qty-form">
                 {% csrf_token %}
                 <input type="hidden" name="line_index" value="{{ row.index }}">
                 <input type="number" name="qty" value="{{ row.qty }}" min="1" max="{{ row.max_qty }}" aria-label="Quantity" inputmode="numeric">
@@ -392,7 +392,7 @@
             </div>
           </div>
           <div class="cart-line__sub">
-            <form method="post" action="{% url 'shop:cart_remove_line' %}" class="cart-remove-form" data-cart-remove-form="1">
+            <form method="post" action="{% shop_url 'shop:cart_remove_line' %}" class="cart-remove-form" data-cart-remove-form="1">
               {% csrf_token %}
               <input type="hidden" name="line_index" value="{{ row.index }}">
               <input type="hidden" name="product_id" value="{{ row.product.pk }}">
@@ -405,7 +405,7 @@
       </div>
       <aside class="cart-side">
         <h2>Promo code</h2>
-        <form method="post" action="{% url 'shop:cart_apply_promo' %}" class="cart-promo">
+        <form method="post" action="{% shop_url 'shop:cart_apply_promo' %}" class="cart-promo">
           {% csrf_token %}
           <input type="text" name="promo" value="{{ cart_promo_code }}" placeholder="Code" maxlength="64" autocomplete="off" aria-label="Promo code">
           <button type="submit" class="btn btn--sm">APPLY</button>
@@ -417,7 +417,7 @@
         <div class="cart-total-line"><span>Subtotal</span><span class="mono">{{ cart_subtotal }} ₾</span></div>
         <div class="cart-total-line"><span>Promo discount</span><span class="mono">{% if cart_discount > 0 %}−{{ cart_discount }}{% else %}0.00{% endif %} ₾</span></div>
         <div class="cart-total-line cart-total-line--grand"><span>Total</span><span class="mono">{{ cart_total }} ₾</span></div>
-        <a href="{% url 'shop:checkout' %}" class="btn cart-checkout-cta">SUBMIT ORDER</a>
+        <a href="{% shop_url 'shop:checkout' %}" class="btn cart-checkout-cta">SUBMIT ORDER</a>
         <p class="cart-side-note">You will confirm delivery details and payment method on the next step.</p>
       </aside>
     </div>

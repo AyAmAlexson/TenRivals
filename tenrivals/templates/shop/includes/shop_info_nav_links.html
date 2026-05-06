@@ -1,5 +1,6 @@
-<a href="{% url 'shop:info_delivery' %}">Delivery</a>
-<a href="{% url 'shop:info_payment' %}">Payment</a>
-<a href="{% url 'shop:info_returns' %}">Returns &amp; exchanges</a>
-<a href="{% url 'shop:info_size_guide' %}">Size guide</a>
-<a href="{% url 'shop:info_contacts' %}">Contacts</a>
+{% load catalog_tags %}
+<a href="{% shop_url 'shop:info_delivery' %}">Delivery</a>
+<a href="{% shop_url 'shop:info_payment' %}">Payment</a>
+<a href="{% shop_url 'shop:info_returns' %}">Returns &amp; exchanges</a>
+<a href="{% shop_url 'shop:info_size_guide' %}">Size guide</a>
+<a href="{% shop_url 'shop:info_contacts' %}">Contacts</a>

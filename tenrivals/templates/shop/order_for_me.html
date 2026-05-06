@@ -1,3 +1,4 @@
+{% load catalog_tags %}
 {% extends 'shop/base_marketing.html' %}
 {% block title %}Order for me | Tenrivals{% endblock %}
 {% block extra_css %}
@@ -129,7 +130,7 @@
 
     <label class="ofm-agree">
       <input type="checkbox" name="agree_terms" value="1" {% if contact.agree_terms %}checked{% endif %}>
-      <span>I agree with <a href="{% url 'shop:legal_terms' %}" target="_blank" rel="noopener">Terms</a> and <a href="{% url 'shop:legal_privacy' %}" target="_blank" rel="noopener">Privacy Policy</a>.</span>
+      <span>I agree with <a href="{% shop_url 'shop:legal_terms' %}" target="_blank" rel="noopener">Terms</a> and <a href="{% shop_url 'shop:legal_privacy' %}" target="_blank" rel="noopener">Privacy Policy</a>.</span>
     </label>
 
     <div class="ofm-actions">
@@ -142,8 +143,8 @@
       <h3 class="ofm-modal__title" id="ofm-success-title">Request submitted</h3>
       <p class="ofm-modal__text">Thank you, your request has been submitted successfully. We will contact you within 48 hours.</p>
       <div class="ofm-modal__actions">
-        <a class="btn" href="{% url 'shop:order_for_me' %}">Place another order</a>
-        <a class="btn btn--outline" href="{% url 'shop:stock' %}">Back to in stock</a>
+        <a class="btn" href="{% shop_url 'shop:order_for_me' %}">Place another order</a>
+        <a class="btn btn--outline" href="{% shop_url 'shop:stock' %}">Back to in stock</a>
       </div>
     </div>
   </div>

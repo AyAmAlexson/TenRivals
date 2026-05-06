@@ -72,6 +72,7 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'shop.middleware.SiteLocaleMiddleware',
     'shop.middleware.MaintenanceModeMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'allauth.account.middleware.AccountMiddleware',
@@ -113,6 +114,7 @@ TEMPLATES = [
                 'rivals.context_processors.ticket_form',
                 'persons.context_processors.telegram_settings',
                 'shop.context_processors.shop_cart',
+                'shop.context_processors.shop_i18n',
             ],
         },
     },
@@ -176,6 +178,17 @@ TIME_ZONE = 'UTC'
 USE_TZ = True
 USE_I18N = True
 
+LANGUAGE_COOKIE_NAME = 'django_language'
+
+LOCALE_PATHS = [
+    os.path.join(BASE_DIR, 'locale'),
+]
+
+LANGUAGES = [
+    ('en', 'English'),
+    ('ru', 'Russian'),
+    ('ka', 'Georgian'),
+]
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/

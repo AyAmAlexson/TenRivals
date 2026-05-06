@@ -2,9 +2,8 @@
 
 from django.contrib.sitemaps import Sitemap
 from django.db import DatabaseError
-from django.urls import reverse
 
-from .models import BlogPost, Product, ProductCollection
+from .site_locale import DEFAULT_SHOP_SITE_LOCALE, shop_reverse
 
 
 class ShopStaticSitemap(Sitemap):
@@ -38,7 +37,7 @@ class ShopStaticSitemap(Sitemap):
         ]
 
     def location(self, item):
-        return reverse(item)
+        return shop_reverse(item, site_locale=DEFAULT_SHOP_SITE_LOCALE)
 
 
 class ProductSitemap(Sitemap):
@@ -55,7 +54,11 @@ class ProductSitemap(Sitemap):
             return []
 
     def location(self, obj):
-        return reverse('shop:product_detail', args=[obj.pk])
+        return shop_reverse(
+            'shop:product_detail',
+            obj.pk,
+            site_locale=DEFAULT_SHOP_SITE_LOCALE,
+        )
 
     def lastmod(self, obj):
         return obj.updated_at
@@ -75,7 +78,11 @@ class BlogPostSitemap(Sitemap):
             return []
 
     def location(self, obj):
-        return reverse('shop:blog_post', kwargs={'slug': obj.slug})
+        return shop_reverse(
+            'shop:blog_post',
+            site_locale=DEFAULT_SHOP_SITE_LOCALE,
+            slug=obj.slug,
+        )
 
     def lastmod(self, obj):
         return obj.updated_at
@@ -98,4 +105,8 @@ class ProductCollectionSitemap(Sitemap):
         return obj.updated_at
 
     def location(self, obj):
-        return reverse('shop:collection_detail', kwargs={'slug': obj.slug})
+        return shop_reverse(
+            'shop:collection_detail',
+            site_locale=DEFAULT_SHOP_SITE_LOCALE,
+            slug=obj.slug,
+        )

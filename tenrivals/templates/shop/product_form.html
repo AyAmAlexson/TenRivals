@@ -1,3 +1,4 @@
+{% load catalog_tags %}
 <!doctype html>
 {% load static %}
 <html lang="en">
@@ -110,7 +111,7 @@
 
   <header class="mast">
     <div class="mast-inner">
-      <a class="brand" href="{% url 'shop:index' %}"><img class="logo" src="{% static 'assets/img/TR Logo 25/TR 25 LOGO HOR RED.svg' %}" alt="Tenrivals"></a>
+      <a class="brand" href="{% shop_url 'shop:index' %}"><img class="logo" src="{% static 'assets/img/TR Logo 25/TR 25 LOGO HOR RED.svg' %}" alt="Tenrivals"></a>
       {% if is_edit and object.pk %}<span class="sub">ID {{ object.pk }}</span>{% endif %}
     </div>
   </header>
@@ -175,7 +176,7 @@
           {% else %}
           <div class="col"><div class="field">
             <span style="display:block;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px">{{ form.type.label }}</span>
-            <p class="hint" style="margin-bottom:8px">Product type: <strong>{{ product_type_label }}</strong>. <a href="{% url 'shop:product_create' %}{% if pick_type_qs %}?{{ pick_type_qs }}{% endif %}">Change type</a></p>
+            <p class="hint" style="margin-bottom:8px">Product type: <strong>{{ product_type_label }}</strong>. <a href="{% shop_url 'shop:product_create' %}{% if pick_type_qs %}?{{ pick_type_qs }}{% endif %}">Change type</a></p>
             {{ form.type.as_hidden }}
             {% if form.type.errors %}<ul class="errorlist">{% for e in form.type.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
           </div></div>
@@ -331,7 +332,7 @@
   </div>
 
   {% if is_edit and object.pk %}
-  <form id="deleteForm" method="post" action="{% url 'shop:product_edit' object.pk %}" style="display:none;">
+  <form id="deleteForm" method="post" action="{% shop_url 'shop:product_edit' object.pk %}" style="display:none;">
     {% csrf_token %}
     <input type="hidden" name="_delete" value="1">
   </form>

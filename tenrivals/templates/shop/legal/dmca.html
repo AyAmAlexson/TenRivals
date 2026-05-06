@@ -1,3 +1,4 @@
+{% load catalog_tags %}
 {% extends 'shop/info/layout.html' %}
 {% block title %}Copyright &amp; IP | Tenrivals{% endblock %}
 {% block info_main %}
@@ -23,7 +24,7 @@
   <h2 class="info-h2">Contact for IP notices</h2>
   <p class="info-prose"><strong>Email:</strong> <a href="mailto:andy.rivals@tenrivals.com">andy.rivals@tenrivals.com</a><br>
   <strong>Subject:</strong> Copyright / IP notice</p>
-  <p class="info-prose" style="margin-top:12px">Order and product questions should go through <a href="{% url 'shop:info_contacts' %}" style="color:var(--accent);font-weight:600">Contacts</a> so we can respond faster.</p>
+  <p class="info-prose" style="margin-top:12px">Order and product questions should go through <a href="{% shop_url 'shop:info_contacts' %}" style="color:var(--accent);font-weight:600">Contacts</a> so we can respond faster.</p>
 </div>
 
 <div class="info-section">

@@ -1,3 +1,4 @@
+{% load catalog_tags %}
 {% load i18n static account %}
 <!doctype html>
 <html lang="en">
@@ -32,7 +33,7 @@
 <body>
   {% include 'includes/google_tag_manager_body.html' %}
   <div class="auth-header">
-    <a href="{% url 'shop:index' %}">
+    <a href="{% shop_url 'shop:index' %}">
       <img src="{% static 'assets/img/TR Logo 25/TR 25 LOGO HOR RED.svg' %}" alt="Tenrivals">
     </a>
   </div>
@@ -59,7 +60,7 @@
       {% endif %}
 
       <div class="auth-footer-text">
-        <a href="{% url 'shop:index' %}">{% trans "Back to shop" %}</a>
+        <a href="{% shop_url 'shop:index' %}">{% trans "Back to shop" %}</a>
       </div>
     </div>
   </div>

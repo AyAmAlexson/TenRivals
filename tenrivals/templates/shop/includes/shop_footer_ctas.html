@@ -1,6 +1,7 @@
+{% load catalog_tags %}
 {# Three primary footer CTAs — keep in sync on all shop marketing pages #}
 <div class="footer-cta-row">
-  <a class="btn btn--footer-shop-cta" href="{% url 'shop:stock' %}">IN STOCK</a>
-  <a class="btn btn--footer-shop-cta" href="{% url 'shop:blog_index' %}">BLOG</a>
-  <a class="btn btn--footer-shop-cta" href="{% url 'shop:order_for_me' %}">ORDER FOR ME</a>
+  <a class="btn btn--footer-shop-cta" href="{% shop_url 'shop:stock' %}">IN STOCK</a>
+  <a class="btn btn--footer-shop-cta" href="{% shop_url 'shop:blog_index' %}">BLOG</a>
+  <a class="btn btn--footer-shop-cta" href="{% shop_url 'shop:order_for_me' %}">ORDER FOR ME</a>
 </div>

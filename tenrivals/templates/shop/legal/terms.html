@@ -1,9 +1,10 @@
+{% load catalog_tags %}
 {% extends 'shop/info/layout.html' %}
 {% block title %}Terms &amp; conditions | Tenrivals{% endblock %}
 {% block info_main %}
 <header class="info-hero">
   <h1 class="info-hero__h1">Terms &amp; conditions</h1>
-  <p class="info-hero__lead">These terms govern use of the Tennis Rivals Shop website and purchases from us. We sell and deliver within Georgia only. By placing an order, you accept them. Practical details: <a href="{% url 'shop:info_delivery' %}" style="color:var(--accent);font-weight:600">Delivery</a>, <a href="{% url 'shop:info_payment' %}" style="color:var(--accent);font-weight:600">Payment</a>, <a href="{% url 'shop:info_returns' %}" style="color:var(--accent);font-weight:600">Returns</a>, <a href="{% url 'shop:legal_privacy' %}" style="color:var(--accent);font-weight:600">Privacy</a>, <a href="{% url 'shop:legal_cookies' %}" style="color:var(--accent);font-weight:600">Cookies</a>.</p>
+  <p class="info-hero__lead">These terms govern use of the Tennis Rivals Shop website and purchases from us. We sell and deliver within Georgia only. By placing an order, you accept them. Practical details: <a href="{% shop_url 'shop:info_delivery' %}" style="color:var(--accent);font-weight:600">Delivery</a>, <a href="{% shop_url 'shop:info_payment' %}" style="color:var(--accent);font-weight:600">Payment</a>, <a href="{% shop_url 'shop:info_returns' %}" style="color:var(--accent);font-weight:600">Returns</a>, <a href="{% shop_url 'shop:legal_privacy' %}" style="color:var(--accent);font-weight:600">Privacy</a>, <a href="{% shop_url 'shop:legal_cookies' %}" style="color:var(--accent);font-weight:600">Cookies</a>.</p>
 </header>
 
 <div class="info-callout">
@@ -32,12 +33,12 @@
 
 <div class="info-section">
   <h2 class="info-h2">5. Orders &amp; contract</h2>
-  <p class="info-prose">Checkout steps on the site are an offer to buy. The contract is formed when we <strong>confirm acceptance</strong> of your order — for example by email, SMS, Telegram, or another channel we use to confirm the order and delivery details. <strong>Online card payment on the website is not available yet;</strong> payment is normally collected <strong>on delivery</strong> (card terminal or cash in GEL) or by <strong>bank transfer</strong> where we agree that method, as described on our <a href="{% url 'shop:info_payment' %}" style="color:var(--accent);font-weight:600">Payment</a> page. We may refuse or cancel orders for stock, legal, or good-faith fraud-prevention reasons; in that case you will not owe payment for undelivered goods or we will refund amounts already received, as applicable.</p>
+  <p class="info-prose">Checkout steps on the site are an offer to buy. The contract is formed when we <strong>confirm acceptance</strong> of your order — for example by email, SMS, Telegram, or another channel we use to confirm the order and delivery details. <strong>Online card payment on the website is not available yet;</strong> payment is normally collected <strong>on delivery</strong> (card terminal or cash in GEL) or by <strong>bank transfer</strong> where we agree that method, as described on our <a href="{% shop_url 'shop:info_payment' %}" style="color:var(--accent);font-weight:600">Payment</a> page. We may refuse or cancel orders for stock, legal, or good-faith fraud-prevention reasons; in that case you will not owe payment for undelivered goods or we will refund amounts already received, as applicable.</p>
 </div>
 
 <div class="info-section">
   <h2 class="info-h2">6. Payment</h2>
-  <p class="info-prose">You can pay as described on <a href="{% url 'shop:info_payment' %}" style="color:var(--accent);font-weight:600">Payment</a>. At present that means in practice:</p>
+  <p class="info-prose">You can pay as described on <a href="{% shop_url 'shop:info_payment' %}" style="color:var(--accent);font-weight:600">Payment</a>. At present that means in practice:</p>
   <ul class="info-ul" style="margin-top:10px">
     <li><strong>Pay on delivery:</strong> by <strong>bank card</strong> (courier POS terminal) or <strong>cash in GEL</strong>, unless we have agreed otherwise in writing.</li>
     <li><strong>Bank transfer</strong> where we offer it for your order.</li>
@@ -47,12 +48,12 @@
 
 <div class="info-section">
   <h2 class="info-h2">7. Delivery</h2>
-  <p class="info-prose">Areas, timelines, and fees are on our <a href="{% url 'shop:info_delivery' %}" style="color:var(--accent);font-weight:600">Delivery</a> page. Risk passes to you when goods are delivered to you or a person you designate, unless mandatory law says otherwise.</p>
+  <p class="info-prose">Areas, timelines, and fees are on our <a href="{% shop_url 'shop:info_delivery' %}" style="color:var(--accent);font-weight:600">Delivery</a> page. Risk passes to you when goods are delivered to you or a person you designate, unless mandatory law says otherwise.</p>
 </div>
 
 <div class="info-section">
   <h2 class="info-h2">8. Returns &amp; withdrawal</h2>
-  <p class="info-prose">The <strong>14-day</strong> return/exchange rules and exceptions (e.g. strung rackets, hygiene) are in <a href="{% url 'shop:info_returns' %}" style="color:var(--accent);font-weight:600">Returns &amp; exchanges</a> and form part of these terms. Statutory rights under Georgian consumer law remain in force where applicable.</p>
+  <p class="info-prose">The <strong>14-day</strong> return/exchange rules and exceptions (e.g. strung rackets, hygiene) are in <a href="{% shop_url 'shop:info_returns' %}" style="color:var(--accent);font-weight:600">Returns &amp; exchanges</a> and form part of these terms. Statutory rights under Georgian consumer law remain in force where applicable.</p>
 </div>
 
 <div class="info-section">
@@ -80,5 +81,5 @@
   <p class="info-prose">These terms are governed by the laws of <strong>Georgia</strong>. Courts of Georgia have jurisdiction over disputes arising from these terms and your purchases, without prejudice to mandatory consumer rights under Georgian law.</p>
 </div>
 
-<p class="info-prose" style="margin-top:24px;font-size:14px;color:var(--muted)">Last updated: April 2026. Questions: <a href="{% url 'shop:info_contacts' %}" style="color:var(--accent);font-weight:600">Contacts</a>.</p>
+<p class="info-prose" style="margin-top:24px;font-size:14px;color:var(--muted)">Last updated: April 2026. Questions: <a href="{% shop_url 'shop:info_contacts' %}" style="color:var(--accent);font-weight:600">Contacts</a>.</p>
 {% endblock %}

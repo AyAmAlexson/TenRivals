@@ -1,3 +1,4 @@
+{% load catalog_tags %}
 {% extends 'persons/staff_base.html' %}
 {% block title %}Collections — Staff | Tenrivals{% endblock %}
 {% block page_heading %}{{ page_heading }}{% endblock %}
@@ -43,7 +44,7 @@
           <td class="mono">
             <span class="slug-cell">
               <span>{{ coll.slug }}</span>
-              <button type="button" class="icon-btn slug-copy-btn js-copy-collection-path" data-path="{% url 'shop:collection_detail' coll.slug %}" title="Copy storefront path" aria-label="Copy path for {{ coll.slug }}">
+              <button type="button" class="icon-btn slug-copy-btn js-copy-collection-path" data-path="{% shop_url 'shop:collection_detail' slug=coll.slug %}" title="Copy storefront path" aria-label="Copy path for {{ coll.slug }}">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
               </button>
             </span>
@@ -52,7 +53,7 @@
           <td>{% if coll.is_archived %}<span class="badge badge--no">Archived</span>{% else %}<span class="badge badge--yes">Active</span>{% endif %}</td>
           <td>
             <div class="action-icons">
-              <a href="{% url 'shop:collection_detail' coll.slug %}" class="icon-btn" title="View on site" aria-label="View on site" target="_blank" rel="noopener">↗</a>
+              <a href="{% shop_url 'shop:collection_detail' slug=coll.slug %}" class="icon-btn" title="View on site" aria-label="View on site" target="_blank" rel="noopener">↗</a>
               <a href="{% url 'administration:staff_collection_edit' coll.pk %}" class="icon-btn" title="Edit" aria-label="Edit">✎</a>
               <form method="post" action="{% url 'administration:staff_collections' %}" style="display:inline">
                 {% csrf_token %}

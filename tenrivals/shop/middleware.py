@@ -3,9 +3,44 @@ import os
 
 from django.http import HttpResponse
 from django.template.loader import render_to_string
+from django.utils import translation
+
+from .site_locale import (
+    ACTIVE_SHOP_SITE_LOCALES,
+    django_lang_for_site_locale,
+    set_session_site_locale,
+)
 
 
 logger = logging.getLogger(__name__)
+
+
+class SiteLocaleMiddleware:
+    """Parses /<site_locale>/shop/..., syncs session, activates gettext per request."""
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        request.site_locale = None
+        path = getattr(request, 'path_info', '') or ''
+        parts = path.strip('/').split('/')
+        if (
+            len(parts) >= 2
+            and parts[1] == 'shop'
+            and parts[0] in ACTIVE_SHOP_SITE_LOCALES
+        ):
+            sl = parts[0]
+            request.site_locale = sl
+            set_session_site_locale(request, sl)
+            lang = django_lang_for_site_locale(sl)
+            translation.activate(lang)
+            try:
+                return self.get_response(request)
+            finally:
+                translation.deactivate()
+        return self.get_response(request)
+
 
 ALLOWED_PATHS = (
     '/accounts/login/',

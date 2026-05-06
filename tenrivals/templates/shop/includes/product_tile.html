@@ -1,12 +1,13 @@
+{% load catalog_tags %}
 {# p, request required. browse_mode: "stock" | "preorder" | "home" | omit (same as home). tile_fetch: optional int — first tiles on home rails get faster image hints. STOCK qty = shelf in Tbilisi. PREORDER qty = preorder slots; 0 = vitrine (coming soon). Preorder catalog uses preorder_listing_qty for tile copy when annotated. #}
 <div class="product-tile">
   {% with qty=p.stock_listing_qty|default:0 po=p.preorder_listing_qty|default:0 %}
   {% if user.is_staff %}
-  <a href="{% url 'shop:product_edit' p.pk %}?{% if browse_mode == 'preorder' %}channel=preorder&{% else %}channel={% if qty > 0 or p.in_stock %}stock{% else %}preorder{% endif %}&{% endif %}next={{ request.get_full_path|urlencode }}" class="product-tile__edit" title="Edit product" aria-label="Edit product">
+  <a href="{% shop_url 'shop:product_edit' p.pk %}?{% if browse_mode == 'preorder' %}channel=preorder&{% else %}channel={% if qty > 0 or p.in_stock %}stock{% else %}preorder{% endif %}&{% endif %}next={{ request.get_full_path|urlencode }}" class="product-tile__edit" title="Edit product" aria-label="Edit product">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 013 3L8 18l-4 1 1-4L16.5 3.5z"/></svg>
   </a>
   {% endif %}
-  <a class="product-tile__link" href="{% url 'shop:product_detail' p.pk %}{% if browse_mode == 'preorder' %}?channel=preorder{% elif qty > 0 or p.in_stock %}?channel=stock{% else %}?channel=preorder{% endif %}">
+  <a class="product-tile__link" href="{% shop_url 'shop:product_detail' p.pk %}{% if browse_mode == 'preorder' %}?channel=preorder{% elif qty > 0 or p.in_stock %}?channel=stock{% else %}?channel=preorder{% endif %}">
     <div class="product-tile__media">
       {% if p.main_image %}
       <img src="{{ p.main_image.url }}" alt="{{ p.name }}" decoding="async" sizes="(max-width:640px) 78vw, 260px"{% if p.main_image.width and p.main_image.height %} width="{{ p.main_image.width }}" height="{{ p.main_image.height }}"{% endif %}{% if tile_fetch == 0 and browse_mode == 'home' %} fetchpriority="high"{% elif tile_fetch and tile_fetch < 4 and browse_mode == 'home' %} loading="eager" fetchpriority="low"{% else %} loading="lazy"{% endif %}>

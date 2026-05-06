@@ -1,5 +1,6 @@
+{% load catalog_tags %}
 {# Search GET form. Optional: search_channel = "stock" | "preorder" scopes results to that catalog. #}
-<form class="search" role="search" action="{% url 'shop:product_search' %}" method="get">
+<form class="search" role="search" action="{% shop_url 'shop:product_search' %}" method="get">
   {% if search_channel == 'stock' or search_channel == 'preorder' %}
   <input type="hidden" name="channel" value="{{ search_channel }}">
   {% endif %}

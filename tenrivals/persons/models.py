@@ -5,6 +5,9 @@ from django.utils import timezone
 from datetime import timedelta
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
+
+from shop.site_locale import SITE_LOCALE_CHOICES_FULL
+
 from .managers import CustomUserManager
 
 
@@ -22,6 +25,12 @@ class CustomUser(AbstractUser):
     is_test_user = models.BooleanField(default=False)
     preferred_city = models.CharField(max_length=3, choices=TR_CITIES, default='TBI')
     preferred_geo = models.CharField(max_length=2, choices=TR_GEOS, default='GE')
+    preferred_site_locale = models.CharField(
+        max_length=8,
+        choices=SITE_LOCALE_CHOICES_FULL,
+        default='ge_en',
+        help_text=('Preferred storefront language (country_language URL prefix); only some values are routed yet.'),
+    )
     is_telegram_verified = models.BooleanField(default=False)
 
     newsletter_opt_in = models.BooleanField(

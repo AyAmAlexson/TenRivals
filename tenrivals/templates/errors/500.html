@@ -1,7 +1,8 @@
+{% load catalog_tags %}
 {% extends "errors/base_error.html" %}
 {% block title %}Something went wrong{% endblock %}
 {% block body %}
 <h1>Something went wrong</h1>
 <p>We are sorry. A server error occurred. Please try again in a few minutes.</p>
-<p><a class="btn" href="{% url 'shop:index' %}">Back to shop</a></p>
+<p><a class="btn" href="{% shop_url 'shop:index' %}">Back to shop</a></p>
 {% endblock %}

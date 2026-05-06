@@ -1,3 +1,4 @@
+{% load catalog_tags %}
 {% load i18n static %}
 <!doctype html>
 <html lang="en">
@@ -27,7 +28,7 @@
 <body>
   {% include 'includes/google_tag_manager_body.html' %}
   <div class="auth-header">
-    <a href="{% url 'shop:index' %}"><img src="{% static 'assets/img/TR Logo 25/TR 25 LOGO HOR RED.svg' %}" alt="Tenrivals"></a>
+    <a href="{% shop_url 'shop:index' %}"><img src="{% static 'assets/img/TR Logo 25/TR 25 LOGO HOR RED.svg' %}" alt="Tenrivals"></a>
   </div>
   <div class="auth-wrap">
     <div class="auth-card">
@@ -36,7 +37,7 @@
       {% url 'account_email' as email_url %}
       <p>{% blocktrans %}This page requires a verified email. We have sent you a link — please check your inbox and spam folder.{% endblocktrans %}</p>
       <p>{% blocktrans %}You can still <a href="{{ email_url }}">change your email address</a>.{% endblocktrans %}</p>
-      <p><a href="{% url 'shop:index' %}">{% trans "Back to shop" %}</a></p>
+      <p><a href="{% shop_url 'shop:index' %}">{% trans "Back to shop" %}</a></p>
     </div>
   </div>
   <div class="page-footer">&copy; {% now "Y" %} TenRivals Shop</div>

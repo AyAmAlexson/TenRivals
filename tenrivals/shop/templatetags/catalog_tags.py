@@ -1,11 +1,12 @@
 from django import template
 from django.templatetags.static import static as static_url
-from django.urls import reverse
 
 from persons.account_display import account_initials_for_user
 
 from ..catalog_utils import distinct_brands_for_type, stock_catalog_storefront_queryset
 from ..models import ProductType
+from ..site_locale import shop_reverse
+
 
 register = template.Library()
 
@@ -34,6 +35,14 @@ def account_initials(user):
     return account_initials_for_user(user)
 
 
+@register.simple_tag(takes_context=True)
+def shop_url(context, viewname: str, *args, **kwargs):
+    """Reverse a shop URL keeping the active /<locale>/shop/ prefix."""
+    req = context.get('request')
+    locale = getattr(req, 'site_locale', None) if req else None
+    return shop_reverse(viewname, *args, site_locale=locale, **kwargs)
+
+
 @register.filter(name='abs_site_href')
 def abs_site_href(url):
     """Ensure internal paths are root-absolute so they work from any page (e.g. /shop/ → not /shop/shop/...)."""
@@ -46,17 +55,19 @@ def abs_site_href(url):
     return u if u.startswith('/') else f'/{u}'
 
 
-@register.inclusion_tag('shop/includes/stock_catalog_nav.html')
-def stock_catalog_nav():
+@register.inclusion_tag('shop/includes/stock_catalog_nav.html', takes_context=True)
+def stock_catalog_nav(context):
+    request = context['request']
+    loc = getattr(request, 'site_locale', None)
     stock = stock_catalog_storefront_queryset()
 
     def b(tc):
         return distinct_brands_for_type(stock, tc)
 
     return {
-        'catalog_url': reverse('shop:stock'),
-        'preorder_url': reverse('shop:preorder'),
-        'index_url': reverse('shop:index'),
+        'catalog_url': shop_reverse('shop:stock', site_locale=loc),
+        'preorder_url': shop_reverse('shop:preorder', site_locale=loc),
+        'index_url': shop_reverse('shop:index', site_locale=loc),
         'racket_brands': b(ProductType.RACKET),
         'bag_brands': b(ProductType.BAGS),
         'ball_brands': b(ProductType.BALLS),

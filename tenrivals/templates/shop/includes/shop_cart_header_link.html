@@ -1,4 +1,5 @@
-<a href="{% url 'shop:cart' %}" class="header-cart" aria-label="Shopping cart">
+{% load catalog_tags %}
+<a href="{% shop_url 'shop:cart' %}" class="header-cart" aria-label="Shopping cart">
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
     <path d="M6 6h15l-1.5 9h-12z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
     <path d="M6 6 5 3H2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>

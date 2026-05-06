@@ -1,3 +1,4 @@
+{% load catalog_tags %}
 {% extends 'shop/base_marketing.html' %}
 {% load static %}
 {% block title %}{{ collection.title }} | Tenrivals{% endblock %}
@@ -99,7 +100,7 @@
   @media(max-width:860px){.group-intro{grid-template-columns:1fr}.group-media{max-width:340px}}
 {% endblock %}
 {% block content %}
-  <a class="back-to-blog" href="{% url 'shop:stock' %}">← Back to in stock</a>
+  <a class="back-to-blog" href="{% shop_url 'shop:stock' %}">← Back to in stock</a>
 
   <section class="collection-hero">
     {% if collection.banner_image %}
