@@ -63,11 +63,26 @@ def django_lang_for_site_locale(site_locale: str | None) -> str:
 
 
 def shop_reverse(viewname: str, *args, site_locale: str | None = None, **kwargs):
-    """reverse() for shop routes that live under /<site_locale>/shop/..."""
+    """reverse() for shop routes that live under /<site_locale>/shop/...
+
+    Django forbids passing both ``args`` and ``kwargs`` to ``reverse()``.
+    Templates may use positional captures (e.g. ``{% shop_url 'shop:product_detail' p.pk %}``);
+    those must use ``args`` only, with ``site_locale`` prepended for the parent prefix.
+    Keyword-only reverses use ``kwargs`` and include ``site_locale``.
+    """
+
     sl = normalize_site_locale(site_locale)
-    url_kwargs = dict(kwargs)
-    url_kwargs['site_locale'] = sl
-    return reverse(viewname, args=args, kwargs=url_kwargs)
+    if args and kwargs:
+        raise ValueError(
+            f'shop_reverse({viewname!r}): use either positional URL args or keyword args, not both'
+        )
+    if kwargs:
+        url_kwargs = dict(kwargs)
+        url_kwargs['site_locale'] = sl
+        return reverse(viewname, kwargs=url_kwargs)
+    if args:
+        return reverse(viewname, args=(sl,) + tuple(args))
+    return reverse(viewname, kwargs={'site_locale': sl})
 
 
 def safe_shop_reverse(viewname: str, *args, site_locale: str | None = None, **kwargs) -> str:
