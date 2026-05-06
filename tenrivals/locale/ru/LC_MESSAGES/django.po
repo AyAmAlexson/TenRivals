@@ -54,3 +54,177 @@ msgstr "Наши бренды"
 
 msgid "Featured tennis brands"
 msgstr "Подборка теннисных брендов"
+
+msgid "Language menu"
+msgstr "Меню языка"
+
+msgid "Choose language"
+msgstr "Выберите язык"
+
+msgid "Promo banner"
+msgstr "Промо-баннер"
+
+msgid "Hero image — add slides in Staff → Shop home"
+msgstr "Главное фото баннера — добавьте слайды в Staff → главная магазина"
+
+msgid "Previous hero slide"
+msgstr "Предыдущий слайд баннера"
+
+msgid "Next hero slide"
+msgstr "Следующий слайд баннера"
+
+msgid "Featured products carousel controls"
+msgstr "Управление блоком избранных товаров"
+
+msgid "Scroll featured products left"
+msgstr "Прокрутить избранные влево"
+
+msgid "Scroll featured products right"
+msgstr "Прокрутить избранные вправо"
+
+msgid "Promo banner controls"
+msgstr "Управление промо-баннером"
+
+msgid "Previous promo banner"
+msgstr "Предыдущий промо-баннер"
+
+msgid "Promo banner pagination"
+msgstr "Нумерация промо-баннеров"
+
+msgid "Go to banner"
+msgstr "Баннер"
+
+msgid "Next promo banner"
+msgstr "Следующий промо-баннер"
+
+msgid "New arrivals carousel controls"
+msgstr "Управление блоком новинок"
+
+msgid "Scroll new arrivals left"
+msgstr "Прокрутить новинки влево"
+
+msgid "Scroll new arrivals right"
+msgstr "Прокрутить новинки вправо"
+
+msgid "Ten Rivals"
+msgstr "Ten Rivals"
+
+msgid "Featured stories carousel controls"
+msgstr "Управление блоком историй"
+
+msgid "Scroll stories left"
+msgstr "Прокрутить истории влево"
+
+msgid "Scroll stories right"
+msgstr "Прокрутить истории вправо"
+
+msgid "Shop %(brand)s in stock"
+msgstr "%(brand)s — в наличии"
+
+msgid "About Tennis Rivals"
+msgstr "О Tennis Rivals"
+
+msgid "Your Premium Tennis Destination<br>in Tbilisi, Georgia"
+msgstr "Ваш премиальный теннисный магазин<br>в Тбилиси, Грузия"
+
+msgid "Expertly curated gear for the dedicated player"
+msgstr "Честный отбор экипировки для игроков, которые играют всерьёз"
+
+msgid "Store highlights"
+msgstr "О магазине кратко"
+
+msgid "Player-first curation"
+msgstr "Отбор с позиции игрока"
+
+msgid "Official fiscal receipts"
+msgstr "Официальные фискальные чеки"
+
+msgid "Expert fitting support"
+msgstr "Помощь с подбором и примеркой"
+
+msgid "Fast delivery in Tbilisi"
+msgstr "Быстрая доставка по Тбилиси"
+
+msgid "At Tennis Rivals, we are more than just an online tennis shop in Tbilisi. We are a community-driven project founded by players, for players. Whether you are stepping onto the clay courts of Mziuri or training at Raketo, we understand that the right equipment is the foundation of your growth. Our mission is to provide the Georgian tennis community with access to the world's most advanced tennis technology, backed by radical transparency and expert advice."
+msgstr "Tennis Rivals — это больше, чем интернет-магазин в Тбилиси. Проект игроков для игроков: мы сами на корте, знаем, как важна правильная экипировка и рост. Наша цель — дать теннисному сообществу Грузии доступ к самым современным технологиям с прозрачностью по ценам и честными консультациями."
+
+msgid "Why choose Tennis Rivals for your gear?"
+msgstr "Почему стоит выбрать нас"
+
+msgid "<strong>Curated professional selection:</strong> We do not just stock every racket on the market. We act as a filter, offering a hand-picked selection of high-performance gear from industry leaders like Wilson, Solinco, Prince, and Toroline. From the legendary Wilson Blade v9 to the spin-friendly Solinco Whiteout, every item in our store has been tested on local courts to ensure it meets the needs of players ranging from NTRP 2.5 to 3.5 and beyond."
+msgstr "<strong>Селекция профессионального уровня:</strong> Мы не заливаем все ракетки подряд. Фильтруем ассортимент Wilson, Solinco, Prince, Toroline и других топ-брендов: от Wilson Blade v9 до Solinco Whiteout — то, что реально имеет смысл на ваших кортах, для игроков от NTRP 2.5 и выше."
+
+msgid "<strong>The best tennis shoes and apparel in Georgia:</strong> Movement is the soul of tennis. That is why we offer specialized tennis footwear designed for both hard and clay courts. Our size guides and personal consultations help you find the perfect fit to prevent injury and maximize your lateral speed."
+msgstr "<strong>Обувь и одежда под грунт и хард:</strong> Передвижение — основа тенниса. Специализированная корточная обувь для грунта и хардов, подбор размера по гиду и советам, чтобы снизить риск травмы и сохранить скорость по корту."
+
+msgid "<strong>Official and transparent service:</strong> We are proud to be a fully legal business in Georgia. When you buy a tennis racket in Tbilisi from us, you receive an official fiscal receipt. We stand against grey imports, ensuring that every product is authentic and covered by our fair-play return policy."
+msgstr "<strong>Официально и прозрачно:</strong> Работаем «в белую» по Грузии. За каждую ракетку в Тбилиси — официальный фискальный чек. Без серых импортов; подлинность и честное право возврата."
+
+msgid "<strong>Global pre-orders, local delivery:</strong> Cannot find a specific grip size or a limited-edition frame in Tbilisi? Our global pre-order service connects you to the best warehouses in the US and Europe. We handle the logistics, customs, and paperwork, delivering your dream gear directly to your door with free delivery in Tbilisi."
+msgstr "<strong>Предзаказ из США и Европы:</strong> Нет нужного grip size или лимитки у нас в наличии? Заказываем на проверенных складах США и ЕС — берём таможню и документы на себя и привезём домой по Тбилиси с нашей обычной доставкой."
+
+msgid "Join the Rivals community"
+msgstr "Сообщество Rivals"
+
+msgid "Tennis in Georgia is growing, and we are here to support that momentum. Beyond being a store, we provide expert insights into tennis stringing, racket customization, and gear maintenance. We believe that professional-grade equipment should not be a luxury — it should be a tool for your next victory."
+msgstr "Теннис в Грузии растёт — мы хотим поддерживать этот темп. Это не только магазин: подсказываем по натяжке, модификациям ракеток и уходу за экипировкой. Струны и рамки уровня pro не должны быть «роскошью» — это инструмент для вашей следующей победы."
+
+msgid "Explore our collection today and see why Tennis Rivals is the preferred choice for players who take their game seriously. From high-quality strings to the latest racket innovations, we help you find the line for your growth."
+msgstr "Загляните в каталог: Tennis Rivals выбирают те, кто относится к игре серьёзно. От струн до новейших ракеток — поможем найти баланс под ваш рост и стиль."
+
+msgid "Frequently asked questions"
+msgstr "Частые вопросы"
+
+msgid "Do you offer free delivery in Tbilisi?"
+msgstr "Есть ли бесплатная доставка по Тбилиси?"
+
+msgid "Yes, any in-stock order includes free delivery within Tbilisi (0₾). Whether it is a high-end racket or just a single pack of overgrips, we will bring it to your door. For other cities in Georgia, contact us and we will provide a quick courier quote before you checkout."
+msgstr "Да: для заказов из наличия доставка по Тбилиси бесплатно (0₾) — и для дорогой ракетки, и для пачки овергрипов. В другие города Грузии — напишите, рассчитаем курьера до оплаты."
+
+msgid "Which brands do you carry?"
+msgstr "Какие бренды у вас есть?"
+
+msgid "We offer a curated selection of world leaders like Wilson, HEAD, and Babolat, alongside “hidden gems” favored by pro players, such as Solinco, Prince, and Toroline. From rackets and shoes to strings and accessories — if it is on our shelves, it is because we trust its performance."
+msgstr "У нас — честный микс лидеров Wilson, HEAD, Babolat и «глубинных» брендов вроде Solinco, Prince, Toroline, которыми пользуются про-игроки. Ракетки, обувь, струны, аксессуары: если висит у нас на полке, значит, верим в этот материал."
+
+msgid "All brands"
+msgstr "Все бренды"
+
+msgid "Use the category strip above to browse."
+msgstr "Категории — в разноцветной полоске над блоком ниже."
+
+msgid "Are the products original? Do I get a receipt?"
+msgstr "Товары оригинальные? Есть чек?"
+
+msgid "Absolutely. We operate fully “in the white.” Every item in our stock is sourced directly from official distributors or trusted global retailers. Every purchase includes an official fiscal receipt (RS.ge), which serves as your guarantee of authenticity and quality."
+msgstr "Да, работаем полностью «в белую». Поставки у официальных дистрибьюторов и проверенных магазинов. На покупку — официальный фискальный чек (RS.ge) как доказательство подлинности и качества."
+
+msgid "Can you help me choose a racket if I am a beginner?"
+msgstr "Поможете подобрать ракетку новичку?"
+
+msgid "That is exactly what we are here for. We do not just “sell boxes” — we consult. As players ourselves, we analyze your NTRP level, play style, and goals to recommend a racket that will help you grow. Message us for a personalized gear audit."
+msgstr "Именно за этим мы и здесь. Не просто отправляем «коробки» — разбираем ваш NTRP, стиль и цели под рекомендацию рамки под рост. Напишите — сделаем персональный мини-подбор."
+
+msgid "How does the global pre-order service work?"
+msgstr "Как работает международный предзаказ?"
+
+msgid "If you need something that is not in our local stock (like a rare grip size or a specific brand from the US or EU), send us a link. We will provide an official quote including shipping and customs. We handle the paperwork and logistics, and you pay locally upon delivery."
+msgstr "Если нужного grip size или бренда нет в локальном каталоге (США или ЕУ) — пришлите ссылку: делаем официальный расчёт с доставкой и пошлиной; документы и логистику тянем мы, платите уже при получении в Грузии."
+
+msgid "What happens if the shoes or clothes do not fit?"
+msgstr "А если обувь или одежда не подошла по размеру?"
+
+msgid "We offer a “two-size delivery” service. If you are unsure about your size, tell us and we will bring two adjacent sizes for you to try on at delivery. You only pay for what fits perfectly."
+msgstr "У нас есть доставка «двух соседних размеров»: если сомневаетесь — привезём два соседних номера померять при курьере. Оплачиваете только то, что село идеально."
+
+msgid "Do you have a physical store where I can see the gear?"
+msgstr "Есть ли офлайн-магазин, где можно посмотреть товар?"
+
+msgid "We are an online-first shop to keep our prices fair and our delivery fast. However, we are deeply involved in the Tbilisi tennis scene. You can often find us at City Sport or Mziuri. If you want to see a specific racket before buying, we can arrange a meeting at a court near you."
+msgstr "Мы в первую очередь онлайн — чтобы цены и доставка оставались честными. Но мы в теннисной жизни Тбилиси: часто на City Sport и Mziuri. Нужно «пощупать» конкретную ракетку — договоримся о встрече на корте рядом с вами."
+
+msgid "Do you provide stringing services?"
+msgstr "Натягиваете струны сами?"
+
+msgid "While we specialize in high-performance strings like Toroline and Solinco, we can also recommend the best stringing professionals in Tbilisi and help you choose the right tension for your racket and game style."
+msgstr "Сами специализируемся на струнах уровня Toroline и Solinco; плюс подскажем проверенных стрингеров в Тбилиси и натяжку под вашу ракетку и стиль."

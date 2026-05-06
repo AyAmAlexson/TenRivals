@@ -1,0 +1,23 @@
+{% load i18n %}
+{% comment %}
+Compact language picker. Pass wrapper_class for layout context, e.g. shop-lang-switcher--topbar.
+{% endcomment %}
+<details class="shop-lang-switcher {{ wrapper_class }}">
+  <summary class="shop-lang-switcher-summary" aria-label="{% trans 'Language menu' %}">
+    <span class="shop-lang-switcher__globe" aria-hidden="true">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.4"/><ellipse cx="12" cy="12" rx="3.5" ry="9" stroke="currentColor" stroke-width="1.2"/><path d="M5 11h14M12 20c2.5-2.8 4-6.2 4-8s-1.5-5.2-4-8c-2.5 2.8-4 6.2-4 8s1.5 5.2 4 8z" stroke="currentColor" stroke-width="1.2"/></svg>
+    </span>
+    <span class="shop-lang-switcher-code">{{ shop_language_toggle_short }}</span>
+    <span class="shop-lang-switcher-caret" aria-hidden="true"></span>
+  </summary>
+  <ul class="shop-lang-switcher-menu" role="listbox" aria-label="{% trans 'Choose language' %}">
+    {% for opt in shop_language_switch_options %}
+    <li role="presentation">
+      <a href="{{ opt.href }}" role="option"{% if opt.is_active %} class="is-active" aria-current="true"{% endif %} data-locale-option="{{ opt.code }}">
+        <span class="shop-lang-switcher-flagcol">{{ opt.short_label }}</span>
+        <span class="shop-lang-switcher-langcol">{{ opt.native_label }}</span>
+      </a>
+    </li>
+    {% endfor %}
+  </ul>
+</details>

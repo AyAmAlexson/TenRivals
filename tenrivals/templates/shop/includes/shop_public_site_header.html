@@ -1,4 +1,3 @@
-{% load catalog_tags %}
 {% load static catalog_tags %}
 {# Shop storefront header + mobile drawer. Optional context: search_channel (stock|preorder) for scoped search. #}
 <div class="topbar">
@@ -8,9 +7,12 @@
         {% include 'shop/includes/shop_info_nav_links.html' %}
         {% if user.is_superuser %}<a href="{% url 'administration:staff_users' %}">Staff</a>{% endif %}
       </div>
-      <a href="#" class="city-select" onclick="return false">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style="vertical-align:-1px; margin-right:4px" aria-hidden="true"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" stroke="currentColor" stroke-width="2" fill="none"/><circle cx="12" cy="9" r="2.5" stroke="currentColor" stroke-width="1.5"/></svg>Tbilisi
-      </a>
+      <div class="topbar-right">
+        {% include 'shop/includes/shop_lang_switcher.html' with wrapper_class='shop-lang-switcher--topbar' %}
+        <a href="#" class="city-select" onclick="return false">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style="vertical-align:-1px; margin-right:4px" aria-hidden="true"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" stroke="currentColor" stroke-width="2" fill="none"/><circle cx="12" cy="9" r="2.5" stroke="currentColor" stroke-width="1.5"/></svg>Tbilisi
+        </a>
+      </div>
     </div>
   </div>
 </div>
@@ -27,25 +29,7 @@
           <span class="site-header-menu-btn__bars" aria-hidden="true"></span>
         </button>
         <div class="header-toolbar-cluster" aria-label="Header actions">
-          <details class="shop-lang-switcher shop-lang-switcher--header">
-            <summary class="shop-lang-switcher-summary" aria-label="Language menu">
-              <span class="shop-lang-switcher__globe" aria-hidden="true">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.4"/><ellipse cx="12" cy="12" rx="3.5" ry="9" stroke="currentColor" stroke-width="1.2"/><path d="M5 11h14M12 20c2.5-2.8 4-6.2 4-8s-1.5-5.2-4-8c-2.5 2.8-4 6.2-4 8s1.5 5.2 4 8z" stroke="currentColor" stroke-width="1.2"/></svg>
-              </span>
-              <span class="shop-lang-switcher-code">{{ shop_language_toggle_short }}</span>
-              <span class="shop-lang-switcher-caret" aria-hidden="true"></span>
-            </summary>
-            <ul class="shop-lang-switcher-menu" role="listbox" aria-label="Choose language">
-              {% for opt in shop_language_switch_options %}
-              <li role="presentation">
-                <a href="{{ opt.href }}" role="option"{% if opt.is_active %} class="is-active" aria-current="true"{% endif %} data-locale-option="{{ opt.code }}">
-                  <span class="shop-lang-switcher-flagcol">{{ opt.short_label }}</span>
-                  <span class="shop-lang-switcher-langcol">{{ opt.native_label }}</span>
-                </a>
-              </li>
-              {% endfor %}
-            </ul>
-          </details>
+          {% include 'shop/includes/shop_lang_switcher.html' with wrapper_class='shop-lang-switcher--toolbar-mobile' %}
           <nav class="socials" aria-label="Social links">
             <a class="social-link" href="https://www.instagram.com/tennis_rivals_shop/" target="_blank" rel="noopener" aria-label="Instagram" title="Instagram">
               <svg viewBox="0 0 24 24" width="22" height="22" fill="none" aria-hidden="true">

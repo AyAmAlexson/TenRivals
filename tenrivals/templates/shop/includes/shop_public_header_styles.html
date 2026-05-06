@@ -3,6 +3,7 @@
   /* Topbar (desktop; hidden on small screens — links live under Help in mobile drawer) */
   .topbar{background:#111; color:rgba(255,255,255,.7); font-size:12px}
   .topbar .topbar-row{display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:34px}
+  .topbar-right{display:inline-flex;align-items:center;gap:14px;flex-shrink:0}
   .topbar .links{display:flex; gap:20px; flex-wrap:wrap}
   .topbar a{opacity:.8; transition:opacity .15s}
   .topbar a:hover{opacity:1}
@@ -131,6 +132,11 @@
   .shop-lang-switcher-menu a.is-active{background:rgba(178,0,9,.18);color:#fff;border:1px solid rgba(178,0,9,.45)}
   .shop-lang-switcher-flagcol{font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;opacity:.55;text-align:right}
   .shop-lang-switcher-langcol{font-weight:600}
+  .shop-lang-switcher--toolbar-mobile{display:none!important}
+  .shop-lang-switcher--topbar .shop-lang-switcher-summary{
+    min-height:26px;padding:4px 10px;font-size:10px;gap:6px;
+  }
+  .shop-lang-switcher--topbar .shop-lang-switcher-menu{top:calc(100% + 6px);}
   .shop-mobile-lang{display:none}
 
   /* Full-width catalog rail (desktop: static; mobile: off-canvas panel) */
@@ -224,7 +230,7 @@
       gap:12px;
     }
     .header-toolbar-cluster{flex:1; justify-content:flex-end; min-width:0}
-    .shop-lang-switcher--header{display:none!important}
+    .shop-lang-switcher--toolbar-mobile{display:inline-flex!important}
     .shop-mobile-lang{
       display:flex;flex-wrap:wrap;gap:8px;margin:2px 0 14px;padding:2px 0 4px;
     }

@@ -4,9 +4,9 @@
 <head>
   {% include 'includes/google_tag_gtag.html' %}
   <meta charset="utf-8">
-  <title>{{ seo_page_title|default:"Tenrivals | Tennis shop, Tbilisi, Georgia" }}</title>
+  <title>{{ seo_page_title }}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="{{ seo_meta_description|default_if_none:'' }}">
+  <meta name="description" content="{{ seo_meta_description|default:'' }}">
   {% include 'includes/shop_og_meta.html' with og_title=seo_page_title og_description=seo_meta_description %}
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -535,6 +535,7 @@
 </head>
 <body>
 {% include 'includes/google_tag_manager_body.html' %}
+{% trans "Promo banner" as promo_banner_alt_default %}
   <div class="build-version">2.48</div>
   {% include 'shop/includes/shop_public_site_header.html' %}
 
@@ -552,7 +553,7 @@
         {% endif %}
       </div>
       {% empty %}
-      <div class="hero-slide hero-slide--placeholder is-active" data-hero-slide>Hero image — add slides in Staff → Shop home</div>
+      <div class="hero-slide hero-slide--placeholder is-active" data-hero-slide>{% trans "Hero image — add slides in Staff → Shop home" %}</div>
       {% endfor %}
     </div>
     <div class="hero-scrim" aria-hidden="true"></div>
@@ -571,10 +572,10 @@
       </div>
     </div>
     {% if hero_slides|length > 1 %}
-    <button type="button" class="hero-nav hero-nav--prev" aria-label="Previous slide" data-hero-prev>
+    <button type="button" class="hero-nav hero-nav--prev" aria-label="{% trans 'Previous hero slide' %}" data-hero-prev>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>
     </button>
-    <button type="button" class="hero-nav hero-nav--next" aria-label="Next slide" data-hero-next>
+    <button type="button" class="hero-nav hero-nav--next" aria-label="{% trans 'Next hero slide' %}" data-hero-next>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
     </button>
     {% endif %}
@@ -608,10 +609,10 @@
           <div class="product-rail__cell">{% include 'shop/includes/product_tile.html' with p=p browse_mode='home' tile_fetch=forloop.counter0 %}</div>
           {% endfor %}
         </div></div>
-        <div class="carousel-controls carousel-controls--red" aria-label="Featured products carousel controls">
-          <button type="button" class="carousel-controls__arrow" data-rail-prev aria-label="Scroll featured left">←</button>
+        <div class="carousel-controls carousel-controls--red" aria-label="{% trans 'Featured products carousel controls' %}">
+          <button type="button" class="carousel-controls__arrow" data-rail-prev aria-label="{% trans 'Scroll featured products left' %}">←</button>
           <div class="carousel-controls__dots" data-rail-dots></div>
-          <button type="button" class="carousel-controls__arrow" data-rail-next aria-label="Scroll featured right">→</button>
+          <button type="button" class="carousel-controls__arrow" data-rail-next aria-label="{% trans 'Scroll featured products right' %}">→</button>
         </div>
       </div>
     </section>
@@ -624,23 +625,23 @@
           <div class="promo-carousel__slide{% if forloop.first %} is-active{% endif %}" data-promo-slide>
             {% if banner.image_link_url %}
             <a href="{{ banner.image_link_url|abs_site_href }}"{% if banner.image_link_url|slice:":4" == "http" %} target="_blank" rel="noopener"{% endif %}>
-              <img src="{{ banner.image.url }}" alt="{{ banner.internal_note|default:'Promo banner' }}" decoding="async" sizes="(max-width:1200px) 100vw, 1200px"{% if banner.image.width and banner.image.height %} width="{{ banner.image.width }}" height="{{ banner.image.height }}"{% endif %}{% if forloop.first %} fetchpriority="high"{% else %} loading="lazy" fetchpriority="low"{% endif %}>
+              <img src="{{ banner.image.url }}" alt="{{ banner.internal_note|default:promo_banner_alt_default }}" decoding="async" sizes="(max-width:1200px) 100vw, 1200px"{% if banner.image.width and banner.image.height %} width="{{ banner.image.width }}" height="{{ banner.image.height }}"{% endif %}{% if forloop.first %} fetchpriority="high"{% else %} loading="lazy" fetchpriority="low"{% endif %}>
             </a>
             {% else %}
-            <img src="{{ banner.image.url }}" alt="{{ banner.internal_note|default:'Promo banner' }}" decoding="async" sizes="(max-width:1200px) 100vw, 1200px"{% if banner.image.width and banner.image.height %} width="{{ banner.image.width }}" height="{{ banner.image.height }}"{% endif %}{% if forloop.first %} fetchpriority="high"{% else %} loading="lazy" fetchpriority="low"{% endif %}>
+            <img src="{{ banner.image.url }}" alt="{{ banner.internal_note|default:promo_banner_alt_default }}" decoding="async" sizes="(max-width:1200px) 100vw, 1200px"{% if banner.image.width and banner.image.height %} width="{{ banner.image.width }}" height="{{ banner.image.height }}"{% endif %}{% if forloop.first %} fetchpriority="high"{% else %} loading="lazy" fetchpriority="low"{% endif %}>
             {% endif %}
           </div>
           {% endfor %}
         </div>
         {% if promo_banners|length > 1 %}
-        <div class="carousel-controls carousel-controls--navy promo-carousel__controls" aria-label="Promo banner controls">
-          <button type="button" class="carousel-controls__arrow" aria-label="Previous promo banner" data-promo-prev>←</button>
-          <div class="carousel-controls__dots" aria-label="Promo banner pagination">
+        <div class="carousel-controls carousel-controls--navy promo-carousel__controls" aria-label="{% trans 'Promo banner controls' %}">
+          <button type="button" class="carousel-controls__arrow" aria-label="{% trans 'Previous promo banner' %}" data-promo-prev>←</button>
+          <div class="carousel-controls__dots" aria-label="{% trans 'Promo banner pagination' %}">
           {% for banner in promo_banners %}
-          <button type="button" class="carousel-controls__dot{% if forloop.first %} is-active{% endif %}" aria-label="Go to banner {{ forloop.counter }}" data-promo-dot></button>
+          <button type="button" class="carousel-controls__dot{% if forloop.first %} is-active{% endif %}" aria-label="{% trans 'Go to banner' %} {{ forloop.counter }}" data-promo-dot></button>
           {% endfor %}
           </div>
-          <button type="button" class="carousel-controls__arrow" aria-label="Next promo banner" data-promo-next>→</button>
+          <button type="button" class="carousel-controls__arrow" aria-label="{% trans 'Next promo banner' %}" data-promo-next>→</button>
         </div>
         {% endif %}
       </div>
@@ -655,10 +656,10 @@
           <div class="product-rail__cell">{% include 'shop/includes/product_tile.html' with p=p browse_mode='home' tile_fetch=forloop.counter0 %}</div>
           {% endfor %}
         </div></div>
-        <div class="carousel-controls carousel-controls--blue" aria-label="New arrivals carousel controls">
-          <button type="button" class="carousel-controls__arrow" data-rail-prev aria-label="Scroll new arrivals left">←</button>
+        <div class="carousel-controls carousel-controls--blue" aria-label="{% trans 'New arrivals carousel controls' %}">
+          <button type="button" class="carousel-controls__arrow" data-rail-prev aria-label="{% trans 'Scroll new arrivals left' %}">←</button>
           <div class="carousel-controls__dots" data-rail-dots></div>
-          <button type="button" class="carousel-controls__arrow" data-rail-next aria-label="Scroll new arrivals right">→</button>
+          <button type="button" class="carousel-controls__arrow" data-rail-next aria-label="{% trans 'Scroll new arrivals right' %}">→</button>
         </div>
       </div>
     </section>
@@ -676,7 +677,7 @@
                 <img src="{{ post.teaser_image.url }}" alt="{{ post.title }}" decoding="async" sizes="(max-width:640px) 78vw, 320px"{% if post.teaser_image.width and post.teaser_image.height %} width="{{ post.teaser_image.width }}" height="{{ post.teaser_image.height }}"{% endif %}{% if forloop.counter0 < 2 %} fetchpriority="low"{% else %} loading="lazy"{% endif %}>
               </div>
               {% else %}
-              <div class="story-card__media" style="min-height:160px;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase">Ten Rivals</div>
+              <div class="story-card__media" style="min-height:160px;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase">{% trans "Ten Rivals" %}</div>
               {% endif %}
               <div class="story-card__body">
                 <h3 class="story-card__title">{{ post.title }}</h3>
@@ -687,10 +688,10 @@
           </div>
           {% endfor %}
         </div></div>
-        <div class="carousel-controls carousel-controls--teal" aria-label="Featured stories carousel controls">
-          <button type="button" class="carousel-controls__arrow" data-rail-prev aria-label="Scroll stories left">←</button>
+        <div class="carousel-controls carousel-controls--teal" aria-label="{% trans 'Featured stories carousel controls' %}">
+          <button type="button" class="carousel-controls__arrow" data-rail-prev aria-label="{% trans 'Scroll stories left' %}">←</button>
           <div class="carousel-controls__dots" data-rail-dots></div>
-          <button type="button" class="carousel-controls__arrow" data-rail-next aria-label="Scroll stories right">→</button>
+          <button type="button" class="carousel-controls__arrow" data-rail-next aria-label="{% trans 'Scroll stories right' %}">→</button>
         </div>
       </div>
     </section>
@@ -707,14 +708,14 @@
           <ul class="brands-marquee__sequence">
             {% for row in featured_stock_brands %}
             <li>
-              <a class="brand-logo-link" style="--brand-optical-scale: {{ row.logo_optical_scale|default:1 }}" href="{% shop_url 'shop:stock' %}?cbrand={{ row.stock_brand|urlencode }}" title="Shop {{ row.label }} in stock">
+              <a class="brand-logo-link" style="--brand-optical-scale: {{ row.logo_optical_scale|default:1 }}" href="{% shop_url 'shop:stock' %}?cbrand={{ row.stock_brand|urlencode }}" title="{% blocktranslate with brand=row.label %}Shop %(brand)s in stock{% endblocktranslate %}">
                 <img src="{% static row.logo %}" alt="{{ row.label }}" width="280" height="64" loading="lazy" decoding="async">
               </a>
             </li>
             {% endfor %}
             {% for row in featured_stock_brands %}
             <li aria-hidden="true">
-              <a class="brand-logo-link" style="--brand-optical-scale: {{ row.logo_optical_scale|default:1 }}" href="{% shop_url 'shop:stock' %}?cbrand={{ row.stock_brand|urlencode }}" tabindex="-1" title="Shop {{ row.label }} in stock">
+              <a class="brand-logo-link" style="--brand-optical-scale: {{ row.logo_optical_scale|default:1 }}" href="{% shop_url 'shop:stock' %}?cbrand={{ row.stock_brand|urlencode }}" tabindex="-1" title="{% blocktranslate with brand=row.label %}Shop %(brand)s in stock{% endblocktranslate %}">
                 <img src="{% static row.logo %}" alt="" width="280" height="64" loading="lazy" decoding="async">
               </a>
             </li>
@@ -724,88 +725,88 @@
       </div>
     </div>
   </section>
-  <section class="shop-about" aria-label="About Tennis Rivals">
+  <section class="shop-about" aria-label="{% trans 'About Tennis Rivals' %}">
     <div class="container">
       <div class="shop-about__content">
-      <h2 class="shop-about__headline">Your Premium Tennis Destination<br>in Tbilisi, Georgia</h2>
-      <p class="shop-about__subheadline">Expertly Curated Gear for the Dedicated Player</p>
-      <div class="shop-about__feature-chips" aria-label="Store highlights">
-        <span class="shop-about__chip">Player-first curation</span>
-        <span class="shop-about__chip">Official fiscal receipts</span>
-        <span class="shop-about__chip">Expert fitting support</span>
-        <span class="shop-about__chip">Fast delivery in Tbilisi</span>
+      <h2 class="shop-about__headline">{% blocktranslate trimmed %}Your Premium Tennis Destination<br>in Tbilisi, Georgia{% endblocktranslate %}</h2>
+      <p class="shop-about__subheadline">{% trans "Expertly curated gear for the dedicated player" %}</p>
+      <div class="shop-about__feature-chips" aria-label="{% trans 'Store highlights' %}">
+        <span class="shop-about__chip">{% trans "Player-first curation" %}</span>
+        <span class="shop-about__chip">{% trans "Official fiscal receipts" %}</span>
+        <span class="shop-about__chip">{% trans "Expert fitting support" %}</span>
+        <span class="shop-about__chip">{% trans "Fast delivery in Tbilisi" %}</span>
       </div>
       <p class="shop-about__lead">
-        At Tennis Rivals, we are more than just an online tennis shop in Tbilisi. We are a community-driven project founded by players, for players. Whether you are stepping onto the clay courts of Mziuri or training at Raketo, we understand that the right equipment is the foundation of your growth. Our mission is to provide the Georgian tennis community with access to the world&apos;s most advanced tennis technology, backed by radical transparency and expert advice.
+        {% blocktranslate trimmed %}At Tennis Rivals, we are more than just an online tennis shop in Tbilisi. We are a community-driven project founded by players, for players. Whether you are stepping onto the clay courts of Mziuri or training at Raketo, we understand that the right equipment is the foundation of your growth. Our mission is to provide the Georgian tennis community with access to the world's most advanced tennis technology, backed by radical transparency and expert advice.{% endblocktranslate %}
       </p>
 
-      <h3 class="shop-about__section-title">Why Choose Tennis Rivals for Your Gear?</h3>
+      <h3 class="shop-about__section-title">{% trans "Why choose Tennis Rivals for your gear?" %}</h3>
       <ul class="shop-about__list">
-        <li><strong>Curated Professional Selection:</strong> We do not just stock every racket on the market. We act as a filter, offering a hand-picked selection of high-performance gear from industry leaders like Wilson, Solinco, Prince, and Toroline. From the legendary Wilson Blade v9 to the spin-friendly Solinco Whiteout, every item in our store has been tested on local courts to ensure it meets the needs of players ranging from NTRP 2.5 to 3.5 and beyond.</li>
-        <li><strong>The Best Tennis Shoes and Apparel in Georgia:</strong> Movement is the soul of tennis. That is why we offer specialized tennis footwear designed for both hard and clay courts. Our size guides and personal consultations help you find the perfect fit to prevent injury and maximize your lateral speed.</li>
-        <li><strong>Official and Transparent Service:</strong> We are proud to be a 100% legal business in Georgia. When you buy a tennis racket in Tbilisi from us, you receive an official fiscal receipt. We stand against grey imports, ensuring that every product is authentic and covered by our fair-play return policy.</li>
-        <li><strong>Global Pre-Orders, Local Delivery:</strong> Cannot find a specific grip size or a limited-edition frame in Tbilisi? Our Global Pre-Order service connects you to the best warehouses in the US and Europe. We handle the logistics, customs, and paperwork, delivering your dream gear directly to your door with free delivery in Tbilisi.</li>
+        <li>{% blocktranslate trimmed %}<strong>Curated professional selection:</strong> We do not just stock every racket on the market. We act as a filter, offering a hand-picked selection of high-performance gear from industry leaders like Wilson, Solinco, Prince, and Toroline. From the legendary Wilson Blade v9 to the spin-friendly Solinco Whiteout, every item in our store has been tested on local courts to ensure it meets the needs of players ranging from NTRP 2.5 to 3.5 and beyond.{% endblocktranslate %}</li>
+        <li>{% blocktranslate trimmed %}<strong>The best tennis shoes and apparel in Georgia:</strong> Movement is the soul of tennis. That is why we offer specialized tennis footwear designed for both hard and clay courts. Our size guides and personal consultations help you find the perfect fit to prevent injury and maximize your lateral speed.{% endblocktranslate %}</li>
+        <li>{% blocktranslate trimmed %}<strong>Official and transparent service:</strong> We are proud to be a fully legal business in Georgia. When you buy a tennis racket in Tbilisi from us, you receive an official fiscal receipt. We stand against grey imports, ensuring that every product is authentic and covered by our fair-play return policy.{% endblocktranslate %}</li>
+        <li>{% blocktranslate trimmed %}<strong>Global pre-orders, local delivery:</strong> Cannot find a specific grip size or a limited-edition frame in Tbilisi? Our global pre-order service connects you to the best warehouses in the US and Europe. We handle the logistics, customs, and paperwork, delivering your dream gear directly to your door with free delivery in Tbilisi.{% endblocktranslate %}</li>
       </ul>
 
       <div class="shop-about__community">
-        <h3 class="shop-about__section-title">Join the Rivals Community</h3>
+        <h3 class="shop-about__section-title">{% trans "Join the Rivals community" %}</h3>
         <p class="shop-about__closing">
-          Tennis in Georgia is growing, and we are here to support that momentum. Beyond being a store, we provide expert insights into tennis stringing, racket customization, and gear maintenance. We believe that professional-grade equipment should not be a luxury - it should be a tool for your next victory.
+          {% blocktranslate trimmed %}Tennis in Georgia is growing, and we are here to support that momentum. Beyond being a store, we provide expert insights into tennis stringing, racket customization, and gear maintenance. We believe that professional-grade equipment should not be a luxury — it should be a tool for your next victory.{% endblocktranslate %}
         </p>
         <p class="shop-about__closing">
-          Explore our collection today and see why Tennis Rivals is the preferred choice for players who take their game seriously. From high-quality strings to the latest racket innovations, we help you find the line for your growth.
+          {% blocktranslate trimmed %}Explore our collection today and see why Tennis Rivals is the preferred choice for players who take their game seriously. From high-quality strings to the latest racket innovations, we help you find the line for your growth.{% endblocktranslate %}
         </p>
       </div>
 
       <section class="shop-home-faq shop-home-faq--embedded" aria-labelledby="shop-home-faq-title">
-        <h2 id="shop-home-faq-title">Frequently Asked Questions</h2>
+        <h2 id="shop-home-faq-title">{% trans "Frequently asked questions" %}</h2>
         <div class="shop-home-faq__acc">
           <details class="shop-home-faq__details">
-            <summary class="shop-home-faq__summary"><span class="shop-home-faq__num" aria-hidden="true">1</span><span class="shop-home-faq__qtext">Do you offer free delivery in Tbilisi?</span></summary>
+            <summary class="shop-home-faq__summary"><span class="shop-home-faq__num" aria-hidden="true">1</span><span class="shop-home-faq__qtext">{% trans "Do you offer free delivery in Tbilisi?" %}</span></summary>
             <div class="shop-home-faq__panel">
-              <p>Yes, any in-stock order includes free delivery within Tbilisi (0₾). Whether it&apos;s a high-end racket or just a single pack of overgrips, we&apos;ll bring it to your door. For other cities in Georgia, just contact us, and we&apos;ll provide a quick courier quote before you checkout.</p>
+              <p>{% blocktranslate trimmed %}Yes, any in-stock order includes free delivery within Tbilisi (0₾). Whether it is a high-end racket or just a single pack of overgrips, we will bring it to your door. For other cities in Georgia, contact us and we will provide a quick courier quote before you checkout.{% endblocktranslate %}</p>
             </div>
           </details>
           <details class="shop-home-faq__details">
-            <summary class="shop-home-faq__summary"><span class="shop-home-faq__num" aria-hidden="true">2</span><span class="shop-home-faq__qtext">Which brands do you carry?</span></summary>
+            <summary class="shop-home-faq__summary"><span class="shop-home-faq__num" aria-hidden="true">2</span><span class="shop-home-faq__qtext">{% trans "Which brands do you carry?" %}</span></summary>
             <div class="shop-home-faq__panel">
-              <p>We offer a curated selection of world leaders like Wilson, HEAD, and Babolat, alongside &ldquo;hidden gems&rdquo; favored by pro-players, such as Solinco, Prince, and Toroline. From rackets and shoes to strings and accessories &mdash; if it&apos;s on our shelves, it&apos;s because we trust its performance. Use the category tabs above or visit our <a href="{% shop_url 'shop:brands' %}">All Brands</a> page.</p>
+              <p>{% blocktranslate trimmed %}We offer a curated selection of world leaders like Wilson, HEAD, and Babolat, alongside “hidden gems” favored by pro players, such as Solinco, Prince, and Toroline. From rackets and shoes to strings and accessories — if it is on our shelves, it is because we trust its performance.{% endblocktranslate %} <a href="{% shop_url 'shop:brands' %}">{% trans "All brands" %}</a>. {% trans "Use the category strip above to browse." %}</p>
             </div>
           </details>
           <details class="shop-home-faq__details">
-            <summary class="shop-home-faq__summary"><span class="shop-home-faq__num" aria-hidden="true">3</span><span class="shop-home-faq__qtext">Are the products original? Do I get a receipt?</span></summary>
+            <summary class="shop-home-faq__summary"><span class="shop-home-faq__num" aria-hidden="true">3</span><span class="shop-home-faq__qtext">{% trans "Are the products original? Do I get a receipt?" %}</span></summary>
             <div class="shop-home-faq__panel">
-              <p>Absolutely. We operate 100% &ldquo;in the white.&rdquo; Every item in our stock is sourced directly from official distributors or trusted global retailers. Every purchase includes an official fiscal receipt (RS.ge), which serves as your guarantee of authenticity and quality.</p>
+              <p>{% blocktranslate trimmed %}Absolutely. We operate fully “in the white.” Every item in our stock is sourced directly from official distributors or trusted global retailers. Every purchase includes an official fiscal receipt (RS.ge), which serves as your guarantee of authenticity and quality.{% endblocktranslate %}</p>
             </div>
           </details>
           <details class="shop-home-faq__details">
-            <summary class="shop-home-faq__summary"><span class="shop-home-faq__num" aria-hidden="true">4</span><span class="shop-home-faq__qtext">Can you help me choose a racket if I&apos;m a beginner?</span></summary>
+            <summary class="shop-home-faq__summary"><span class="shop-home-faq__num" aria-hidden="true">4</span><span class="shop-home-faq__qtext">{% trans "Can you help me choose a racket if I am a beginner?" %}</span></summary>
             <div class="shop-home-faq__panel">
-              <p>That is exactly what we are here for. We don&apos;t just &ldquo;sell boxes&rdquo;, we consult. As players ourselves, we analyze your NTRP level, playstyle, and goals to recommend a racket that will help you grow. Feel free to DM us for a personalized gear audit.</p>
+              <p>{% blocktranslate trimmed %}That is exactly what we are here for. We do not just “sell boxes” — we consult. As players ourselves, we analyze your NTRP level, play style, and goals to recommend a racket that will help you grow. Message us for a personalized gear audit.{% endblocktranslate %}</p>
             </div>
           </details>
           <details class="shop-home-faq__details">
-            <summary class="shop-home-faq__summary"><span class="shop-home-faq__num" aria-hidden="true">5</span><span class="shop-home-faq__qtext">How does the Global Pre-Order service work?</span></summary>
+            <summary class="shop-home-faq__summary"><span class="shop-home-faq__num" aria-hidden="true">5</span><span class="shop-home-faq__qtext">{% trans "How does the global pre-order service work?" %}</span></summary>
             <div class="shop-home-faq__panel">
-              <p>If you need something that isn&apos;t in our local stock (like a rare grip size or a specific brand from the US/EU), just send us a link. We will provide an official quote including shipping and customs. We handle all the paperwork and logistics, and you pay locally upon delivery.</p>
+              <p>{% blocktranslate trimmed %}If you need something that is not in our local stock (like a rare grip size or a specific brand from the US or EU), send us a link. We will provide an official quote including shipping and customs. We handle the paperwork and logistics, and you pay locally upon delivery.{% endblocktranslate %}</p>
             </div>
           </details>
           <details class="shop-home-faq__details">
-            <summary class="shop-home-faq__summary"><span class="shop-home-faq__num" aria-hidden="true">6</span><span class="shop-home-faq__qtext">What happens if the shoes or clothes don&apos;t fit?</span></summary>
+            <summary class="shop-home-faq__summary"><span class="shop-home-faq__num" aria-hidden="true">6</span><span class="shop-home-faq__qtext">{% trans "What happens if the shoes or clothes do not fit?" %}</span></summary>
             <div class="shop-home-faq__panel">
-              <p>We offer a &ldquo;Two-Size Delivery&rdquo; service. If you are unsure about your size, let us know, and we will bring two adjacent sizes for you to try on at the moment of delivery. You only pay for what fits perfectly.</p>
+              <p>{% blocktranslate trimmed %}We offer a “two-size delivery” service. If you are unsure about your size, tell us and we will bring two adjacent sizes for you to try on at delivery. You only pay for what fits perfectly.{% endblocktranslate %}</p>
             </div>
           </details>
           <details class="shop-home-faq__details">
-            <summary class="shop-home-faq__summary"><span class="shop-home-faq__num" aria-hidden="true">7</span><span class="shop-home-faq__qtext">Do you have a physical store where I can see the gear?</span></summary>
+            <summary class="shop-home-faq__summary"><span class="shop-home-faq__num" aria-hidden="true">7</span><span class="shop-home-faq__qtext">{% trans "Do you have a physical store where I can see the gear?" %}</span></summary>
             <div class="shop-home-faq__panel">
-              <p>We are an online-first shop to keep our prices fair and our delivery fast. However, we are deeply involved in the Tbilisi tennis scene. You can often find us at the City Sport, or Mziuri courts. If you want to see a specific racket before buying, we can arrange a meeting at a court near you.</p>
+              <p>{% blocktranslate trimmed %}We are an online-first shop to keep our prices fair and our delivery fast. However, we are deeply involved in the Tbilisi tennis scene. You can often find us at City Sport or Mziuri. If you want to see a specific racket before buying, we can arrange a meeting at a court near you.{% endblocktranslate %}</p>
             </div>
           </details>
           <details class="shop-home-faq__details">
-            <summary class="shop-home-faq__summary"><span class="shop-home-faq__num" aria-hidden="true">8</span><span class="shop-home-faq__qtext">Do you provide stringing services?</span></summary>
+            <summary class="shop-home-faq__summary"><span class="shop-home-faq__num" aria-hidden="true">8</span><span class="shop-home-faq__qtext">{% trans "Do you provide stringing services?" %}</span></summary>
             <div class="shop-home-faq__panel">
-              <p>While we specialize in high-performance strings like Toroline and Solinco, we can also recommend the best stringing professionals in Tbilisi and help you choose the right tension for your specific racket and game style.</p>
+              <p>{% blocktranslate trimmed %}While we specialize in high-performance strings like Toroline and Solinco, we can also recommend the best stringing professionals in Tbilisi and help you choose the right tension for your racket and game style.{% endblocktranslate %}</p>
             </div>
           </details>
         </div>

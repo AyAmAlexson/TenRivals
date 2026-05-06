@@ -54,3 +54,177 @@ msgstr "ჩვენი ბრენდები"
 
 msgid "Featured tennis brands"
 msgstr "ტენისის ბრენდები"
+
+msgid "Language menu"
+msgstr "ენის მენიუ"
+
+msgid "Choose language"
+msgstr "აირჩიეთ ენა"
+
+msgid "Promo banner"
+msgstr "პრომო ბანერი"
+
+msgid "Hero image — add slides in Staff → Shop home"
+msgstr "საწყისი სურათი — სლაიდები დაამატეთ Staff → Shop home"
+
+msgid "Previous hero slide"
+msgstr "წინა სლაიდი"
+
+msgid "Next hero slide"
+msgstr "შემდეგი სლაიდი"
+
+msgid "Featured products carousel controls"
+msgstr "რეკომენდებული პროდუქტების კარუსელის მართვა"
+
+msgid "Scroll featured products left"
+msgstr "რეკომენდებული მარცხნივ"
+
+msgid "Scroll featured products right"
+msgstr "რეკომენდებული მარჯვნივ"
+
+msgid "Promo banner controls"
+msgstr "პრომო ბანერის მართვა"
+
+msgid "Previous promo banner"
+msgstr "წინა პრომო ბანერი"
+
+msgid "Promo banner pagination"
+msgstr "პრომო ბანერის გვერდები"
+
+msgid "Go to banner"
+msgstr "ბანერისკენ"
+
+msgid "Next promo banner"
+msgstr "შემდეგი პრომო ბანერი"
+
+msgid "New arrivals carousel controls"
+msgstr "ახალი შემოსულის კარუსელის მართვა"
+
+msgid "Scroll new arrivals left"
+msgstr "ახალი მარცხნივ"
+
+msgid "Scroll new arrivals right"
+msgstr "ახალი მარჯვნივ"
+
+msgid "Ten Rivals"
+msgstr "Ten Rivals"
+
+msgid "Featured stories carousel controls"
+msgstr "რჩეული ისტორიების კარუსელის მართვა"
+
+msgid "Scroll stories left"
+msgstr "ისტორიები მარცხნივ"
+
+msgid "Scroll stories right"
+msgstr "ისტორიები მარჯვნივ"
+
+msgid "Shop %(brand)s in stock"
+msgstr "%(brand)s — საწყობში"
+
+msgid "About Tennis Rivals"
+msgstr "Tennis Rivals-ის შესახებ"
+
+msgid "Your Premium Tennis Destination<br>in Tbilisi, Georgia"
+msgstr "თქვენი პრემიუმ ტენისის მიმართულება<br>თბილისში, საქართველოში"
+
+msgid "Expertly curated gear for the dedicated player"
+msgstr "ბომონდისთვის შერჩეული აღჭურვილობა"
+
+msgid "Store highlights"
+msgstr "მაღაზიის მოკლედ"
+
+msgid "Player-first curation"
+msgstr "მოთამაშის პოზიციიდან შერჩევა"
+
+msgid "Official fiscal receipts"
+msgstr "ოფიციალური ფისკალური ქვითრები"
+
+msgid "Expert fitting support"
+msgstr "პროფესიონალური შერჩევა და ზომა"
+
+msgid "Fast delivery in Tbilisi"
+msgstr "სწრაფი მიწოდება თბილისში"
+
+msgid "At Tennis Rivals, we are more than just an online tennis shop in Tbilisi. We are a community-driven project founded by players, for players. Whether you are stepping onto the clay courts of Mziuri or training at Raketo, we understand that the right equipment is the foundation of your growth. Our mission is to provide the Georgian tennis community with access to the world's most advanced tennis technology, backed by radical transparency and expert advice."
+msgstr "Tennis Rivals — საქართველოში უბრალოდ ინტერნეტ-მაღაზიაზე მეტია. პროექტია მოთამაშეების მიერ მოთამაშეებისთვის; ვხედავთ, როგორ ზრდის სწორი აღჭურვილობა თამაშს — მზიარიდან რაკეტომანამდე. ვცდილობთ, ქართულ ტენისის საზოგადოებას მივაწოდოთ უწყვეტი ტექნოლოგიური ტენდენციები ღია ფასებით და პრაქტიკული რჩევებით."
+
+msgid "Why choose Tennis Rivals for your gear?"
+msgstr "რატომ ჩვენ?"
+
+msgid "<strong>Curated professional selection:</strong> We do not just stock every racket on the market. We act as a filter, offering a hand-picked selection of high-performance gear from industry leaders like Wilson, Solinco, Prince, and Toroline. From the legendary Wilson Blade v9 to the spin-friendly Solinco Whiteout, every item in our store has been tested on local courts to ensure it meets the needs of players ranging from NTRP 2.5 to 3.5 and beyond."
+msgstr "<strong>პროფესიონალური შერჩევა:</strong> ყველა რაკეტას არ ვაწყდებით. ვფილტრავთ Wilson, Solinco, Prince, Toroline და სხვა ტოპბრენდებს — Wilson Blade v9-დან Solinco Whiteout-მდე — რაც რეალურად ბადებს ლოკალურ კორტებზე, NTRP 2.5-ის ფარგლებიდან ზემოთ."
+
+msgid "<strong>The best tennis shoes and apparel in Georgia:</strong> Movement is the soul of tennis. That is why we offer specialized tennis footwear designed for both hard and clay courts. Our size guides and personal consultations help you find the perfect fit to prevent injury and maximize your lateral speed."
+msgstr "<strong>კორტის ფეხსაცმელი და აპარელი:</strong> ტენისში მოძრაობა ბირთვია. გთავაზობთ სპეციალიზებულ კორტის ფეხსაცმელს გრუნტისა და ჰარდისთვის; ზომის სახელმძღვანელო და კონსულტაცია გეხმარებათ ზუსტ ზომასა და ტრავმის რისკის შემცირებაში."
+
+msgid "<strong>Official and transparent service:</strong> We are proud to be a fully legal business in Georgia. When you buy a tennis racket in Tbilisi from us, you receive an official fiscal receipt. We stand against grey imports, ensuring that every product is authentic and covered by our fair-play return policy."
+msgstr "<strong>ოფიციალურად და გამჭვირვალედ:</strong> ვმუშაობთ სრულად ლეგალურად საქართველოში; თბილისიდან ყოველ რაკეტაზე იღებთ ოფიციალურ ფისკალურ ქვითარს. რუხი იმპორტების გარეშე — ორიგინალობა და სამართლიანი დაბრუნების პოლიტიკა."
+
+msgid "<strong>Global pre-orders, local delivery:</strong> Cannot find a specific grip size or a limited-edition frame in Tbilisi? Our global pre-order service connects you to the best warehouses in the US and Europe. We handle the logistics, customs, and paperwork, delivering your dream gear directly to your door with free delivery in Tbilisi."
+msgstr "<strong>გლობალური წინასწარი შეკვეთა:</strong> გაუჩინარდა სწორი grip size ან ლიმიტირებული რაკეტა თბილისში? ვალაგებთ წინასწარ შეკვეთას აშშ-ისა და ევროპის შემოწმებული საწყობებიდან — საბაჟოსა და დოკუმენტებს ვიღებთ ჩვენ, მიწოდება თბილისში იგივე წესით."
+
+msgid "Join the Rivals community"
+msgstr "Rivals-ის საზოგადოება"
+
+msgid "Tennis in Georgia is growing, and we are here to support that momentum. Beyond being a store, we provide expert insights into tennis stringing, racket customization, and gear maintenance. We believe that professional-grade equipment should not be a luxury — it should be a tool for your next victory."
+msgstr "ტენისი საქართველოში იზრდება — გვინდა მხარი დავუჭიროთ. ეს მხოლოდ მაღაზია არაა: რჩევებს ვაძლევთ ბაგირებზე, რაკეტის მოდიფიკაციასა და აღჭურვილობის მოვლაზე. პროფესიულ დონეზე აღჭურვილობა ფუფუნება არ უნდა იყოს — იარაღია თქვენს მომდევნო გამარჯვებაზე."
+
+msgid "Explore our collection today and see why Tennis Rivals is the preferred choice for players who take their game seriously. From high-quality strings to the latest racket innovations, we help you find the line for your growth."
+msgstr "გადახედეთ კატალოგს: Tennis Rivals-ს ირჩევენ ისინი, ვინც თამაშს სერიოზულად უყურებს. თქვენი წინსვლისთვის — ხარისხიანი ბაგირებიდან უახლეს რაკეტებამდე."
+
+msgid "Frequently asked questions"
+msgstr "ხშირი კითხვები"
+
+msgid "Do you offer free delivery in Tbilisi?"
+msgstr "თბილისში უფასო მიწოდება გაქვთ?"
+
+msgid "Yes, any in-stock order includes free delivery within Tbilisi (0₾). Whether it is a high-end racket or just a single pack of overgrips, we will bring it to your door. For other cities in Georgia, contact us and we will provide a quick courier quote before you checkout."
+msgstr "დიახ: საწყობში არსებულ ნივთზე თბილისის ფარგლებში მიწოდება უფასოა (0₾) — ძვირი რაკეტაც და ერთი პაჩკა ოვერგრიპიც. საქართველოს სხვა ქალაქებში დაგვიკავშირდით — გამოგიგზავნით სწრაფ ფასს გადახდამდე."
+
+msgid "Which brands do you carry?"
+msgstr "რა ბრენდები გაქვთ?"
+
+msgid "We offer a curated selection of world leaders like Wilson, HEAD, and Babolat, alongside “hidden gems” favored by pro players, such as Solinco, Prince, and Toroline. From rackets and shoes to strings and accessories — if it is on our shelves, it is because we trust its performance."
+msgstr "Wilson, HEAD, Babolat-ის მსგავს ლიდერებთან ერთად გვაქვს „ფარული ბრილიანტები“ — Solinco, Prince, Toroline, რასაც პროფესიონალებიც იყენებენ. რაკეტებიდან ფეხსაცმლამდე და ბაგირებიდან აქსესუარამდე — თუ ჩვენს თაროზეა, ნდობით ვუყურებთ მის მუშაობას."
+
+msgid "All brands"
+msgstr "ყველა ბრენდი"
+
+msgid "Use the category strip above to browse."
+msgstr "კატეგორიები — ფერად ზოლში გვერდის ზემოთ."
+
+msgid "Are the products original? Do I get a receipt?"
+msgstr "ორიგინალია და ქვითარს ვიღებ?"
+
+msgid "Absolutely. We operate fully “in the white.” Every item in our stock is sourced directly from official distributors or trusted global retailers. Every purchase includes an official fiscal receipt (RS.ge), which serves as your guarantee of authenticity and quality."
+msgstr "დიახ — ვმუშაობთ სრულად „თეთრად“. შეკვეთა უშუალოდ ოფიციალური დისტრიბუტორებიდან ან შემოწმებული მაღაზიებიდან. ყოველ ყიდვაზე იღებთ ოფიციალურ ფისკალურ ქვითარს (RS.ge)."
+
+msgid "Can you help me choose a racket if I am a beginner?"
+msgstr "დამიხმარებით დამწყების რაკეტის არჩევაში?"
+
+msgid "That is exactly what we are here for. We do not just “sell boxes” — we consult. As players ourselves, we analyze your NTRP level, play style, and goals to recommend a racket that will help you grow. Message us for a personalized gear audit."
+msgstr "ზუსტად ამისთვის ვართ. მხოლოდ „კოლოფებს“ არ ვაგზავნით — რჩევას ვაძლევთ. როგორც მოთამაშეები, განვიხილავთ NTRP-ს, სტილსა და მიზანს შესაფერისი რაკეტის შესარჩევად. მოგვწერეთ პერსონალიზებული შერჩევისთვის."
+
+msgid "How does the global pre-order service work?"
+msgstr "როგორ მუშაობს საერთაშორისო წინასწარი შეკვეთა?"
+
+msgid "If you need something that is not in our local stock (like a rare grip size or a specific brand from the US or EU), send us a link. We will provide an official quote including shipping and customs. We handle the paperwork and logistics, and you pay locally upon delivery."
+msgstr "თუ იშვიათი grip size ან აშშ/ევროპის კონკრეტული ბრენდი ლოკალურად არაა, გამოგვიგზავნით ბმული: ოფიციალურ ფასდებაში შევიტანთ გზასა და საბაჟოს. დოკუმენტებსა და ლოგისტიკას ვაწყებთ ჩვენ, გადახდა — მიწოდებისას საქართველოში."
+
+msgid "What happens if the shoes or clothes do not fit?"
+msgstr "რა ხდება თუ ფეხსაცმელს ან ტანსაცმელს ზომა არ უხდება?"
+
+msgid "We offer a “two-size delivery” service. If you are unsure about your size, tell us and we will bring two adjacent sizes for you to try on at delivery. You only pay for what fits perfectly."
+msgstr "გვაქვს „ორი ზომით მიწოდების“ სერვისი: უცნობი ზომისას ვატანთ ორ მეზობე ზომას მიტანის მომენტში. იხდით მხოლოდ იმას, რაც იდეალურად გეხდებათ."
+
+msgid "Do you have a physical store where I can see the gear?"
+msgstr "გაქვთ ფიზიკური მაღაზია, სადაც ვნახავ პროდუქტს?"
+
+msgid "We are an online-first shop to keep our prices fair and our delivery fast. However, we are deeply involved in the Tbilisi tennis scene. You can often find us at City Sport or Mziuri. If you want to see a specific racket before buying, we can arrange a meeting at a court near you."
+msgstr "პირველ რიგში ონლაინ ვართ — ღია ფასებისა და სწრაფი მიწოდებისთვის. აქტიურად ვართ თბილისის ტენისის ცხოვრებაში — ხშირად გვიპოვნით City Sport-ზე ან მზიარზე. კონკრეტული რაკეტის ხილვისთვის დაგიგეგმით შეხვედრას მახლობელ კორტზე."
+
+msgid "Do you provide stringing services?"
+msgstr "ბაგირის ნატიებას თავად აკეთებთ?"
+
+msgid "While we specialize in high-performance strings like Toroline and Solinco, we can also recommend the best stringing professionals in Tbilisi and help you choose the right tension for your racket and game style."
+msgstr "Toroline-სა და Solinco-ს მაღალი დონის ბაგირებს ვხაშავთ; ასევე გირჩევთ ნატიის მცობე პროფესიონალებს თბილისში და ჩაჭიმვას თქვენი სტილისა და რაკეტის მიხედვით."
