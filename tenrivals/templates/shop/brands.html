@@ -1,6 +1,7 @@
 {% extends 'shop/info/layout.html' %}
 {% load catalog_tags %}
 {% load static %}
+{% load l10n %}
 {% block title %}All our brands | Tenrivals{% endblock %}
 {% block extra_css %}
 {{ block.super }}
@@ -68,7 +69,7 @@
   <div class="brands-all-grid">
     {% for row in featured_stock_brands %}
     <a class="brands-all-tile" href="{% shop_url 'shop:stock' %}?cbrand={{ row.stock_brand|urlencode }}">
-      <span class="brands-all-tile__mark" style="--brand-optical-scale: {{ row.logo_optical_scale|default:1 }}">
+      <span class="brands-all-tile__mark" style="--brand-optical-scale: {{ row.logo_optical_scale|default:1|unlocalize }}">
         <img class="brands-all-tile__img" src="{% static row.logo %}" alt="{{ row.label }}" width="260" height="84" loading="lazy" decoding="async">
       </span>
     </a>
