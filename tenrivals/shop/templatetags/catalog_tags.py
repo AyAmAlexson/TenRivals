@@ -66,7 +66,7 @@ def stock_catalog_nav(context):
 
     return {
         'catalog_url': shop_reverse('shop:stock', site_locale=loc),
-        'preorder_url': shop_reverse('shop:preorder', site_locale=loc),
+        'preorder_url': shop_reverse('shop:stock', site_locale=loc),
         'index_url': shop_reverse('shop:index', site_locale=loc),
         'racket_brands': b(ProductType.RACKET),
         'bag_brands': b(ProductType.BAGS),

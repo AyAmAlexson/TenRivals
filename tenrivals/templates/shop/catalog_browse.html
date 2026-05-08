@@ -235,7 +235,7 @@
               {% if code != 'OTHER' and code != 'ACCESSORIES' and code != 'GRIPS' and code != 'STRINGS' and code != 'DAMPENERS' %}
                 {% if browse_mode != 'stock' and code == 'RACKET' or browse_mode != 'stock' and code == 'M_SHOES' or browse_mode != 'stock' and code == 'W_SHOES' %}
                 {% with ts=slug_for_type|dict_get:code %}
-                <a class="preorder-tab {% if active_tab == 'type:'|add:code %}active{% endif %}" href="{% if ts %}{% shop_url 'shop:preorder_catalog_type' ts %}{% if catalog_brand %}?cbrand={{ catalog_brand|urlencode }}{% endif %}{% else %}?type={{ code }}{% if catalog_brand %}&amp;cbrand={{ catalog_brand|urlencode }}{% endif %}{% endif %}">{{ label }}</a>
+                <a class="preorder-tab {% if active_tab == 'type:'|add:code %}active{% endif %}" href="{% if ts %}{% shop_url 'shop:stock_catalog_type' ts %}{% if catalog_brand %}?cbrand={{ catalog_brand|urlencode }}{% endif %}{% else %}?type={{ code }}{% if catalog_brand %}&amp;cbrand={{ catalog_brand|urlencode }}{% endif %}{% endif %}">{{ label }}</a>
                 {% endwith %}
                 {% endif %}
               {% endif %}

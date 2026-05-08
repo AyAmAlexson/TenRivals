@@ -396,8 +396,7 @@ def index(request):
             'new_arrivals': new_arrivals,
             'featured_stock_brands': FEATURED_STOCK_BRANDS,
             'seo_page_title': _(
-                'Tennis Rivals Shop - Tennis rackets, shoes & strings in Tbilisi, '
-                'Georgia | Tenrivals'
+                'Tenrivals | Tennis rackets, shoes & strings | Tbilisi, Georgia'
             ),
             'seo_meta_description': _(
                 'Buy tennis equipment in Tbilisi, Georgia: in-stock Wilson, HEAD, Babolat, '
@@ -1005,18 +1004,22 @@ def stock(request, type_slug=None, brand_slug=None, surface_slug=None):
     )
 
 
+def redirect_preorder_path_to_stock(request):
+    """Preorder catalog URLs are retired (301 to in-stock catalog, same filters)."""
+    path = request.path
+    if '/preorder' in path:
+        new_path = path.replace('/preorder', '/stock', 1)
+    else:
+        new_path = shop_reverse('shop:stock', site_locale=getattr(request, 'site_locale', None))
+    if request.GET:
+        q = request.GET.urlencode()
+        sep = '?' if '?' not in new_path else '&'
+        new_path = f'{new_path}{sep}{q}'
+    return redirect(new_path, permanent=True)
+
+
 def preorder(request, type_slug=None, brand_slug=None, surface_slug=None):
-    return render(
-        request,
-        'shop/catalog_browse.html',
-        _catalog_browse_context(
-            request,
-            'preorder',
-            path_type_slug=type_slug,
-            path_brand_slug=brand_slug,
-            path_surface_slug=surface_slug,
-        ),
-    )
+    return redirect_preorder_path_to_stock(request)
 
 
 def _order_for_me_initial_contact(request):
@@ -1319,12 +1322,12 @@ def shop_info_page(request, page_key: str):
         from .seo_catalog import site_organization_json_ld
 
         context['seo_page_title'] = (
-            'Payment & delivery — tennis shop in Tbilisi, Georgia | Tenrivals'
+            'Payment & delivery | Tennis shop Tbilisi, Georgia | Tenrivals'
         )
         context['seo_meta_description'] = (
             'Pay on delivery with card or cash in GEL, bank transfer for clubs, '
             'free delivery in Tbilisi on in-stock items, shipping across Georgia. '
-            'Preorder from the EU/USA with official import — Tenrivals.'
+            'Preorder from the EU/USA with official import | Tenrivals.'
         )
         context['schema_org_json'] = json.dumps(site_organization_json_ld(request))
     if page_key == 'sitemap':
@@ -2132,15 +2135,17 @@ def checkout_success(request, order_id: int):
 _GUIDE_PAGES = {
     'racket-weight': {
         'template': 'shop/guides/how_to_choose_racket_weight.html',
-        'title': 'How to choose tennis racket weight — guide for players in Tbilisi, Georgia | Tenrivals',
+        'title': (
+            'How to choose tennis racket weight | Tbilisi, Georgia | Tenrivals'
+        ),
         'meta': (
             'Light vs heavy tennis rackets: swingweight, arm comfort, and level. '
-            'Tenrivals shop in Tbilisi — in-stock and EU preorder with official import to Georgia.'
+            'Tenrivals shop in Tbilisi | in-stock and EU preorder with official import to Georgia.'
         ),
     },
     'clay-shoes-tbilisi': {
         'template': 'shop/guides/clay_court_shoes_tbilisi.html',
-        'title': 'Clay-court tennis shoes in Tbilisi — what to buy | Tenrivals',
+        'title': 'Clay-court tennis shoes Tbilisi | What to buy | Tenrivals',
         'meta': (
             'Herringbone outsoles, durability on Georgian clay courts, and brands (HEAD, Wilson, '
             'Babolat). Buy in Tbilisi with free city delivery or preorder from the EU via Tenrivals.'

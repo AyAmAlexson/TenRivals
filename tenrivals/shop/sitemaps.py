@@ -3,6 +3,7 @@
 from django.contrib.sitemaps import Sitemap
 from django.db import DatabaseError
 
+from .models import BlogPost, Product, ProductCollection
 from .site_locale import DEFAULT_SHOP_SITE_LOCALE, shop_reverse
 
 

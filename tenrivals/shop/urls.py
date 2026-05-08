@@ -1,6 +1,6 @@
 from functools import wraps
 
-from django.urls import path
+from django.urls import path, re_path
 from django.views.generic import RedirectView
 
 from . import views
@@ -72,6 +72,7 @@ urlpatterns = [
     path('legal/accessibility/', _v(views.shop_info_page), {'page_key': 'accessibility'}, name='legal_accessibility'),
     path('legal/cookies/', _v(views.shop_info_page), {'page_key': 'cookies'}, name='legal_cookies'),
     path('legal/sitemap/', _v(views.shop_info_page), {'page_key': 'sitemap'}, name='legal_sitemap'),
+    re_path(r'^preorder/?$', _v(views.preorder), name='preorder'),
     path(
         'guides/how-to-choose-racket-weight/',
         _v(views.shop_guide),
@@ -92,7 +93,6 @@ urlpatterns = [
             query_string=True,
         ),
     ),
-    path('preorder', _v(views.preorder), name='preorder'),
     path('add', _v(views.product_create), name='product_create'),
     path('edit/<int:pk>', _v(views.product_edit), name='product_edit'),
 ]

@@ -273,11 +273,12 @@ def catalog_seo_texts(
 
     head_subject = f'{gender_txt}{type_label}'.strip()
     if brand_txt:
-        head_subject = f'{head_subject} · {brand_txt}'
+        head_subject = f'{head_subject} | {brand_txt}'
     if surf_txt:
-        head_subject = f'{head_subject} · {surf_txt}'
+        head_subject = f'{head_subject} | {surf_txt}'
 
-    title = f'{head_subject} | {SITE_NAME} — {mode_short}'
+    # Pipe separators read reliably in link previews (avoid em dash before brand tail).
+    title = f'{head_subject} | {SITE_NAME} | {mode_short}'
     if len(title) > 72:
         title = f'{head_subject} | {SITE_NAME}'
 
@@ -296,9 +297,9 @@ def catalog_seo_texts(
     if surf_txt:
         desc_bits.append(f'Surface: {surf_txt}.')
     desc_bits.append(
-        'Wilson, HEAD, Babolat, Prince & more — rackets, shoes, strings, and apparel.'
+        'Wilson, HEAD, Babolat, Prince & more: rackets, shoes, strings, and apparel.'
         if browse_mode == 'stock'
-        else 'Rackets, shoes, strings, bags — indicative prices until you confirm your order.'
+        else 'Rackets, shoes, strings, bags; indicative prices until you confirm your order.'
     )
     desc = ' '.join(desc_bits)
     if len(desc) > 320:
@@ -528,40 +529,38 @@ def shoe_brand_tab_href(
 
 
 def pdp_seo_title(product, *, pdp_mode: str, stock_qty: int) -> str:
-    """Document + Open Graph title: brand first, then product; trim long names only.
-
-    Older format put ``| Tenrivals`` at the end and sliced ``[:70]``, which cut the shop name
-    in messengers.
-    """
+    """Document + Open Graph title: shop | brand + model + category | status (pipes for previews)."""
     brand = (product.brand or '').strip()
     name = (product.name or '').strip()
-    product_line = ' '.join(p for p in (brand, name) if p).strip()
-    if not product_line:
-        product_line = (product.get_type_display() or '').strip()
+    type_disp = (product.get_type_display() or '').strip()
+    center = ' '.join(p for p in (brand, name, type_disp) if p).strip()
+    if not center:
+        center = type_disp or (product.name or '').strip() or 'Product'
 
     if pdp_mode == 'stock' and stock_qty > 0:
-        suffix = 'In stock · Tbilisi'
+        suffix = 'In stock, Tbilisi'
     elif pdp_mode == 'stock':
         suffix = 'Tbilisi'
     else:
-        suffix = 'Preorder EU → Georgia'
+        suffix = 'Preorder to Georgia'
 
-    head = f'{SITE_NAME} — '
-    tail = f' · {suffix}'
+    left = f'{SITE_NAME} | '
+    mid = f' | {suffix}'
     max_len = PDP_SEO_TITLE_MAX_LEN
-    room = max_len - len(head) - len(tail)
+    overhead = len(left) + len(mid)
+    room = max_len - overhead
     if room < 12:
         room = 12
-    pl = product_line
-    if len(pl) > room:
-        pl = pl[: room - 1].rstrip(' ·—,;') + '…'
-    return head + pl + tail
+    c = center
+    if len(c) > room:
+        c = c[: room - 1].rstrip(' |,;') + '…'
+    return left + c + mid
 
 
 def pdp_meta_description(product, *, pdp_mode: str, stock_qty: int) -> str:
     brand = (product.brand or '').strip()
     bits = [
-        f'{SITE_NAME} — tennis shop in Tbilisi, Georgia.',
+        f'{SITE_NAME} | Tennis shop in Tbilisi, Georgia.',
         f'{product.get_type_display()} {brand} {product.name}.'.strip(),
     ]
     if product.short_description:

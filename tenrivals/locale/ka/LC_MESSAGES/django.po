@@ -4,8 +4,8 @@ msgid ""
 msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 
-msgid "Tennis Rivals Shop - Tennis rackets, shoes & strings in Tbilisi, Georgia | Tenrivals"
-msgstr "Tennis Rivals Shop — ტენისის რაკეტები, ფეხსაცმელი და ბაგირები თბილისში, საქართველო | Tenrivals"
+msgid "Tenrivals | Tennis rackets, shoes & strings | Tbilisi, Georgia"
+msgstr "Tenrivals | ტენისის რაკეტები, ფეხსაცმელი და სიმები | თბილისი, საქართველო"
 
 msgid "Buy tennis equipment in Tbilisi, Georgia: in-stock Wilson, HEAD, Babolat, Prince; preorder from the EU and USA with official import. Free delivery in Tbilisi, shipping across Georgia. Tenrivals online store."
 msgstr "შეიძინეთ ტენისის აღჭურვილობა თბილისში (საქართველო): საწყობში Wilson, HEAD, Babolat, Prince; წინასწარი შეკვეთა ევროპიდან და აშშ-დან ოფიციალური საბაჟო გადაწყვეტით. უფასო მიწოდება თბილისში, გზავნა საქართველოში. Tenrivals-ის ონლაინ მაღაზია."

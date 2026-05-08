@@ -25,9 +25,17 @@ def shop_root_locale_redirect(request):
 
 
 def shop_legacy_path_redirect(request, path_rest: str | None = None):
-    """Send /shop/... to /<resolved_locale>/shop/... preserving path and GET params."""
+    """Send /shop/... to /<resolved_locale>/shop/... preserving path and GET params.
+
+    Legacy /shop/preorder/... is mapped to in-stock catalog paths (301 target in view).
+    """
     loc = resolve_redirect_site_locale(request)
     tail = (path_rest or '').strip('/')
+    if tail == 'preorder' or tail.startswith('preorder/'):
+        if tail == 'preorder':
+            tail = 'stock'
+        else:
+            tail = 'stock/' + tail[len('preorder/') :]
     if tail:
         target = f'/{loc}/shop/{tail}/'
     else:
