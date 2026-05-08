@@ -1,16 +1,17 @@
 {% load static catalog_tags %}
+{% load i18n %}
 {# Shop storefront header + mobile drawer. Optional context: search_channel (stock|preorder) for scoped search. #}
 <div class="topbar">
   <div class="container">
     <div class="topbar-row">
       <div class="links">
         {% include 'shop/includes/shop_info_nav_links.html' %}
-        {% if user.is_superuser %}<a href="{% url 'administration:staff_users' %}">Staff</a>{% endif %}
+        {% if user.is_superuser %}<a href="{% url 'administration:staff_users' %}">{% trans "Staff" %}</a>{% endif %}
       </div>
       <div class="topbar-right">
         {% include 'shop/includes/shop_lang_switcher.html' with wrapper_class='shop-lang-switcher--topbar' %}
         <a href="#" class="city-select" onclick="return false">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style="vertical-align:-1px; margin-right:4px" aria-hidden="true"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" stroke="currentColor" stroke-width="2" fill="none"/><circle cx="12" cy="9" r="2.5" stroke="currentColor" stroke-width="1.5"/></svg>Tbilisi
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style="vertical-align:-1px; margin-right:4px" aria-hidden="true"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" stroke="currentColor" stroke-width="2" fill="none"/><circle cx="12" cy="9" r="2.5" stroke="currentColor" stroke-width="1.5"/></svg>{% trans "Tbilisi" %}
         </a>
       </div>
     </div>
@@ -20,25 +21,25 @@
 <header class="shop-public-header">
   <div class="container">
     <div class="header-row">
-      <a href="{% shop_url 'shop:index' %}" class="brand" aria-label="Home">
+      <a href="{% shop_url 'shop:index' %}" class="brand" aria-label="{% trans 'Home' %}">
         <img class="logo" src="{% static 'assets/img/TR Logo 25/TR 25 LOGO HOR RED.svg' %}" alt="Tenrivals">
       </a>
       {% include 'shop/includes/shop_search_form.html' %}
       <div class="header-toolbar">
-        <button type="button" class="site-header-menu-btn" id="shop-site-menu-open" aria-controls="shop-public-nav" aria-expanded="false" aria-label="Open menu">
+        <button type="button" class="site-header-menu-btn" id="shop-site-menu-open" aria-controls="shop-public-nav" aria-expanded="false" aria-label="{% trans 'Open menu' %}">
           <span class="site-header-menu-btn__bars" aria-hidden="true"></span>
         </button>
-        <div class="header-toolbar-cluster" aria-label="Header actions">
+        <div class="header-toolbar-cluster" aria-label="{% trans 'Header actions' %}">
           {% include 'shop/includes/shop_lang_switcher.html' with wrapper_class='shop-lang-switcher--toolbar-mobile' %}
-          <nav class="socials" aria-label="Social links">
-            <a class="social-link" href="https://www.instagram.com/tennis_rivals_shop/" target="_blank" rel="noopener" aria-label="Instagram" title="Instagram">
+          <nav class="socials" aria-label="{% trans 'Social links' %}">
+            <a class="social-link" href="https://www.instagram.com/tennis_rivals_shop/" target="_blank" rel="noopener" aria-label="{% trans 'Instagram' %}" title="{% trans 'Instagram' %}">
               <svg viewBox="0 0 24 24" width="22" height="22" fill="none" aria-hidden="true">
                 <rect x="3" y="3" width="18" height="18" rx="0" stroke="currentColor" stroke-width="1.6"/>
                 <circle cx="12" cy="12" r="4.2" stroke="currentColor" stroke-width="1.6"/>
                 <circle cx="17.5" cy="6.5" r="1.2" fill="currentColor"/>
               </svg>
             </a>
-            <a class="social-link" href="https://t.me/tennis_rivals_shop_tbilisi" target="_blank" rel="noopener" aria-label="Telegram" title="Telegram">
+            <a class="social-link" href="https://t.me/tennis_rivals_shop_tbilisi" target="_blank" rel="noopener" aria-label="{% trans 'Telegram' %}" title="{% trans 'Telegram' %}">
               <svg viewBox="0 0 24 24" width="22" height="22" fill="none" aria-hidden="true">
                 <path d="M21 4L3 11l6 2 2 6 3-4 4.5 3L21 4Z" stroke="currentColor" stroke-width="1.6" fill="none"/>
               </svg>
@@ -50,18 +51,18 @@
             <div class="user-menu">
               <button type="button" class="user-avatar" aria-haspopup="true" aria-expanded="false">{{ user|account_initials }}</button>
               <div class="user-dropdown">
-                <a href="{% url 'persons:account_details' %}">Account</a>
-                <a href="{% url 'persons:shop_order_history' %}">Order history</a>
-                <a href="{% url 'persons:order_for_me_history' %}">Order for me</a>
-                <a href="{% url 'account_logout' %}">Log out</a>
+                <a href="{% url 'persons:account_details' %}">{% trans "Account" %}</a>
+                <a href="{% url 'persons:shop_order_history' %}">{% trans "Order history" %}</a>
+                <a href="{% url 'persons:order_for_me_history' %}">{% trans "Order for me" %}</a>
+                <a href="{% url 'account_logout' %}">{% trans "Log out" %}</a>
               </div>
             </div>
             {% else %}
-            <a href="{% url 'account_login' %}">Sign in</a>
+            <a href="{% url 'account_login' %}">{% trans "Sign in" %}</a>
             {% endif %}
           </div>
           {% if user.is_superuser %}
-          <a class="header-staff-link" href="{% url 'administration:staff_users' %}">Staff</a>
+          <a class="header-staff-link" href="{% url 'administration:staff_users' %}">{% trans "Staff" %}</a>
           {% endif %}
         </div>
       </div>
@@ -71,28 +72,28 @@
 
 <div class="shop-mobile-nav-scrim" id="shop-nav-scrim" aria-hidden="true"></div>
 
-<div class="public-nav-rail" id="shop-public-nav" role="dialog" aria-modal="true" aria-label="Shop menu" aria-hidden="true">
+<div class="public-nav-rail" id="shop-public-nav" role="dialog" aria-modal="true" aria-label="{% trans 'Shop menu' %}" aria-hidden="true">
   <div class="public-nav-rail__scroll">
     <div class="shop-mobile-drawer-head">
-      <span class="shop-mobile-drawer-title">Menu</span>
-      <button type="button" class="site-header-menu-close" id="shop-site-menu-close" aria-label="Close menu">&times;</button>
+      <span class="shop-mobile-drawer-title">{% trans "Menu" %}</span>
+      <button type="button" class="site-header-menu-close" id="shop-site-menu-close" aria-label="{% trans 'Close menu' %}">&times;</button>
     </div>
     <p class="shop-mobile-city-line">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style="vertical-align:-1px; margin-right:4px; opacity:.75" aria-hidden="true"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" stroke="currentColor" stroke-width="2" fill="none"/><circle cx="12" cy="9" r="2.5" stroke="currentColor" stroke-width="1.5"/></svg>
-      Tbilisi
+      {% trans "Tbilisi" %}
     </p>
-    <nav class="shop-mobile-lang" aria-label="Language">
+    <nav class="shop-mobile-lang" aria-label="{% trans 'Language' %}">
       {% for opt in shop_language_switch_options %}
       <a class="shop-mobile-lang-chip{% if opt.is_active %} is-active{% endif %}" href="{{ opt.href }}"{% if opt.is_active %} aria-current="page"{% endif %}>{{ opt.native_label }}</a>
       {% endfor %}
     </nav>
     {% include 'shop/includes/shop_public_main_nav.html' %}
     <details class="shop-mobile-help-details">
-      <summary class="shop-mobile-help-summary">Help</summary>
-      <nav class="shop-mobile-help-links" aria-label="Help and information">
+      <summary class="shop-mobile-help-summary">{% trans "Help" %}</summary>
+      <nav class="shop-mobile-help-links" aria-label="{% trans 'Help and information' %}">
         {% include 'shop/includes/shop_info_nav_links.html' %}
       </nav>
     </details>
-    <a class="shop-mobile-ofm-cta" href="{% shop_url 'shop:order_for_me' %}">Order for me</a>
+    <a class="shop-mobile-ofm-cta" href="{% shop_url 'shop:order_for_me' %}">{% trans "Order for me" %}</a>
   </div>
 </div>

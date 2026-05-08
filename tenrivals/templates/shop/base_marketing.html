@@ -1,12 +1,13 @@
 <!doctype html>
 {% load static %}
 {% load catalog_tags %}
-<html lang="en">
+{% load i18n %}
+<html lang="{{ shop_html_lang|default:'en' }}">
 <head>
   {% include 'includes/google_tag_gtag.html' %}
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}Tenrivals | Tennis shop, Tbilisi, Georgia{% endblock %}</title>
+  <title>{% block title %}{% trans "Tenrivals | Tennis shop, Tbilisi, Georgia" %}{% endblock %}</title>
   {% block shop_social_meta %}
   {% include 'includes/shop_og_meta.html' %}
   {% endblock %}

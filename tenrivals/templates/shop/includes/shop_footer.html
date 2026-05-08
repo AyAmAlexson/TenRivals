@@ -1,4 +1,6 @@
 {% load static catalog_tags %}
+{% load i18n %}
+{% shop_url 'shop:info_payment' as pay_url %}
 {# Single shop footer — include on every shop page #}
 <style>
   html,body{height:100%}
@@ -200,20 +202,20 @@
     .footer-bottom{padding:18px 0 max(20px, env(safe-area-inset-bottom))}
   }
 </style>
-<section class="service-strip" aria-label="Customer service highlights">
+<section class="service-strip" aria-label="{% trans 'Customer service highlights' %}">
   <div class="container">
     <div class="service-strip__row">
       <article class="service-strip__item">
-        <h4 class="service-strip__title">Customer service</h4>
-        <p class="service-strip__text">Our team is available Monday to Sunday to help with product selection, sizing, and custom orders.</p>
+        <h4 class="service-strip__title">{% trans "Customer service" %}</h4>
+        <p class="service-strip__text">{% blocktranslate trimmed %}Our team is available Monday to Sunday to help with product selection, sizing, and custom orders.{% endblocktranslate %}</p>
       </article>
       <article class="service-strip__item">
-        <h4 class="service-strip__title">Payment</h4>
-        <p class="service-strip__text">Pay on delivery by card or cash in GEL, or by bank transfer where we offer it. Online card checkout on the site is not available yet. Our <a href="{% shop_url 'shop:info_payment' %}" style="color:inherit;font-weight:700;text-decoration:underline">Payment</a> page lists accepted methods.</p>
+        <h4 class="service-strip__title">{% trans "Payment" %}</h4>
+        <p class="service-strip__text">{% blocktranslate trimmed with pay_url=pay_url %}Pay on delivery by card or cash in GEL, or by bank transfer where we offer it. Online card checkout on the site is not available yet. Our <a href="{{ pay_url }}" style="color:inherit;font-weight:700;text-decoration:underline">Payment</a> page lists accepted methods.{% endblocktranslate %}</p>
       </article>
       <article class="service-strip__item">
-        <h4 class="service-strip__title">Contact us</h4>
-        <p class="service-strip__text">Need help? Send us an e-mail at <a href="mailto:andy.rivals@tenrivals.com">andy.rivals@tenrivals.com</a>.</p>
+        <h4 class="service-strip__title">{% trans "Contact us" %}</h4>
+        <p class="service-strip__text">{% blocktranslate trimmed %}Need help? Send us an e-mail at <a href="mailto:andy.rivals@tenrivals.com">andy.rivals@tenrivals.com</a>.{% endblocktranslate %}</p>
       </article>
     </div>
   </div>
@@ -227,33 +229,33 @@
             <img src="{% static 'assets/img/tr_footer_line_frame148.svg' %}" alt="" width="240" height="41" decoding="async" loading="lazy">
           </div>
         </div>
-        <p class="footer-brand-slogan">THE LINE FOR YOUR GROWTH</p>
-        <p class="footer-brand-lead">Equipment and stories for players who want more from the game.</p>
+        <p class="footer-brand-slogan">{% trans "THE LINE FOR YOUR GROWTH" %}</p>
+        <p class="footer-brand-lead">{% blocktranslate trimmed %}Equipment and stories for players who want more from the game.{% endblocktranslate %}</p>
         {% include 'shop/includes/shop_footer_ctas.html' %}
       </div>
       <div class="footer-mid-row">
         <div>
-          <h4>Explore</h4>
+          <h4>{% trans "Explore" %}</h4>
           {% include 'shop/includes/shop_footer_explore.html' %}
         </div>
         <div>
-          <h4>Help</h4>
+          <h4>{% trans "Help" %}</h4>
           {% include 'shop/includes/shop_info_nav_links.html' %}
         </div>
       </div>
       <div class="footer-col-contacts">
-        <h4>Contacts</h4>
+        <h4>{% trans "Contacts" %}</h4>
         <a href="tel:+995591288967">+995 591 288 967</a>
-        <a href="https://wa.me/995591288967" target="_blank" rel="noopener">WhatsApp</a>
-        <a href="https://t.me/tennis_rivals_shop_tbilisi" target="_blank" rel="noopener">Telegram</a>
-        <a href="https://www.instagram.com/tennis_rivals_shop/" target="_blank" rel="noopener">Instagram</a>
+        <a href="https://wa.me/995591288967" target="_blank" rel="noopener">{% trans "WhatsApp" %}</a>
+        <a href="https://t.me/tennis_rivals_shop_tbilisi" target="_blank" rel="noopener">{% trans "Telegram" %}</a>
+        <a href="https://www.instagram.com/tennis_rivals_shop/" target="_blank" rel="noopener">{% trans "Instagram" %}</a>
         <a href="mailto:andy.rivals@tenrivals.com">andy.rivals@tenrivals.com</a>
       </div>
     </div>
     <div class="footer-bottom">
       <div class="footer-bottom-inner">
-        <p class="footer-bottom-copy">© {% now "Y" %} TenRivals Shop. All rights reserved.</p>
-        <nav class="footer-bottom-legal footer-legal-row footer-legal-row--inline" aria-label="Legal and policies">
+        <p class="footer-bottom-copy">© {% now "Y" %} {% trans "TenRivals Shop. All rights reserved." %}</p>
+        <nav class="footer-bottom-legal footer-legal-row footer-legal-row--inline" aria-label="{% trans 'Legal and policies' %}">
           {% include 'shop/includes/shop_footer_legal_links.html' %}
         </nav>
       </div>

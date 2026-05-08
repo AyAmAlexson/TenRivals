@@ -1,8 +1,9 @@
 {% load catalog_tags %}
-<a href="{% shop_url 'shop:legal_terms' %}">Terms &amp; conditions</a>
-<a href="{% shop_url 'shop:legal_privacy' %}">Privacy</a>
-<a href="{% shop_url 'shop:legal_cookies' %}">Cookies</a>
-<a href="{% shop_url 'shop:legal_dmca' %}">Copyright</a>
-<a href="{% shop_url 'shop:legal_company' %}">Company</a>
-<a href="{% shop_url 'shop:legal_accessibility' %}">Accessibility</a>
-<a href="{% shop_url 'shop:legal_sitemap' %}">Site map</a>
+{% load i18n %}
+<a href="{% shop_url 'shop:legal_terms' %}">{% trans "Terms & conditions" %}</a>
+<a href="{% shop_url 'shop:legal_privacy' %}">{% trans "Privacy" %}</a>
+<a href="{% shop_url 'shop:legal_cookies' %}">{% trans "Cookies" %}</a>
+<a href="{% shop_url 'shop:legal_dmca' %}">{% trans "Copyright" %}</a>
+<a href="{% shop_url 'shop:legal_company' %}">{% trans "Company" %}</a>
+<a href="{% shop_url 'shop:legal_accessibility' %}">{% trans "Accessibility" %}</a>
+<a href="{% shop_url 'shop:legal_sitemap' %}">{% trans "Site map" %}</a>

@@ -1,165 +1,166 @@
 {% load catalog_tags %}
+{% load i18n %}
 {# Stock catalog links → shop:stock (in-stock channel). Wrap with .nav-row in parent. #}
   <div class="dropdown">
-    <a class="nav-link dropdown-toggle" href="{{ catalog_url }}?type=RACKET">Rackets</a>
+    <a class="nav-link dropdown-toggle" href="{{ catalog_url }}?type=RACKET">{% trans "Rackets" %}</a>
     <div class="dropdown-menu">
       <div class="dropdown-grid">
         <div>
-          <div class="dropdown-title">All</div>
-          <a class="dropdown-item" href="{{ catalog_url }}?type=RACKET">All rackets</a>
+          <div class="dropdown-title">{% trans "All" %}</div>
+          <a class="dropdown-item" href="{{ catalog_url }}?type=RACKET">{% trans "All rackets" %}</a>
         </div>
         <div>
-          <div class="dropdown-title">Brands</div>
+          <div class="dropdown-title">{% trans "Brands" %}</div>
           {% for b in racket_brands %}
           <a class="dropdown-item" href="{{ catalog_url }}?type=RACKET&amp;brand={{ b|urlencode }}">{{ b }}</a>
           {% empty %}
-          <span class="dropdown-item" style="opacity:.5">No brands in stock</span>
+          <span class="dropdown-item" style="opacity:.5">{% trans "No brands in stock" %}</span>
           {% endfor %}
         </div>
       </div>
     </div>
   </div>
   <div class="dropdown">
-    <a class="nav-link dropdown-toggle" href="{{ catalog_url }}?type=BAGS">Bags &amp; Covers</a>
+    <a class="nav-link dropdown-toggle" href="{{ catalog_url }}?type=BAGS">{% trans "Bags & Covers" %}</a>
     <div class="dropdown-menu">
       <div class="dropdown-grid">
         <div>
-          <div class="dropdown-title">All</div>
-          <a class="dropdown-item" href="{{ catalog_url }}?type=BAGS">All bags &amp; covers</a>
+          <div class="dropdown-title">{% trans "All" %}</div>
+          <a class="dropdown-item" href="{{ catalog_url }}?type=BAGS">{% trans "All bags & covers" %}</a>
         </div>
         <div>
-          <div class="dropdown-title">Brands</div>
+          <div class="dropdown-title">{% trans "Brands" %}</div>
           {% for b in bag_brands %}
           <a class="dropdown-item" href="{{ catalog_url }}?type=BAGS&amp;cbrand={{ b|urlencode }}">{{ b }}</a>
           {% empty %}
-          <span class="dropdown-item" style="opacity:.5">No brands in stock</span>
+          <span class="dropdown-item" style="opacity:.5">{% trans "No brands in stock" %}</span>
           {% endfor %}
         </div>
       </div>
     </div>
   </div>
   <div class="dropdown">
-    <a class="nav-link dropdown-toggle" href="{{ catalog_url }}?type=M_APP">Clothing</a>
+    <a class="nav-link dropdown-toggle" href="{{ catalog_url }}?type=M_APP">{% trans "Clothing" %}</a>
     <div class="dropdown-menu">
       <div class="dropdown-grid">
         <div>
-          <div class="dropdown-title">All</div>
-          <a class="dropdown-item" href="{{ catalog_url }}?type=M_APP">Men&apos;s apparel</a>
-          <a class="dropdown-item" href="{{ catalog_url }}?type=W_APP">Women&apos;s apparel</a>
-          <a class="dropdown-item" href="{{ catalog_url }}?type=J_APP">Junior apparel</a>
+          <div class="dropdown-title">{% trans "All" %}</div>
+          <a class="dropdown-item" href="{{ catalog_url }}?type=M_APP">{% trans "Men's apparel" %}</a>
+          <a class="dropdown-item" href="{{ catalog_url }}?type=W_APP">{% trans "Women's apparel" %}</a>
+          <a class="dropdown-item" href="{{ catalog_url }}?type=J_APP">{% trans "Junior apparel" %}</a>
         </div>
         <div>
-          <div class="dropdown-title">Men&apos;s brands</div>
+          <div class="dropdown-title">{% trans "Men's brands" %}</div>
           {% for b in m_app_brands %}
           <a class="dropdown-item" href="{{ catalog_url }}?type=M_APP&amp;cbrand={{ b|urlencode }}">{{ b }}</a>
           {% empty %}
-          <span class="dropdown-item" style="opacity:.5">—</span>
+          <span class="dropdown-item" style="opacity:.5">{% trans "—" %}</span>
           {% endfor %}
         </div>
         <div>
-          <div class="dropdown-title">Women&apos;s brands</div>
+          <div class="dropdown-title">{% trans "Women's brands" %}</div>
           {% for b in w_app_brands %}
           <a class="dropdown-item" href="{{ catalog_url }}?type=W_APP&amp;cbrand={{ b|urlencode }}">{{ b }}</a>
           {% empty %}
-          <span class="dropdown-item" style="opacity:.5">—</span>
+          <span class="dropdown-item" style="opacity:.5">{% trans "—" %}</span>
           {% endfor %}
         </div>
       </div>
     </div>
   </div>
   <div class="dropdown">
-    <a class="nav-link dropdown-toggle" href="{{ catalog_url }}?type=M_SHOES">Shoes</a>
+    <a class="nav-link dropdown-toggle" href="{{ catalog_url }}?type=M_SHOES">{% trans "Shoes" %}</a>
     <div class="dropdown-menu">
       <div class="dropdown-grid">
         <div>
-          <div class="dropdown-title">All</div>
-          <a class="dropdown-item" href="{{ catalog_url }}?type=M_SHOES">Men&apos;s shoes</a>
-          <a class="dropdown-item" href="{{ catalog_url }}?type=W_SHOES">Women&apos;s shoes</a>
-          <a class="dropdown-item" href="{{ catalog_url }}?type=J_SHOES">Junior shoes</a>
+          <div class="dropdown-title">{% trans "All" %}</div>
+          <a class="dropdown-item" href="{{ catalog_url }}?type=M_SHOES">{% trans "Men's shoes" %}</a>
+          <a class="dropdown-item" href="{{ catalog_url }}?type=W_SHOES">{% trans "Women's shoes" %}</a>
+          <a class="dropdown-item" href="{{ catalog_url }}?type=J_SHOES">{% trans "Junior shoes" %}</a>
         </div>
         <div>
-          <div class="dropdown-title">Men&apos;s brands</div>
+          <div class="dropdown-title">{% trans "Men's brands" %}</div>
           {% for b in m_shoe_brands %}
           <a class="dropdown-item" href="{{ catalog_url }}?type=M_SHOES&amp;sbrand={{ b|urlencode }}">{{ b }}</a>
           {% empty %}
-          <span class="dropdown-item" style="opacity:.5">—</span>
+          <span class="dropdown-item" style="opacity:.5">{% trans "—" %}</span>
           {% endfor %}
         </div>
         <div>
-          <div class="dropdown-title">Women&apos;s brands</div>
+          <div class="dropdown-title">{% trans "Women's brands" %}</div>
           {% for b in w_shoe_brands %}
           <a class="dropdown-item" href="{{ catalog_url }}?type=W_SHOES&amp;sbrand={{ b|urlencode }}">{{ b }}</a>
           {% empty %}
-          <span class="dropdown-item" style="opacity:.5">—</span>
+          <span class="dropdown-item" style="opacity:.5">{% trans "—" %}</span>
           {% endfor %}
         </div>
       </div>
     </div>
   </div>
   <div class="dropdown">
-    <a class="nav-link dropdown-toggle" href="{{ catalog_url }}?type=BALLS">Balls</a>
+    <a class="nav-link dropdown-toggle" href="{{ catalog_url }}?type=BALLS">{% trans "Balls" %}</a>
     <div class="dropdown-menu">
       <div class="dropdown-grid">
         <div>
-          <div class="dropdown-title">All</div>
-          <a class="dropdown-item" href="{{ catalog_url }}?type=BALLS">All balls</a>
+          <div class="dropdown-title">{% trans "All" %}</div>
+          <a class="dropdown-item" href="{{ catalog_url }}?type=BALLS">{% trans "All balls" %}</a>
         </div>
         <div>
-          <div class="dropdown-title">Brands</div>
+          <div class="dropdown-title">{% trans "Brands" %}</div>
           {% for b in ball_brands %}
           <a class="dropdown-item" href="{{ catalog_url }}?type=BALLS&amp;cbrand={{ b|urlencode }}">{{ b }}</a>
           {% empty %}
-          <span class="dropdown-item" style="opacity:.5">No brands in stock</span>
+          <span class="dropdown-item" style="opacity:.5">{% trans "No brands in stock" %}</span>
           {% endfor %}
         </div>
       </div>
     </div>
   </div>
   <div class="dropdown">
-    <a class="nav-link dropdown-toggle" href="{{ catalog_url }}?type=ACC_GEAR">Accessories</a>
+    <a class="nav-link dropdown-toggle" href="{{ catalog_url }}?type=ACC_GEAR">{% trans "Accessories" %}</a>
     <div class="dropdown-menu">
       <div class="dropdown-grid">
         <div>
-          <div class="dropdown-title">Browse</div>
-          <a class="dropdown-item" href="{{ catalog_url }}?type=ACCESSORIES">Accessories</a>
-          <a class="dropdown-item" href="{{ catalog_url }}?type=STRINGS">Strings</a>
-          <a class="dropdown-item" href="{{ catalog_url }}?type=GRIPS">Grips</a>
-          <a class="dropdown-item" href="{{ catalog_url }}?type=DAMPENERS">Dampeners</a>
+          <div class="dropdown-title">{% trans "Browse" %}</div>
+          <a class="dropdown-item" href="{{ catalog_url }}?type=ACCESSORIES">{% trans "Accessories" %}</a>
+          <a class="dropdown-item" href="{{ catalog_url }}?type=STRINGS">{% trans "Strings" %}</a>
+          <a class="dropdown-item" href="{{ catalog_url }}?type=GRIPS">{% trans "Grips" %}</a>
+          <a class="dropdown-item" href="{{ catalog_url }}?type=DAMPENERS">{% trans "Dampeners" %}</a>
         </div>
         <div>
-          <div class="dropdown-title">Accessory brands</div>
+          <div class="dropdown-title">{% trans "Accessory brands" %}</div>
           {% for b in acc_brands %}
           <a class="dropdown-item" href="{{ catalog_url }}?type=ACCESSORIES&amp;cbrand={{ b|urlencode }}">{{ b }}</a>
           {% empty %}
-          <span class="dropdown-item" style="opacity:.5">No brands in stock</span>
+          <span class="dropdown-item" style="opacity:.5">{% trans "No brands in stock" %}</span>
           {% endfor %}
         </div>
         <div>
-          <div class="dropdown-title">Dampener brands</div>
+          <div class="dropdown-title">{% trans "Dampener brands" %}</div>
           {% for b in damp_brands %}
           <a class="dropdown-item" href="{{ catalog_url }}?type=DAMPENERS&amp;cbrand={{ b|urlencode }}">{{ b }}</a>
           {% empty %}
-          <span class="dropdown-item" style="opacity:.5">—</span>
+          <span class="dropdown-item" style="opacity:.5">{% trans "—" %}</span>
           {% endfor %}
         </div>
         <div>
-          <div class="dropdown-title">String brands</div>
+          <div class="dropdown-title">{% trans "String brands" %}</div>
           {% for b in string_brands %}
           <a class="dropdown-item" href="{{ catalog_url }}?type=STRINGS&amp;cbrand={{ b|urlencode }}">{{ b }}</a>
           {% empty %}
-          <span class="dropdown-item" style="opacity:.5">—</span>
+          <span class="dropdown-item" style="opacity:.5">{% trans "—" %}</span>
           {% endfor %}
         </div>
         <div>
-          <div class="dropdown-title">Grip brands</div>
+          <div class="dropdown-title">{% trans "Grip brands" %}</div>
           {% for b in grip_brands %}
           <a class="dropdown-item" href="{{ catalog_url }}?type=GRIPS&amp;cbrand={{ b|urlencode }}">{{ b }}</a>
           {% empty %}
-          <span class="dropdown-item" style="opacity:.5">—</span>
+          <span class="dropdown-item" style="opacity:.5">{% trans "—" %}</span>
           {% endfor %}
         </div>
       </div>
     </div>
   </div>
-  <a class="nav-link" href="{% shop_url 'shop:blog_index' %}">Blog</a>
-  <a class="nav-link nav-link--primary" href="{% shop_url 'shop:order_for_me' %}">Order for me</a>
+  <a class="nav-link" href="{% shop_url 'shop:blog_index' %}">{% trans "Blog" %}</a>
+  <a class="nav-link nav-link--primary" href="{% shop_url 'shop:order_for_me' %}">{% trans "Order for me" %}</a>

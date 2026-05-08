@@ -2,229 +2,3276 @@
 #
 msgid ""
 msgstr ""
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-05-08 14:33+0400\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
+#: persons/adapters.py:27
+msgid ""
+"An account is already registered with this email address. Please log in or "
+"reset your password."
+msgstr ""
+
+#: persons/forms.py:61 persons/forms.py:67 templates/account/signup.html:84
+msgid "First name"
+msgstr ""
+
+#: persons/forms.py:73 persons/forms.py:79 templates/account/signup.html:89
+msgid "Last name"
+msgstr ""
+
+#: persons/forms.py:85 templates/account/signup.html:94
+msgid "Phone"
+msgstr ""
+
+#: persons/forms.py:91
+msgid "+995 …"
+msgstr ""
+
+#: persons/forms.py:98 shop/models.py:1130 templates/account/signup.html:118
+#: templates/rivals/player_wizard_step5.html:32
+#: templates/shop/includes/shop_footer.html:250
+#: templates/shop/includes/shop_public_site_header.html:42
+#: templates/shop/legal/company.html:38
+msgid "Telegram"
+msgstr "ტელეგრამა"
+
+#: persons/forms.py:104
+msgid "username"
+msgstr ""
+
+#: persons/forms.py:112
+msgid "I have read and agree to the Terms, Privacy Policy, and Cookie Policy"
+msgstr ""
+
+#: persons/forms.py:114
+msgid "You must accept the terms and policies to create an account."
+msgstr ""
+
+#: persons/forms.py:124
+msgid "I agree to receive news and offers"
+msgstr ""
+
+#: persons/forms.py:154 persons/forms.py:160 persons/forms.py:166
+msgid "This field is required."
+msgstr ""
+
+#: persons/forms.py:175
+msgid "This Telegram username is already linked to an account."
+msgstr ""
+
+#: persons/models.py:19
+msgid "email address"
+msgstr ""
+
+#: persons/models.py:37
+msgid "agreed to receive newsletter"
+msgstr ""
+
+#: persons/models.py:39
+msgid "Indicates whether the user agreed to receive news and offers."
+msgstr ""
+
+#: rivals/views.py:2210
+msgid "Please complete the previous step first."
+msgstr ""
+
+#: rivals/views.py:2230
+msgid "Could not calculate profile data."
+msgstr ""
+
+#: rivals/views.py:2325
+msgid "User profile not found. Cannot complete setup."
+msgstr ""
+
+#: rivals/views.py:2337
+msgid ""
+"You are already active player. Recalculation will be available next season."
+msgstr ""
+
+#: rivals/views.py:2347
+msgid "Your profile has been completed successfully!"
+msgstr ""
+
+#: rivals/views.py:2355
+msgid ""
+"An error occurred while saving your profile. Please try again or contact "
+"support."
+msgstr ""
+
+#: rivals/views.py:2371
+msgid "Your stats have been updated successfully!"
+msgstr ""
+
+#: rivals/views.py:2373
+msgid "Could not update your stats. Please try again or contact support."
+msgstr ""
+
+#: shop/models.py:73
+msgid "Show in Featured block on the shop home (up to 5, newest first)."
+msgstr ""
+
+#: shop/models.py:286
+msgid "Width / last (e.g. D, 2E, Wide)."
+msgstr ""
+
+#: shop/models.py:442
+msgid "Use a line break for a second line, e.g. before “Your Growth”."
+msgstr ""
+
+#: shop/models.py:458
+msgid "Russian (ge_ru). Empty = use English fields above."
+msgstr ""
+
+#: shop/models.py:468
+msgid "Georgian (ge_ka). Empty = use English fields above."
+msgstr ""
+
+#: shop/models.py:574
+msgid ""
+"Raster (PNG/JPEG/WebP) or SVG. Recommended raster size: 1600x420 px (wide "
+"landscape). SVG keeps text sharp at any width."
+msgstr ""
+
+#: shop/models.py:618
+msgid ""
+"Raster (PNG/JPEG/WebP) or SVG. Recommended raster size: 1600x560 px (wide "
+"banner). SVG keeps text sharp at any width."
+msgstr ""
+
+#: shop/models.py:660
+msgid ""
+"Optional square image for this group. Raster recommendation: 1200x1200 px. "
+"SVG is allowed."
+msgstr ""
+
+#: shop/models.py:689
+msgid "Short intro under the title (plain text)."
+msgstr ""
+
+#: shop/models.py:692
+msgid "Legacy aggregated body (auto-built from text blocks)."
+msgstr ""
+
+#: shop/models.py:694
+msgid "Article text block 1/4 (before quote)."
+msgstr ""
+
+#: shop/models.py:695
+msgid "Article text block 2/4 (after quote, before mid CTA)."
+msgstr ""
+
+#: shop/models.py:696
+msgid "Article text block 3/4 (after mid CTA, before product rail)."
+msgstr ""
+
+#: shop/models.py:697
+msgid "Article text block 4/4 (after product rail, before end CTA)."
+msgstr ""
+
+#: shop/models.py:702
+msgid "Wide image for the article page header (landscape recommended)."
+msgstr ""
+
+#: shop/models.py:708
+msgid ""
+"Portrait image for the home “Featured stories” carousel (3:4 works best). "
+"Falls back to hero if empty."
+msgstr ""
+
+#: shop/models.py:714
+msgid ""
+"Optional inline figure (1/3). Raster (JPEG/PNG/WebP) is auto-optimized; SVG "
+"is allowed."
+msgstr ""
+
+#: shop/models.py:720
+msgid ""
+"Optional inline figure (2/3). Raster is auto-optimized; SVG is allowed."
+msgstr ""
+
+#: shop/models.py:726
+msgid ""
+"Optional inline figure (3/3). Raster is auto-optimized; SVG is allowed."
+msgstr ""
+
+#: shop/models.py:730
+msgid "Highlighted quote block shown mid-article."
+msgstr ""
+
+#: shop/models.py:735
+msgid "Optional quote author/signature."
+msgstr ""
+
+#: shop/models.py:740
+msgid "Middle CTA heading text."
+msgstr ""
+
+#: shop/models.py:747
+msgid "Ending CTA heading text."
+msgstr ""
+
+#: shop/models.py:791
+msgid "Show this post in the Featured stories carousel on the shop home page."
+msgstr ""
+
+#: shop/models.py:796
+msgid "Lower numbers appear first in the home carousel."
+msgstr ""
+
+#: shop/models.py:802
+msgid "Button text on the home card (default: Read more)."
+msgstr ""
+
+#: shop/models.py:859 templates/shop/includes/shop_footer_ctas.html:5
+#: templates/shop/legal/sitemap.html:32
+msgid "In stock"
+msgstr "მარაგში"
+
+#: shop/models.py:860
+msgid "Preorder"
+msgstr ""
+
+#: shop/models.py:937
+msgid "Pending"
+msgstr ""
+
+#: shop/models.py:938 shop/models.py:1240
+msgid "Confirmed"
+msgstr ""
+
+#: shop/models.py:939
+msgid "Fulfilled"
+msgstr ""
+
+#: shop/models.py:940 shop/models.py:1135 shop/models.py:1243
+msgid "Cancelled"
+msgstr ""
+
+#: shop/models.py:959
+msgid "Total in GEL (₾); updated from line items on save."
+msgstr ""
+
+#: shop/models.py:962
+msgid "Staff only, not shown to customer."
+msgstr ""
+
+#: shop/models.py:999
+msgid "Size, grip, colorway, etc."
+msgstr ""
+
+#: shop/models.py:1051
+msgid "Georgian / local script first name (optional)."
+msgstr ""
+
+#: shop/models.py:1056
+msgid "Georgian / local script last name (optional)."
+msgstr ""
+
+#: shop/models.py:1064
+msgid "Telegram username or handle (optional)."
+msgstr ""
+
+#: shop/models.py:1128 templates/account/login.html:76
+#: templates/account/password_reset.html:76 templates/account/signup.html:100
+#: templates/shop/legal/company.html:34
+msgid "Email"
+msgstr "ელფოსტა"
+
+#: shop/models.py:1129 templates/shop/includes/shop_footer.html:249
+msgid "WhatsApp"
+msgstr "WhatsApp"
+
+#: shop/models.py:1133 shop/models.py:1238
+msgid "Submitted"
+msgstr ""
+
+#: shop/models.py:1134
+msgid "Quote provided"
+msgstr ""
+
+#: shop/models.py:1136
+msgid "Ordered"
+msgstr ""
+
+#: shop/models.py:1214
+msgid "Delivery / extra charge, VAT-inclusive (₾)."
+msgstr ""
+
+#: shop/models.py:1221
+msgid "List of {\"name\": str, \"gross\": str|number} — VAT-inclusive amounts."
+msgstr ""
+
+#: shop/models.py:1228
+msgid "Promo code string applied at checkout (snapshot)."
+msgstr ""
+
+#: shop/models.py:1234
+msgid "VAT-inclusive promo discount (₾), subtracted from line subtotal."
+msgstr ""
+
+#: shop/models.py:1239
+msgid "Awaiting payment"
+msgstr ""
+
+#: shop/models.py:1241
+msgid "Shipped"
+msgstr ""
+
+#: shop/models.py:1242
+msgid "Completed"
+msgstr ""
+
+#: shop/models.py:1244
+msgid "Refunded"
+msgstr ""
+
+#: shop/models.py:1277
+msgid "Unit price including VAT (₾)."
+msgstr ""
+
+#: shop/models.py:1287
+msgid "Grip size (L2, …) or shoe US size when product uses size grid."
+msgstr ""
+
+#: shop/models.py:1319
+msgid "Fixed amount (₾)"
+msgstr ""
+
+#: shop/models.py:1320
+msgid "Percent of eligible subtotal"
+msgstr ""
+
+#: shop/models.py:1323
+msgid "Entire catalog"
+msgstr ""
+
+#: shop/models.py:1324
+msgid "Specific products (SKU)"
+msgstr ""
+
+#: shop/models.py:1325
+msgid "Specific collections"
+msgstr ""
+
+#: shop/models.py:1331
+msgid "Case-insensitive; stored uppercase."
+msgstr ""
+
+#: shop/models.py:1336
+msgid "Internal label for staff (optional)."
+msgstr ""
+
+#: shop/models.py:1341
+msgid "Turn off to deactivate regardless of dates."
+msgstr ""
+
+#: shop/models.py:1353
+msgid ""
+"For fixed type: amount to subtract (₾), capped by eligible subtotal and by %"
+" cap below."
+msgstr ""
+
+#: shop/models.py:1359
+msgid ""
+"For fixed type: discount cannot exceed this % of eligible subtotal (default "
+"100)."
+msgstr ""
+
+#: shop/models.py:1366
+msgid "For percent type: 0–100."
+msgstr ""
+
+#: shop/models.py:1372
+msgid "For percent type: eligible subtotal must be at least this (₾)."
+msgstr ""
+
+#: shop/models.py:1377
+msgid "If set, code is not valid before this instant (site timezone)."
+msgstr ""
+
+#: shop/models.py:1382
+msgid "If set, code is not valid after this instant."
+msgstr ""
+
+#: shop/models.py:1386
+msgid "If true, only one redemption ever (across all customers)."
+msgstr ""
+
+#: shop/models.py:1391
+msgid ""
+"Optional cap on total redemptions; leave empty for unlimited (within dates)."
+msgstr ""
+
+#: shop/models.py:1399
+msgid "If set, only this signed-in user may redeem the code."
+msgstr ""
+
+#: shop/models.py:1410
+msgid "When scope is “Specific products” — eligible SKUs."
+msgstr ""
+
+#: shop/models.py:1416
+msgid ""
+"When scope is “Specific collections” — union of collection + group products."
+msgstr ""
+
+#: shop/models.py:1424
+#, fuzzy
+#| msgid "Promo banner"
+msgid "Promo code"
+msgstr "პრომო ბანერი"
+
+#: shop/models.py:1425
+#, fuzzy
+#| msgid "Promo banner"
+msgid "Promo codes"
+msgstr "პრომო ბანერი"
+
+#: shop/models.py:1460
+#, fuzzy
+#| msgid "Promo banner pagination"
+msgid "Promo redemption"
+msgstr "პრომო ბანერის გვერდები"
+
+#: shop/models.py:1461
+#, fuzzy
+#| msgid "Promo banner pagination"
+msgid "Promo redemptions"
+msgstr "პრომო ბანერის გვერდები"
+
+#: shop/site_locale.py:22
+msgid "Georgia · English"
+msgstr ""
+
+#: shop/site_locale.py:23
+msgid "Georgia · Russian"
+msgstr ""
+
+#: shop/site_locale.py:24
+msgid "Georgia · Georgian"
+msgstr ""
+
+#: shop/site_locale.py:25
+msgid "Georgia · Spanish"
+msgstr ""
+
+#: shop/site_locale.py:26
+msgid "Georgia · Portuguese"
+msgstr ""
+
+#: shop/site_locale.py:27
+msgid "Georgia · Italian"
+msgstr ""
+
+#: shop/site_locale.py:28
+msgid "Georgia · French"
+msgstr ""
+
+#: shop/site_locale.py:29
+msgid "Georgia · German"
+msgstr ""
+
+#: shop/site_locale.py:30
+msgid "Georgia · Dutch"
+msgstr ""
+
+#: shop/site_locale.py:31
+msgid "Georgia · Polish"
+msgstr ""
+
+#: shop/site_locale.py:32
+msgid "Georgia · Ukrainian"
+msgstr ""
+
+#: shop/site_locale.py:33
+msgid "Georgia · Turkish"
+msgstr ""
+
+#: shop/views.py:399
 msgid "Tenrivals | Tennis rackets, shoes & strings | Tbilisi, Georgia"
-msgstr "Tenrivals | ტენისის რაკეტები, ფეხსაცმელი და სიმები | თბილისი, საქართველო"
+msgstr ""
+"Tenrivals | ტენისის რაკეტები, ფეხსაცმელი და სიმები | თბილისი, საქართველო"
 
-msgid "Buy tennis equipment in Tbilisi, Georgia: in-stock Wilson, HEAD, Babolat, Prince; preorder from the EU and USA with official import. Free delivery in Tbilisi, shipping across Georgia. Tenrivals online store."
-msgstr "შეიძინეთ ტენისის აღჭურვილობა თბილისში (საქართველო): საწყობში Wilson, HEAD, Babolat, Prince; წინასწარი შეკვეთა ევროპიდან და აშშ-დან ოფიციალური საბაჟო გადაწყვეტით. უფასო მიწოდება თბილისში, გზავნა საქართველოში. Tenrivals-ის ონლაინ მაღაზია."
+#: shop/views.py:402
+msgid ""
+"Buy tennis equipment in Tbilisi, Georgia: in-stock Wilson, HEAD, Babolat, "
+"Prince; preorder from the EU and USA with official import. Free delivery in "
+"Tbilisi, shipping across Georgia. Tenrivals online store."
+msgstr ""
+"შეიძინეთ ტენისის აღჭურვილობა თბილისში (საქართველო): საწყობში Wilson, HEAD, "
+"Babolat, Prince; წინასწარი შეკვეთა ევროპიდან და აშშ-დან ოფიციალური საბაჟო "
+"გადაწყვეტით. უფასო მიწოდება თბილისში, გზავნა საქართველოში. Tenrivals-ის "
+"ონლაინ მაღაზია."
 
-msgid "Free delivery in Tbilisi"
-msgstr "უფასო მიწოდება თბილისში"
+#: templates/account/email/email_change_confirmation_message.txt:2
+#, python-format
+msgid "Hello from %(current_site.name)s!"
+msgstr ""
 
-msgid "Pre-order from US & EU with official customs clearance"
-msgstr "წინასწარი შეკვეთა აშშ-დან და ევროპიდან ოფიციალური საბაჟო გასავლით"
+#: templates/account/email/email_change_confirmation_message.txt:4
+#, python-format
+msgid ""
+"You're receiving this email because you requested an email address change on"
+" %(current_site.name)s."
+msgstr ""
 
-msgid "Shop categories"
-msgstr "მაღაზიის კატეგორიები"
+#: templates/account/email/email_change_confirmation_message.txt:6
+msgid "Please go to the following page to confirm the change:"
+msgstr ""
 
+#: templates/account/email/email_change_confirmation_message.txt:9
+#, python-format
+msgid "Thank you for using %(current_site.name)s!"
+msgstr ""
+
+#: templates/account/email/email_change_confirmation_message.txt:10
+#, python-format
+msgid "%(current_site.name)s"
+msgstr ""
+
+#: templates/account/email/email_confirmation_message.html:10
+msgid "Confirm your email"
+msgstr ""
+
+#: templates/account/email/email_confirmation_message.html:23
+#, fuzzy
+#| msgid "Ten Rivals"
+msgid "Tenrivals"
+msgstr "Ten Rivals"
+
+#: templates/account/email/email_confirmation_message.html:38
+msgid "Verify your email"
+msgstr ""
+
+#: templates/account/email/email_confirmation_message.html:41
+msgid "Tenrivals account"
+msgstr ""
+
+#: templates/account/email/email_confirmation_message.html:45
+#, python-format
+msgid ""
+"Hi <strong>%(user_display)s</strong>,<br><br>this address was added for an "
+"account on <strong>%(site_domain)s</strong>. Confirm it to finish email "
+"verification."
+msgstr ""
+
+#: templates/account/email/email_confirmation_message.html:51
+msgid "Verify email"
+msgstr ""
+
+#: templates/account/email/email_confirmation_message.html:57
+msgid "Link not working?"
+msgstr ""
+
+#: templates/account/email/email_confirmation_message.html:67
+msgid "If you did not request this email, you can ignore it."
+msgstr ""
+
+#: templates/account/email/email_confirmation_message.txt:5
+#, python-format
+msgid ""
+"You're receiving this email because user %(user_display)s has given your email address to register an account on %(site_domain)s.\n"
+"\n"
+"To confirm this is correct, go to %(activate_url)s"
+msgstr ""
+
+#: templates/account/email_confirm.html:8
+#: templates/account/email_confirm.html:42
+msgid "Confirm Email Address"
+msgstr ""
+
+#: templates/account/email_confirm.html:48
+#, python-format
+msgid ""
+"Please confirm that <a href=\"mailto:%(email)s\">%(email)s</a> belongs to "
+"%(user_display)s."
+msgstr ""
+
+#: templates/account/email_confirm.html:51
+msgid "Confirm"
+msgstr ""
+
+#: templates/account/email_confirm.html:54
+#, python-format
+msgid ""
+"Unable to confirm %(email)s because it is already confirmed by a different "
+"account."
+msgstr ""
+
+#: templates/account/email_confirm.html:58
+msgid "This confirmation link is invalid or has expired."
+msgstr ""
+
+#: templates/account/email_confirm.html:59
+#, python-format
+msgid ""
+"You can <a href=\"%(email_url)s\">request a new confirmation email</a> from "
+"your account settings."
+msgstr ""
+
+#: templates/account/email_confirm.html:63
+#: templates/account/verification_sent.html:47
+#: templates/account/verified_email_required.html:40
+msgid "Back to shop"
+msgstr ""
+
+#: templates/account/email_confirmation_redirecting.html:8
+msgid "Confirming email"
+msgstr ""
+
+#: templates/account/email_confirmation_redirecting.html:56
+msgid "Email verified"
+msgstr ""
+
+#: templates/account/email_confirmation_redirecting.html:57
+msgid "Taking you to your account…"
+msgstr ""
+
+#: templates/account/email_confirmation_redirecting.html:59
+msgid "Continue"
+msgstr ""
+
+#: templates/account/login.html:8 templates/account/login.html:63
+#: templates/account/login.html:96
+#: templates/account/password_reset_from_key_done.html:46
+#: templates/account/verification_sent.html:45
+msgid "Sign In"
+msgstr ""
+
+#: templates/account/login.html:68 templates/account/password_change.html:64
+#: templates/account/password_reset_from_key.html:68
+#: templates/account/signup.html:76 templates/persons/change_email.html:77
+msgid "Please correct the errors below."
+msgstr ""
+
+#: templates/account/login.html:82 templates/account/signup.html:106
+msgid "Password"
+msgstr ""
+
+#: templates/account/login.html:90
+msgid "Remember me"
+msgstr ""
+
+#: templates/account/login.html:95 templates/account/password_change.html:100
+msgid "Forgot Password?"
+msgstr ""
+
+#: templates/account/login.html:105 templates/account/password_reset.html:88
+msgid "Need an account? Sign up!"
+msgstr ""
+
+#: templates/account/logout.html:8 templates/account/logout.html:46
+#: templates/account/logout.html:51
+msgid "Sign Out"
+msgstr ""
+
+#: templates/account/logout.html:47
+msgid "Are you sure you want to sign out?"
+msgstr ""
+
+#: templates/account/logout.html:50
+msgid "Cancel"
+msgstr ""
+
+#: templates/account/password_change.html:8
+#: templates/account/password_change.html:59
+#: templates/account/password_change.html:95
+#: templates/account/password_reset_from_key.html:8
+#: templates/account/password_reset_from_key.html:88
+msgid "Change Password"
+msgstr ""
+
+#: templates/account/password_change.html:60
+msgid "Update your account password"
+msgstr ""
+
+#: templates/account/password_change.html:94
+#: templates/persons/change_email.html:102
+msgid "Back to account"
+msgstr ""
+
+#: templates/account/password_reset.html:8
+#: templates/account/password_reset.html:59
+#: templates/account/password_reset_done.html:8
+msgid "Password Reset"
+msgstr ""
+
+#: templates/account/password_reset.html:60
+msgid ""
+"Enter your email address and we will send you a link to reset your password."
+msgstr ""
+
+#: templates/account/password_reset.html:63
+msgid "You are already signed in."
+msgstr ""
+
+#: templates/account/password_reset.html:77
+msgid "Enter email address"
+msgstr ""
+
+#: templates/account/password_reset.html:82
+#: templates/account/password_reset_done.html:46
+msgid "Back to Sign In"
+msgstr ""
+
+#: templates/account/password_reset.html:83
+msgid "Reset Password"
+msgstr ""
+
+#: templates/account/password_reset_done.html:44
+msgid "Check Your Email"
+msgstr ""
+
+#: templates/account/password_reset_done.html:45
+msgid ""
+"We have sent you an email with a link to reset your password. Please check "
+"your inbox and follow the instructions."
+msgstr ""
+
+#: templates/account/password_reset_done.html:45
+msgid ""
+"If you don't receive it within a few minutes, check your spam folder or try "
+"again."
+msgstr ""
+
+#: templates/account/password_reset_from_key.html:57
+msgid "Invalid Link"
+msgstr ""
+
+#: templates/account/password_reset_from_key.html:59
+msgid "This password reset link is invalid or has expired."
+msgstr ""
+
+#: templates/account/password_reset_from_key.html:60
+msgid "Request a new link"
+msgstr ""
+
+#: templates/account/password_reset_from_key.html:63
+#: templates/account/password_reset_from_key.html:76
+msgid "New Password"
+msgstr ""
+
+#: templates/account/password_reset_from_key.html:64
+msgid "Enter your new password below."
+msgstr ""
+
+#: templates/account/password_reset_from_key.html:82
+msgid "Confirm New Password"
+msgstr ""
+
+#: templates/account/password_reset_from_key_done.html:8
+#: templates/account/password_reset_from_key_done.html:44
+msgid "Password Changed"
+msgstr ""
+
+#: templates/account/password_reset_from_key_done.html:45
+msgid ""
+"Your password has been successfully updated. You can now sign in with your "
+"new password."
+msgstr ""
+
+#: templates/account/password_reset_request_tg.html:7
+msgid "Password Recovery"
+msgstr ""
+
+#: templates/account/signup.html:8
+msgid "Sign Up"
+msgstr ""
+
+#: templates/account/signup.html:71 templates/account/signup.html:154
+msgid "Create Account"
+msgstr ""
+
+#: templates/account/signup.html:112
+msgid "Confirm Password"
+msgstr ""
+
+#: templates/account/signup.html:118
+msgid "optional"
+msgstr ""
+
+#: templates/account/signup.html:123
+msgid ""
+"Enter your Telegram username without @. Leading @ will be removed if pasted."
+msgstr ""
+
+#: templates/account/signup.html:136
+msgid "I have read and agree to the"
+msgstr ""
+
+#: templates/account/signup.html:137
+msgid "Terms and conditions"
+msgstr ""
+
+#: templates/account/signup.html:138 templates/shop/legal/privacy.html:9
+#: templates/shop/legal/sitemap.html:89
+msgid "Privacy policy"
+msgstr "კონფიდენციალურობის პოლიტიკა"
+
+#: templates/account/signup.html:139
+msgid "and"
+msgstr ""
+
+#: templates/account/signup.html:140 templates/shop/legal/cookies.html:8
+#: templates/shop/legal/sitemap.html:90
+msgid "Cookie policy"
+msgstr "ქუქიების პოლიტიკა"
+
+#: templates/account/signup.html:141
+msgid ""
+"Payment is on delivery (card or cash) or by bank transfer where offered; "
+"online card checkout is not available yet — see"
+msgstr ""
+
+#: templates/account/signup.html:142
+#: templates/shop/includes/shop_footer.html:213
+#: templates/shop/includes/shop_info_nav_links.html:4
+#: templates/shop/legal/sitemap.html:78
+msgid "Payment"
+msgstr "გადახდა"
+
+#: templates/account/signup.html:159
+msgid "Already have an account?"
+msgstr ""
+
+#: templates/account/signup.html:159
+msgid "Sign in!"
+msgstr ""
+
+#: templates/account/verification_sent.html:8
+#: templates/account/verification_sent.html:40
+#: templates/account/verified_email_required.html:8
+#: templates/account/verified_email_required.html:35
+msgid "Verify Your Email Address"
+msgstr ""
+
+#: templates/account/verification_sent.html:42
+msgid ""
+"We have sent you a verification email. Open the link in that message to "
+"finish signing up. If you do not see it, check your spam folder."
+msgstr ""
+
+#: templates/account/verification_sent.html:43
+msgid "Contact us if you do not receive the email within a few minutes."
+msgstr ""
+
+#: templates/account/verified_email_required.html:38
+msgid ""
+"This page requires a verified email. We have sent you a link — please check "
+"your inbox and spam folder."
+msgstr ""
+
+#: templates/account/verified_email_required.html:39
+#, python-format
+msgid "You can still <a href=\"%(email_url)s\">change your email address</a>."
+msgstr ""
+
+#: templates/persons/change_email.html:8
+#: templates/persons/change_email.html:59
+#: templates/persons/change_email.html:103
+msgid "Change Email"
+msgstr ""
+
+#: templates/persons/change_email.html:60
+msgid "We will send a confirmation link to your new address"
+msgstr ""
+
+#: templates/persons/change_email.html:84
+msgid "Current email"
+msgstr ""
+
+#: templates/persons/change_email.html:90
+msgid "New email"
+msgstr ""
+
+#: templates/persons/change_email.html:96
+msgid "Current password"
+msgstr ""
+
+#: templates/persons/change_telegram.html:15
+#: templates/persons/change_telegram.html:49
+msgid "Change Telegram Account"
+msgstr ""
+
+#: templates/persons/change_telegram.html:31
+#: templates/persons/verify_telegram.html:175
+msgid "Important Information"
+msgstr ""
+
+#: templates/persons/change_telegram.html:34
+msgid ""
+"After changing your Telegram account, you'll need to verify it again. A "
+"verification code will be sent to your new Telegram account."
+msgstr ""
+
+#: templates/persons/change_telegram.html:41
+msgid "New Telegram Username"
+msgstr ""
+
+#: templates/persons/change_telegram.html:46
+msgid "Enter your Telegram username without the @ symbol"
+msgstr ""
+
+#: templates/persons/change_telegram.html:56
+msgid "Back to Account"
+msgstr ""
+
+#: templates/persons/delete_profile.html:13
+msgid "Delete Profile"
+msgstr ""
+
+#: templates/persons/verify_telegram.html:18
+msgid "Verify Your Telegram Account"
+msgstr ""
+
+#: templates/persons/verify_telegram.html:19
+msgid ""
+"To start using Tennis Rivals, you need to verify your Telegram account."
+msgstr ""
+
+#: templates/persons/verify_telegram.html:33
+msgid "Open the bot in Telegram"
+msgstr ""
+
+#: templates/persons/verify_telegram.html:43
+msgid "Start"
+msgstr ""
+
+#: templates/persons/verify_telegram.html:50
+msgid "with your account"
+msgstr ""
+
+#: templates/persons/verify_telegram.html:56
+msgid "Or scan QR code"
+msgstr ""
+
+#: templates/persons/verify_telegram.html:77
+msgid "Get verification code"
+msgstr ""
+
+#: templates/persons/verify_telegram.html:86
+msgid "Send this command to the bot:"
+msgstr ""
+
+#: templates/persons/verify_telegram.html:97
+msgid "Make sure that:"
+msgstr ""
+
+#: templates/persons/verify_telegram.html:126
+msgid "Enter verification code"
+msgstr ""
+
+#: templates/persons/verify_telegram.html:135
+msgid "Enter the 6-digit code you received"
+msgstr ""
+
+#: templates/persons/verify_telegram.html:156
+msgid "Verify Account"
+msgstr ""
+
+#: templates/persons/verify_telegram.html:177
+msgid ""
+"By verifying your Telegram account, you agree to receive important "
+"notifications via our Telegram bot. These include match schedules, opponent "
+"details, tournament updates, and score confirmations. For the best "
+"experience, please don't block our bot as you might miss important "
+"information. We promise not to spam you with unnecessary messages."
+msgstr ""
+
+#: templates/rivals/player_wizard.html:7
+#: templates/rivals/player_wizard.html:17
+#: templates/rivals/player_wizard_step1.html:16
+#: templates/rivals/player_wizard_step2.html:16
+#: templates/rivals/player_wizard_step3.html:16
+#: templates/rivals/player_wizard_step4.html:16
+#: templates/rivals/player_wizard_step5.html:17
+msgid "Player Profile Setup"
+msgstr ""
+
+#: templates/rivals/player_wizard.html:19
+msgid "Complete your player profile to start participating"
+msgstr ""
+
+#: templates/rivals/player_wizard.html:38
+msgid "Telegram Account"
+msgstr ""
+
+#: templates/rivals/player_wizard.html:39
+msgid "Link your Telegram"
+msgstr ""
+
+#: templates/rivals/player_wizard.html:47
+msgid "Verify Telegram"
+msgstr ""
+
+#: templates/rivals/player_wizard.html:48
+msgid "Confirm via code or link"
+msgstr ""
+
+#: templates/rivals/player_wizard.html:56
+msgid "Personal Information"
+msgstr ""
+
+#: templates/rivals/player_wizard.html:57
+msgid "Basic details about you"
+msgstr ""
+
+#: templates/rivals/player_wizard.html:65
+msgid "Tennis Profile"
+msgstr ""
+
+#: templates/rivals/player_wizard.html:66
+#: templates/rivals/player_wizard_step4.html:46
+msgid "Your physical stats & experience"
+msgstr ""
+
+#: templates/rivals/player_wizard.html:74
+msgid "Review & Submit"
+msgstr ""
+
+#: templates/rivals/player_wizard.html:75
+msgid "Review and submit your profile"
+msgstr ""
+
+#: templates/rivals/player_wizard.html:105
+#: templates/rivals/player_wizard_step1.html:88
+msgid "Step 1: Link Telegram"
+msgstr ""
+
+#: templates/rivals/player_wizard.html:106
+#: templates/rivals/player_wizard_step1.html:91
+msgid "Enter your Telegram username"
+msgstr ""
+
+#: templates/rivals/player_wizard.html:110
+#: templates/rivals/player_wizard_step1.html:115
+msgid "Why Telegram?"
+msgstr ""
+
+#: templates/rivals/player_wizard.html:111
+#: templates/rivals/player_wizard_step1.html:116
+msgid ""
+"Telegram is essential for tournament communication, receiving match "
+"notifications, and important updates. Please ensure you have a username set "
+"up."
+msgstr ""
+
+#: templates/rivals/player_wizard.html:112
+#: templates/rivals/player_wizard_step1.html:117
+msgid "How to find or set your username:"
+msgstr ""
+
+#: templates/rivals/player_wizard.html:114
+#: templates/rivals/player_wizard_step1.html:119
+msgid "Open Telegram app."
+msgstr ""
+
+#: templates/rivals/player_wizard.html:115
+#: templates/rivals/player_wizard_step1.html:120
+msgid "Go to Settings."
+msgstr ""
+
+#: templates/rivals/player_wizard.html:116
+#: templates/rivals/player_wizard_step1.html:121
+msgid ""
+"If you see 'Username' listed, that's it! Enter it below (without the leading"
+" '@')."
+msgstr ""
+
+#: templates/rivals/player_wizard.html:117
+#: templates/rivals/player_wizard_step1.html:122
+msgid ""
+"If you see 'None' or no username, tap it to set one up. It must be unique, "
+"5-32 characters, using a-z, 0-9, and underscores."
+msgstr ""
+
+#: templates/rivals/player_wizard.html:136
+msgid "Error loading Telegram form."
+msgstr ""
+
+#: templates/rivals/player_wizard.html:143
+#: templates/rivals/player_wizard_step1.html:129
+msgid "Save & Proceed to Verification"
+msgstr ""
+
+#: templates/rivals/player_wizard.html:153
+#: templates/rivals/player_wizard_step2.html:88
+msgid "Step 2: Verify Telegram"
+msgstr ""
+
+#: templates/rivals/player_wizard.html:155
+#: templates/rivals/player_wizard_step2.html:93
+#, python-format
+msgid "Confirm your account @%(username)s"
+msgstr ""
+
+#: templates/rivals/player_wizard.html:157
+#: templates/rivals/player_wizard_step2.html:95
+msgid "Verification Options"
+msgstr ""
+
+#: templates/rivals/player_wizard.html:167
+#: templates/rivals/player_wizard_step2.html:105
+msgid "Verify via QR Code or Link"
+msgstr ""
+
+#: templates/rivals/player_wizard.html:168
+#: templates/rivals/player_wizard_step2.html:106
+msgid "Fastest way! Scan or click below."
+msgstr ""
+
+#: templates/rivals/player_wizard.html:174
+#: templates/rivals/player_wizard_step2.html:112
+msgid "Click Link to Verify"
+msgstr ""
+
+#: templates/rivals/player_wizard.html:177
+#: templates/rivals/player_wizard_step2.html:115
+msgid "QR code/link generation failed. Check bot settings."
+msgstr ""
+
+#: templates/rivals/player_wizard.html:182
+#: templates/rivals/player_wizard_step2.html:120
+msgid "Try Again"
+msgstr ""
+
+#: templates/rivals/player_wizard.html:186
+msgid "After verifying, click 'Check Status & Continue' below."
+msgstr ""
+
+#: templates/rivals/player_wizard.html:196
+#: templates/rivals/player_wizard_step2.html:134
+msgid "Verify Manually"
+msgstr ""
+
+#: templates/rivals/player_wizard.html:197
+#: templates/rivals/player_wizard_step2.html:135
+msgid "Enter the 6-digit code sent to your Telegram."
+msgstr ""
+
+#: templates/rivals/player_wizard.html:203
+#: templates/rivals/player_wizard_step2.html:141
+#, python-format
+msgid "Check messages from <strong>@%(bot_name)s</strong>."
+msgstr ""
+
+#: templates/rivals/player_wizard.html:205
+#: templates/rivals/player_wizard_step2.html:143
+msgid "Bot information not available."
+msgstr ""
+
+#: templates/rivals/player_wizard.html:211
+#: templates/rivals/player_wizard_step2.html:149
+msgid "Verification Code"
+msgstr ""
+
+#: templates/rivals/player_wizard.html:225
+#: templates/rivals/player_wizard_step2.html:166
+msgid "Verify Code & Continue"
+msgstr ""
+
+#: templates/rivals/player_wizard.html:229
+msgid "Error loading code form."
+msgstr ""
+
+#: templates/rivals/player_wizard.html:239
+#: templates/rivals/player_wizard_step2.html:183
+msgid "Back to Username"
+msgstr ""
+
+#: templates/rivals/player_wizard.html:243
+#: templates/rivals/player_wizard_step2.html:186
+msgid "Check Status & Continue"
+msgstr ""
+
+#: templates/rivals/player_wizard.html:253
+msgid "Step 3"
+msgstr ""
+
+#: templates/rivals/player_wizard.html:254
+msgid "Enter your personal information"
+msgstr ""
+
+#: templates/rivals/player_wizard.html:327
+#: templates/rivals/player_wizard.html:410
+#: templates/rivals/player_wizard_step3.html:137
+#: templates/rivals/player_wizard_step4.html:125
+msgid "Next"
+msgstr ""
+
+#: templates/rivals/player_wizard.html:337
+msgid "Step 4"
+msgstr ""
+
+#: templates/rivals/player_wizard.html:338
+msgid "Your tennis profile and skill level"
+msgstr ""
+
+#: templates/rivals/player_wizard.html:342
+#: templates/rivals/player_wizard_step4.html:50
+msgid "Physical Attributes"
+msgstr ""
+
+#: templates/rivals/player_wizard.html:370
+#: templates/rivals/player_wizard_step4.html:77
+msgid "Tennis Experience & Skill Assessment"
+msgstr ""
+
+#: templates/rivals/player_wizard.html:409
+#: templates/rivals/player_wizard.html:498
+#: templates/rivals/player_wizard_step3.html:134
+#: templates/rivals/player_wizard_step4.html:122
+#: templates/rivals/player_wizard_step5.html:152
+msgid "Previous"
+msgstr ""
+
+#: templates/rivals/player_wizard.html:419
+msgid "Step 5"
+msgstr ""
+
+#: templates/rivals/player_wizard.html:420
+msgid "Review your information and submit"
+msgstr ""
+
+#: templates/rivals/player_wizard.html:482
+msgid "Please correct the errors below:"
+msgstr ""
+
+#: templates/rivals/player_wizard.html:491
+msgid ""
+"You might need to go back to previous steps using the 'Edit' buttons to fix "
+"them."
+msgstr ""
+
+#: templates/rivals/player_wizard.html:502
+#: templates/rivals/player_wizard_step5.html:156
+msgid "Submit Profile"
+msgstr ""
+
+#: templates/rivals/player_wizard_step1.html:6
+msgid "Player Profile Setup - Step 1"
+msgstr ""
+
+#: templates/rivals/player_wizard_step1.html:18
+msgid "Step 1 of 5: Link your Telegram Account"
+msgstr ""
+
+#: templates/rivals/player_wizard_step1.html:137
+#: templates/rivals/player_wizard_step2.html:177
+msgid "Change Telegram"
+msgstr ""
+
+#: templates/rivals/player_wizard_step1.html:143
+msgid "Proceed"
+msgstr ""
+
+#: templates/rivals/player_wizard_step2.html:6
+msgid "Player Profile Setup - Step 2"
+msgstr ""
+
+#: templates/rivals/player_wizard_step2.html:18
+msgid "Step 2 of 5: Verify Telegram Account"
+msgstr ""
+
+#: templates/rivals/player_wizard_step2.html:124
+msgid "After verifying via QR/Link, click 'Check Status & Continue' below."
+msgstr ""
+
+#: templates/rivals/player_wizard_step3.html:6
+msgid "Player Profile Setup - Step 3"
+msgstr ""
+
+#: templates/rivals/player_wizard_step3.html:18
+msgid "Step 3 of 5: Personal Information"
+msgstr ""
+
+#: templates/rivals/player_wizard_step3.html:45
+msgid "Step 3: Personal Information"
+msgstr ""
+
+#: templates/rivals/player_wizard_step3.html:46
+msgid "Enter your basic details"
+msgstr ""
+
+#: templates/rivals/player_wizard_step3.html:50
+msgid "Profile Picture (Optional)"
+msgstr ""
+
+#: templates/rivals/player_wizard_step3.html:68
+#, fuzzy
+#| msgid "Choose language"
+msgid "Choose Image"
+msgstr "აირჩიეთ ენა"
+
+#: templates/rivals/player_wizard_step4.html:6
+msgid "Player Profile Setup - Step 4"
+msgstr ""
+
+#: templates/rivals/player_wizard_step4.html:18
+msgid "Step 4 of 5: Tennis Profile & Skill Assessment"
+msgstr ""
+
+#: templates/rivals/player_wizard_step4.html:45
+msgid "Step 4: Tennis Profile"
+msgstr ""
+
+#: templates/rivals/player_wizard_step5.html:7
+msgid "Player Profile Setup - Review"
+msgstr ""
+
+#: templates/rivals/player_wizard_step5.html:19
+msgid "Step 5 of 5: Review and Submit Your Profile"
+msgstr ""
+
+#: templates/rivals/player_wizard_step5.html:33
+msgid "Verify"
+msgstr ""
+
+#: templates/rivals/player_wizard_step5.html:34
+msgid "Personal"
+msgstr ""
+
+#: templates/rivals/player_wizard_step5.html:35
+msgid "Profile"
+msgstr ""
+
+#: templates/rivals/player_wizard_step5.html:36
+msgid "Review"
+msgstr ""
+
+#: templates/rivals/player_wizard_step5.html:58
+msgid "Step 5: Review & Submit"
+msgstr ""
+
+#: templates/rivals/player_wizard_step5.html:59
+msgid "Please review your information before submitting"
+msgstr ""
+
+#: templates/rivals/player_wizard_step5.html:63
+msgid "Profile Picture"
+msgstr ""
+
+#: templates/rivals/player_wizard_step5.html:71
+msgid "Change Picture (Step 3)"
+msgstr ""
+
+#: templates/rivals/player_wizard_step5.html:137
+msgid "Please correct the errors:"
+msgstr ""
+
+#: templates/rivals/player_wizard_step5.html:145
+msgid ""
+"You might need to go back to previous steps using the 'Edit' buttons or re-"
+"upload the avatar."
+msgstr ""
+
+#: templates/shop/base_marketing.html:10
+#| msgid ""
+#| "Tenrivals | Tennis rackets, shoes & strings | Tbilisi, Georgia"
+msgid "Tenrivals | Tennis shop, Tbilisi, Georgia"
+msgstr "Tenrivals | ჩოგბურთის მაღაზია, თბილისი, საქართველო"
+
+#: templates/shop/includes/shop_cart_header_link.html:3
+msgid "Shopping cart"
+msgstr "საყიდლების კალათა"
+
+#: templates/shop/includes/shop_footer.html:205
+#| msgid "Store highlights"
+msgid "Customer service highlights"
+msgstr "მომხმარებელთა მომსახურების ხაზგასმა"
+
+#: templates/shop/includes/shop_footer.html:209
+#: templates/shop/legal/sitemap.html:75
+msgid "Customer service"
+msgstr "მომხმარებელთა მომსახურება"
+
+#: templates/shop/includes/shop_footer.html:210
+msgid ""
+"Our team is available Monday to Sunday to help with product selection, "
+"sizing, and custom orders."
+msgstr ""
+"ჩვენი გუნდი ხელმისაწვდომია ორშაბათიდან კვირამდე, რათა დაგეხმაროთ პროდუქტის "
+"შერჩევაში, ზომაში და შეკვეთებში."
+
+#: templates/shop/includes/shop_footer.html:214
+#, python-format
+msgid ""
+"Pay on delivery by card or cash in GEL, or by bank transfer where we offer "
+"it. Online card checkout on the site is not available yet. Our <a "
+"href=\"%(pay_url)s\" style=\"color:inherit;font-weight:700;text-"
+"decoration:underline\">Payment</a> page lists accepted methods."
+msgstr ""
+"გადაიხადეთ ბარათით ან ნაღდი ანგარიშსწორებით ლარში, ან საბანკო გადარიცხვით, "
+"სადაც ჩვენ გთავაზობთ. ონლაინ ბარათის გადახდა საიტზე ჯერ არ არის "
+"ხელმისაწვდომი. ჩვენი <a href=\"%(pay_url)s\" style=\"color:inherit;font-"
+"weight:700;text-decoration:underline\">გადახდის</a> გვერდი ჩამოთვლის მიღებულ"
+" მეთოდებს."
+
+#: templates/shop/includes/shop_footer.html:217
+msgid "Contact us"
+msgstr "დაგვიკავშირდით"
+
+#: templates/shop/includes/shop_footer.html:218
+msgid ""
+"Need help? Send us an e-mail at <a "
+"href=\"mailto:andy.rivals@tenrivals.com\">andy.rivals@tenrivals.com</a>."
+msgstr ""
+"დახმარება გჭირდებათ? გამოგვიგზავნეთ ელფოსტა მისამართზე <a "
+"href=\"mailto:andy.rivals@tenrivals.com\">andy.rivals@tenrivals.com</a>."
+
+#: templates/shop/includes/shop_footer.html:232
+msgid "THE LINE FOR YOUR GROWTH"
+msgstr "ხაზი თქვენი ზრდისთვის"
+
+#: templates/shop/includes/shop_footer.html:233
+msgid "Equipment and stories for players who want more from the game."
+msgstr ""
+"აღჭურვილობა და ისტორიები მოთამაშეებისთვის, რომლებსაც სურთ მეტი თამაში."
+
+#: templates/shop/includes/shop_footer.html:238
+msgid "Explore"
+msgstr "გამოიკვლიეთ"
+
+#: templates/shop/includes/shop_footer.html:242
+#: templates/shop/includes/shop_public_site_header.html:92
+msgid "Help"
+msgstr "დახმარება"
+
+#: templates/shop/includes/shop_footer.html:247
+#: templates/shop/includes/shop_info_nav_links.html:7
+#: templates/shop/legal/sitemap.html:81
+msgid "Contacts"
+msgstr "კონტაქტები"
+
+#: templates/shop/includes/shop_footer.html:251
+#: templates/shop/includes/shop_public_site_header.html:35
+msgid "Instagram"
+msgstr "ინსტაგრამი"
+
+#: templates/shop/includes/shop_footer.html:257
+msgid "TenRivals Shop. All rights reserved."
+msgstr "TenRivals მაღაზია. ყველა უფლება დაცულია."
+
+#: templates/shop/includes/shop_footer.html:258
+msgid "Legal and policies"
+msgstr "სამართლებრივი და პოლიტიკა"
+
+#: templates/shop/includes/shop_footer_ctas.html:6
+#: templates/shop/includes/stock_catalog_nav.html:165
+#: templates/shop/legal/sitemap.html:35
+msgid "Blog"
+msgstr "ბლოგი"
+
+#: templates/shop/includes/shop_footer_ctas.html:7
+#: templates/shop/includes/shop_public_site_header.html:56
+#: templates/shop/includes/shop_public_site_header.html:97
+#: templates/shop/includes/stock_catalog_nav.html:166
+#: templates/shop/legal/sitemap.html:34
+msgid "Order for me"
+msgstr "შეუკვეთე ჩემთვის"
+
+#: templates/shop/includes/shop_footer_explore.html:4
+#: templates/shop/legal/sitemap.html:31
+msgid "Shop home"
+msgstr "მაღაზია სახლში"
+
+#: templates/shop/includes/shop_footer_explore.html:5
+#: templates/shop/includes/stock_catalog_nav.html:5
+#: templates/shop/index.html:592 templates/shop/legal/sitemap.html:46
 msgid "Rackets"
 msgstr "რაკეტები"
 
+#: templates/shop/includes/shop_footer_explore.html:6
+#: templates/shop/includes/stock_catalog_nav.html:72
+#: templates/shop/index.html:593
 msgid "Shoes"
 msgstr "ფეხსაცმელი"
 
-msgid "Bags"
-msgstr "ჩანთები"
-
-msgid "Clothing"
+#: templates/shop/includes/shop_footer_explore.html:7
+msgid "Apparel"
 msgstr "ტანსაცმელი"
 
+#: templates/shop/includes/shop_footer_explore.html:8
+#: templates/shop/legal/sitemap.html:47
+msgid "Bags & covers"
+msgstr "ჩანთები და გადასაფარებლები"
+
+#: templates/shop/includes/shop_footer_explore.html:9
+#: templates/shop/includes/stock_catalog_nav.html:101
+#: templates/shop/index.html:596 templates/shop/legal/sitemap.html:54
 msgid "Balls"
 msgstr "ბურთები"
 
-msgid "Accessories"
-msgstr "აქსესუარები"
+#: templates/shop/includes/shop_footer_explore.html:10
+#| msgid "Accessories"
+msgid "Accessories & equipment"
+msgstr "აქსესუარები და აღჭურვილობა"
 
-msgid "Featured Products"
-msgstr "რჩეული პროდუქტები"
+#: templates/shop/includes/shop_footer_explore.html:11
+#: templates/shop/includes/stock_catalog_nav.html:128
+#: templates/shop/legal/sitemap.html:59
+msgid "Dampeners"
+msgstr "დამტენები"
 
-msgid "View all"
-msgstr "იხილეთ ყველა"
+#: templates/shop/includes/shop_footer_legal_links.html:3
+#: templates/shop/legal/sitemap.html:88 templates/shop/legal/terms.html:12
+msgid "Terms & conditions"
+msgstr "წესები და პირობები"
 
-msgid "New Arrivals"
-msgstr "ახალი შემოსული"
+#: templates/shop/includes/shop_footer_legal_links.html:4
+msgid "Privacy"
+msgstr "კონფიდენციალურობა"
 
-msgid "Featured Stories"
-msgstr "რჩეული სტატიები"
+#: templates/shop/includes/shop_footer_legal_links.html:5
+msgid "Cookies"
+msgstr "ნამცხვრები"
 
-msgid "Our Brands"
-msgstr "ჩვენი ბრენდები"
+#: templates/shop/includes/shop_footer_legal_links.html:6
+msgid "Copyright"
+msgstr "საავტორო უფლება"
 
-msgid "Featured tennis brands"
-msgstr "ტენისის ბრენდები"
+#: templates/shop/includes/shop_footer_legal_links.html:7
+msgid "Company"
+msgstr "კომპანია"
 
+#: templates/shop/includes/shop_footer_legal_links.html:8
+#: templates/shop/legal/accessibility.html:6
+#: templates/shop/legal/sitemap.html:93
+msgid "Accessibility"
+msgstr "ხელმისაწვდომობა"
+
+#: templates/shop/includes/shop_footer_legal_links.html:9
+#: templates/shop/legal/sitemap.html:9
+msgid "Site map"
+msgstr "საიტის რუკა"
+
+#: templates/shop/includes/shop_info_nav_links.html:3
+#: templates/shop/legal/sitemap.html:77
+msgid "Delivery"
+msgstr "მიწოდება"
+
+#: templates/shop/includes/shop_info_nav_links.html:5
+#: templates/shop/legal/sitemap.html:79
+msgid "Returns & exchanges"
+msgstr "დაბრუნება და გაცვლა"
+
+#: templates/shop/includes/shop_info_nav_links.html:6
+#: templates/shop/legal/sitemap.html:80
+msgid "Size guide"
+msgstr "ზომის სახელმძღვანელო"
+
+#: templates/shop/includes/shop_lang_switcher.html:6
 msgid "Language menu"
 msgstr "ენის მენიუ"
 
+#: templates/shop/includes/shop_lang_switcher.html:13
 msgid "Choose language"
 msgstr "აირჩიეთ ენა"
 
+#: templates/shop/includes/shop_public_site_header.html:9
+#: templates/shop/includes/shop_public_site_header.html:65
+msgid "Staff"
+msgstr "პერსონალი"
+
+#: templates/shop/includes/shop_public_site_header.html:14
+#: templates/shop/includes/shop_public_site_header.html:83
+msgid "Tbilisi"
+msgstr "თბილისი"
+
+#: templates/shop/includes/shop_public_site_header.html:24
+msgid "Home"
+msgstr "მთავარი"
+
+#: templates/shop/includes/shop_public_site_header.html:29
+msgid "Open menu"
+msgstr "მენიუს გახსნა"
+
+#: templates/shop/includes/shop_public_site_header.html:32
+msgid "Header actions"
+msgstr "სათაურის მოქმედებები"
+
+#: templates/shop/includes/shop_public_site_header.html:34
+msgid "Social links"
+msgstr "სოციალური ბმულები"
+
+#: templates/shop/includes/shop_public_site_header.html:54
+#: templates/shop/legal/sitemap.html:99
+msgid "Account"
+msgstr "ანგარიში"
+
+#: templates/shop/includes/shop_public_site_header.html:55
+#: templates/shop/legal/sitemap.html:104
+msgid "Order history"
+msgstr "შეკვეთების ისტორია"
+
+#: templates/shop/includes/shop_public_site_header.html:57
+msgid "Log out"
+msgstr "გასვლა"
+
+#: templates/shop/includes/shop_public_site_header.html:61
+#: templates/shop/legal/sitemap.html:101
+msgid "Sign in"
+msgstr "შესვლა"
+
+#: templates/shop/includes/shop_public_site_header.html:75
+msgid "Shop menu"
+msgstr "მაღაზიის მენიუ"
+
+#: templates/shop/includes/shop_public_site_header.html:78
+msgid "Menu"
+msgstr "მენიუ"
+
+#: templates/shop/includes/shop_public_site_header.html:79
+msgid "Close menu"
+msgstr "მენიუს დახურვა"
+
+#: templates/shop/includes/shop_public_site_header.html:85
+#| msgid "Language menu"
+msgid "Language"
+msgstr "ენა"
+
+#: templates/shop/includes/shop_public_site_header.html:93
+msgid "Help and information"
+msgstr "დახმარება და ინფორმაცია"
+
+#: templates/shop/includes/shop_search_form.html:12
+msgid "Search the catalog"
+msgstr "მოძებნეთ კატალოგი"
+
+#: templates/shop/includes/stock_catalog_nav.html:9
+#: templates/shop/includes/stock_catalog_nav.html:28
+#: templates/shop/includes/stock_catalog_nav.html:47
+#: templates/shop/includes/stock_catalog_nav.html:76
+#: templates/shop/includes/stock_catalog_nav.html:105
+msgid "All"
+msgstr "ყველა"
+
+#: templates/shop/includes/stock_catalog_nav.html:10
+#| msgid "Rackets"
+msgid "All rackets"
+msgstr "ყველა რეკეტი"
+
+#: templates/shop/includes/stock_catalog_nav.html:13
+#: templates/shop/includes/stock_catalog_nav.html:32
+#: templates/shop/includes/stock_catalog_nav.html:109
+#| msgid "Our Brands"
+msgid "Brands"
+msgstr "ბრენდები"
+
+#: templates/shop/includes/stock_catalog_nav.html:17
+#: templates/shop/includes/stock_catalog_nav.html:36
+#: templates/shop/includes/stock_catalog_nav.html:113
+#: templates/shop/includes/stock_catalog_nav.html:135
+#| msgid "Shop %(brand)s in stock"
+msgid "No brands in stock"
+msgstr "მარაგში არ არის ბრენდები"
+
+#: templates/shop/includes/stock_catalog_nav.html:24
+msgid "Bags & Covers"
+msgstr "ჩანთები და გადასაფარებლები"
+
+#: templates/shop/includes/stock_catalog_nav.html:29
+msgid "All bags & covers"
+msgstr "ყველა ჩანთა და გადასაფარებელი"
+
+#: templates/shop/includes/stock_catalog_nav.html:43
+#: templates/shop/index.html:595
+msgid "Clothing"
+msgstr "ტანსაცმელი"
+
+#: templates/shop/includes/stock_catalog_nav.html:48
+#: templates/shop/legal/sitemap.html:48
+msgid "Men's apparel"
+msgstr "მამაკაცის ტანსაცმელი"
+
+#: templates/shop/includes/stock_catalog_nav.html:49
+#: templates/shop/legal/sitemap.html:49
+msgid "Women's apparel"
+msgstr "ქალის ტანსაცმელი"
+
+#: templates/shop/includes/stock_catalog_nav.html:50
+#: templates/shop/legal/sitemap.html:50
+msgid "Junior apparel"
+msgstr "უმცროსი ტანსაცმელი"
+
+#: templates/shop/includes/stock_catalog_nav.html:53
+#: templates/shop/includes/stock_catalog_nav.html:82
+#| msgid "All brands"
+msgid "Men's brands"
+msgstr "მამაკაცის ბრენდები"
+
+#: templates/shop/includes/stock_catalog_nav.html:57
+#: templates/shop/includes/stock_catalog_nav.html:65
+#: templates/shop/includes/stock_catalog_nav.html:86
+#: templates/shop/includes/stock_catalog_nav.html:94
+#: templates/shop/includes/stock_catalog_nav.html:143
+#: templates/shop/includes/stock_catalog_nav.html:151
+#: templates/shop/includes/stock_catalog_nav.html:159
+msgid "—"
+msgstr "—"
+
+#: templates/shop/includes/stock_catalog_nav.html:61
+#: templates/shop/includes/stock_catalog_nav.html:90
+msgid "Women's brands"
+msgstr "ქალთა ბრენდები"
+
+#: templates/shop/includes/stock_catalog_nav.html:77
+#: templates/shop/legal/sitemap.html:51
+msgid "Men's shoes"
+msgstr "მამაკაცის ფეხსაცმელი"
+
+#: templates/shop/includes/stock_catalog_nav.html:78
+#: templates/shop/legal/sitemap.html:52
+msgid "Women's shoes"
+msgstr "ქალის ფეხსაცმელი"
+
+#: templates/shop/includes/stock_catalog_nav.html:79
+#: templates/shop/legal/sitemap.html:53
+msgid "Junior shoes"
+msgstr "უმცროსი ფეხსაცმელი"
+
+#: templates/shop/includes/stock_catalog_nav.html:106
+#| msgid "All brands"
+msgid "All balls"
+msgstr "ყველა ბურთი"
+
+#: templates/shop/includes/stock_catalog_nav.html:120
+#: templates/shop/includes/stock_catalog_nav.html:125
+#: templates/shop/index.html:597 templates/shop/legal/sitemap.html:56
+msgid "Accessories"
+msgstr "აქსესუარები"
+
+#: templates/shop/includes/stock_catalog_nav.html:124
+msgid "Browse"
+msgstr "დათვალიერება"
+
+#: templates/shop/includes/stock_catalog_nav.html:126
+#: templates/shop/legal/sitemap.html:57
+msgid "Strings"
+msgstr "სიმები"
+
+#: templates/shop/includes/stock_catalog_nav.html:127
+#: templates/shop/legal/sitemap.html:58
+msgid "Grips"
+msgstr "სახელურები"
+
+#: templates/shop/includes/stock_catalog_nav.html:131
+#| msgid "Accessories"
+msgid "Accessory brands"
+msgstr "აქსესუარების ბრენდები"
+
+#: templates/shop/includes/stock_catalog_nav.html:139
+msgid "Dampener brands"
+msgstr "დამტენების ბრენდები"
+
+#: templates/shop/includes/stock_catalog_nav.html:147
+#| msgid "All brands"
+msgid "String brands"
+msgstr "სიმებიანი ბრენდები"
+
+#: templates/shop/includes/stock_catalog_nav.html:155
+#| msgid "All brands"
+msgid "Grip brands"
+msgstr "გრიპის ბრენდები"
+
+#: templates/shop/index.html:538
 msgid "Promo banner"
 msgstr "პრომო ბანერი"
 
+#: templates/shop/index.html:556
 msgid "Hero image — add slides in Staff → Shop home"
 msgstr "საწყისი სურათი — სლაიდები დაამატეთ Staff → Shop home"
 
+#: templates/shop/index.html:575
 msgid "Previous hero slide"
 msgstr "წინა სლაიდი"
 
+#: templates/shop/index.html:578
 msgid "Next hero slide"
 msgstr "შემდეგი სლაიდი"
 
+#: templates/shop/index.html:586
+msgid "Free delivery in Tbilisi"
+msgstr "უფასო მიწოდება თბილისში"
+
+#: templates/shop/index.html:586
+msgid "Pre-order from US & EU with official customs clearance"
+msgstr "წინასწარი შეკვეთა აშშ-დან და ევროპიდან ოფიციალური საბაჟო გასავლით"
+
+#: templates/shop/index.html:591
+msgid "Shop categories"
+msgstr "მაღაზიის კატეგორიები"
+
+#: templates/shop/index.html:594
+msgid "Bags"
+msgstr "ჩანთები"
+
+#: templates/shop/index.html:605
+msgid "Featured Products"
+msgstr "რჩეული პროდუქტები"
+
+#: templates/shop/index.html:605 templates/shop/index.html:652
+#: templates/shop/index.html:669 templates/shop/index.html:705
+msgid "View all"
+msgstr "იხილეთ ყველა"
+
+#: templates/shop/index.html:612
 msgid "Featured products carousel controls"
 msgstr "რეკომენდებული პროდუქტების კარუსელის მართვა"
 
+#: templates/shop/index.html:613
 msgid "Scroll featured products left"
 msgstr "რეკომენდებული მარცხნივ"
 
+#: templates/shop/index.html:615
 msgid "Scroll featured products right"
 msgstr "რეკომენდებული მარჯვნივ"
 
+#: templates/shop/index.html:637
 msgid "Promo banner controls"
 msgstr "პრომო ბანერის მართვა"
 
+#: templates/shop/index.html:638
 msgid "Previous promo banner"
 msgstr "წინა პრომო ბანერი"
 
+#: templates/shop/index.html:639
 msgid "Promo banner pagination"
 msgstr "პრომო ბანერის გვერდები"
 
+#: templates/shop/index.html:641
 msgid "Go to banner"
 msgstr "ბანერისკენ"
 
+#: templates/shop/index.html:644
 msgid "Next promo banner"
 msgstr "შემდეგი პრომო ბანერი"
 
+#: templates/shop/index.html:652
+msgid "New Arrivals"
+msgstr "ახალი შემოსული"
+
+#: templates/shop/index.html:659
 msgid "New arrivals carousel controls"
 msgstr "ახალი შემოსულის კარუსელის მართვა"
 
+#: templates/shop/index.html:660
 msgid "Scroll new arrivals left"
 msgstr "ახალი მარცხნივ"
 
+#: templates/shop/index.html:662
 msgid "Scroll new arrivals right"
 msgstr "ახალი მარჯვნივ"
 
+#: templates/shop/index.html:669
+msgid "Featured Stories"
+msgstr "რჩეული სტატიები"
+
+#: templates/shop/index.html:680
 msgid "Ten Rivals"
 msgstr "Ten Rivals"
 
+#: templates/shop/index.html:691
 msgid "Featured stories carousel controls"
 msgstr "რჩეული ისტორიების კარუსელის მართვა"
 
+#: templates/shop/index.html:692
 msgid "Scroll stories left"
 msgstr "ისტორიები მარცხნივ"
 
+#: templates/shop/index.html:694
 msgid "Scroll stories right"
 msgstr "ისტორიები მარჯვნივ"
 
-msgid "Shop %(brand)s in stock"
-msgstr "%(brand)s — საწყობში"
+#: templates/shop/index.html:705
+msgid "Our Brands"
+msgstr "ჩვენი ბრენდები"
 
+#: templates/shop/index.html:706
+msgid "Featured tennis brands"
+msgstr "ტენისის ბრენდები"
+
+#: templates/shop/index.html:711 templates/shop/index.html:718
+#, python-format
+#| msgid "Shop %(brand)s in stock"
+msgid "Shop %%(brand)s in stock"
+msgstr "%(brand)s — მარაგში"
+
+#: templates/shop/index.html:728
 msgid "About Tennis Rivals"
 msgstr "Tennis Rivals-ის შესახებ"
 
+#: templates/shop/index.html:731
 msgid "Your Premium Tennis Destination<br>in Tbilisi, Georgia"
 msgstr "თქვენი პრემიუმ ტენისის მიმართულება<br>თბილისში, საქართველოში"
 
+#: templates/shop/index.html:732
 msgid "Expertly curated gear for the dedicated player"
 msgstr "ბომონდისთვის შერჩეული აღჭურვილობა"
 
+#: templates/shop/index.html:733
 msgid "Store highlights"
 msgstr "მაღაზიის მოკლედ"
 
+#: templates/shop/index.html:734
 msgid "Player-first curation"
 msgstr "მოთამაშის პოზიციიდან შერჩევა"
 
+#: templates/shop/index.html:735
 msgid "Official fiscal receipts"
 msgstr "ოფიციალური ფისკალური ქვითრები"
 
+#: templates/shop/index.html:736
 msgid "Expert fitting support"
 msgstr "პროფესიონალური შერჩევა და ზომა"
 
+#: templates/shop/index.html:737
 msgid "Fast delivery in Tbilisi"
 msgstr "სწრაფი მიწოდება თბილისში"
 
-msgid "At Tennis Rivals, we are more than just an online tennis shop in Tbilisi. We are a community-driven project founded by players, for players. Whether you are stepping onto the clay courts of Mziuri or training at Raketo, we understand that the right equipment is the foundation of your growth. Our mission is to provide the Georgian tennis community with access to the world's most advanced tennis technology, backed by radical transparency and expert advice."
-msgstr "Tennis Rivals — საქართველოში უბრალოდ ინტერნეტ-მაღაზიაზე მეტია. პროექტია მოთამაშეების მიერ მოთამაშეებისთვის; ვხედავთ, როგორ ზრდის სწორი აღჭურვილობა თამაშს — მზიარიდან რაკეტომანამდე. ვცდილობთ, ქართულ ტენისის საზოგადოებას მივაწოდოთ უწყვეტი ტექნოლოგიური ტენდენციები ღია ფასებით და პრაქტიკული რჩევებით."
+#: templates/shop/index.html:740
+msgid ""
+"At Tennis Rivals, we are more than just an online tennis shop in Tbilisi. We"
+" are a community-driven project founded by players, for players. Whether you"
+" are stepping onto the clay courts of Mziuri or training at Raketo, we "
+"understand that the right equipment is the foundation of your growth. Our "
+"mission is to provide the Georgian tennis community with access to the "
+"world's most advanced tennis technology, backed by radical transparency and "
+"expert advice."
+msgstr ""
+"Tennis Rivals — საქართველოში უბრალოდ ინტერნეტ-მაღაზიაზე მეტია. პროექტია "
+"მოთამაშეების მიერ მოთამაშეებისთვის; ვხედავთ, როგორ ზრდის სწორი აღჭურვილობა "
+"თამაშს — მზიარიდან რაკეტომანამდე. ვცდილობთ, ქართულ ტენისის საზოგადოებას "
+"მივაწოდოთ უწყვეტი ტექნოლოგიური ტენდენციები ღია ფასებით და პრაქტიკული "
+"რჩევებით."
 
+#: templates/shop/index.html:743
 msgid "Why choose Tennis Rivals for your gear?"
 msgstr "რატომ ჩვენ?"
 
-msgid "<strong>Curated professional selection:</strong> We do not just stock every racket on the market. We act as a filter, offering a hand-picked selection of high-performance gear from industry leaders like Wilson, Solinco, Prince, and Toroline. From the legendary Wilson Blade v9 to the spin-friendly Solinco Whiteout, every item in our store has been tested on local courts to ensure it meets the needs of players ranging from NTRP 2.5 to 3.5 and beyond."
-msgstr "<strong>პროფესიონალური შერჩევა:</strong> ყველა რაკეტას არ ვაწყდებით. ვფილტრავთ Wilson, Solinco, Prince, Toroline და სხვა ტოპბრენდებს — Wilson Blade v9-დან Solinco Whiteout-მდე — რაც რეალურად ბადებს ლოკალურ კორტებზე, NTRP 2.5-ის ფარგლებიდან ზემოთ."
+#: templates/shop/index.html:745
+msgid ""
+"<strong>Curated professional selection:</strong> We do not just stock every "
+"racket on the market. We act as a filter, offering a hand-picked selection "
+"of high-performance gear from industry leaders like Wilson, Solinco, Prince,"
+" and Toroline. From the legendary Wilson Blade v9 to the spin-friendly "
+"Solinco Whiteout, every item in our store has been tested on local courts to"
+" ensure it meets the needs of players ranging from NTRP 2.5 to 3.5 and "
+"beyond."
+msgstr ""
+"<strong>პროფესიონალური შერჩევა:</strong> ყველა რაკეტას არ ვაწყდებით. "
+"ვფილტრავთ Wilson, Solinco, Prince, Toroline და სხვა ტოპბრენდებს — Wilson "
+"Blade v9-დან Solinco Whiteout-მდე — რაც რეალურად ბადებს ლოკალურ კორტებზე, "
+"NTRP 2.5-ის ფარგლებიდან ზემოთ."
 
-msgid "<strong>The best tennis shoes and apparel in Georgia:</strong> Movement is the soul of tennis. That is why we offer specialized tennis footwear designed for both hard and clay courts. Our size guides and personal consultations help you find the perfect fit to prevent injury and maximize your lateral speed."
-msgstr "<strong>კორტის ფეხსაცმელი და აპარელი:</strong> ტენისში მოძრაობა ბირთვია. გთავაზობთ სპეციალიზებულ კორტის ფეხსაცმელს გრუნტისა და ჰარდისთვის; ზომის სახელმძღვანელო და კონსულტაცია გეხმარებათ ზუსტ ზომასა და ტრავმის რისკის შემცირებაში."
+#: templates/shop/index.html:746
+msgid ""
+"<strong>The best tennis shoes and apparel in Georgia:</strong> Movement is "
+"the soul of tennis. That is why we offer specialized tennis footwear "
+"designed for both hard and clay courts. Our size guides and personal "
+"consultations help you find the perfect fit to prevent injury and maximize "
+"your lateral speed."
+msgstr ""
+"<strong>კორტის ფეხსაცმელი და აპარელი:</strong> ტენისში მოძრაობა ბირთვია. "
+"გთავაზობთ სპეციალიზებულ კორტის ფეხსაცმელს გრუნტისა და ჰარდისთვის; ზომის "
+"სახელმძღვანელო და კონსულტაცია გეხმარებათ ზუსტ ზომასა და ტრავმის რისკის "
+"შემცირებაში."
 
-msgid "<strong>Official and transparent service:</strong> We are proud to be a fully legal business in Georgia. When you buy a tennis racket in Tbilisi from us, you receive an official fiscal receipt. We stand against grey imports, ensuring that every product is authentic and covered by our fair-play return policy."
-msgstr "<strong>ოფიციალურად და გამჭვირვალედ:</strong> ვმუშაობთ სრულად ლეგალურად საქართველოში; თბილისიდან ყოველ რაკეტაზე იღებთ ოფიციალურ ფისკალურ ქვითარს. რუხი იმპორტების გარეშე — ორიგინალობა და სამართლიანი დაბრუნების პოლიტიკა."
+#: templates/shop/index.html:747
+msgid ""
+"<strong>Official and transparent service:</strong> We are proud to be a "
+"fully legal business in Georgia. When you buy a tennis racket in Tbilisi "
+"from us, you receive an official fiscal receipt. We stand against grey "
+"imports, ensuring that every product is authentic and covered by our fair-"
+"play return policy."
+msgstr ""
+"<strong>ოფიციალურად და გამჭვირვალედ:</strong> ვმუშაობთ სრულად ლეგალურად "
+"საქართველოში; თბილისიდან ყოველ რაკეტაზე იღებთ ოფიციალურ ფისკალურ ქვითარს. "
+"რუხი იმპორტების გარეშე — ორიგინალობა და სამართლიანი დაბრუნების პოლიტიკა."
 
-msgid "<strong>Global pre-orders, local delivery:</strong> Cannot find a specific grip size or a limited-edition frame in Tbilisi? Our global pre-order service connects you to the best warehouses in the US and Europe. We handle the logistics, customs, and paperwork, delivering your dream gear directly to your door with free delivery in Tbilisi."
-msgstr "<strong>გლობალური წინასწარი შეკვეთა:</strong> გაუჩინარდა სწორი grip size ან ლიმიტირებული რაკეტა თბილისში? ვალაგებთ წინასწარ შეკვეთას აშშ-ისა და ევროპის შემოწმებული საწყობებიდან — საბაჟოსა და დოკუმენტებს ვიღებთ ჩვენ, მიწოდება თბილისში იგივე წესით."
+#: templates/shop/index.html:748
+msgid ""
+"<strong>Global pre-orders, local delivery:</strong> Cannot find a specific "
+"grip size or a limited-edition frame in Tbilisi? Our global pre-order "
+"service connects you to the best warehouses in the US and Europe. We handle "
+"the logistics, customs, and paperwork, delivering your dream gear directly "
+"to your door with free delivery in Tbilisi."
+msgstr ""
+"<strong>გლობალური წინასწარი შეკვეთა:</strong> გაუჩინარდა სწორი grip size ან "
+"ლიმიტირებული რაკეტა თბილისში? ვალაგებთ წინასწარ შეკვეთას აშშ-ისა და ევროპის "
+"შემოწმებული საწყობებიდან — საბაჟოსა და დოკუმენტებს ვიღებთ ჩვენ, მიწოდება "
+"თბილისში იგივე წესით."
 
+#: templates/shop/index.html:752
 msgid "Join the Rivals community"
 msgstr "Rivals-ის საზოგადოება"
 
-msgid "Tennis in Georgia is growing, and we are here to support that momentum. Beyond being a store, we provide expert insights into tennis stringing, racket customization, and gear maintenance. We believe that professional-grade equipment should not be a luxury — it should be a tool for your next victory."
-msgstr "ტენისი საქართველოში იზრდება — გვინდა მხარი დავუჭიროთ. ეს მხოლოდ მაღაზია არაა: რჩევებს ვაძლევთ ბაგირებზე, რაკეტის მოდიფიკაციასა და აღჭურვილობის მოვლაზე. პროფესიულ დონეზე აღჭურვილობა ფუფუნება არ უნდა იყოს — იარაღია თქვენს მომდევნო გამარჯვებაზე."
+#: templates/shop/index.html:754
+msgid ""
+"Tennis in Georgia is growing, and we are here to support that momentum. "
+"Beyond being a store, we provide expert insights into tennis stringing, "
+"racket customization, and gear maintenance. We believe that professional-"
+"grade equipment should not be a luxury — it should be a tool for your next "
+"victory."
+msgstr ""
+"ტენისი საქართველოში იზრდება — გვინდა მხარი დავუჭიროთ. ეს მხოლოდ მაღაზია "
+"არაა: რჩევებს ვაძლევთ ბაგირებზე, რაკეტის მოდიფიკაციასა და აღჭურვილობის "
+"მოვლაზე. პროფესიულ დონეზე აღჭურვილობა ფუფუნება არ უნდა იყოს — იარაღია თქვენს"
+" მომდევნო გამარჯვებაზე."
 
-msgid "Explore our collection today and see why Tennis Rivals is the preferred choice for players who take their game seriously. From high-quality strings to the latest racket innovations, we help you find the line for your growth."
-msgstr "გადახედეთ კატალოგს: Tennis Rivals-ს ირჩევენ ისინი, ვინც თამაშს სერიოზულად უყურებს. თქვენი წინსვლისთვის — ხარისხიანი ბაგირებიდან უახლეს რაკეტებამდე."
+#: templates/shop/index.html:757
+msgid ""
+"Explore our collection today and see why Tennis Rivals is the preferred "
+"choice for players who take their game seriously. From high-quality strings "
+"to the latest racket innovations, we help you find the line for your growth."
+msgstr ""
+"გადახედეთ კატალოგს: Tennis Rivals-ს ირჩევენ ისინი, ვინც თამაშს სერიოზულად "
+"უყურებს. თქვენი წინსვლისთვის — ხარისხიანი ბაგირებიდან უახლეს რაკეტებამდე."
 
+#: templates/shop/index.html:762
 msgid "Frequently asked questions"
 msgstr "ხშირი კითხვები"
 
+#: templates/shop/index.html:765
 msgid "Do you offer free delivery in Tbilisi?"
 msgstr "თბილისში უფასო მიწოდება გაქვთ?"
 
-msgid "Yes, any in-stock order includes free delivery within Tbilisi (0₾). Whether it is a high-end racket or just a single pack of overgrips, we will bring it to your door. For other cities in Georgia, contact us and we will provide a quick courier quote before you checkout."
-msgstr "დიახ: საწყობში არსებულ ნივთზე თბილისის ფარგლებში მიწოდება უფასოა (0₾) — ძვირი რაკეტაც და ერთი პაჩკა ოვერგრიპიც. საქართველოს სხვა ქალაქებში დაგვიკავშირდით — გამოგიგზავნით სწრაფ ფასს გადახდამდე."
+#: templates/shop/index.html:767
+msgid ""
+"Yes, any in-stock order includes free delivery within Tbilisi (0₾). Whether "
+"it is a high-end racket or just a single pack of overgrips, we will bring it"
+" to your door. For other cities in Georgia, contact us and we will provide a"
+" quick courier quote before you checkout."
+msgstr ""
+"დიახ: საწყობში არსებულ ნივთზე თბილისის ფარგლებში მიწოდება უფასოა (0₾) — "
+"ძვირი რაკეტაც და ერთი პაჩკა ოვერგრიპიც. საქართველოს სხვა ქალაქებში "
+"დაგვიკავშირდით — გამოგიგზავნით სწრაფ ფასს გადახდამდე."
 
+#: templates/shop/index.html:771
 msgid "Which brands do you carry?"
 msgstr "რა ბრენდები გაქვთ?"
 
-msgid "We offer a curated selection of world leaders like Wilson, HEAD, and Babolat, alongside “hidden gems” favored by pro players, such as Solinco, Prince, and Toroline. From rackets and shoes to strings and accessories — if it is on our shelves, it is because we trust its performance."
-msgstr "Wilson, HEAD, Babolat-ის მსგავს ლიდერებთან ერთად გვაქვს „ფარული ბრილიანტები“ — Solinco, Prince, Toroline, რასაც პროფესიონალებიც იყენებენ. რაკეტებიდან ფეხსაცმლამდე და ბაგირებიდან აქსესუარამდე — თუ ჩვენს თაროზეა, ნდობით ვუყურებთ მის მუშაობას."
+#: templates/shop/index.html:773
+msgid ""
+"We offer a curated selection of world leaders like Wilson, HEAD, and "
+"Babolat, alongside “hidden gems” favored by pro players, such as Solinco, "
+"Prince, and Toroline. From rackets and shoes to strings and accessories — if"
+" it is on our shelves, it is because we trust its performance."
+msgstr ""
+"Wilson, HEAD, Babolat-ის მსგავს ლიდერებთან ერთად გვაქვს „ფარული ბრილიანტები“"
+" — Solinco, Prince, Toroline, რასაც პროფესიონალებიც იყენებენ. რაკეტებიდან "
+"ფეხსაცმლამდე და ბაგირებიდან აქსესუარამდე — თუ ჩვენს თაროზეა, ნდობით ვუყურებთ"
+" მის მუშაობას."
 
+#: templates/shop/index.html:773
 msgid "All brands"
 msgstr "ყველა ბრენდი"
 
+#: templates/shop/index.html:773
 msgid "Use the category strip above to browse."
 msgstr "კატეგორიები — ფერად ზოლში გვერდის ზემოთ."
 
+#: templates/shop/index.html:777
 msgid "Are the products original? Do I get a receipt?"
 msgstr "ორიგინალია და ქვითარს ვიღებ?"
 
-msgid "Absolutely. We operate fully “in the white.” Every item in our stock is sourced directly from official distributors or trusted global retailers. Every purchase includes an official fiscal receipt (RS.ge), which serves as your guarantee of authenticity and quality."
-msgstr "დიახ — ვმუშაობთ სრულად „თეთრად“. შეკვეთა უშუალოდ ოფიციალური დისტრიბუტორებიდან ან შემოწმებული მაღაზიებიდან. ყოველ ყიდვაზე იღებთ ოფიციალურ ფისკალურ ქვითარს (RS.ge)."
+#: templates/shop/index.html:779
+msgid ""
+"Absolutely. We operate fully “in the white.” Every item in our stock is "
+"sourced directly from official distributors or trusted global retailers. "
+"Every purchase includes an official fiscal receipt (RS.ge), which serves as "
+"your guarantee of authenticity and quality."
+msgstr ""
+"დიახ — ვმუშაობთ სრულად „თეთრად“. შეკვეთა უშუალოდ ოფიციალური "
+"დისტრიბუტორებიდან ან შემოწმებული მაღაზიებიდან. ყოველ ყიდვაზე იღებთ ოფიციალურ"
+" ფისკალურ ქვითარს (RS.ge)."
 
+#: templates/shop/index.html:783
 msgid "Can you help me choose a racket if I am a beginner?"
 msgstr "დამიხმარებით დამწყების რაკეტის არჩევაში?"
 
-msgid "That is exactly what we are here for. We do not just “sell boxes” — we consult. As players ourselves, we analyze your NTRP level, play style, and goals to recommend a racket that will help you grow. Message us for a personalized gear audit."
-msgstr "ზუსტად ამისთვის ვართ. მხოლოდ „კოლოფებს“ არ ვაგზავნით — რჩევას ვაძლევთ. როგორც მოთამაშეები, განვიხილავთ NTRP-ს, სტილსა და მიზანს შესაფერისი რაკეტის შესარჩევად. მოგვწერეთ პერსონალიზებული შერჩევისთვის."
+#: templates/shop/index.html:785
+msgid ""
+"That is exactly what we are here for. We do not just “sell boxes” — we "
+"consult. As players ourselves, we analyze your NTRP level, play style, and "
+"goals to recommend a racket that will help you grow. Message us for a "
+"personalized gear audit."
+msgstr ""
+"ზუსტად ამისთვის ვართ. მხოლოდ „კოლოფებს“ არ ვაგზავნით — რჩევას ვაძლევთ. "
+"როგორც მოთამაშეები, განვიხილავთ NTRP-ს, სტილსა და მიზანს შესაფერისი რაკეტის "
+"შესარჩევად. მოგვწერეთ პერსონალიზებული შერჩევისთვის."
 
+#: templates/shop/index.html:789
 msgid "How does the global pre-order service work?"
 msgstr "როგორ მუშაობს საერთაშორისო წინასწარი შეკვეთა?"
 
-msgid "If you need something that is not in our local stock (like a rare grip size or a specific brand from the US or EU), send us a link. We will provide an official quote including shipping and customs. We handle the paperwork and logistics, and you pay locally upon delivery."
-msgstr "თუ იშვიათი grip size ან აშშ/ევროპის კონკრეტული ბრენდი ლოკალურად არაა, გამოგვიგზავნით ბმული: ოფიციალურ ფასდებაში შევიტანთ გზასა და საბაჟოს. დოკუმენტებსა და ლოგისტიკას ვაწყებთ ჩვენ, გადახდა — მიწოდებისას საქართველოში."
+#: templates/shop/index.html:791
+msgid ""
+"If you need something that is not in our local stock (like a rare grip size "
+"or a specific brand from the US or EU), send us a link. We will provide an "
+"official quote including shipping and customs. We handle the paperwork and "
+"logistics, and you pay locally upon delivery."
+msgstr ""
+"თუ იშვიათი grip size ან აშშ/ევროპის კონკრეტული ბრენდი ლოკალურად არაა, "
+"გამოგვიგზავნით ბმული: ოფიციალურ ფასდებაში შევიტანთ გზასა და საბაჟოს. "
+"დოკუმენტებსა და ლოგისტიკას ვაწყებთ ჩვენ, გადახდა — მიწოდებისას საქართველოში."
 
+#: templates/shop/index.html:795
 msgid "What happens if the shoes or clothes do not fit?"
 msgstr "რა ხდება თუ ფეხსაცმელს ან ტანსაცმელს ზომა არ უხდება?"
 
-msgid "We offer a “two-size delivery” service. If you are unsure about your size, tell us and we will bring two adjacent sizes for you to try on at delivery. You only pay for what fits perfectly."
-msgstr "გვაქვს „ორი ზომით მიწოდების“ სერვისი: უცნობი ზომისას ვატანთ ორ მეზობე ზომას მიტანის მომენტში. იხდით მხოლოდ იმას, რაც იდეალურად გეხდებათ."
+#: templates/shop/index.html:797
+msgid ""
+"We offer a “two-size delivery” service. If you are unsure about your size, "
+"tell us and we will bring two adjacent sizes for you to try on at delivery. "
+"You only pay for what fits perfectly."
+msgstr ""
+"გვაქვს „ორი ზომით მიწოდების“ სერვისი: უცნობი ზომისას ვატანთ ორ მეზობე ზომას "
+"მიტანის მომენტში. იხდით მხოლოდ იმას, რაც იდეალურად გეხდებათ."
 
+#: templates/shop/index.html:801
 msgid "Do you have a physical store where I can see the gear?"
 msgstr "გაქვთ ფიზიკური მაღაზია, სადაც ვნახავ პროდუქტს?"
 
-msgid "We are an online-first shop to keep our prices fair and our delivery fast. However, we are deeply involved in the Tbilisi tennis scene. You can often find us at City Sport or Mziuri. If you want to see a specific racket before buying, we can arrange a meeting at a court near you."
-msgstr "პირველ რიგში ონლაინ ვართ — ღია ფასებისა და სწრაფი მიწოდებისთვის. აქტიურად ვართ თბილისის ტენისის ცხოვრებაში — ხშირად გვიპოვნით City Sport-ზე ან მზიარზე. კონკრეტული რაკეტის ხილვისთვის დაგიგეგმით შეხვედრას მახლობელ კორტზე."
+#: templates/shop/index.html:803
+msgid ""
+"We are an online-first shop to keep our prices fair and our delivery fast. "
+"However, we are deeply involved in the Tbilisi tennis scene. You can often "
+"find us at City Sport or Mziuri. If you want to see a specific racket before"
+" buying, we can arrange a meeting at a court near you."
+msgstr ""
+"პირველ რიგში ონლაინ ვართ — ღია ფასებისა და სწრაფი მიწოდებისთვის. აქტიურად "
+"ვართ თბილისის ტენისის ცხოვრებაში — ხშირად გვიპოვნით City Sport-ზე ან "
+"მზიარზე. კონკრეტული რაკეტის ხილვისთვის დაგიგეგმით შეხვედრას მახლობელ კორტზე."
 
+#: templates/shop/index.html:807
 msgid "Do you provide stringing services?"
 msgstr "ბაგირის ნატიებას თავად აკეთებთ?"
 
-msgid "While we specialize in high-performance strings like Toroline and Solinco, we can also recommend the best stringing professionals in Tbilisi and help you choose the right tension for your racket and game style."
-msgstr "Toroline-სა და Solinco-ს მაღალი დონის ბაგირებს ვხაშავთ; ასევე გირჩევთ ნატიის მცობე პროფესიონალებს თბილისში და ჩაჭიმვას თქვენი სტილისა და რაკეტის მიხედვით."
+#: templates/shop/index.html:809
+msgid ""
+"While we specialize in high-performance strings like Toroline and Solinco, "
+"we can also recommend the best stringing professionals in Tbilisi and help "
+"you choose the right tension for your racket and game style."
+msgstr ""
+"Toroline-სა და Solinco-ს მაღალი დონის ბაგირებს ვხაშავთ; ასევე გირჩევთ ნატიის"
+" მცობე პროფესიონალებს თბილისში და ჩაჭიმვას თქვენი სტილისა და რაკეტის "
+"მიხედვით."
+
+#: templates/shop/legal/accessibility.html:3
+msgid "Accessibility | Tenrivals"
+msgstr "ხელმისაწვდომობა | მეტოქეები"
+
+#: templates/shop/legal/accessibility.html:7
+msgid ""
+"We want everyone, including customers who use screen readers, keyboard "
+"navigation, or other assistive tools, to be able to use Tennis Rivals Shop "
+"successfully."
+msgstr ""
+"ჩვენ გვინდა, რომ ყველამ, მათ შორის კლიენტებმა, რომლებიც იყენებენ ეკრანის "
+"წამკითხველებს, კლავიატურის ნავიგაციას ან სხვა დამხმარე ხელსაწყოებს, შეძლონ "
+"Tennis Rivals Shop-ის წარმატებით გამოყენება."
+
+#: templates/shop/legal/accessibility.html:11
+msgid "Our commitment"
+msgstr "ჩვენი ვალდებულება"
+
+#: templates/shop/legal/accessibility.html:12
+msgid ""
+"We aim to align the storefront with widely recognised guidelines such as the"
+" <strong>Web Content Accessibility Guidelines (WCAG) 2.1</strong> at Level "
+"AA where reasonably achievable. New templates and major updates are reviewed"
+" with accessibility in mind."
+msgstr ""
+"ჩვენ მიზნად ისახავს მაღაზიის ვიტრინის გათანაბრებას ფართოდ აღიარებულ "
+"სახელმძღვანელოებთან, როგორიცაა <strong>ვებ კონტენტის ხელმისაწვდომობის "
+"სახელმძღვანელო (WCAG) 2.1</strong> AA დონეზე, სადაც გონივრულად მიიღწევა. "
+"ახალი შაბლონები და ძირითადი განახლებები განიხილება ხელმისაწვდომობის "
+"გათვალისწინებით."
+
+#: templates/shop/legal/accessibility.html:16
+msgid "Ongoing work"
+msgstr "მიმდინარე სამუშაოები"
+
+#: templates/shop/legal/accessibility.html:17
+msgid ""
+"E-commerce sites evolve (new products, third-party widgets, design changes)."
+" Some areas may not yet meet every success criterion. We welcome specific "
+"feedback so we can prioritise fixes."
+msgstr ""
+"ელექტრონული კომერციის საიტები ვითარდება (ახალი პროდუქტები, მესამე მხარის "
+"ვიჯეტები, დიზაინის ცვლილებები). ზოგიერთი სფერო შეიძლება ჯერ არ "
+"აკმაყოფილებდეს წარმატების ყველა კრიტერიუმს. ჩვენ მივესალმებით კონკრეტულ "
+"გამოხმაურებას, ასე რომ ჩვენ შეგვიძლია პრიორიტეტული გამოსწორება."
+
+#: templates/shop/legal/accessibility.html:21
+msgid "Need help?"
+msgstr "დახმარება გჭირდებათ?"
+
+#: templates/shop/legal/accessibility.html:22
+msgid ""
+"If you cannot access part of the site or complete a task (e.g. search, "
+"checkout, account), please email <a "
+"href=\"mailto:andy.rivals@tenrivals.com\">andy.rivals@tenrivals.com</a> with"
+" the page URL and what you were trying to do. We will work with you to "
+"provide the information or service by another means where possible."
+msgstr ""
+"თუ ვერ შედიხართ საიტის ნაწილზე ან ვერ შეასრულებთ დავალებას (მაგ. ძიება, "
+"გადახდა, ანგარიში), გთხოვთ, ელფოსტით <a "
+"href=\"mailto:andy.rivals@tenrivals.com\">andy.rivals@tenrivals.com</a> "
+"მიუთითოთ გვერდის URL და რის გაკეთებას ცდილობდით. ჩვენ ვიმუშავებთ თქვენთან, "
+"რათა მოგაწოდოთ ინფორმაცია ან მომსახურება სხვა საშუალებით, სადაც ეს "
+"შესაძლებელია."
+
+#: templates/shop/legal/accessibility.html:26
+msgid "Third-party content"
+msgstr "მესამე მხარის კონტენტი"
+
+#: templates/shop/legal/accessibility.html:27
+msgid ""
+"Some features (e.g. embedded maps, <strong>future online card "
+"checkout</strong> widgets from a payment partner if we enable them, payment "
+"terminals in person, or external links) are provided by third parties. Their"
+" accessibility is governed by those providers."
+msgstr ""
+"ზოგიერთი ფუნქცია (მაგ. ჩაშენებული რუკები, <strong>მომავალი ონლაინ ბარათის "
+"გადახდა</strong> ვიჯეტები გადახდის პარტნიორისგან, თუ ჩვენ ჩავრთავთ მათ, "
+"გადახდის ტერმინალები პირადად ან გარე ბმულები) მოწოდებულია მესამე მხარის "
+"მიერ. მათი ხელმისაწვდომობა რეგულირდება ამ პროვაიდერების მიერ."
+
+#: templates/shop/legal/accessibility.html:30
+#: templates/shop/legal/company.html:44 templates/shop/legal/cookies.html:49
+#: templates/shop/legal/dmca.html:36 templates/shop/legal/privacy.html:78
+msgid "Last updated: April 2026."
+msgstr "ბოლო განახლება: 2026 წლის აპრილი."
+
+#: templates/shop/legal/company.html:3
+msgid "Company information | Tenrivals"
+msgstr "კომპანიის ინფორმაცია | მეტოქეები"
+
+#: templates/shop/legal/company.html:8 templates/shop/legal/sitemap.html:92
+msgid "Company information"
+msgstr "კომპანიის ინფორმაცია"
+
+#: templates/shop/legal/company.html:9
+msgid ""
+"Legal details of the operator of Tennis Rivals Shop. We sell to customers "
+"located in Georgia only."
+msgstr ""
+"Tennis Rivals Shop-ის ოპერატორის იურიდიული დეტალები. ჩვენ ვყიდით მხოლოდ "
+"საქართველოში მდებარე მომხმარებლებს."
+
+#: templates/shop/legal/company.html:14
+#| msgid "Player-first curation"
+msgid "Registration"
+msgstr "რეგისტრაცია"
+
+#: templates/shop/legal/company.html:16
+msgid "Legal form"
+msgstr "იურიდიული ფორმა"
+
+#: templates/shop/legal/company.html:17
+msgid "Individual entrepreneur (sole proprietor)"
+msgstr "ინდივიდუალური მეწარმე (ერთპიროვნული მეწარმე)"
+
+#: templates/shop/legal/company.html:18
+msgid "Registered name"
+msgstr "რეგისტრირებული სახელი"
+
+#: templates/shop/legal/company.html:19
+msgid "IE Andrey Molodenko"
+msgstr "IE Andrey Molodenko"
+
+#: templates/shop/legal/company.html:20
+msgid "Identification code (PN / Tax ID)"
+msgstr "საიდენტიფიკაციო კოდი (PN / საგადასახადო ID)"
+
+#: templates/shop/legal/company.html:21
+msgid "100382729"
+msgstr "100382729"
+
+#: templates/shop/legal/company.html:22
+msgid "Registered address"
+msgstr "რეგისტრირებული მისამართი"
+
+#: templates/shop/legal/company.html:23
+msgid "Georgia, Tbilisi, E. Bejanishvili Street 23, apartment 19"
+msgstr "საქართველო, თბილისი, ე.ბეჯანიშვილის ქუჩა 23, ბინა 19"
+
+#: templates/shop/legal/company.html:25
+msgid ""
+"Tennis Rivals Shop is the retail channel for tennis equipment and related "
+"goods offered through this website. We issue official fiscal documentation "
+"for purchases in line with Georgian tax rules."
+msgstr ""
+"Tennis Rivals Shop არის საცალო არხი ჩოგბურთის აღჭურვილობისა და მასთან "
+"დაკავშირებულ საქონელზე, რომელიც შემოთავაზებულია ამ ვებსაიტის საშუალებით. "
+"ჩვენ ვაძლევთ ოფიციალურ ფისკალურ დოკუმენტაციას შესყიდვებისთვის საქართველოს "
+"საგადასახადო წესების შესაბამისად."
+
+#: templates/shop/legal/company.html:30 templates/shop/legal/cookies.html:38
+msgid "Contact"
+msgstr "კონტაქტი"
+
+#: templates/shop/legal/company.html:32
+msgid "Phone / WhatsApp"
+msgstr "ტელეფონი / WhatsApp"
+
+#: templates/shop/legal/company.html:36
+msgid "Social"
+msgstr "სოციალური"
+
+#: templates/shop/legal/company.html:37
+msgid ""
+"<a href=\"https://www.instagram.com/tennis_rivals_shop/\" target=\"_blank\" "
+"rel=\"noopener\">Instagram — @tennis_rivals_shop</a>"
+msgstr ""
+"<a href=\"https://www.instagram.com/tennis_rivals_shop/\" target=\"_blank\" "
+"rel=\"noopener\">ინსტაგრამი — @tennis_rivals_shop</a>"
+
+#: templates/shop/legal/company.html:41
+#, python-format
+msgid ""
+"We are <strong>online-first</strong>. Pickup and hand delivery are described"
+" on <a href=\"%(u_delivery)s\" style=\"color:var(--accent);font-"
+"weight:600\">Delivery</a> and <a href=\"%(u_contacts)s\" "
+"style=\"color:var(--accent);font-weight:600\">Contacts</a>."
+msgstr ""
+"ჩვენ ვართ <strong>ონლაინ-პირველი მაღაზია</strong>. თვით-აღება და კურიერის "
+"მიწოდება აღწერილია გვერდებზე <a href=\"%(u_delivery)s\" "
+"style=\"color:var(--accent);font-weight:600\">მიწოდება</a> და <a "
+"href=\"%(u_contacts)s\" style=\"color:var(--accent);font-"
+"weight:600\">კონტაქტები</a>."
+
+#: templates/shop/legal/cookies.html:3
+msgid "Cookie policy | Tenrivals"
+msgstr "ქუქიების პოლიტიკა | მეტოქეები"
+
+#: templates/shop/legal/cookies.html:9
+#, python-format
+msgid ""
+"How Tennis Rivals Shop uses cookies and similar technologies on this "
+"website. This policy should be read together with our <a "
+"href=\"%(u_privacy)s\" style=\"color:var(--accent);font-weight:600\">Privacy"
+" policy</a>."
+msgstr ""
+"როგორ იყენებს Tennis Rivals Shop ქუქი-ფაილებს და მსგავს ტექნოლოგიებს ამ "
+"ვებსაიტზე. ეს პოლიტიკა უნდა წაიკითხოთ ჩვენს <a href=\"%(u_privacy)s\" "
+"style=\"color:var(--accent);font-weight:600\">კონფიდენციალურობის "
+"პოლიტიკასთან</a>."
+
+#: templates/shop/legal/cookies.html:13
+msgid "What are cookies?"
+msgstr "რა არის ქუქიები?"
+
+#: templates/shop/legal/cookies.html:14
+msgid ""
+"Cookies are small text files stored on your device when you visit a site. We"
+" also use similar technologies (e.g. local storage) where they help the shop"
+" function. Georgian law and good practice require transparency and, for non-"
+"essential cookies, appropriate consent where applicable."
+msgstr ""
+"ქუქი-ფაილები არის პატარა ტექსტური ფაილები, რომლებიც ინახება თქვენს "
+"მოწყობილობაში, როდესაც თქვენ ეწვიეთ საიტს. ჩვენ ასევე ვიყენებთ მსგავს "
+"ტექნოლოგიებს (მაგ. ლოკალური შენახვა), სადაც ისინი ხელს უწყობენ მაღაზიის "
+"ფუნქციონირებას. საქართველოს კანონმდებლობა და კარგი პრაქტიკა მოითხოვს "
+"გამჭვირვალობას და არაარსებითი ქუქი-ფაილების შემთხვევაში, შესაბამის "
+"თანხმობას, სადაც ეს შესაძლებელია."
+
+#: templates/shop/legal/cookies.html:18
+msgid "Types we use"
+msgstr "ჩვენ ვიყენებთ ტიპებს"
+
+#: templates/shop/legal/cookies.html:20
+msgid ""
+"<strong>Strictly necessary:</strong> Required for the site to work — e.g. "
+"session, security (CSRF), cart or checkout state, cookie consent choice. "
+"These are usually exempt from consent under typical interpretations because "
+"they are essential to provide the service you request."
+msgstr ""
+"<strong>აუცილებლად აუცილებელია:</strong> საჭიროა საიტის მუშაობისთვის — მაგ. "
+"სესია, უსაფრთხოება (CSRF), კალათა ან გადახდის მდგომარეობა, ქუქიების "
+"თანხმობის არჩევანი. ისინი ჩვეულებრივ თავისუფლდებიან თანხმობისგან ტიპიური "
+"ინტერპრეტაციებისგან, რადგან ისინი აუცილებელია იმ სერვისის უზრუნველსაყოფად, "
+"რომელსაც ითხოვთ."
+
+#: templates/shop/legal/cookies.html:21
+msgid ""
+"<strong>Functional:</strong> Remember preferences (e.g. language, display "
+"options). We only use these if you enable them or if they are low-impact and"
+" aligned with our privacy notice."
+msgstr ""
+"<strong>ფუნქციური:</strong> დაიმახსოვრე პრეფერენციები (მაგ. ენა, ჩვენების "
+"პარამეტრები). ჩვენ ვიყენებთ მათ მხოლოდ იმ შემთხვევაში, თუ თქვენ ჩართავთ მათ "
+"ან თუ ისინი დაბალი ზემოქმედების ქვეშ არიან და შეესაბამება ჩვენს "
+"კონფიდენციალურობის შეტყობინებას."
+
+#: templates/shop/legal/cookies.html:22
+msgid ""
+"<strong>Analytics & performance:</strong> Help us understand traffic and "
+"errors (e.g. page views, anonymised usage). Non-essential analytics are used"
+" only after <strong>opt-in</strong> through any cookie notice or preference "
+"tools we publish, as required by applicable rules."
+msgstr ""
+"<strong>ანალიტიკა და შესრულება:</strong> დაგვეხმარეთ ტრაფიკისა და შეცდომების"
+" გაგებაში (მაგ. გვერდის ნახვები, ანონიმური გამოყენება). არაარსებითი "
+"ანალიტიკა გამოიყენება მხოლოდ <strong>დათანხმების</strong> შემდეგ ნებისმიერი "
+"ქუქი-ჩანაწერის შეტყობინებით ან ჩვენ მიერ გამოქვეყნებული უპირატესობის "
+"ხელსაწყოებით, როგორც ამას მოქმედი წესები მოითხოვს."
+
+#: templates/shop/legal/cookies.html:23
+msgid ""
+"<strong>Payment & checkout:</strong> Strictly necessary cookies may support "
+"cart and checkout steps. <strong>Online card payment on our site is not "
+"enabled yet;</strong> if we add it later, our payment provider may set "
+"additional cookies or storage during that flow — those would be governed by "
+"the provider’s policy."
+msgstr ""
+"<strong>გადახდა და ანგარიშსწორება:</strong> მკაცრად აუცილებელ ქუქი-ფაილებს "
+"შეუძლიათ მხარი დაუჭირონ კალათისა და გადახდის ნაბიჯებს. <strong>ონლაინ "
+"ბარათით გადახდა ჩვენს საიტზე ჯერ არ არის ჩართული;</strong> თუ მას "
+"მოგვიანებით დავამატებთ, ჩვენმა გადახდის პროვაიდერმა შეიძლება დააყენოს "
+"დამატებითი ქუქი-ფაილები ან საცავი ამ ნაკადის დროს — ისინი რეგულირდება "
+"პროვაიდერის პოლიტიკით."
+
+#: templates/shop/legal/cookies.html:28
+msgid "Managing cookies"
+msgstr "ქუქიების მართვა"
+
+#: templates/shop/legal/cookies.html:29
+msgid ""
+"You can block or delete cookies in your browser settings. Blocking strictly "
+"necessary cookies may break login, cart, or checkout. When we provide a "
+"cookie preference control on the site, use it to manage non-essential "
+"categories."
+msgstr ""
+"თქვენ შეგიძლიათ დაბლოკოთ ან წაშალოთ ქუქიები თქვენი ბრაუზერის პარამეტრებში. "
+"მკაცრად საჭირო ქუქი-ფაილების დაბლოკვამ შეიძლება დაარღვიოს შესვლა, კალათა ან "
+"ანგარიშსწორება. როდესაც ჩვენ უზრუნველვყოფთ ქუქიების პრიორიტეტების კონტროლს "
+"საიტზე, გამოიყენეთ იგი არაარსებითი კატეგორიების სამართავად."
+
+#: templates/shop/legal/cookies.html:33
+msgid "Updates"
+msgstr "განახლებები"
+
+#: templates/shop/legal/cookies.html:34
+msgid ""
+"We may update this policy when we change tools or the law requires. Check "
+"the date below."
+msgstr ""
+"ჩვენ შეიძლება განვაახლოთ ეს პოლიტიკა, როდესაც შევცვლით ხელსაწყოებს ან ამას "
+"მოითხოვს კანონი. შეამოწმეთ თარიღი ქვემოთ."
+
+#: templates/shop/legal/cookies.html:39
+msgid ""
+"Questions: <a "
+"href=\"mailto:andy.rivals@tenrivals.com\">andy.rivals@tenrivals.com</a>."
+msgstr ""
+"კითხვები: <a "
+"href=\"mailto:andy.rivals@tenrivals.com\">andy.rivals@tenrivals.com</a>."
+
+#: templates/shop/legal/cookies.html:44
+msgid "Georgian — short summary"
+msgstr "ქართული — მოკლე რეზიუმე"
+
+#: templates/shop/legal/cookies.html:45
+msgid ""
+"We use cookies for the site to work (session, security, cart, payment), and "
+"— with your consent — for analytics. You can manage cookies in your browser "
+"settings. Details are in English above; email us if you have questions."
+msgstr ""
+"ჩვენ ვიყენებთ ქუქიებს საიტის მუშაობისთვის (სესია, უსაფრთხოება, კალათა, "
+"გადახდა) და — თქვენი თანხმობით — ანალიტიკისთვის. თქვენ შეგიძლიათ მართოთ "
+"ქუქიები თქვენი ბრაუზერის პარამეტრებში. დეტალები ზემოთ მოცემულია ინგლისურ "
+"ენაზე; მოგვწერეთ, თუ თქვენ გაქვთ შეკითხვები."
+
+#: templates/shop/legal/dmca.html:3
+msgid "Copyright & IP | Tenrivals"
+msgstr "საავტორო უფლება & IP | მეტოქეები"
+
+#: templates/shop/legal/dmca.html:7
+msgid "Copyright & intellectual property"
+msgstr "საავტორო უფლება და ინტელექტუალური საკუთრება"
+
+#: templates/shop/legal/dmca.html:8
+msgid ""
+"We respect copyright and related rights under the Law of Georgia on "
+"Copyright and Related Rights. If you believe content on this site infringes "
+"your rights, contact us with the details below."
+msgstr ""
+"ჩვენ პატივს ვცემთ საავტორო და მომიჯნავე უფლებებს „საავტორო და მომიჯნავე "
+"უფლებების შესახებ“ საქართველოს კანონით. თუ ფიქრობთ, რომ ამ საიტის შინაარსი "
+"არღვევს თქვენს უფლებებს, დაგვიკავშირდით ქვემოთ მოცემული დეტალებით."
+
+#: templates/shop/legal/dmca.html:12
+msgid "Complaints"
+msgstr "საჩივრები"
+
+#: templates/shop/legal/dmca.html:13
+msgid "Send a message in writing (email is fine) that includes:"
+msgstr "გაგზავნეთ შეტყობინება წერილობით (ელ.ფოსტა კარგია), რომელიც მოიცავს:"
+
+#: templates/shop/legal/dmca.html:15
+msgid "Your name and reliable contact details;"
+msgstr "თქვენი სახელი და სანდო საკონტაქტო ინფორმაცია;"
+
+#: templates/shop/legal/dmca.html:16
+msgid ""
+"Identification of the work or right you claim (e.g. photo, text, trademark);"
+msgstr ""
+"სამუშაოს ან უფლების იდენტიფიკაცია, რომელსაც აცხადებთ (მაგ. ფოტო, ტექსტი, "
+"სავაჭრო ნიშანი);"
+
+#: templates/shop/legal/dmca.html:17
+msgid ""
+"The exact URL or location on our site and a short description of the issue;"
+msgstr "ზუსტი URL ან მდებარეობა ჩვენს საიტზე და საკითხის მოკლე აღწერა;"
+
+#: templates/shop/legal/dmca.html:18
+msgid "A statement that you believe in good faith the use is not authorised;"
+msgstr ""
+"განცხადება იმის შესახებ, რომ თქვენ კეთილსინდისიერად გჯერათ გამოყენების არ "
+"არის უფლებამოსილი;"
+
+#: templates/shop/legal/dmca.html:19
+msgid ""
+"If you act for the rights holder, your authority to act on their behalf."
+msgstr ""
+"თუ თქვენ მოქმედებთ უფლებების მფლობელისთვის, თქვენი უფლებამოსილება იმოქმედოთ "
+"მათი სახელით."
+
+#: templates/shop/legal/dmca.html:21
+msgid ""
+"False or misleading claims may have legal consequences. We may forward "
+"notices to suppliers or users where appropriate."
+msgstr ""
+"ცრუ ან შეცდომაში შემყვან პრეტენზიებს შეიძლება ჰქონდეს სამართლებრივი "
+"შედეგები. საჭიროების შემთხვევაში, ჩვენ შეიძლება მივაწოდოთ შეტყობინებები "
+"მომწოდებლებს ან მომხმარებლებს."
+
+#: templates/shop/legal/dmca.html:25
+msgid "Contact for IP notices"
+msgstr "დაუკავშირდით IP შეტყობინებებისთვის"
+
+#: templates/shop/legal/dmca.html:26
+msgid ""
+"<strong>Email:</strong> <a "
+"href=\"mailto:andy.rivals@tenrivals.com\">andy.rivals@tenrivals.com</a><br> "
+"<strong>Subject:</strong> Copyright / IP notice"
+msgstr ""
+"<strong>ელფოსტა:</strong> <a "
+"href=\"mailto:andy.rivals@tenrivals.com\">andy.rivals@tenrivals.com</a><br> "
+"<strong>თემა:</strong> საავტორო უფლებები / IP შეტყობინება"
+
+#: templates/shop/legal/dmca.html:28
+#, python-format
+msgid ""
+"Order and product questions should go through <a href=\"%(u_contacts)s\" "
+"style=\"color:var(--accent);font-weight:600\">Contacts</a> so we can respond"
+" faster."
+msgstr ""
+"შეკვეთისა და პროდუქტის შესახებ კითხვები უნდა გაიაროს <a "
+"href=\"%(u_contacts)s\" style=\"color:var(--accent);font-"
+"weight:600\">კონტაქტები</a>, რათა უფრო სწრაფად ვუპასუხოთ."
+
+#: templates/shop/legal/dmca.html:32
+#| msgid "Featured tennis brands"
+msgid "Our content & brands"
+msgstr "ჩვენი კონტენტი და ბრენდები"
+
+#: templates/shop/legal/dmca.html:33
+msgid ""
+"Product names and logos may be trademarks of their owners. Descriptions and "
+"photos may combine our original material with assets licensed from brands or"
+" distributors. Copying our site design, original text, or photography "
+"without permission may infringe our rights or those of third parties."
+msgstr ""
+"პროდუქტის სახელები და ლოგოები შეიძლება იყოს მათი მფლობელების სავაჭრო "
+"ნიშნები. აღწერილობებსა და ფოტოებს შეიძლება აერთიანებს ჩვენი ორიგინალური "
+"მასალა ბრენდების ან დისტრიბუტორებისგან ლიცენზირებულ აქტივებთან. ჩვენი საიტის"
+" დიზაინის, ორიგინალური ტექსტის ან ფოტოგრაფიის ნებართვის გარეშე კოპირებამ "
+"შეიძლება დაარღვიოს ჩვენი ან მესამე მხარის უფლებები."
+
+#: templates/shop/legal/privacy.html:3
+msgid "Privacy policy | Tenrivals"
+msgstr "კონფიდენციალურობის პოლიტიკა | მეტოქეები"
+
+#: templates/shop/legal/privacy.html:10
+#, python-format
+msgid ""
+"How Tennis Rivals Shop collects and uses personal data when you use our "
+"website, account, or checkout. We target customers in Georgia and process "
+"data under the Law of Georgia on Personal Data Protection and related rules."
+" Online card payment on the site is not live yet; payment is usually taken "
+"on delivery or by bank transfer as described on <a href=\"%(u_payment)s\" "
+"style=\"color:var(--accent);font-weight:600\">Payment</a>."
+msgstr ""
+"როგორ აგროვებს და იყენებს Tennis Rivals Shop პერსონალურ მონაცემებს, როდესაც "
+"თქვენ იყენებთ ჩვენს ვებსაიტს, ანგარიშს ან გადახდას. ჩვენ მიზნად ისახავს "
+"კლიენტებს საქართველოში და ვამუშავებთ მონაცემებს „პერსონალურ მონაცემთა დაცვის"
+" შესახებ“ საქართველოს კანონისა და მასთან დაკავშირებული წესების შესაბამისად. "
+"ონლაინ ბარათით გადახდა საიტზე ჯერ არ არის ცოცხალი; გადახდა ჩვეულებრივ ხდება "
+"მიტანისთანავე ან საბანკო გადარიცხვით, როგორც ეს აღწერილია <a "
+"href=\"%(u_payment)s\" style=\"color:var(--accent);font-"
+"weight:600\">გადახდა</a>."
+
+#: templates/shop/legal/privacy.html:14
+msgid ""
+"This page is for transparency. It does not replace individual legal advice. "
+"If you need a formal data subject request, use the contact below."
+msgstr ""
+"ეს გვერდი არის გამჭვირვალობისთვის. ის არ ცვლის ინდივიდუალურ იურიდიულ რჩევას."
+" თუ გჭირდებათ მონაცემთა სუბიექტის ოფიციალური მოთხოვნა, გამოიყენეთ ქვემოთ "
+"მოცემული კონტაქტი."
+
+#: templates/shop/legal/privacy.html:18
+msgid "1. Data controller"
+msgstr "1. მონაცემთა კონტროლერი"
+
+#: templates/shop/legal/privacy.html:19
+#, python-format
+msgid ""
+"The controller is <strong>IE Andrey Molodenko</strong> (individual "
+"entrepreneur; identification code 100382729), operator of Tennis Rivals "
+"Shop, address: Georgia, Tbilisi, E. Bejanishvili Street 23, apt. 19. "
+"Contact: <a "
+"href=\"mailto:andy.rivals@tenrivals.com\">andy.rivals@tenrivals.com</a> and "
+"the channels on our <a href=\"%(u_contacts)s\" "
+"style=\"color:var(--accent);font-weight:600\">Contacts</a> page."
+msgstr ""
+"კონტროლერი არის <strong>ი.ე. ანდრეი მოლოდენკო</strong> (ინდივიდუალური "
+"მეწარმე; საიდენტიფიკაციო კოდი 100382729), Tennis Rivals Shop-ის ოპერატორი, "
+"მისამართი: საქართველო, თბილისი, ე.ბეჯანიშვილის ქ. 23, ბ. 19. დაუკავშირდით: "
+"<a href=\"mailto:andy.rivals@tenrivals.com\">andy.rivals@tenrivals.com</a> "
+"და არხებს ჩვენს <a href=\"%(u_contacts)s\" style=\"color:var(--accent);font-"
+"weight:600\">კონტაქტების</a> გვერდზე."
+
+#: templates/shop/legal/privacy.html:23
+msgid "2. What we collect"
+msgstr "2. რასაც ვაგროვებთ"
+
+#: templates/shop/legal/privacy.html:24
+msgid "Depending on how you use the site, we may process:"
+msgstr "იმის მიხედვით, თუ როგორ იყენებთ საიტს, ჩვენ შეიძლება დავამუშავოთ:"
+
+#: templates/shop/legal/privacy.html:26
+msgid ""
+"<strong>Account & identity:</strong> name, email, phone (if provided), login"
+" identifiers."
+msgstr ""
+"<strong>ანგარიში და ვინაობა:</strong> სახელი, ელფოსტა, ტელეფონი (თუ "
+"მითითებულია), შესვლის იდენტიფიკატორები."
+
+#: templates/shop/legal/privacy.html:27
+msgid ""
+"<strong>Orders & checkout:</strong> delivery address, cart contents, order "
+"references, payment method choice, and messages you add at checkout. "
+"<strong>We do not collect card numbers through the website checkout "
+"today</strong> (online card capture is not enabled). If you pay <strong>by "
+"card on delivery</strong>, the courier’s terminal or bank handles card data "
+"under their rules; we may receive transaction references and amounts needed "
+"for receipts and accounting. For <strong>bank transfers</strong>, we process"
+" account and reference data needed to match your payment."
+msgstr ""
+"<strong>შეკვეთები და ანგარიშსწორება:</strong> მიწოდების მისამართი, კალათის "
+"შიგთავსი, შეკვეთის მითითებები, გადახდის მეთოდის არჩევანი და შეტყობინებები, "
+"რომლებსაც ამატებთ გადახდისას. <strong>დღეს ჩვენ არ ვაგროვებთ ბარათის ნომრებს"
+" ვებსაიტის შეკვეთის მეშვეობით</strong> (ონლაინ ბარათის აღება არ არის "
+"ჩართული). თუ იხდით <strong>ბარათით მიტანისას</strong>, კურიერის ტერმინალი ან"
+" ბანკი ამუშავებს ბარათის მონაცემებს მათი წესების შესაბამისად; ჩვენ შეიძლება "
+"მივიღოთ ტრანზაქციის მითითებები და თანხები, რომლებიც საჭიროა ქვითრებისა და "
+"აღრიცხვისთვის. <strong>საბანკო გადარიცხვებისთვის</strong> ჩვენ ვამუშავებთ "
+"ანგარიშის და მითითების მონაცემებს, რომლებიც საჭიროა თქვენი გადახდის "
+"შესატყვისად."
+
+#: templates/shop/legal/privacy.html:28
+msgid ""
+"<strong>Communications:</strong> messages you send us (email, social "
+"channels we monitor for support)."
+msgstr ""
+"<strong>კომუნიკაციები:</strong> შეტყობინებები, რომლებსაც გვიგზავნით "
+"(ელფოსტა, სოციალური არხები, რომლებსაც ჩვენ ვაკვირდებით მხარდაჭერისთვის)."
+
+#: templates/shop/legal/privacy.html:29
+#, python-format
+msgid ""
+"<strong>Technical data:</strong> IP address, device/browser type, pages "
+"viewed, timestamps — from server logs and, if enabled, analytics cookies "
+"(see our <a href=\"%(u_cookies)s\" style=\"color:var(--accent);font-"
+"weight:600\">Cookie policy</a>)."
+msgstr ""
+"<strong>ტექნიკური მონაცემები:</strong> IP მისამართი, მოწყობილობის/ბრაუზერის "
+"ტიპი, ნანახი გვერდები, დროის ანაბეჭდები — სერვერის ჟურნალებიდან და, თუ "
+"ჩართულია, ანალიტიკის ქუქიებიდან (იხილეთ ჩვენი <a href=\"%(u_cookies)s\" "
+"style=\"color:var(--accent);font-weight:600\">ქუქის წესები</a>)."
+
+#: templates/shop/legal/privacy.html:34
+msgid "3. Purposes & legal grounds"
+msgstr "3. მიზნები და სამართლებრივი საფუძველი"
+
+#: templates/shop/legal/privacy.html:35
+msgid ""
+"We use data to: perform our contract with you (arrange payment and delivery,"
+" support orders); operate accounts; meet tax, accounting, and other "
+"<strong>legal obligations</strong> under Georgian law; secure the site and "
+"prevent fraud; and, if you opt in, send marketing. Where the law requires "
+"<strong>consent</strong> (for example certain cookies or direct marketing), "
+"we will ask for it separately."
+msgstr ""
+"ჩვენ ვიყენებთ მონაცემებს, რათა: შეასრულოთ ჩვენი კონტრაქტი თქვენთან (გადახდის"
+" და მიწოდების მოწყობა, შეკვეთების მხარდაჭერა); ამუშავებს ანგარიშებს; "
+"შეასრულოს საგადასახადო, სააღრიცხვო და სხვა <strong>სამართლებრივი "
+"ვალდებულებები</strong> საქართველოს კანონმდებლობით; დაიცავით საიტი და თავიდან"
+" აიცილეთ თაღლითობა; და თუ დაეთანხმებით, გაგზავნეთ მარკეტინგი. სადაც კანონი "
+"მოითხოვს <strong>თანხმობას</strong> (მაგალითად, გარკვეული ქუქი-ფაილები ან "
+"პირდაპირი მარკეტინგი), ჩვენ ამას ცალკე მოვითხოვთ."
+
+#: templates/shop/legal/privacy.html:39
+msgid "4. Sharing"
+msgstr "4. გაზიარება"
+
+#: templates/shop/legal/privacy.html:40
+msgid ""
+"We may share data with: banks and payment/terminal providers (to complete "
+"card-at-delivery or transfer payments); delivery partners; hosting and IT "
+"providers; and advisers (e.g. accountants) where required. They may process "
+"data only on our instructions or as required by law. We do not sell personal"
+" data."
+msgstr ""
+"ჩვენ შეიძლება გავუზიაროთ მონაცემები: ბანკებს და გადახდის/ტერმინალის "
+"პროვაიდერებს (ბარათით მიტანის დროს ან გადახდების გადარიცხვის მიზნით); "
+"მიწოდების პარტნიორები; ჰოსტინგის და IT პროვაიდერები; და მრჩევლები (მაგ. "
+"ბუღალტერები) სადაც საჭიროა. მათ შეუძლიათ მონაცემების დამუშავება მხოლოდ ჩვენი"
+" მითითებით ან კანონით მოთხოვნილი. ჩვენ არ ვყიდით პერსონალურ მონაცემებს."
+
+#: templates/shop/legal/privacy.html:44
+msgid "5. Transfers outside Georgia"
+msgstr "5. ტრანსფერები საქართველოს ფარგლებს გარეთ"
+
+#: templates/shop/legal/privacy.html:45
+msgid ""
+"Our primary operations and customers are in Georgia. Some tools (e.g. email,"
+" hosting, or future online payment gateways) may involve processing in other"
+" countries. Where that happens, we rely on appropriate safeguards required "
+"by Georgian law and contractual clauses with providers."
+msgstr ""
+"ჩვენი ძირითადი ოპერაციები და მომხმარებლები არიან საქართველოში. ზოგიერთი "
+"ინსტრუმენტი (მაგ. ელფოსტა, ჰოსტინგი ან მომავალი ონლაინ გადახდის კარიბჭეები) "
+"შეიძლება მოიცავდეს დამუშავებას სხვა ქვეყნებში. სადაც ეს მოხდება, ჩვენ "
+"ვეყრდნობით შესაბამის გარანტიებს, რომლებიც მოითხოვება საქართველოს "
+"კანონმდებლობითა და პროვაიდერებთან სახელშეკრულებო პუნქტებით."
+
+#: templates/shop/legal/privacy.html:49
+msgid "6. Retention"
+msgstr "6. შეკავება"
+
+#: templates/shop/legal/privacy.html:50
+msgid ""
+"We keep data only as long as needed for the purposes above — for example "
+"order and fiscal records for periods set by Georgian tax and accounting "
+"rules, account data while your account is active, and logs for security for "
+"a limited time. When retention ends, we delete or anonymise data where "
+"feasible."
+msgstr ""
+"ჩვენ ვინახავთ მონაცემებს მხოლოდ მანამ, სანამ საჭიროა ზემოთ მოყვანილი "
+"მიზნებისთვის - მაგალითად, შეკვეთა და ფისკალური ჩანაწერები საქართველოს "
+"საგადასახადო და ბუღალტრული აღრიცხვის წესებით დადგენილი პერიოდებისთვის, "
+"ანგარიშის მონაცემებს, სანამ თქვენი ანგარიში აქტიურია, და ჩანაწერები "
+"უსაფრთხოებისთვის შეზღუდული დროით. როდესაც შენახვა დასრულდება, ჩვენ ვშლით ან "
+"ვაკეთებთ ანონიმურ მონაცემებს, სადაც ეს შესაძლებელია."
+
+#: templates/shop/legal/privacy.html:54
+msgid "7. Your rights (Georgia)"
+msgstr "7. თქვენი უფლებები (საქართველო)"
+
+#: templates/shop/legal/privacy.html:55
+msgid ""
+"Under the Law of Georgia on Personal Data Protection, you generally have "
+"rights to request information about processing, access, rectification, "
+"updating, blocking, or deletion of your personal data where the law allows, "
+"and to object to processing in prescribed cases. To exercise these rights, "
+"email <a "
+"href=\"mailto:andy.rivals@tenrivals.com\">andy.rivals@tenrivals.com</a>. You"
+" may also contact the <strong>Personal Data Protection Service of "
+"Georgia</strong> (<a href=\"https://personaldata.ge/\" target=\"_blank\" "
+"rel=\"noopener\">personaldata.ge</a>) with questions or complaints about "
+"lawful processing."
+msgstr ""
+"„პერსონალურ მონაცემთა დაცვის შესახებ“ საქართველოს კანონის თანახმად, თქვენ "
+"გაქვთ უფლება მოითხოვოთ ინფორმაცია თქვენი პერსონალური მონაცემების "
+"დამუშავების, წვდომის, გასწორების, განახლების, დაბლოკვის ან წაშლის შესახებ "
+"იქ, სადაც კანონი იძლევა, და გააპროტესტოთ დამუშავება დადგენილ შემთხვევებში. "
+"ამ უფლებების გამოსაყენებლად ელფოსტა <a "
+"href=\"mailto:andy.rivals@tenrivals.com\">andy.rivals@tenrivals.com</a>. "
+"თქვენ ასევე შეგიძლიათ დაუკავშირდეთ <strong>საქართველოს პერსონალური მონაცემთა"
+" დაცვის სამსახურს</strong> (<a href=\"https://personaldata.ge/\" "
+"target=\"_blank\" rel=\"noopener\">personaldata.ge</a>) შეკითხვებით ან "
+"საჩივრებით კანონიერი დამუშავების შესახებ."
+
+#: templates/shop/legal/privacy.html:59
+msgid "8. Cookies"
+msgstr "8. ფუნთუშები"
+
+#: templates/shop/legal/privacy.html:60
+#, python-format
+msgid ""
+"We use cookies and similar technologies as described in our <a "
+"href=\"%(u_cookies)s\" style=\"color:var(--accent);font-weight:600\">Cookie "
+"policy</a>."
+msgstr ""
+"ჩვენ ვიყენებთ ქუქიებს და მსგავს ტექნოლოგიებს, როგორც ეს აღწერილია ჩვენს <a "
+"href=\"%(u_cookies)s\" style=\"color:var(--accent);font-"
+"weight:600\">ქუქიების პოლიტიკაში</a>."
+
+#: templates/shop/legal/privacy.html:64
+msgid "9. Security"
+msgstr "9. უსაფრთხოება"
+
+#: templates/shop/legal/privacy.html:65
+msgid ""
+"We apply technical and organisational measures appropriate to the risk "
+"(HTTPS, access controls, agreements with processors). When we enable card "
+"payment on the website, entry will be handled by certified payment partners;"
+" until then, card data for your purchase is processed on the courier’s "
+"terminal or by your bank. No online system is perfectly secure — use a "
+"strong password and protect your devices."
+msgstr ""
+"ჩვენ ვიყენებთ რისკის შესაბამის ტექნიკურ და ორგანიზაციულ ზომებს (HTTPS, "
+"წვდომის კონტროლი, ხელშეკრულებები პროცესორებთან). როდესაც ჩვენ ჩავრთავთ "
+"ბარათით გადახდას ვებსაიტზე, შესვლას ახორციელებენ გადახდის სერტიფიცირებული "
+"პარტნიორები; მანამდე, ბარათის მონაცემები თქვენი შესყიდვისთვის მუშავდება "
+"კურიერის ტერმინალზე ან თქვენი ბანკის მიერ. არცერთი ონლაინ სისტემა არ არის "
+"სრულყოფილად უსაფრთხო — გამოიყენეთ ძლიერი პაროლი და დაიცავით თქვენი "
+"მოწყობილობები."
+
+#: templates/shop/legal/privacy.html:69
+msgid "10. Minors"
+msgstr "10. არასრულწლოვნები"
+
+#: templates/shop/legal/privacy.html:70
+msgid ""
+"The shop is aimed at adults who can enter into contracts under Georgian law."
+" We do not knowingly collect data from children without parental "
+"involvement; if you believe we have, contact us and we will address it."
+msgstr ""
+"მაღაზია განკუთვნილია მოზარდებისთვის, რომლებსაც შეუძლიათ დადონ კონტრაქტები "
+"საქართველოს კანონმდებლობით. ჩვენ შეგნებულად არ ვაგროვებთ მონაცემებს "
+"ბავშვებისგან მშობლების ჩართულობის გარეშე; თუ გჯერათ, რომ გვაქვს, "
+"დაგვიკავშირდით და ჩვენ მივმართავთ მას."
+
+#: templates/shop/legal/privacy.html:74
+msgid "11. Updates"
+msgstr "11. განახლებები"
+
+#: templates/shop/legal/privacy.html:75
+msgid ""
+"We may update this policy. The current version is always on this page; "
+"material changes will be reflected in the date below."
+msgstr ""
+"ჩვენ შეიძლება განვაახლოთ ეს პოლიტიკა. მიმდინარე ვერსია ყოველთვის ამ "
+"გვერდზეა; მატერიალური ცვლილებები აისახება ქვემოთ მოცემულ თარიღში."
+
+#: templates/shop/legal/sitemap.html:3
+msgid "Site map | Tenrivals"
+msgstr "საიტის რუკა | მეტოქეები"
+
+#: templates/shop/legal/sitemap.html:11
+#, python-format
+msgid ""
+"Quick links across Tennis Rivals Shop. For the catalogue, use the navigation"
+" bar or open <a href=\"%(u_stock)s\" style=\"color:var(--accent);font-"
+"weight:600\">In stock</a> here. Search engines can use the <a "
+"href=\"%(u_sitemap_xml)s\" style=\"color:var(--accent);font-weight:600\">XML"
+" sitemap</a>."
+msgstr ""
+"სწრაფი ბმულები Tennis Rivals Shop-ში. კატალოგისთვის გამოიყენეთ ნავიგაციის "
+"ზოლი ან გახსენით <a href=\"%(u_stock)s\" style=\"color:var(--accent);font-"
+"weight:600\">მარაგში</a> აქ. საძიებო სისტემებს შეუძლიათ გამოიყენონ <a "
+"href=\"%(u_sitemap_xml)s\" style=\"color:var(--accent);font-weight:600\">XML"
+" საიტის რუკა</a>."
+
+#: templates/shop/legal/sitemap.html:21
+msgid "Guides"
+msgstr "გიდები"
+
+#: templates/shop/legal/sitemap.html:23
+msgid "How to choose racket weight"
+msgstr "როგორ ავირჩიოთ რეკეტის წონა"
+
+#: templates/shop/legal/sitemap.html:24
+msgid "Clay-court shoes in Tbilisi"
+msgstr "თიხის მოედნის ფეხსაცმელი თბილისში"
+
+#: templates/shop/legal/sitemap.html:29
+msgid "Shop"
+msgstr "მაღაზია"
+
+#: templates/shop/legal/sitemap.html:33
+#| msgid "All brands"
+msgid "All our brands"
+msgstr "ყველა ჩვენი ბრენდი"
+
+#: templates/shop/legal/sitemap.html:36
+msgid "Search"
+msgstr "ძიება"
+
+#: templates/shop/legal/sitemap.html:37
+msgid "Cart"
+msgstr "კალათა"
+
+#: templates/shop/legal/sitemap.html:38
+msgid "Checkout"
+msgstr "გადახდა"
+
+#: templates/shop/legal/sitemap.html:43
+msgid "Catalog (in stock)"
+msgstr "კატალოგი (საწყობში)"
+
+#: templates/shop/legal/sitemap.html:44
+msgid "Main product types — same entries as the shop navigation."
+msgstr ""
+"პროდუქტის ძირითადი ტიპები - იგივე ჩანაწერები, როგორც მაღაზიის ნავიგაცია."
+
+#: templates/shop/legal/sitemap.html:55
+msgid "Accessories & equipment (combined)"
+msgstr "აქსესუარები და აღჭურვილობა (კომბინირებული)"
+
+#: templates/shop/legal/sitemap.html:65
+msgid "Collections"
+msgstr "კოლექციები"
+
+#: templates/shop/legal/sitemap.html:86
+msgid "Legal & policies"
+msgstr "სამართლებრივი და პოლიტიკა"
+
+#: templates/shop/legal/sitemap.html:91
+msgid "Copyright & IP"
+msgstr "საავტორო უფლება & IP"
+
+#: templates/shop/legal/sitemap.html:94
+#, python-format
+msgid ""
+"<a href=\"%(u_legal_sitemap)s\" style=\"color:var(--accent);font-"
+"weight:600\">Site map</a> (this page)"
+msgstr ""
+"<a href=\"%(u_legal_sitemap)s\" style=\"color:var(--accent);font-"
+"weight:600\">საიტის რუკა</a> (ეს გვერდი)"
+
+#: templates/shop/legal/sitemap.html:102
+msgid "Create account"
+msgstr "ანგარიშის შექმნა"
+
+#: templates/shop/legal/sitemap.html:103
+msgid "Account details"
+msgstr "ანგარიშის დეტალები"
+
+#: templates/shop/legal/sitemap.html:105
+msgid "Order for me — requests"
+msgstr "შეუკვეთე ჩემთვის - ითხოვს"
+
+#: templates/shop/legal/terms.html:3
+msgid "Terms & conditions | Tenrivals"
+msgstr "წესები და პირობები | მეტოქეები"
+
+#: templates/shop/legal/terms.html:13
+#, python-format
+msgid ""
+"These terms govern use of the Tennis Rivals Shop website and purchases from "
+"us. We sell and deliver within Georgia only. By placing an order, you accept"
+" them. Practical details: <a href=\"%(u_delivery)s\" "
+"style=\"color:var(--accent);font-weight:600\">Delivery</a>, <a "
+"href=\"%(u_payment)s\" style=\"color:var(--accent);font-"
+"weight:600\">Payment</a>, <a href=\"%(u_returns)s\" "
+"style=\"color:var(--accent);font-weight:600\">Returns</a>, <a "
+"href=\"%(u_privacy)s\" style=\"color:var(--accent);font-"
+"weight:600\">Privacy</a>, <a href=\"%(u_cookies)s\" "
+"style=\"color:var(--accent);font-weight:600\">Cookies</a>."
+msgstr ""
+"ამ პირობებს არეგულირებს Tennis Rivals Shop-ის ვებსაიტის გამოყენება და ყიდვა "
+"ჩვენთან. ვყიდით და ვაწვდით მხოლოდ საქართველოში. შეკვეთის განთავსებით თქვენ "
+"ეთანხმებით მათ. პრაქტიკული დეტალები: <a href=\"%(u_delivery)s\" "
+"style=\"color:var(--accent);font-weight:600\">მიწოდება</a>, <a "
+"href=\"%(u_payment)s\" style=\"color:var(--accent);font-"
+"weight:600\">გადახდა</a>, <a href=\"%(u_returns)s\" "
+"style=\"color:var(--accent);font-weight:600\">დაბრუნება</a>, <a "
+"href=\"%(u_privacy)s\" style=\"color:var(--accent);font-"
+"weight:600\">კონფიდენციალურობა</a>, <a href=\"%(u_cookies)s\" "
+"style=\"color:var(--accent);font-weight:600\">ქუქი-ფაილები</a>."
+
+#: templates/shop/legal/terms.html:17
+msgid ""
+"For information only; does not replace legal advice. Consumer relations are "
+"governed by the <strong>Law of Georgia on Consumer Rights "
+"Protection</strong> where it applies to your purchase."
+msgstr ""
+"მხოლოდ ინფორმაციისთვის; არ ცვლის იურიდიულ რჩევას. მომხმარებელთან ურთიერთობა "
+"რეგულირდება <strong>საქართველოს კანონი მომხმარებელთა უფლებების დაცვის "
+"შესახებ</strong>, სადაც ის ვრცელდება თქვენს შეძენაზე."
+
+#: templates/shop/legal/terms.html:21
+msgid "1. Seller"
+msgstr "1. გამყიდველი"
+
+#: templates/shop/legal/terms.html:22
+msgid ""
+"The seller is <strong>IE Andrey Molodenko</strong> (individual "
+"entrepreneur), identification code (PN) <strong>100382729</strong>, address:"
+" Georgia, Tbilisi, E. Bejanishvili Street 23, apartment 19 "
+"(“<strong>we</strong>”, “<strong>us</strong>”, “<strong>Tennis Rivals "
+"Shop</strong>”). Contact: <a "
+"href=\"mailto:andy.rivals@tenrivals.com\">andy.rivals@tenrivals.com</a>, <a "
+"href=\"tel:+995591288967\">+995 591 288 967</a>."
+msgstr ""
+"გამყიდველი არის <strong>ი.ე. ანდრეი მოლოდენკო</strong> (ინდივიდუალური "
+"მეწარმე), საიდენტიფიკაციო კოდი (PN) <strong>100382729</strong>, მისამართი: "
+"საქართველო, თბილისი, ე. ბეჯანიშვილის ქ. 23, ბინა 19 "
+"(«<strong>ჩვენ</strong>», «<strong>ჩვენ</strong>», «<strong>Tennis Rivals "
+"Shop</strong>»). კონტაქტი: <a "
+"href=\"mailto:andy.rivals@tenrivals.com\">andy.rivals@tenrivals.com</a>, <a "
+"href=\"tel:+995591288967\">+995 591 288 967</a>."
+
+#: templates/shop/legal/terms.html:26
+msgid "2. Eligibility & territory"
+msgstr "2. უფლებამოსილება და ტერიტორია"
+
+#: templates/shop/legal/terms.html:27
+msgid ""
+"You must have capacity to contract under Georgian law. We accept orders for "
+"delivery <strong>within Georgia</strong> only. Prices, taxes, and consumer "
+"rules refer to Georgia unless we explicitly state otherwise."
+msgstr ""
+"თქვენ უნდა გქონდეთ კონტრაქტი საქართველოს კანონმდებლობის შესაბამისად. ჩვენ "
+"ვიღებთ შეკვეთებს მიწოდებაზე <strong>საქართველოში</strong> მხოლოდ. ფასები, "
+"გადასახადები და სამომხმარებლო წესები ეხება საქართველოს, თუ ჩვენ სხვაგვარად "
+"არ განვაცხადეთ."
+
+#: templates/shop/legal/terms.html:31
+msgid "3. Products & information"
+msgstr "3. პროდუქტები და ინფორმაცია"
+
+#: templates/shop/legal/terms.html:32
+msgid ""
+"We aim for accurate descriptions, images, and availability. Minor "
+"differences (e.g. manufacturer packaging changes) are not defects. If an "
+"item is unavailable after you have placed an order or paid (including pay-"
+"on-delivery arrangements), we will refund or adjust that item or the order "
+"as applicable and notify you."
+msgstr ""
+"ჩვენი მიზანია ზუსტი აღწერილობები, სურათები და ხელმისაწვდომობა. მცირე "
+"განსხვავებები (მაგ. მწარმოებლის შეფუთვის ცვლილებები) არ არის დეფექტი. თუ "
+"საქონელი მიუწვდომელია მას შემდეგ, რაც თქვენ გააკეთებთ შეკვეთას ან გადაიხდით "
+"(მათ შორის გადახდაზე მიტანის შეთანხმებები), ჩვენ დაგიბრუნებთ თანხას ან "
+"მოვარგებთ ამ ნივთს ან შეკვეთას და შეგატყობინებთ."
+
+#: templates/shop/legal/terms.html:36
+msgid "4. Prices & taxes"
+msgstr "4. ფასები და გადასახადები"
+
+#: templates/shop/legal/terms.html:37
+msgid ""
+"Prices are in <strong>GEL (₾)</strong> and include applicable taxes unless "
+"clearly marked otherwise. We may correct obvious errors before or shortly "
+"after acceptance; if you were charged incorrectly, we will adjust or refund."
+msgstr ""
+"ფასები მოცემულია <strong>ლარში (₾)</strong> და მოიცავს მოქმედ გადასახადებს, "
+"თუ სხვაგვარად მკაფიოდ არ არის მითითებული. ჩვენ შეიძლება გამოვასწოროთ აშკარა "
+"შეცდომები მიღებამდე ან მის შემდეგ მალევე; თუ არასწორად ჩამოგეჭრებათ თანხა, "
+"ჩვენ დავარეგულირებთ ან დაგიბრუნებთ თანხას."
+
+#: templates/shop/legal/terms.html:41
+msgid "5. Orders & contract"
+msgstr "5. შეკვეთები და კონტრაქტი"
+
+#: templates/shop/legal/terms.html:42
+#, python-format
+msgid ""
+"Checkout steps on the site are an offer to buy. The contract is formed when "
+"we <strong>confirm acceptance</strong> of your order — for example by email,"
+" SMS, Telegram, or another channel we use to confirm the order and delivery "
+"details. <strong>Online card payment on the website is not available "
+"yet;</strong> payment is normally collected <strong>on delivery</strong> "
+"(card terminal or cash in GEL) or by <strong>bank transfer</strong> where we"
+" agree that method, as described on our <a href=\"%(u_payment)s\" "
+"style=\"color:var(--accent);font-weight:600\">Payment</a> page. We may "
+"refuse or cancel orders for stock, legal, or good-faith fraud-prevention "
+"reasons; in that case you will not owe payment for undelivered goods or we "
+"will refund amounts already received, as applicable."
+msgstr ""
+"საიტზე შეკვეთის ნაბიჯები არის შეთავაზება ყიდვაზე. ხელშეკრულება იქმნება, "
+"როდესაც ჩვენ <strong>ვადასტურებთ თქვენი შეკვეთის მიღებას</strong> — "
+"მაგალითად ელფოსტით, SMS-ით, ტელეგრამით ან სხვა არხით, რომელთაც ვიყენებთ "
+"შეკვეთისა და მიწოდების გადასამოწმებლად. <strong>ვებგვერდზე ბარათით ონლაინ "
+"გადახდა ჯერ არ არის ხელმისაწვდომი;</strong> გადახდა ჩვეულებრივ ირიცხება "
+"<strong>მიტანისას</strong> (ბარათის ტერმინალი ან ნაღდი ლარი) ან "
+"<strong>საბანკო გადარიცხვით</strong>, სადაც ამ მეთოდს ვეთანხმებით, როგორც ეს"
+" აღწერილია ჩვენს <a href=\"%(u_payment)s\" style=\"color:var(--accent);font-"
+"weight:600\">გადახდის</a> გვერდზე. შეკვეთები შეიძლება უარყოფილი ან "
+"გაუქმებული იყოს მარაგის, სამართლებრივი ან კეთილსინდისიერი თაღლითობის "
+"პრევენციის გამო; ამ შემთხვევაში თქვენ არ მოგიწევთ გადასახადი მიუწოდებელი "
+"საქონლისთვის ან ჩვენ დაგიბრუნებთ უკვე მიღებულ თანხას, შესაბამისად."
+
+#: templates/shop/legal/terms.html:46
+msgid "6. Payment"
+msgstr "6. გადახდა"
+
+#: templates/shop/legal/terms.html:47
+#, python-format
+msgid ""
+"You can pay as described on <a href=\"%(u_payment)s\" "
+"style=\"color:var(--accent);font-weight:600\">Payment</a>. At present that "
+"means in practice:"
+msgstr ""
+"შეგიძლიათ გადაიხადოთ როგორც აღწერილია <a href=\"%(u_payment)s\" "
+"style=\"color:var(--accent);font-weight:600\">გადახდა</a>. ამჟამად ეს "
+"პრაქტიკაში ნიშნავს:"
+
+#: templates/shop/legal/terms.html:49
+msgid ""
+"<strong>Pay on delivery:</strong> by <strong>bank card</strong> (courier POS"
+" terminal) or <strong>cash in GEL</strong>, unless we have agreed otherwise "
+"in writing."
+msgstr ""
+"<strong>გადაიხადეთ მიტანისას:</strong> <strong>საბანკო ბარათით</strong> "
+"(კურიერის POS ტერმინალი) ან <strong>ნაღდი ანგარიშსწორებით ლარში</strong>, თუ"
+" სხვაგვარად არ გვაქვს შეთანხმებული წერილობით."
+
+#: templates/shop/legal/terms.html:50
+msgid "<strong>Bank transfer</strong> where we offer it for your order."
+msgstr ""
+"<strong>საბანკო გადარიცხვა</strong> სადაც ჩვენ გთავაზობთ მას თქვენი "
+"შეკვეთისთვის."
+
+#: templates/shop/legal/terms.html:51
+msgid ""
+"<strong>Online card payment in checkout</strong> may be added later; until "
+"then, do not expect to enter card details on our website for immediate "
+"capture. When available, it will be operated by a licensed payment partner "
+"under its rules; we will update these terms and the Payment page."
+msgstr ""
+"<strong>ონლაინ ბარათით გადახდა შეკვეთისას</strong> შეიძლება მოგვიანებით "
+"დაემატოს; მანამდე, არ უნდა ელოდოთ ბარათის დეტალების შეყვანას ჩვენს ვებსაიტზე"
+" დაუყოვნებლივ გადასაღებად. როდესაც ხელმისაწვდომი იქნება, მას იმუშავებს "
+"ლიცენზირებული გადახდის პარტნიორი მისი წესების შესაბამისად; ჩვენ განვაახლებთ "
+"ამ პირობებს და გადახდის გვერდს."
+
+#: templates/shop/legal/terms.html:56
+msgid "7. Delivery"
+msgstr "7. მიწოდება"
+
+#: templates/shop/legal/terms.html:57
+#, python-format
+msgid ""
+"Areas, timelines, and fees are on our <a href=\"%(u_delivery)s\" "
+"style=\"color:var(--accent);font-weight:600\">Delivery</a> page. Risk passes"
+" to you when goods are delivered to you or a person you designate, unless "
+"mandatory law says otherwise."
+msgstr ""
+"სფეროები, ვადები და მოსაკრებლები მოცემულია ჩვენს <a href=\"%(u_delivery)s\" "
+"style=\"color:var(--accent);font-weight:600\">მიწოდების</a> გვერდზე. რისკი "
+"გადაეცემა თქვენზე, როდესაც საქონელი მიეწოდებათ თქვენ ან თქვენს მიერ დანიშნულ"
+" პირს, თუ სავალდებულო კანონი სხვაგვარად არ წერს."
+
+#: templates/shop/legal/terms.html:61
+msgid "8. Returns & withdrawal"
+msgstr "8. დაბრუნება და გატანა"
+
+#: templates/shop/legal/terms.html:62
+#, python-format
+msgid ""
+"The <strong>14-day</strong> return/exchange rules and exceptions (e.g. "
+"strung rackets, hygiene) are in <a href=\"%(u_returns)s\" "
+"style=\"color:var(--accent);font-weight:600\">Returns & exchanges</a> and "
+"form part of these terms. Statutory rights under Georgian consumer law "
+"remain in force where applicable."
+msgstr ""
+"<strong>14-დღიანი</strong> დაბრუნების/გაცვლის წესები და გამონაკლისები (მაგ.,"
+" რეკეტი, ჰიგიენა) მოცემულია <a href=\"%(u_returns)s\" "
+"style=\"color:var(--accent);font-weight:600\">დაბრუნებები და გაცვლა</a> და "
+"წარმოადგენს ამ პირობების ნაწილს. საქართველოს სამომხმარებლო კანონმდებლობით "
+"დადგენილი კანონიერი უფლებები რჩება ძალაში, სადაც ეს გამოიყენება."
+
+#: templates/shop/legal/terms.html:66
+msgid "9. Legal warranty & defects"
+msgstr "9. სამართლებრივი გარანტია და დეფექტები"
+
+#: templates/shop/legal/terms.html:67
+msgid ""
+"If goods are defective under applicable law, contact us with your order "
+"details and, where useful, photos. Manufacturer warranties are additional "
+"and subject to the manufacturer’s terms."
+msgstr ""
+"თუ საქონელი დეფექტურია მოქმედი კანონმდებლობით, დაგვიკავშირდით თქვენი "
+"შეკვეთის დეტალებით და, სადაც ეს სასარგებლოა, ფოტოებით. მწარმოებლის "
+"გარანტიები დამატებითია და ექვემდებარება მწარმოებლის პირობებს."
+
+#: templates/shop/legal/terms.html:71
+msgid "10. Liability"
+msgstr "10. პასუხისმგებლობა"
+
+#: templates/shop/legal/terms.html:72
+msgid ""
+"To the extent permitted by Georgian law, we are not liable for indirect or "
+"consequential loss. Our aggregate liability for a given order is generally "
+"limited to the amount you paid for that order, except where liability cannot"
+" be limited (including gross negligence or wilful misconduct, and mandatory "
+"consumer protections)."
+msgstr ""
+"რამდენადაც დაშვებულია საქართველოს კანონმდებლობით, ჩვენ არ ვართ "
+"პასუხისმგებელი ირიბი ან თანმიმდევრული ზარალისთვის. ჩვენი ერთობლივი "
+"პასუხისმგებლობა მოცემულ შეკვეთაზე ზოგადად შემოიფარგლება იმ თანხით, რომელიც "
+"თქვენ გადაიხადეთ ამ შეკვეთისთვის, გარდა იმ შემთხვევებისა, როდესაც "
+"პასუხისმგებლობა არ შეიძლება იყოს შეზღუდული (უხეში დაუდევრობის ან განზრახ "
+"გადაცდომის ჩათვლით და მომხმარებელთა სავალდებულო დაცვა)."
+
+#: templates/shop/legal/terms.html:76
+msgid "11. Website use"
+msgstr "11. ვებგვერდის გამოყენება"
+
+#: templates/shop/legal/terms.html:77
+msgid ""
+"Do not misuse the site (fraud, scraping that harms service, attempts to "
+"bypass security). Product pages may be linked for personal use; commercial "
+"reuse of our content needs our written permission."
+msgstr ""
+"არ გამოიყენოთ საიტი ბოროტად (თაღლითობა, გახეხვა, რომელიც ზიანს აყენებს "
+"მომსახურებას, უსაფრთხოების გვერდის ავლით). პროდუქტის გვერდები შეიძლება იყოს "
+"დაკავშირებული პირადი გამოყენებისთვის; ჩვენი შინაარსის კომერციული ხელახალი "
+"გამოყენება საჭიროებს ჩვენს წერილობით ნებართვას."
+
+#: templates/shop/legal/terms.html:81
+msgid "12. Changes"
+msgstr "12. ცვლილებები"
+
+#: templates/shop/legal/terms.html:82
+msgid ""
+"We may update these terms. The version published at the time of your order "
+"applies to that order."
+msgstr ""
+"ჩვენ შეიძლება განვაახლოთ ეს პირობები. თქვენი შეკვეთის დროს გამოქვეყნებული "
+"ვერსია ვრცელდება ამ შეკვეთაზე."
+
+#: templates/shop/legal/terms.html:86
+msgid "13. Law & disputes"
+msgstr "13. სამართალი და დავა"
+
+#: templates/shop/legal/terms.html:87
+msgid ""
+"These terms are governed by the laws of <strong>Georgia</strong>. Courts of "
+"Georgia have jurisdiction over disputes arising from these terms and your "
+"purchases, without prejudice to mandatory consumer rights under Georgian "
+"law."
+msgstr ""
+"ეს პირობები რეგულირდება <strong>საქართველოს</strong> კანონმდებლობით. "
+"საქართველოს სასამართლოები იურისდიქციას ფლობენ წინამდებარე პირობებიდან და "
+"თქვენი შესყიდვებიდან წარმოშობილ დავებს, საქართველოს კანონმდებლობით "
+"გათვალისწინებული მომხმარებლის სავალდებულო უფლებების შელახვის გარეშე."
+
+#: templates/shop/legal/terms.html:90
+#, python-format
+msgid ""
+"Last updated: April 2026. Questions: <a href=\"%(u_contacts)s\" "
+"style=\"color:var(--accent);font-weight:600\">Contacts</a>."
+msgstr ""
+"ბოლო განახლება: 2026 წლის აპრილი. კითხვები: <a href=\"%(u_contacts)s\" "
+"style=\"color:var(--accent);font-weight:600\">კონტაქტები</a>."

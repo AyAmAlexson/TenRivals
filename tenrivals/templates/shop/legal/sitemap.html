@@ -1,63 +1,68 @@
 {% extends 'shop/info/layout.html' %}
-{% load catalog_tags %}
-{% block title %}Site map | Tenrivals{% endblock %}
+{% load i18n catalog_tags %}
+{% block title %}{% trans "Site map | Tenrivals" %}{% endblock %}
 {% block info_main %}
+{% shop_url 'shop:stock' as u_stock %}
+{% url 'sitemap_xml' as u_sitemap_xml %}
+{% shop_url 'shop:legal_sitemap' as u_legal_sitemap %}
 <header class="info-hero">
-  <h1 class="info-hero__h1">Site map</h1>
+  <h1 class="info-hero__h1">{% trans "Site map" %}</h1>
   <p class="info-hero__lead">
+    {% blocktranslate trimmed with u_stock=u_stock u_sitemap_xml=u_sitemap_xml %}
     Quick links across Tennis Rivals Shop. For the catalogue, use the navigation bar or open
-    <a href="{% shop_url 'shop:stock' %}" style="color:var(--accent);font-weight:600">In stock</a>
+    <a href="{{ u_stock }}" style="color:var(--accent);font-weight:600">In stock</a>
     here. Search engines can use the
-    <a href="{% url 'sitemap_xml' %}" style="color:var(--accent);font-weight:600">XML sitemap</a>.
+    <a href="{{ u_sitemap_xml }}" style="color:var(--accent);font-weight:600">XML sitemap</a>.
+    {% endblocktranslate %}
   </p>
 </header>
 
 <div class="info-section">
-  <h2 class="info-h2">Guides</h2>
+  <h2 class="info-h2">{% trans "Guides" %}</h2>
   <ul class="info-ul">
-    <li><a href="{% shop_url 'shop:guide_racket_weight' %}" style="color:var(--accent);font-weight:600">How to choose racket weight</a></li>
-    <li><a href="{% shop_url 'shop:guide_clay_shoes' %}" style="color:var(--accent);font-weight:600">Clay-court shoes in Tbilisi</a></li>
+    <li><a href="{% shop_url 'shop:guide_racket_weight' %}" style="color:var(--accent);font-weight:600">{% trans "How to choose racket weight" %}</a></li>
+    <li><a href="{% shop_url 'shop:guide_clay_shoes' %}" style="color:var(--accent);font-weight:600">{% trans "Clay-court shoes in Tbilisi" %}</a></li>
   </ul>
 </div>
 
 <div class="info-section">
-  <h2 class="info-h2">Shop</h2>
+  <h2 class="info-h2">{% trans "Shop" %}</h2>
   <ul class="info-ul">
-    <li><a href="{% shop_url 'shop:index' %}" style="color:var(--accent);font-weight:600">Shop home</a></li>
-    <li><a href="{% shop_url 'shop:stock' %}" style="color:var(--accent);font-weight:600">In stock</a></li>
-    <li><a href="{% shop_url 'shop:brands' %}" style="color:var(--accent);font-weight:600">All our brands</a></li>
-    <li><a href="{% shop_url 'shop:order_for_me' %}" style="color:var(--accent);font-weight:600">Order for me</a></li>
-    <li><a href="{% shop_url 'shop:blog_index' %}" style="color:var(--accent);font-weight:600">Blog</a></li>
-    <li><a href="{% shop_url 'shop:product_search' %}" style="color:var(--accent);font-weight:600">Search</a></li>
-    <li><a href="{% shop_url 'shop:cart' %}" style="color:var(--accent);font-weight:600">Cart</a></li>
-    <li><a href="{% shop_url 'shop:checkout' %}" style="color:var(--accent);font-weight:600">Checkout</a></li>
+    <li><a href="{% shop_url 'shop:index' %}" style="color:var(--accent);font-weight:600">{% trans "Shop home" %}</a></li>
+    <li><a href="{% shop_url 'shop:stock' %}" style="color:var(--accent);font-weight:600">{% trans "In stock" %}</a></li>
+    <li><a href="{% shop_url 'shop:brands' %}" style="color:var(--accent);font-weight:600">{% trans "All our brands" %}</a></li>
+    <li><a href="{% shop_url 'shop:order_for_me' %}" style="color:var(--accent);font-weight:600">{% trans "Order for me" %}</a></li>
+    <li><a href="{% shop_url 'shop:blog_index' %}" style="color:var(--accent);font-weight:600">{% trans "Blog" %}</a></li>
+    <li><a href="{% shop_url 'shop:product_search' %}" style="color:var(--accent);font-weight:600">{% trans "Search" %}</a></li>
+    <li><a href="{% shop_url 'shop:cart' %}" style="color:var(--accent);font-weight:600">{% trans "Cart" %}</a></li>
+    <li><a href="{% shop_url 'shop:checkout' %}" style="color:var(--accent);font-weight:600">{% trans "Checkout" %}</a></li>
   </ul>
 </div>
 
 <div class="info-section">
-  <h2 class="info-h2">Catalog (in stock)</h2>
-  <p class="info-prose" style="margin-bottom:12px">Main product types — same entries as the shop navigation.</p>
+  <h2 class="info-h2">{% trans "Catalog (in stock)" %}</h2>
+  <p class="info-prose" style="margin-bottom:12px">{% trans "Main product types — same entries as the shop navigation." %}</p>
   <ul class="info-ul">
-    <li><a href="{% shop_url 'shop:stock' %}?type=RACKET" style="color:var(--accent);font-weight:600">Rackets</a></li>
-    <li><a href="{% shop_url 'shop:stock' %}?type=BAGS" style="color:var(--accent);font-weight:600">Bags &amp; covers</a></li>
-    <li><a href="{% shop_url 'shop:stock' %}?type=M_APP" style="color:var(--accent);font-weight:600">Men&apos;s apparel</a></li>
-    <li><a href="{% shop_url 'shop:stock' %}?type=W_APP" style="color:var(--accent);font-weight:600">Women&apos;s apparel</a></li>
-    <li><a href="{% shop_url 'shop:stock' %}?type=J_APP" style="color:var(--accent);font-weight:600">Junior apparel</a></li>
-    <li><a href="{% shop_url 'shop:stock' %}?type=M_SHOES" style="color:var(--accent);font-weight:600">Men&apos;s shoes</a></li>
-    <li><a href="{% shop_url 'shop:stock' %}?type=W_SHOES" style="color:var(--accent);font-weight:600">Women&apos;s shoes</a></li>
-    <li><a href="{% shop_url 'shop:stock' %}?type=J_SHOES" style="color:var(--accent);font-weight:600">Junior shoes</a></li>
-    <li><a href="{% shop_url 'shop:stock' %}?type=BALLS" style="color:var(--accent);font-weight:600">Balls</a></li>
-    <li><a href="{% shop_url 'shop:stock' %}?type=ACC_GEAR" style="color:var(--accent);font-weight:600">Accessories &amp; equipment (combined)</a></li>
-    <li><a href="{% shop_url 'shop:stock' %}?type=ACCESSORIES" style="color:var(--accent);font-weight:600">Accessories</a></li>
-    <li><a href="{% shop_url 'shop:stock' %}?type=STRINGS" style="color:var(--accent);font-weight:600">Strings</a></li>
-    <li><a href="{% shop_url 'shop:stock' %}?type=GRIPS" style="color:var(--accent);font-weight:600">Grips</a></li>
-    <li><a href="{% shop_url 'shop:stock' %}?type=DAMPENERS" style="color:var(--accent);font-weight:600">Dampeners</a></li>
+    <li><a href="{% shop_url 'shop:stock' %}?type=RACKET" style="color:var(--accent);font-weight:600">{% trans "Rackets" %}</a></li>
+    <li><a href="{% shop_url 'shop:stock' %}?type=BAGS" style="color:var(--accent);font-weight:600">{% trans "Bags & covers" %}</a></li>
+    <li><a href="{% shop_url 'shop:stock' %}?type=M_APP" style="color:var(--accent);font-weight:600">{% trans "Men's apparel" %}</a></li>
+    <li><a href="{% shop_url 'shop:stock' %}?type=W_APP" style="color:var(--accent);font-weight:600">{% trans "Women's apparel" %}</a></li>
+    <li><a href="{% shop_url 'shop:stock' %}?type=J_APP" style="color:var(--accent);font-weight:600">{% trans "Junior apparel" %}</a></li>
+    <li><a href="{% shop_url 'shop:stock' %}?type=M_SHOES" style="color:var(--accent);font-weight:600">{% trans "Men's shoes" %}</a></li>
+    <li><a href="{% shop_url 'shop:stock' %}?type=W_SHOES" style="color:var(--accent);font-weight:600">{% trans "Women's shoes" %}</a></li>
+    <li><a href="{% shop_url 'shop:stock' %}?type=J_SHOES" style="color:var(--accent);font-weight:600">{% trans "Junior shoes" %}</a></li>
+    <li><a href="{% shop_url 'shop:stock' %}?type=BALLS" style="color:var(--accent);font-weight:600">{% trans "Balls" %}</a></li>
+    <li><a href="{% shop_url 'shop:stock' %}?type=ACC_GEAR" style="color:var(--accent);font-weight:600">{% trans "Accessories & equipment (combined)" %}</a></li>
+    <li><a href="{% shop_url 'shop:stock' %}?type=ACCESSORIES" style="color:var(--accent);font-weight:600">{% trans "Accessories" %}</a></li>
+    <li><a href="{% shop_url 'shop:stock' %}?type=STRINGS" style="color:var(--accent);font-weight:600">{% trans "Strings" %}</a></li>
+    <li><a href="{% shop_url 'shop:stock' %}?type=GRIPS" style="color:var(--accent);font-weight:600">{% trans "Grips" %}</a></li>
+    <li><a href="{% shop_url 'shop:stock' %}?type=DAMPENERS" style="color:var(--accent);font-weight:600">{% trans "Dampeners" %}</a></li>
   </ul>
 </div>
 
 {% if sitemap_collections %}
 <div class="info-section">
-  <h2 class="info-h2">Collections</h2>
+  <h2 class="info-h2">{% trans "Collections" %}</h2>
   <ul class="info-ul">
     {% for c in sitemap_collections %}
     <li><a href="{% shop_url 'shop:collection_detail' slug=c.slug %}" style="color:var(--accent);font-weight:600">{{ c.title }}</a></li>
@@ -67,37 +72,37 @@
 {% endif %}
 
 <div class="info-section">
-  <h2 class="info-h2">Customer service</h2>
+  <h2 class="info-h2">{% trans "Customer service" %}</h2>
   <ul class="info-ul">
-    <li><a href="{% shop_url 'shop:info_delivery' %}" style="color:var(--accent);font-weight:600">Delivery</a></li>
-    <li><a href="{% shop_url 'shop:info_payment' %}" style="color:var(--accent);font-weight:600">Payment</a></li>
-    <li><a href="{% shop_url 'shop:info_returns' %}" style="color:var(--accent);font-weight:600">Returns &amp; exchanges</a></li>
-    <li><a href="{% shop_url 'shop:info_size_guide' %}" style="color:var(--accent);font-weight:600">Size guide</a></li>
-    <li><a href="{% shop_url 'shop:info_contacts' %}" style="color:var(--accent);font-weight:600">Contacts</a></li>
+    <li><a href="{% shop_url 'shop:info_delivery' %}" style="color:var(--accent);font-weight:600">{% trans "Delivery" %}</a></li>
+    <li><a href="{% shop_url 'shop:info_payment' %}" style="color:var(--accent);font-weight:600">{% trans "Payment" %}</a></li>
+    <li><a href="{% shop_url 'shop:info_returns' %}" style="color:var(--accent);font-weight:600">{% trans "Returns & exchanges" %}</a></li>
+    <li><a href="{% shop_url 'shop:info_size_guide' %}" style="color:var(--accent);font-weight:600">{% trans "Size guide" %}</a></li>
+    <li><a href="{% shop_url 'shop:info_contacts' %}" style="color:var(--accent);font-weight:600">{% trans "Contacts" %}</a></li>
   </ul>
 </div>
 
 <div class="info-section">
-  <h2 class="info-h2">Legal &amp; policies</h2>
+  <h2 class="info-h2">{% trans "Legal & policies" %}</h2>
   <ul class="info-ul">
-    <li><a href="{% shop_url 'shop:legal_terms' %}" style="color:var(--accent);font-weight:600">Terms &amp; conditions</a></li>
-    <li><a href="{% shop_url 'shop:legal_privacy' %}" style="color:var(--accent);font-weight:600">Privacy policy</a></li>
-    <li><a href="{% shop_url 'shop:legal_cookies' %}" style="color:var(--accent);font-weight:600">Cookie policy</a></li>
-    <li><a href="{% shop_url 'shop:legal_dmca' %}" style="color:var(--accent);font-weight:600">Copyright &amp; IP</a></li>
-    <li><a href="{% shop_url 'shop:legal_company' %}" style="color:var(--accent);font-weight:600">Company information</a></li>
-    <li><a href="{% shop_url 'shop:legal_accessibility' %}" style="color:var(--accent);font-weight:600">Accessibility</a></li>
-    <li><a href="{% shop_url 'shop:legal_sitemap' %}" style="color:var(--accent);font-weight:600">Site map</a> (this page)</li>
+    <li><a href="{% shop_url 'shop:legal_terms' %}" style="color:var(--accent);font-weight:600">{% trans "Terms & conditions" %}</a></li>
+    <li><a href="{% shop_url 'shop:legal_privacy' %}" style="color:var(--accent);font-weight:600">{% trans "Privacy policy" %}</a></li>
+    <li><a href="{% shop_url 'shop:legal_cookies' %}" style="color:var(--accent);font-weight:600">{% trans "Cookie policy" %}</a></li>
+    <li><a href="{% shop_url 'shop:legal_dmca' %}" style="color:var(--accent);font-weight:600">{% trans "Copyright & IP" %}</a></li>
+    <li><a href="{% shop_url 'shop:legal_company' %}" style="color:var(--accent);font-weight:600">{% trans "Company information" %}</a></li>
+    <li><a href="{% shop_url 'shop:legal_accessibility' %}" style="color:var(--accent);font-weight:600">{% trans "Accessibility" %}</a></li>
+    <li>{% blocktranslate trimmed with u_legal_sitemap=u_legal_sitemap %}<a href="{{ u_legal_sitemap }}" style="color:var(--accent);font-weight:600">Site map</a> (this page){% endblocktranslate %}</li>
   </ul>
 </div>
 
 <div class="info-section">
-  <h2 class="info-h2">Account</h2>
+  <h2 class="info-h2">{% trans "Account" %}</h2>
   <ul class="info-ul">
-    <li><a href="{% url 'account_login' %}" style="color:var(--accent);font-weight:600">Sign in</a></li>
-    <li><a href="{% url 'account_signup' %}" style="color:var(--accent);font-weight:600">Create account</a></li>
-    <li><a href="{% url 'persons:account_details' %}" style="color:var(--accent);font-weight:600">Account details</a></li>
-    <li><a href="{% url 'persons:shop_order_history' %}" style="color:var(--accent);font-weight:600">Order history</a></li>
-    <li><a href="{% url 'persons:order_for_me_history' %}" style="color:var(--accent);font-weight:600">Order for me — requests</a></li>
+    <li><a href="{% url 'account_login' %}" style="color:var(--accent);font-weight:600">{% trans "Sign in" %}</a></li>
+    <li><a href="{% url 'account_signup' %}" style="color:var(--accent);font-weight:600">{% trans "Create account" %}</a></li>
+    <li><a href="{% url 'persons:account_details' %}" style="color:var(--accent);font-weight:600">{% trans "Account details" %}</a></li>
+    <li><a href="{% url 'persons:shop_order_history' %}" style="color:var(--accent);font-weight:600">{% trans "Order history" %}</a></li>
+    <li><a href="{% url 'persons:order_for_me_history' %}" style="color:var(--accent);font-weight:600">{% trans "Order for me — requests" %}</a></li>
   </ul>
 </div>
 {% endblock %}

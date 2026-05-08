@@ -1,6 +1,7 @@
 {% load catalog_tags %}
-<a href="{% shop_url 'shop:info_delivery' %}">Delivery</a>
-<a href="{% shop_url 'shop:info_payment' %}">Payment</a>
-<a href="{% shop_url 'shop:info_returns' %}">Returns &amp; exchanges</a>
-<a href="{% shop_url 'shop:info_size_guide' %}">Size guide</a>
-<a href="{% shop_url 'shop:info_contacts' %}">Contacts</a>
+{% load i18n %}
+<a href="{% shop_url 'shop:info_delivery' %}">{% trans "Delivery" %}</a>
+<a href="{% shop_url 'shop:info_payment' %}">{% trans "Payment" %}</a>
+<a href="{% shop_url 'shop:info_returns' %}">{% trans "Returns & exchanges" %}</a>
+<a href="{% shop_url 'shop:info_size_guide' %}">{% trans "Size guide" %}</a>
+<a href="{% shop_url 'shop:info_contacts' %}">{% trans "Contacts" %}</a>
