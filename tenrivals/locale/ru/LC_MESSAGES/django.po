@@ -34,7 +34,7 @@ msgstr ""
 #: templates/shop/includes/shop_public_site_header.html:42
 #: templates/shop/legal/company.html:38
 msgid "Telegram"
-msgstr "Телеграмма"
+msgstr "Telegram"
 
 #: persons/forms.py:104
 msgid "username"
@@ -1421,7 +1421,7 @@ msgstr ""
 
 #: templates/shop/includes/shop_footer.html:232
 msgid "THE LINE FOR YOUR GROWTH"
-msgstr "ЛИНИЯ ДЛЯ ВАШЕГО РОСТА"
+msgstr "ЛИНИЯ ТВОЕГО ПРОГРЕССА"
 
 #: templates/shop/includes/shop_footer.html:233
 msgid "Equipment and stories for players who want more from the game."
@@ -1449,7 +1449,7 @@ msgstr "Инстаграм"
 
 #: templates/shop/includes/shop_footer.html:257
 msgid "TenRivals Shop. All rights reserved."
-msgstr "Магазин TenRivals. Все права защищены."
+msgstr "Магазин Tennis Rivals. Все права защищены."
 
 #: templates/shop/includes/shop_footer.html:258
 msgid "Legal and policies"
@@ -1467,7 +1467,7 @@ msgstr "Блог"
 #: templates/shop/includes/stock_catalog_nav.html:166
 #: templates/shop/legal/sitemap.html:34
 msgid "Order for me"
-msgstr "Закажи для меня"
+msgstr "Персональный заказ"
 
 #: templates/shop/includes/shop_footer_explore.html:4
 #: templates/shop/legal/sitemap.html:31
@@ -1510,7 +1510,7 @@ msgstr "Аксессуары и оборудование"
 #: templates/shop/includes/stock_catalog_nav.html:128
 #: templates/shop/legal/sitemap.html:59
 msgid "Dampeners"
-msgstr "Демпферы"
+msgstr "Виброгасители"
 
 #: templates/shop/includes/shop_footer_legal_links.html:3
 #: templates/shop/legal/sitemap.html:88 templates/shop/legal/terms.html:12
@@ -1591,7 +1591,7 @@ msgstr "Действия над заголовком"
 
 #: templates/shop/includes/shop_public_site_header.html:34
 msgid "Social links"
-msgstr "Социальные ссылки"
+msgstr "Ссылки на социальные сети"
 
 #: templates/shop/includes/shop_public_site_header.html:54
 #: templates/shop/legal/sitemap.html:99
@@ -1752,7 +1752,7 @@ msgstr "Струны"
 #: templates/shop/includes/stock_catalog_nav.html:127
 #: templates/shop/legal/sitemap.html:58
 msgid "Grips"
-msgstr "Захваты"
+msgstr "Намотки"
 
 #: templates/shop/includes/stock_catalog_nav.html:131
 #| msgid "Accessories"
@@ -1771,7 +1771,7 @@ msgstr "Струнные бренды"
 #: templates/shop/includes/stock_catalog_nav.html:155
 #| msgid "All brands"
 msgid "Grip brands"
-msgstr "Марки захватов"
+msgstr "Марки намоток"
 
 #: templates/shop/index.html:538
 msgid "Promo banner"
@@ -2471,7 +2471,7 @@ msgstr ""
 
 #: templates/shop/legal/cookies.html:44
 msgid "Georgian — short summary"
-msgstr "Грузинский — краткое содержание"
+msgstr "Грузинский - краткий обзор"
 
 #: templates/shop/legal/cookies.html:45
 msgid ""
@@ -2510,7 +2510,7 @@ msgstr "Жалобы"
 #: templates/shop/legal/dmca.html:13
 msgid "Send a message in writing (email is fine) that includes:"
 msgstr ""
-"Отправьте письменное сообщение (подойдет электронная почта), которое "
+"Отправьте письменное сообщение (например, электронная почта), которое "
 "включает в себя:"
 
 #: templates/shop/legal/dmca.html:15
@@ -2756,7 +2756,7 @@ msgstr ""
 
 #: templates/shop/legal/privacy.html:44
 msgid "5. Transfers outside Georgia"
-msgstr "5. Трансферы за пределы Грузии."
+msgstr "5. Доставка за пределы Грузии."
 
 #: templates/shop/legal/privacy.html:45
 msgid ""
@@ -2912,7 +2912,7 @@ msgstr "Как выбрать вес ракетки"
 
 #: templates/shop/legal/sitemap.html:24
 msgid "Clay-court shoes in Tbilisi"
-msgstr "Глиняные лодочки в Тбилиси"
+msgstr "Кроссовки для грунта в Тбилиси"
 
 #: templates/shop/legal/sitemap.html:29
 msgid "Shop"
@@ -2978,7 +2978,7 @@ msgstr "Детали аккаунта"
 
 #: templates/shop/legal/sitemap.html:105
 msgid "Order for me — requests"
-msgstr "Закажи для меня — запросы"
+msgstr "Персональные заказы"
 
 #: templates/shop/legal/terms.html:3
 msgid "Terms & conditions | Tenrivals"
