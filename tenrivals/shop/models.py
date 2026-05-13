@@ -296,12 +296,6 @@ class Shoe(Product):
             parts.append(str(self.get_surface_display()))
         if self.width:
             parts.append(self.width)
-        if self.sizes and isinstance(self.sizes, dict):
-            pairs = [f'{k}×{v}' for k, v in self.sizes.items() if v]
-            if pairs:
-                parts.append(', '.join(pairs))
-        elif self.sizes and isinstance(self.sizes, list) and self.sizes:
-            parts.append(', '.join(str(x) for x in self.sizes))
         if self.gender:
             parts.append(str(self.get_gender_display()))
         return ' / '.join(parts)
@@ -323,12 +317,6 @@ class Apparel(Product):
             parts.append(str(self.get_gender_display()))
         if self.material:
             parts.append(self.material)
-        if self.sizes and isinstance(self.sizes, dict):
-            pairs = [f'{k}×{v}' for k, v in self.sizes.items() if v]
-            if pairs:
-                parts.append(', '.join(pairs))
-        elif self.sizes and isinstance(self.sizes, list) and self.sizes:
-            parts.append(', '.join(str(x) for x in self.sizes))
         return ' / '.join(parts)
 
 
