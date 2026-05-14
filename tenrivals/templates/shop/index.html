@@ -7,7 +7,8 @@
   <title>{{ seo_page_title }}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="{{ seo_meta_description|default:'' }}">
-  {% include 'includes/shop_og_meta.html' with og_title=seo_page_title og_description=seo_meta_description %}
+  {% include 'includes/shop_og_meta.html' with og_title=seo_page_title og_description=seo_meta_description og_url=seo_canonical_url %}
+  <link rel="canonical" href="{{ seo_canonical_url }}">
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

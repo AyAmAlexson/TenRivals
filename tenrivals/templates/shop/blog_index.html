@@ -1,5 +1,9 @@
 {% extends 'shop/base_marketing.html' %}
 {% load catalog_tags %}
+{% block shop_social_meta %}
+{% include 'includes/shop_og_meta.html' with og_title="Blog | Tenrivals" og_description="Guides, gear notes, and updates from Tenrivals in Tbilisi, Georgia." og_url=seo_canonical_url %}
+<link rel="canonical" href="{{ seo_canonical_url }}">
+{% endblock %}
 {% block title %}Blog | Tenrivals{% endblock %}
 {% block extra_css %}
     .marketing-main{padding:0}

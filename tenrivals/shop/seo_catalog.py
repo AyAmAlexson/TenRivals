@@ -5,11 +5,23 @@ from __future__ import annotations
 from decimal import Decimal
 from urllib.parse import quote, urlencode
 
+from django.conf import settings
 from django.utils.text import slugify
 
+from .models import CourtSurface, Gender, ProductType
 from .site_locale import shop_reverse
 
-from .models import CourtSurface, Gender, ProductType
+
+def absolute_public_shop_url(request, path: str) -> str:
+    """Absolute URL using WEBSITE_URL when set (stable canonical host), else request-derived."""
+    rel = (path or '/').strip() or '/'
+    if not rel.startswith('/'):
+        rel = '/' + rel
+    base = (getattr(settings, 'WEBSITE_URL', '') or '').rstrip('/')
+    if base:
+        return f'{base}{rel}'
+    return request.build_absolute_uri(rel)
+
 
 # URL segment → internal type filter (matches ?type= for stock/preorder)
 TYPE_SLUG_TO_CODE: dict[str, str] = {
@@ -613,12 +625,13 @@ def pdp_product_json_ld(
         'image': images[:8] if images else None,
         'offers': {
             '@type': 'Offer',
-            'url': request.build_absolute_uri(
+            'url': absolute_public_shop_url(
+                request,
                 shop_reverse(
                     'shop:product_detail',
                     product.pk,
                     site_locale=getattr(request, 'site_locale', None),
-                )
+                ),
             ),
             'priceCurrency': 'GEL',
             'availability': avail,
@@ -634,14 +647,8 @@ def pdp_product_json_ld(
 
 
 def site_organization_json_ld(request) -> dict:
-    from django.conf import settings
-
-    configured_root = (getattr(settings, 'WEBSITE_URL', '') or '').rstrip('/')
     store_path = shop_reverse('shop:index', site_locale=getattr(request, 'site_locale', None))
-    if configured_root:
-        store_url = f'{configured_root}{store_path}'
-    else:
-        store_url = request.build_absolute_uri(store_path)
+    store_url = absolute_public_shop_url(request, store_path)
 
     return {
         '@context': 'https://schema.org',

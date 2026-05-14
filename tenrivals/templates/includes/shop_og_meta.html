@@ -8,7 +8,7 @@
 {% if og_url %}
 <meta property="og:url" content="{{ og_url }}">
 {% else %}
-<meta property="og:url" content="{{ request.build_absolute_uri }}">
+<meta property="og:url" content="{% absolute_public_page_uri request %}">
 {% endif %}
 {% if og_image_url %}
 <meta property="og:image" content="{{ og_image_url }}">

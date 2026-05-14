@@ -6,7 +6,8 @@
   <title>{{ seo_page_title|default:product.name }}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="{{ seo_meta_description|default_if_none:'' }}">
-  {% include 'includes/shop_og_meta.html' with og_title=seo_page_title og_description=seo_meta_description og_image_url=pdp_og_image_url %}
+  {% include 'includes/shop_og_meta.html' with og_title=seo_page_title og_description=seo_meta_description og_image_url=pdp_og_image_url og_url=seo_canonical_url %}
+  <link rel="canonical" href="{{ seo_canonical_url }}">
   {% load static %}
   {% load catalog_tags %}
   {% load l10n %}

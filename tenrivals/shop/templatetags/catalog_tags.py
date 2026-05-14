@@ -5,10 +5,18 @@ from persons.account_display import account_initials_for_user
 
 from ..catalog_utils import distinct_brands_for_type, stock_catalog_storefront_queryset
 from ..models import ProductType
+from ..seo_catalog import absolute_public_shop_url
 from ..site_locale import shop_reverse
 
 
 register = template.Library()
+
+
+@register.simple_tag
+def absolute_public_page_uri(request, path: str | None = None) -> str:
+    """Stable public page URL (WEBSITE_URL host when configured)."""
+    rel = path if path is not None else (getattr(request, 'path', None) or '/')
+    return absolute_public_shop_url(request, rel)
 
 
 @register.simple_tag

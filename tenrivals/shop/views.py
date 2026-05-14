@@ -23,6 +23,7 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_POST
 from django.utils.translation import gettext as _
 
+from .seo_catalog import absolute_public_shop_url
 from .site_locale import django_lang_for_site_locale, shop_reverse
 
 from .cart_session import (
@@ -384,6 +385,8 @@ def index(request):
     )
     from .seo_catalog import site_organization_json_ld
 
+    site_loc = getattr(request, 'site_locale', None)
+    home_path = shop_reverse('shop:index', site_locale=site_loc)
     return render(
         request,
         'shop/index.html',
@@ -403,6 +406,7 @@ def index(request):
                 'Prince; preorder from the EU and USA with official import. Free delivery '
                 'in Tbilisi, shipping across Georgia. Tenrivals online store.'
             ),
+            'seo_canonical_url': absolute_public_shop_url(request, home_path),
             'schema_org_json': json.dumps(site_organization_json_ld(request)),
         },
     )
@@ -473,6 +477,9 @@ def product_detail(request, pk):
         price_value=price_ld,
     )
     schema_org_json = json.dumps([org_ld, prod_ld], default=str)
+    site_loc = getattr(request, 'site_locale', None)
+    pdp_path = shop_reverse('shop:product_detail', product.pk, site_locale=site_loc)
+    seo_canonical_url = absolute_public_shop_url(request, pdp_path)
     return render(
         request,
         "shop/product_detail.html",
@@ -480,6 +487,7 @@ def product_detail(request, pk):
             "product": product,
             "pdp_gallery": gallery,
             "pdp_og_image_url": pdp_og_image_url,
+            "seo_canonical_url": seo_canonical_url,
             "pdp_mode": pdp_mode,
             "stock_listing_qty": stock_listing_qty,
             "preorder_listing_qty": preorder_listing_qty,
@@ -738,7 +746,7 @@ def _catalog_browse_context(
         surface_slug=surface_slug_canon,
         site_locale=site_loc,
     )
-    seo_canonical_url = request.build_absolute_uri(canonical_rel)
+    seo_canonical_url = absolute_public_shop_url(request, canonical_rel)
     schema_org_json = json.dumps(site_organization_json_ld(request))
     slug_for_type = {str(v): sk for sk, v in TYPE_SLUG_TO_CODE.items()}
 
@@ -1201,10 +1209,15 @@ def order_for_me_create(request):
 
 def blog_index(request):
     posts = BlogPost.objects.filter(is_published=True).order_by('-published_at', '-id')
+    loc = getattr(request, 'site_locale', None)
+    blog_path = shop_reverse('shop:blog_index', site_locale=loc)
     return render(
         request,
         'shop/blog_index.html',
-        {'blog_posts': posts},
+        {
+            'blog_posts': posts,
+            'seo_canonical_url': absolute_public_shop_url(request, blog_path),
+        },
     )
 
 
@@ -1290,10 +1303,27 @@ def blog_post(request, slug):
     if not article_sections and _p(post.body):
         article_sections.append({'type': 'paragraph', 'text': post.body.strip()})
 
+    loc = getattr(request, 'site_locale', None)
+    post_path = shop_reverse('shop:blog_post', site_locale=loc, slug=post.slug)
+    seo_canonical_url = absolute_public_shop_url(request, post_path)
+    blog_og_image_url = (
+        request.build_absolute_uri(post.hero_image.url) if post.hero_image else ''
+    )
+    seo_og_description = (post.lead or '').strip()[:320] or (
+        'Tennis gear guides and updates from Tenrivals in Tbilisi, Georgia.'
+    )
+
     return render(
         request,
         'shop/blog_post.html',
-        {'post': post, 'article_sections': article_sections},
+        {
+            'post': post,
+            'article_sections': article_sections,
+            'seo_canonical_url': seo_canonical_url,
+            'seo_og_title': f'{post.title} | Tenrivals',
+            'seo_og_description': seo_og_description,
+            'blog_og_image_url': blog_og_image_url,
+        },
     )
 
 
@@ -1345,7 +1375,7 @@ def shop_info_page(request, page_key: str):
 
 
 def robots_txt(request):
-    """Crawl hints for bots; Sitemap URL follows the current host (staging-friendly)."""
+    """Crawl hints for bots; Sitemap URL uses WEBSITE_URL when set (canonical host)."""
     from django.urls import reverse
 
     lines = [
@@ -1373,7 +1403,7 @@ def robots_txt(request):
         'Disallow: /persons/accounts/',
         'Disallow: /accounts/',
         '',
-        f'Sitemap: {request.build_absolute_uri(reverse("sitemap_xml"))}',
+        f'Sitemap: {absolute_public_shop_url(request, reverse("sitemap_xml"))}',
         '',
     ]
     return HttpResponse('\n'.join(lines), content_type='text/plain; charset=utf-8')

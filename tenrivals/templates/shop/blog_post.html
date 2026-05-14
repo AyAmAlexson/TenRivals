@@ -1,5 +1,13 @@
 {% extends 'shop/base_marketing.html' %}
 {% load catalog_tags %}
+{% block shop_social_meta %}
+{% if blog_og_image_url %}
+{% include 'includes/shop_og_meta.html' with og_title=seo_og_title og_description=seo_og_description og_url=seo_canonical_url og_image_url=blog_og_image_url %}
+{% else %}
+{% include 'includes/shop_og_meta.html' with og_title=seo_og_title og_description=seo_og_description og_url=seo_canonical_url %}
+{% endif %}
+<link rel="canonical" href="{{ seo_canonical_url }}">
+{% endblock %}
 {% block title %}{{ post.title }} | Tenrivals{% endblock %}
 {% block extra_head %}
 {% if post.hero_image %}
