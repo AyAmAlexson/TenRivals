@@ -2,10 +2,10 @@
 {% load i18n %}
 {# Short Explore column — full catalog lives in header nav #}
 <a href="{% shop_url 'shop:index' %}">{% trans "Shop home" %}</a>
-<a href="{% shop_url 'shop:stock' %}?type=RACKET">{% trans "Rackets" %}</a>
-<a href="{% shop_url 'shop:stock' %}?type=M_SHOES">{% trans "Shoes" %}</a>
-<a href="{% shop_url 'shop:stock' %}?type=M_APP">{% trans "Apparel" %}</a>
-<a href="{% shop_url 'shop:stock' %}?type=BAGS">{% trans "Bags & covers" %}</a>
-<a href="{% shop_url 'shop:stock' %}?type=BALLS">{% trans "Balls" %}</a>
-<a href="{% shop_url 'shop:stock' %}?type=ACC_GEAR">{% trans "Accessories & equipment" %}</a>
-<a href="{% shop_url 'shop:stock' %}?type=DAMPENERS">{% trans "Dampeners" %}</a>
+<a href="{% shop_url 'shop:stock_catalog_type' 'rackets' %}">{% trans "Rackets" %}</a>
+<a href="{% shop_url 'shop:stock_catalog_type' 'mens-shoes' %}">{% trans "Shoes" %}</a>
+<a href="{% shop_url 'shop:stock_catalog_type' 'mens-apparel' %}">{% trans "Apparel" %}</a>
+<a href="{% shop_url 'shop:stock_catalog_type' 'bags' %}">{% trans "Bags & covers" %}</a>
+<a href="{% shop_url 'shop:stock_catalog_type' 'balls' %}">{% trans "Balls" %}</a>
+<a href="{% shop_url 'shop:stock_catalog_type' 'accessories-equipment' %}">{% trans "Accessories & equipment" %}</a>
+<a href="{% shop_url 'shop:stock_catalog_type' 'dampeners' %}">{% trans "Dampeners" %}</a>

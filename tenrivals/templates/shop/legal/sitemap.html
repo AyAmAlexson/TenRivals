@@ -43,20 +43,20 @@
   <h2 class="info-h2">{% trans "Catalog (in stock)" %}</h2>
   <p class="info-prose" style="margin-bottom:12px">{% trans "Main product types — same entries as the shop navigation." %}</p>
   <ul class="info-ul">
-    <li><a href="{% shop_url 'shop:stock' %}?type=RACKET" style="color:var(--accent);font-weight:600">{% trans "Rackets" %}</a></li>
-    <li><a href="{% shop_url 'shop:stock' %}?type=BAGS" style="color:var(--accent);font-weight:600">{% trans "Bags & covers" %}</a></li>
-    <li><a href="{% shop_url 'shop:stock' %}?type=M_APP" style="color:var(--accent);font-weight:600">{% trans "Men's apparel" %}</a></li>
-    <li><a href="{% shop_url 'shop:stock' %}?type=W_APP" style="color:var(--accent);font-weight:600">{% trans "Women's apparel" %}</a></li>
-    <li><a href="{% shop_url 'shop:stock' %}?type=J_APP" style="color:var(--accent);font-weight:600">{% trans "Junior apparel" %}</a></li>
-    <li><a href="{% shop_url 'shop:stock' %}?type=M_SHOES" style="color:var(--accent);font-weight:600">{% trans "Men's shoes" %}</a></li>
-    <li><a href="{% shop_url 'shop:stock' %}?type=W_SHOES" style="color:var(--accent);font-weight:600">{% trans "Women's shoes" %}</a></li>
-    <li><a href="{% shop_url 'shop:stock' %}?type=J_SHOES" style="color:var(--accent);font-weight:600">{% trans "Junior shoes" %}</a></li>
-    <li><a href="{% shop_url 'shop:stock' %}?type=BALLS" style="color:var(--accent);font-weight:600">{% trans "Balls" %}</a></li>
-    <li><a href="{% shop_url 'shop:stock' %}?type=ACC_GEAR" style="color:var(--accent);font-weight:600">{% trans "Accessories & equipment (combined)" %}</a></li>
-    <li><a href="{% shop_url 'shop:stock' %}?type=ACCESSORIES" style="color:var(--accent);font-weight:600">{% trans "Accessories" %}</a></li>
-    <li><a href="{% shop_url 'shop:stock' %}?type=STRINGS" style="color:var(--accent);font-weight:600">{% trans "Strings" %}</a></li>
-    <li><a href="{% shop_url 'shop:stock' %}?type=GRIPS" style="color:var(--accent);font-weight:600">{% trans "Grips" %}</a></li>
-    <li><a href="{% shop_url 'shop:stock' %}?type=DAMPENERS" style="color:var(--accent);font-weight:600">{% trans "Dampeners" %}</a></li>
+    <li><a href="{% shop_url 'shop:stock_catalog_type' 'rackets' %}" style="color:var(--accent);font-weight:600">{% trans "Rackets" %}</a></li>
+    <li><a href="{% shop_url 'shop:stock_catalog_type' 'bags' %}" style="color:var(--accent);font-weight:600">{% trans "Bags & covers" %}</a></li>
+    <li><a href="{% shop_url 'shop:stock_catalog_type' 'mens-apparel' %}" style="color:var(--accent);font-weight:600">{% trans "Men's apparel" %}</a></li>
+    <li><a href="{% shop_url 'shop:stock_catalog_type' 'womens-apparel' %}" style="color:var(--accent);font-weight:600">{% trans "Women's apparel" %}</a></li>
+    <li><a href="{% shop_url 'shop:stock_catalog_type' 'junior-apparel' %}" style="color:var(--accent);font-weight:600">{% trans "Junior apparel" %}</a></li>
+    <li><a href="{% shop_url 'shop:stock_catalog_type' 'mens-shoes' %}" style="color:var(--accent);font-weight:600">{% trans "Men's shoes" %}</a></li>
+    <li><a href="{% shop_url 'shop:stock_catalog_type' 'womens-shoes' %}" style="color:var(--accent);font-weight:600">{% trans "Women's shoes" %}</a></li>
+    <li><a href="{% shop_url 'shop:stock_catalog_type' 'junior-shoes' %}" style="color:var(--accent);font-weight:600">{% trans "Junior shoes" %}</a></li>
+    <li><a href="{% shop_url 'shop:stock_catalog_type' 'balls' %}" style="color:var(--accent);font-weight:600">{% trans "Balls" %}</a></li>
+    <li><a href="{% shop_url 'shop:stock_catalog_type' 'accessories-equipment' %}" style="color:var(--accent);font-weight:600">{% trans "Accessories & equipment (combined)" %}</a></li>
+    <li><a href="{% shop_url 'shop:stock_catalog_type' 'accessories' %}" style="color:var(--accent);font-weight:600">{% trans "Accessories" %}</a></li>
+    <li><a href="{% shop_url 'shop:stock_catalog_type' 'strings' %}" style="color:var(--accent);font-weight:600">{% trans "Strings" %}</a></li>
+    <li><a href="{% shop_url 'shop:stock_catalog_type' 'grips' %}" style="color:var(--accent);font-weight:600">{% trans "Grips" %}</a></li>
+    <li><a href="{% shop_url 'shop:stock_catalog_type' 'dampeners' %}" style="color:var(--accent);font-weight:600">{% trans "Dampeners" %}</a></li>
   </ul>
 </div>
 

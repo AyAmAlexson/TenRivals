@@ -67,6 +67,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'tenrivals.canonical_host_middleware.CanonicalHostMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -264,9 +265,26 @@ else:
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 SITE_ID = 1
-# django.contrib.sites: used by sitemaps, allauth, absolute URLs. Hostname only (no scheme/path).
-# Override per environment, e.g. SITE_DOMAIN=www.tenrivals.com on Heroku if that is canonical.
-SITE_DOMAIN = env.str('SITE_DOMAIN', default='tenrivals.com')
+
+
+def _normalize_site_host(host: str) -> str:
+    """Strip scheme/path noise and www. prefix; default apex tenrivals.com."""
+    h = (host or '').strip().lower()
+    if '://' in h:
+        from urllib.parse import urlparse
+
+        h = urlparse(h).hostname or ''
+    h = h.split('/', 1)[0]
+    if h.startswith('www.'):
+        h = h[4:]
+    return h or 'tenrivals.com'
+
+
+# django.contrib.sites, sitemaps, canonical/og URLs — apex host only (no www).
+CANONICAL_HOST = _normalize_site_host(
+    env.str('CANONICAL_HOST', default=env.str('SITE_DOMAIN', default='tenrivals.com'))
+)
+SITE_DOMAIN = CANONICAL_HOST
 SITE_DISPLAY_NAME = env.str('SITE_DISPLAY_NAME', default='Tennis Rivals')
 
 LOGIN_URL = 'account_login'
@@ -530,8 +548,21 @@ TELEGRAM_BOT_TOKEN = env.str('TELEGRAM_BOT_TOKEN', default=None)
 TELEGRAM_BOT_USERNAME = env.str('TELEGRAM_BOT_USERNAME', default=None)
 TELEGRAM_BOT_ID = env.str('TELEGRAM_BOT_ID', default=None)
 
-# Добавляем URL сайта для формирования ссылок
-WEBSITE_URL = 'https://tenrivals.com'  
+# Public absolute URLs (canonical, email links, sitemap in robots.txt).
+_website_url_raw = env.str('WEBSITE_URL', default=f'https://{CANONICAL_HOST}').strip().rstrip('/')
+if '://' in _website_url_raw:
+    from urllib.parse import urlparse
+
+    _parsed_site = urlparse(_website_url_raw)
+    WEBSITE_URL = f'https://{_normalize_site_host(_parsed_site.hostname or CANONICAL_HOST)}'
+else:
+    WEBSITE_URL = f'https://{_normalize_site_host(_website_url_raw or CANONICAL_HOST)}'
+
+# 301 www → apex on Heroku/production; off locally unless CANONICAL_REDIRECT_WWW=true.
+CANONICAL_REDIRECT_WWW = env.bool(
+    'CANONICAL_REDIRECT_WWW',
+    default=bool(os.environ.get('DYNO')),
+)
 
 PASSWORD_RESET_TELEGRAM_CODE_EXPIRY_MINUTES = 15
 

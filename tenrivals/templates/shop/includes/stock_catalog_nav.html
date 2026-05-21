@@ -2,12 +2,12 @@
 {% load i18n %}
 {# Stock catalog links → shop:stock (in-stock channel). Wrap with .nav-row in parent. #}
   <div class="dropdown">
-    <a class="nav-link dropdown-toggle" href="{{ catalog_url }}?type=RACKET">{% trans "Rackets" %}</a>
+    <a class="nav-link dropdown-toggle" href="{% shop_url 'shop:stock_catalog_type' 'rackets' %}">{% trans "Rackets" %}</a>
     <div class="dropdown-menu">
       <div class="dropdown-grid">
         <div>
           <div class="dropdown-title">{% trans "All" %}</div>
-          <a class="dropdown-item" href="{{ catalog_url }}?type=RACKET">{% trans "All rackets" %}</a>
+          <a class="dropdown-item" href="{% shop_url 'shop:stock_catalog_type' 'rackets' %}">{% trans "All rackets" %}</a>
         </div>
         <div>
           <div class="dropdown-title">{% trans "Brands" %}</div>
@@ -21,12 +21,12 @@
     </div>
   </div>
   <div class="dropdown">
-    <a class="nav-link dropdown-toggle" href="{{ catalog_url }}?type=BAGS">{% trans "Bags & Covers" %}</a>
+    <a class="nav-link dropdown-toggle" href="{% shop_url 'shop:stock_catalog_type' 'bags' %}">{% trans "Bags & Covers" %}</a>
     <div class="dropdown-menu">
       <div class="dropdown-grid">
         <div>
           <div class="dropdown-title">{% trans "All" %}</div>
-          <a class="dropdown-item" href="{{ catalog_url }}?type=BAGS">{% trans "All bags & covers" %}</a>
+          <a class="dropdown-item" href="{% shop_url 'shop:stock_catalog_type' 'bags' %}">{% trans "All bags & covers" %}</a>
         </div>
         <div>
           <div class="dropdown-title">{% trans "Brands" %}</div>
@@ -40,14 +40,14 @@
     </div>
   </div>
   <div class="dropdown">
-    <a class="nav-link dropdown-toggle" href="{{ catalog_url }}?type=M_APP">{% trans "Clothing" %}</a>
+    <a class="nav-link dropdown-toggle" href="{% shop_url 'shop:stock_catalog_type' 'mens-apparel' %}">{% trans "Clothing" %}</a>
     <div class="dropdown-menu">
       <div class="dropdown-grid">
         <div>
           <div class="dropdown-title">{% trans "All" %}</div>
-          <a class="dropdown-item" href="{{ catalog_url }}?type=M_APP">{% trans "Men's apparel" %}</a>
-          <a class="dropdown-item" href="{{ catalog_url }}?type=W_APP">{% trans "Women's apparel" %}</a>
-          <a class="dropdown-item" href="{{ catalog_url }}?type=J_APP">{% trans "Junior apparel" %}</a>
+          <a class="dropdown-item" href="{% shop_url 'shop:stock_catalog_type' 'mens-apparel' %}">{% trans "Men's apparel" %}</a>
+          <a class="dropdown-item" href="{% shop_url 'shop:stock_catalog_type' 'womens-apparel' %}">{% trans "Women's apparel" %}</a>
+          <a class="dropdown-item" href="{% shop_url 'shop:stock_catalog_type' 'junior-apparel' %}">{% trans "Junior apparel" %}</a>
         </div>
         <div>
           <div class="dropdown-title">{% trans "Men's brands" %}</div>
@@ -69,14 +69,14 @@
     </div>
   </div>
   <div class="dropdown">
-    <a class="nav-link dropdown-toggle" href="{{ catalog_url }}?type=M_SHOES">{% trans "Shoes" %}</a>
+    <a class="nav-link dropdown-toggle" href="{% shop_url 'shop:stock_catalog_type' 'mens-shoes' %}">{% trans "Shoes" %}</a>
     <div class="dropdown-menu">
       <div class="dropdown-grid">
         <div>
           <div class="dropdown-title">{% trans "All" %}</div>
-          <a class="dropdown-item" href="{{ catalog_url }}?type=M_SHOES">{% trans "Men's shoes" %}</a>
-          <a class="dropdown-item" href="{{ catalog_url }}?type=W_SHOES">{% trans "Women's shoes" %}</a>
-          <a class="dropdown-item" href="{{ catalog_url }}?type=J_SHOES">{% trans "Junior shoes" %}</a>
+          <a class="dropdown-item" href="{% shop_url 'shop:stock_catalog_type' 'mens-shoes' %}">{% trans "Men's shoes" %}</a>
+          <a class="dropdown-item" href="{% shop_url 'shop:stock_catalog_type' 'womens-shoes' %}">{% trans "Women's shoes" %}</a>
+          <a class="dropdown-item" href="{% shop_url 'shop:stock_catalog_type' 'junior-shoes' %}">{% trans "Junior shoes" %}</a>
         </div>
         <div>
           <div class="dropdown-title">{% trans "Men's brands" %}</div>
@@ -98,12 +98,12 @@
     </div>
   </div>
   <div class="dropdown">
-    <a class="nav-link dropdown-toggle" href="{{ catalog_url }}?type=BALLS">{% trans "Balls" %}</a>
+    <a class="nav-link dropdown-toggle" href="{% shop_url 'shop:stock_catalog_type' 'balls' %}">{% trans "Balls" %}</a>
     <div class="dropdown-menu">
       <div class="dropdown-grid">
         <div>
           <div class="dropdown-title">{% trans "All" %}</div>
-          <a class="dropdown-item" href="{{ catalog_url }}?type=BALLS">{% trans "All balls" %}</a>
+          <a class="dropdown-item" href="{% shop_url 'shop:stock_catalog_type' 'balls' %}">{% trans "All balls" %}</a>
         </div>
         <div>
           <div class="dropdown-title">{% trans "Brands" %}</div>
@@ -117,15 +117,15 @@
     </div>
   </div>
   <div class="dropdown">
-    <a class="nav-link dropdown-toggle" href="{{ catalog_url }}?type=ACC_GEAR">{% trans "Accessories" %}</a>
+    <a class="nav-link dropdown-toggle" href="{% shop_url 'shop:stock_catalog_type' 'accessories-equipment' %}">{% trans "Accessories" %}</a>
     <div class="dropdown-menu">
       <div class="dropdown-grid">
         <div>
           <div class="dropdown-title">{% trans "Browse" %}</div>
-          <a class="dropdown-item" href="{{ catalog_url }}?type=ACCESSORIES">{% trans "Accessories" %}</a>
-          <a class="dropdown-item" href="{{ catalog_url }}?type=STRINGS">{% trans "Strings" %}</a>
-          <a class="dropdown-item" href="{{ catalog_url }}?type=GRIPS">{% trans "Grips" %}</a>
-          <a class="dropdown-item" href="{{ catalog_url }}?type=DAMPENERS">{% trans "Dampeners" %}</a>
+          <a class="dropdown-item" href="{% shop_url 'shop:stock_catalog_type' 'accessories' %}">{% trans "Accessories" %}</a>
+          <a class="dropdown-item" href="{% shop_url 'shop:stock_catalog_type' 'strings' %}">{% trans "Strings" %}</a>
+          <a class="dropdown-item" href="{% shop_url 'shop:stock_catalog_type' 'grips' %}">{% trans "Grips" %}</a>
+          <a class="dropdown-item" href="{% shop_url 'shop:stock_catalog_type' 'dampeners' %}">{% trans "Dampeners" %}</a>
         </div>
         <div>
           <div class="dropdown-title">{% trans "Accessory brands" %}</div>
