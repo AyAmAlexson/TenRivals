@@ -1,8 +1,11 @@
+from decimal import Decimal
+
 from django import forms
 from django.core.exceptions import ValidationError
 from django.forms import BaseInlineFormSet, inlineformset_factory
 
 from .models import Customer, SalesOrder, SalesOrderLine
+from .sales_order_currency import PAYMENT_CURRENCY_CHOICES, normalize_payment_currency
 from .sales_order_stock import (
     product_requires_variant,
     snapshot_old_lines,
@@ -54,11 +57,22 @@ class SalesOrderForm(forms.ModelForm):
             'delivery_gross',
             'fiscal_receipt',
             'payment_method',
+            'payment_currency',
+            'exchange_rate',
             'notes',
         ]
         widgets = {
             'order_date': forms.DateInput(attrs={'type': 'date'}),
             'notes': forms.Textarea(attrs={'rows': 3}),
+            'payment_currency': forms.Select(attrs={'id': 'id_payment_currency'}),
+            'exchange_rate': forms.NumberInput(
+                attrs={
+                    'id': 'id_exchange_rate',
+                    'step': '0.000001',
+                    'min': '0',
+                    'inputmode': 'decimal',
+                }
+            ),
         }
 
     def __init__(self, *args, **kwargs):
@@ -67,6 +81,30 @@ class SalesOrderForm(forms.ModelForm):
         self.fields['customer'].queryset = Customer.objects.all().order_by(
             'last_name', 'first_name', 'id'
         )
+        self.fields['payment_currency'].choices = PAYMENT_CURRENCY_CHOICES
+        self.fields['exchange_rate'].required = False
+        if not self.instance.pk:
+            self.fields['payment_currency'].initial = 'GEL'
+            self.fields['exchange_rate'].initial = Decimal('1')
+
+    def clean_payment_currency(self):
+        return normalize_payment_currency(self.cleaned_data.get('payment_currency'))
+
+    def clean(self):
+        cleaned = super().clean()
+        cur = cleaned.get('payment_currency') or 'GEL'
+        rate = cleaned.get('exchange_rate')
+        if rate is None or rate == '':
+            rate = Decimal('1')
+        else:
+            rate = Decimal(str(rate))
+        if cur == 'GEL':
+            cleaned['exchange_rate'] = Decimal('1')
+        elif rate <= 0:
+            self.add_error('exchange_rate', 'Enter a positive exchange rate.')
+        else:
+            cleaned['exchange_rate'] = rate
+        return cleaned
 
 
 class SalesOrderLineForm(forms.ModelForm):

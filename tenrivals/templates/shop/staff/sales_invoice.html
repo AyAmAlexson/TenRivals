@@ -199,8 +199,13 @@
           <th class="col-name"><div>დასახელება</div><div class="th-help">Item (brand + details)</div></th>
           <th class="num col-qty"><div>რაოდ.</div><div class="th-help">Qty</div></th>
           <th class="col-disc"><div>ფასდაკლ.</div><div class="th-help">Disc %</div></th>
+          {% if invoice_use_fx %}
+          <th class="num col-price"><div>ფასი (დ.ღ.გ-ით) {{ invoice_currency_symbol }}</div><div class="th-help">Price (inc. VAT) {{ invoice_currency }}</div></th>
+          <th class="num col-amt">სრული ღირებულება, {{ invoice_currency_symbol }}<span class="th-help">Total cost, {{ invoice_currency }}</span></th>
+          {% else %}
           <th class="num col-price"><div>ფასი (დ.ღ.გ-ით) ₾</div><div class="th-help">Price (inc. VAT) ₾</div></th>
           <th class="num col-amt">სრული ღირებულება, ₾<span class="th-help">Total cost, ₾</span></th>
+          {% endif %}
         </tr>
       </thead>
       <tbody>
@@ -211,6 +216,16 @@
           <td class="col-disc">
             {% if row.disc > 0 %}<span class="disc-print">−{{ row.disc|floatformat:2 }}%</span>{% else %}—{% endif %}
           </td>
+          {% if invoice_use_fx %}
+          <td class="num col-price mono">{{ row.unit_fx|floatformat:2 }}&nbsp;{{ invoice_currency_symbol }}</td>
+          <td class="num col-amt amount">
+            <div class="amt-block">
+              <div class="amt-line"><span>სულ (დღგ-მდე) / Net</span><span class="mono">{{ row.net_fx|floatformat:2 }}&nbsp;{{ invoice_currency_symbol }}</span></div>
+              <div class="amt-line"><span>დღგ 18% / VAT</span><span class="mono">{{ row.vat_fx|floatformat:2 }}&nbsp;{{ invoice_currency_symbol }}</span></div>
+              <div class="amt-line amt-line--grand"><span>საბოლოო / Total</span><span class="mono">{{ row.gross_fx|floatformat:2 }}&nbsp;{{ invoice_currency_symbol }}</span></div>
+            </div>
+          </td>
+          {% else %}
           <td class="num col-price mono">{{ row.unit|floatformat:2 }}</td>
           <td class="num col-amt amount">
             <div class="amt-block">
@@ -219,6 +234,7 @@
               <div class="amt-line amt-line--grand"><span>საბოლოო / Total</span><span class="mono">{{ row.gross|floatformat:2 }}&nbsp;₾</span></div>
             </div>
           </td>
+          {% endif %}
         </tr>
         {% endfor %}
         {% for row in services %}
@@ -226,6 +242,16 @@
           <td class="col-name">{{ row.name }}</td>
           <td class="num col-qty">1</td>
           <td class="col-disc">—</td>
+          {% if invoice_use_fx %}
+          <td class="num col-price mono">{{ row.gross_fx|floatformat:2 }}&nbsp;{{ invoice_currency_symbol }}</td>
+          <td class="num col-amt amount">
+            <div class="amt-block">
+              <div class="amt-line"><span>სულ (დღგ-მდე) / Net</span><span class="mono">{{ row.net_fx|floatformat:2 }}&nbsp;{{ invoice_currency_symbol }}</span></div>
+              <div class="amt-line"><span>დღგ 18% / VAT</span><span class="mono">{{ row.vat_fx|floatformat:2 }}&nbsp;{{ invoice_currency_symbol }}</span></div>
+              <div class="amt-line amt-line--grand"><span>საბოლოო / Total</span><span class="mono">{{ row.gross_fx|floatformat:2 }}&nbsp;{{ invoice_currency_symbol }}</span></div>
+            </div>
+          </td>
+          {% else %}
           <td class="num col-price mono">{{ row.gross|floatformat:2 }}</td>
           <td class="num col-amt amount">
             <div class="amt-block">
@@ -234,6 +260,7 @@
               <div class="amt-line amt-line--grand"><span>საბოლოო / Total</span><span class="mono">{{ row.gross|floatformat:2 }}&nbsp;₾</span></div>
             </div>
           </td>
+          {% endif %}
         </tr>
         {% endfor %}
         {% if delivery_gross > 0 %}
@@ -241,6 +268,16 @@
           <td class="col-name">მიწოდება / Delivery</td>
           <td class="num col-qty">1</td>
           <td class="col-disc">—</td>
+          {% if invoice_use_fx %}
+          <td class="num col-price mono">{{ delivery_gross_fx|floatformat:2 }}&nbsp;{{ invoice_currency_symbol }}</td>
+          <td class="num col-amt amount">
+            <div class="amt-block">
+              <div class="amt-line"><span>სულ (დღგ-მდე) / Net</span><span class="mono">{{ delivery_net_fx|floatformat:2 }}&nbsp;{{ invoice_currency_symbol }}</span></div>
+              <div class="amt-line"><span>დღგ 18% / VAT</span><span class="mono">{{ delivery_vat_fx|floatformat:2 }}&nbsp;{{ invoice_currency_symbol }}</span></div>
+              <div class="amt-line amt-line--grand"><span>საბოლოო / Total</span><span class="mono">{{ delivery_gross_fx|floatformat:2 }}&nbsp;{{ invoice_currency_symbol }}</span></div>
+            </div>
+          </td>
+          {% else %}
           <td class="num col-price mono">{{ delivery_gross|floatformat:2 }}</td>
           <td class="num col-amt amount">
             <div class="amt-block">
@@ -249,6 +286,7 @@
               <div class="amt-line amt-line--grand"><span>საბოლოო / Total</span><span class="mono">{{ delivery_gross|floatformat:2 }}&nbsp;₾</span></div>
             </div>
           </td>
+          {% endif %}
         </tr>
         {% endif %}
       </tbody>
@@ -256,9 +294,18 @@
 
     <div class="totals">
       <div class="box">
+        {% if invoice_use_fx %}
+        <div class="line grand"><span>საბოლოო თანხა / Total (VAT incl.)</span><span id="gross" class="mono">{{ invoice_amount_foreign|floatformat:2 }}&nbsp;{{ invoice_currency_symbol }}</span></div>
+        <div class="line"><span>კურსი / Exchange rate</span><span class="mono">{{ invoice_exchange_rate|floatformat:6 }} ({{ invoice_currency }} per 1 ₾ gross)</span></div>
+        <div class="line"><span>საბოლოო ლარებში / Total in GEL (equivalent)</span><span class="mono">{{ order.gross_total|floatformat:2 }}&nbsp;₾</span></div>
+        <div class="line muted" style="margin-top:10px;font-size:10px"><span>დღგ-ის დაშლა ლარში / VAT split (GEL reference)</span><span></span></div>
+        <div class="line"><span>Net (excl. VAT)</span><span id="net" class="mono">{{ order.net_total|floatformat:2 }}&nbsp;₾</span></div>
+        <div class="line"><span>VAT 18%</span><span id="vat" class="mono">{{ order.vat_total|floatformat:2 }}&nbsp;₾</span></div>
+        {% else %}
         <div class="line"><span>სულ (დღგ-მდე) / Net (excl. VAT)</span><span id="net" class="mono">{{ order.net_total|floatformat:2 }}&nbsp;₾</span></div>
         <div class="line"><span>დღგ 18% / VAT 18%</span><span id="vat" class="mono">{{ order.vat_total|floatformat:2 }}&nbsp;₾</span></div>
         <div class="line grand"><span>საბოლოო თანხა / Total (VAT incl.)</span><span id="gross" class="mono">{{ order.gross_total|floatformat:2 }}&nbsp;₾</span></div>
+        {% endif %}
       </div>
     </div>
 

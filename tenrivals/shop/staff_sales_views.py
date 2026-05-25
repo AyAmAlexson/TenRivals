@@ -46,6 +46,12 @@ from .sales_order_utils import (
 )
 from .staff_sales_forms import CustomerForm, SalesOrderForm, SalesOrderLineFormSet
 from .email_links import absolute_url_for_email
+from .sales_order_currency import (
+    apply_payment_currency_fields,
+    convert_gel_amount,
+    invoice_uses_foreign_currency,
+    payment_currency_symbol,
+)
 
 
 def _staff_ok(user):
@@ -69,6 +75,16 @@ def _sales_order_lines_prefetch():
 
 
 def _invoice_context(order: SalesOrder, request=None) -> dict:
+    use_fx = invoice_uses_foreign_currency(order)
+    rate = order.exchange_rate or Decimal('1')
+    cur = order.payment_currency_display()
+    sym = payment_currency_symbol(cur)
+
+    def _conv(amount: Decimal) -> Decimal:
+        if not use_fx:
+            return amount
+        return convert_gel_amount(amount, rate)
+
     lines = []
     any_disc = False
     for line in order.lines.all():
@@ -84,6 +100,10 @@ def _invoice_context(order: SalesOrder, request=None) -> dict:
                 'gross': line.line_gross,
                 'vat': line.line_vat,
                 'net': line.line_net,
+                'unit_fx': _conv(line.unit_price_gross),
+                'gross_fx': _conv(line.line_gross),
+                'vat_fx': _conv(line.line_vat),
+                'net_fx': _conv(line.line_net),
             }
         )
     services = []
@@ -96,6 +116,9 @@ def _invoice_context(order: SalesOrder, request=None) -> dict:
                 'gross': g,
                 'vat': vat,
                 'net': net,
+                'gross_fx': _conv(g),
+                'vat_fx': _conv(vat),
+                'net_fx': _conv(net),
             }
         )
     dg = order.delivery_gross
@@ -122,12 +145,20 @@ def _invoice_context(order: SalesOrder, request=None) -> dict:
         'delivery_gross': delivery_gross,
         'delivery_vat': delivery_vat,
         'delivery_net': delivery_net,
+        'delivery_gross_fx': _conv(delivery_gross),
+        'delivery_vat_fx': _conv(delivery_vat),
+        'delivery_net_fx': _conv(delivery_net),
         'any_line_discount': any_disc,
         'customer_name': order.customer.display_name_for_invoice(),
         'embed_mode': False,
         'print_mode': False,
         'doc_date_display': order.order_date.strftime('%d.%m.%Y'),
         'invoice_logo_abs_url': logo_abs,
+        'invoice_use_fx': use_fx,
+        'invoice_currency': cur,
+        'invoice_currency_symbol': sym,
+        'invoice_exchange_rate': rate,
+        'invoice_amount_foreign': order.amount_in_payment_currency,
     }
 
 
@@ -453,6 +484,7 @@ def staff_sales_order_edit(request, pk=None):
                         order.vat_total = vat
                         order.net_total = net
                         order.services = ser_out
+                        apply_payment_currency_fields(order, gross)
                         order.save()
                         order.lines.all().delete()
                         for spec in line_specs:

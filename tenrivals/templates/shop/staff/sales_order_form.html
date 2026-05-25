@@ -7,7 +7,9 @@
 <style>
   @media(min-width:900px){
     .sales-order-top-row.form-row{grid-template-columns:1.2fr 1fr 1fr}
+    .sales-order-currency-row.form-row{grid-template-columns:1fr 1fr 1fr}
   }
+  #exchange-rate-group.is-gel-only input{opacity:.55}
 </style>
 {% endblock %}
 {% block content %}
@@ -42,6 +44,23 @@
       <div class="form-group">
         <label for="{{ form.payment_method.id_for_label }}">Payment method</label>
         {{ form.payment_method }}
+      </div>
+    </div>
+    <div class="form-row sales-order-currency-row">
+      <div class="form-group">
+        <label for="{{ form.payment_currency.id_for_label }}">Payment currency</label>
+        {{ form.payment_currency }}
+        {% if form.payment_currency.errors %}<div class="field-errors">{{ form.payment_currency.errors }}</div>{% endif %}
+      </div>
+      <div class="form-group" id="exchange-rate-group">
+        <label for="{{ form.exchange_rate.id_for_label }}">Exchange rate (× GEL total)</label>
+        {{ form.exchange_rate }}
+        <p class="page-meta" style="margin:6px 0 0;font-size:12px">For non-GEL: payment amount = total gross ₾ × rate. Use <strong>1</strong> for GEL.</p>
+        {% if form.exchange_rate.errors %}<div class="field-errors">{{ form.exchange_rate.errors }}</div>{% endif %}
+      </div>
+      <div class="form-group">
+        <label>Amount in payment currency</label>
+        <div class="mono" id="sum-payment-currency" style="font-size:18px;font-weight:700;padding-top:6px">—</div>
       </div>
     </div>
     {% if order %}
@@ -163,6 +182,10 @@
   const tbody = document.getElementById('lines-tbody');
   const servicesBody = document.getElementById('services-tbody');
   const deliveryEl = document.getElementById('id_delivery_gross');
+  const currencyEl = document.getElementById('id_payment_currency');
+  const rateEl = document.getElementById('id_exchange_rate');
+  const rateGroup = document.getElementById('exchange-rate-group');
+  const sumPayCurEl = document.getElementById('sum-payment-currency');
 
   function parseNum(v){
     if(v==null||v==='') return 0;
@@ -218,6 +241,20 @@
     });
     servicesHidden.value = JSON.stringify(arr);
   }
+  function syncCurrencyUi(){
+    const cur = (currencyEl && currencyEl.value || 'GEL').toUpperCase();
+    const isGel = cur === 'GEL';
+    if(rateGroup) rateGroup.classList.toggle('is-gel-only', isGel);
+    if(rateEl){
+      if(isGel){
+        rateEl.value = '1';
+        rateEl.readOnly = true;
+      } else {
+        rateEl.readOnly = false;
+        if(!rateEl.value || parseNum(rateEl.value) === 0) rateEl.value = '';
+      }
+    }
+  }
   function recalcTotals(){
     let sumG = 0;
     tbody.querySelectorAll('.line-row').forEach(function(row){
@@ -231,6 +268,15 @@
     document.getElementById('sum-vat').textContent = fmt(t.vat);
     document.getElementById('sum-net').textContent = fmt(t.net);
     syncServicesJson();
+    syncCurrencyUi();
+    const cur = (currencyEl && currencyEl.value || 'GEL').toUpperCase();
+    let rate = parseNum(rateEl && rateEl.value);
+    if(cur === 'GEL') rate = 1;
+    if(rate <= 0) rate = 1;
+    const payAmt = sumG * rate;
+    if(sumPayCurEl){
+      sumPayCurEl.textContent = fmt(payAmt) + ' ' + cur;
+    }
   }
   function fillVariantSelect(row, preserve){
     const selP = row.querySelector('select[name$="-product"]');
@@ -368,6 +414,8 @@
   }catch(e){}
 
   if(deliveryEl) deliveryEl.addEventListener('input', recalcTotals);
+  if(currencyEl) currencyEl.addEventListener('change', recalcTotals);
+  if(rateEl) rateEl.addEventListener('input', recalcTotals);
   recalcTotals();
 })();
 </script>

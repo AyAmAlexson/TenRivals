@@ -14,6 +14,7 @@ from shop.catalog_utils import (
 )
 from shop.models import Customer, Product, ProductListing, ProductListingChannel, ProductType
 from shop.promo_codes import PromoEvaluation
+from shop.sales_order_currency import apply_payment_currency_fields
 
 
 class RetailCustomerGuestLinkTests(TestCase):
@@ -205,3 +206,29 @@ class ProductListingInStockSyncTests(TestCase):
         row.delete()
         p.refresh_from_db()
         self.assertFalse(p.in_stock)
+
+
+class SalesOrderPaymentCurrencyTests(TestCase):
+    def test_gel_normalizes_rate_and_amount(self):
+        order = SalesOrder(
+            invoice_number='2026-000099',
+            customer=Customer.objects.create(first_name='A', last_name='B', email='fx@test.com'),
+            order_date='2026-01-01',
+        )
+        order.payment_currency = 'GEL'
+        order.exchange_rate = Decimal('2.5')
+        apply_payment_currency_fields(order, Decimal('100.00'))
+        self.assertEqual(order.payment_currency, 'GEL')
+        self.assertEqual(order.exchange_rate, Decimal('1'))
+        self.assertEqual(order.amount_in_payment_currency, Decimal('100.00'))
+
+    def test_usd_amount_is_gross_times_rate(self):
+        order = SalesOrder(
+            invoice_number='2026-000098',
+            customer=Customer.objects.create(first_name='C', last_name='D', email='fx2@test.com'),
+            order_date='2026-01-01',
+        )
+        order.payment_currency = 'USD'
+        order.exchange_rate = Decimal('0.37')
+        apply_payment_currency_fields(order, Decimal('100.00'))
+        self.assertEqual(order.amount_in_payment_currency, Decimal('37.00'))

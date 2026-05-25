@@ -1221,6 +1221,24 @@ class SalesOrder(models.Model):
         default=Decimal('0.00'),
         help_text=_('VAT-inclusive promo discount (₾), subtracted from line subtotal.'),
     )
+    payment_currency = models.CharField(
+        max_length=8,
+        default='GEL',
+        db_index=True,
+        help_text=_('Currency for payment (line totals remain in GEL).'),
+    )
+    exchange_rate = models.DecimalField(
+        max_digits=14,
+        decimal_places=6,
+        default=Decimal('1'),
+        help_text=_('Multiplier vs GEL: payment amount = gross_total × rate (1 for GEL).'),
+    )
+    amount_in_payment_currency = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        help_text=_('Order gross total expressed in payment_currency (gross_total × exchange_rate).'),
+    )
 
     class Status(models.TextChoices):
         SUBMITTED = 'SUBMITTED', _('Submitted')
@@ -1245,6 +1263,11 @@ class SalesOrder(models.Model):
 
     def __str__(self):
         return self.invoice_number
+
+    def payment_currency_display(self) -> str:
+        from .sales_order_currency import normalize_payment_currency
+
+        return normalize_payment_currency(self.payment_currency)
 
 
 class SalesOrderLine(models.Model):
