@@ -300,8 +300,8 @@
         <div class="line"><span>კურსი / Exchange rate</span><span class="mono">{{ invoice_exchange_rate|floatformat:6 }}</span></div>
         <div class="line"><span>საბოლოო ლარებში / Total in GEL (equivalent)</span><span class="mono">{{ order.gross_total|floatformat:2 }}&nbsp;₾</span></div>
         <div class="line muted" style="margin-top:6px;font-size:10px"><span>დღგ-ის დაშლა ლარში / VAT split (GEL reference)</span><span></span></div>
-        <div class="line"><span>Net (excl. VAT)</span><span id="net" class="mono">{{ order.net_total|floatformat:2 }}&nbsp;₾</span></div>
-        <div class="line"><span>VAT 18%</span><span id="vat" class="mono">{{ order.vat_total|floatformat:2 }}&nbsp;₾</span></div>
+        <div class="line"><span>სულ (დღგ-მდე) / Net (excl. VAT)</span><span id="net" class="mono">{{ order.net_total|floatformat:2 }}&nbsp;₾</span></div>
+        <div class="line"><span>დღგ 18% / VAT 18%</span><span id="vat" class="mono">{{ order.vat_total|floatformat:2 }}&nbsp;₾</span></div>
         {% else %}
         <div class="line"><span>სულ (დღგ-მდე) / Net (excl. VAT)</span><span id="net" class="mono">{{ order.net_total|floatformat:2 }}&nbsp;₾</span></div>
         <div class="line"><span>დღგ 18% / VAT 18%</span><span id="vat" class="mono">{{ order.vat_total|floatformat:2 }}&nbsp;₾</span></div>
