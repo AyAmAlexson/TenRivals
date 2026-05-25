@@ -50,6 +50,16 @@
       <div class="form-group">
         <label for="{{ form.payment_currency.id_for_label }}">Payment currency</label>
         {{ form.payment_currency }}
+        <datalist id="payment-currency-list">
+          <option value="GEL"></option>
+          <option value="USD"></option>
+          <option value="EUR"></option>
+          <option value="GBP"></option>
+          <option value="CHF"></option>
+          <option value="AED"></option>
+          <option value="TRY"></option>
+        </datalist>
+        <p class="page-meta" style="margin:6px 0 0;font-size:12px">Pick from the list or type a 3-letter code (e.g. USD, EUR).</p>
         {% if form.payment_currency.errors %}<div class="field-errors">{{ form.payment_currency.errors }}</div>{% endif %}
       </div>
       <div class="form-group" id="exchange-rate-group">
@@ -414,7 +424,10 @@
   }catch(e){}
 
   if(deliveryEl) deliveryEl.addEventListener('input', recalcTotals);
-  if(currencyEl) currencyEl.addEventListener('change', recalcTotals);
+  if(currencyEl){
+    currencyEl.addEventListener('change', recalcTotals);
+    currencyEl.addEventListener('input', recalcTotals);
+  }
   if(rateEl) rateEl.addEventListener('input', recalcTotals);
   recalcTotals();
 })();

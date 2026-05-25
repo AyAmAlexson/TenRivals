@@ -14,6 +14,9 @@ PAYMENT_CURRENCY_CHOICES: tuple[tuple[str, str], ...] = (
     ('TRY', 'TRY'),
 )
 
+# ISO codes for HTML datalist (staff can also type any code up to 8 chars).
+PAYMENT_CURRENCY_SUGGESTIONS: tuple[str, ...] = tuple(c[0] for c in PAYMENT_CURRENCY_CHOICES)
+
 CURRENCY_SYMBOLS: dict[str, str] = {
     'GEL': '₾',
     'USD': '$',

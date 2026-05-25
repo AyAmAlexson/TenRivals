@@ -5,7 +5,7 @@ from django.core.exceptions import ValidationError
 from django.forms import BaseInlineFormSet, inlineformset_factory
 
 from .models import Customer, SalesOrder, SalesOrderLine
-from .sales_order_currency import PAYMENT_CURRENCY_CHOICES, normalize_payment_currency
+from .sales_order_currency import normalize_payment_currency
 from .sales_order_stock import (
     product_requires_variant,
     snapshot_old_lines,
@@ -48,6 +48,23 @@ class CustomerForm(forms.ModelForm):
 
 
 class SalesOrderForm(forms.ModelForm):
+    # CharField on model has no choices — Select in Meta.widgets renders empty; use TextInput + datalist.
+    payment_currency = forms.CharField(
+        label='Payment currency',
+        max_length=8,
+        initial='GEL',
+        widget=forms.TextInput(
+            attrs={
+                'id': 'id_payment_currency',
+                'list': 'payment-currency-list',
+                'maxlength': '8',
+                'autocomplete': 'off',
+                'placeholder': 'GEL',
+                'style': 'width:100%;padding:9px 12px;border:1px solid #e5e7eb;font-size:14px;font-family:inherit',
+            }
+        ),
+    )
+
     class Meta:
         model = SalesOrder
         fields = [
@@ -64,7 +81,6 @@ class SalesOrderForm(forms.ModelForm):
         widgets = {
             'order_date': forms.DateInput(attrs={'type': 'date'}),
             'notes': forms.Textarea(attrs={'rows': 3}),
-            'payment_currency': forms.Select(attrs={'id': 'id_payment_currency'}),
             'exchange_rate': forms.NumberInput(
                 attrs={
                     'id': 'id_exchange_rate',
@@ -81,14 +97,23 @@ class SalesOrderForm(forms.ModelForm):
         self.fields['customer'].queryset = Customer.objects.all().order_by(
             'last_name', 'first_name', 'id'
         )
-        self.fields['payment_currency'].choices = PAYMENT_CURRENCY_CHOICES
         self.fields['exchange_rate'].required = False
-        if not self.instance.pk:
-            self.fields['payment_currency'].initial = 'GEL'
+        cur = 'GEL'
+        if self.instance.pk:
+            cur = normalize_payment_currency(self.instance.payment_currency)
+        elif self.initial.get('payment_currency'):
+            cur = normalize_payment_currency(self.initial.get('payment_currency'))
+        self.fields['payment_currency'].initial = cur
+        if self.instance.pk and self.instance.exchange_rate is not None:
+            self.fields['exchange_rate'].initial = self.instance.exchange_rate
+        elif not self.instance.pk:
             self.fields['exchange_rate'].initial = Decimal('1')
 
     def clean_payment_currency(self):
-        return normalize_payment_currency(self.cleaned_data.get('payment_currency'))
+        raw = (self.cleaned_data.get('payment_currency') or '').strip()
+        if not raw:
+            raise ValidationError('Enter a payment currency code.')
+        return normalize_payment_currency(raw)
 
     def clean(self):
         cleaned = super().clean()
