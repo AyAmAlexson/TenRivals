@@ -63,9 +63,9 @@
         {% if form.payment_currency.errors %}<div class="field-errors">{{ form.payment_currency.errors }}</div>{% endif %}
       </div>
       <div class="form-group" id="exchange-rate-group">
-        <label for="{{ form.exchange_rate.id_for_label }}">Exchange rate (× GEL total)</label>
+        <label for="{{ form.exchange_rate.id_for_label }}">Exchange rate (₾ per 1 unit)</label>
         {{ form.exchange_rate }}
-        <p class="page-meta" style="margin:6px 0 0;font-size:12px">For non-GEL: payment amount = total gross ₾ × rate. Use <strong>1</strong> for GEL.</p>
+        <p class="page-meta" style="margin:6px 0 0;font-size:12px">For non-GEL: payment amount = total gross ₾ ÷ rate (e.g. rate <strong>2.70</strong> for USD → 100 ₾ ÷ 2.70). Use <strong>1</strong> for GEL.</p>
         {% if form.exchange_rate.errors %}<div class="field-errors">{{ form.exchange_rate.errors }}</div>{% endif %}
       </div>
       <div class="form-group">
@@ -283,7 +283,7 @@
     let rate = parseNum(rateEl && rateEl.value);
     if(cur === 'GEL') rate = 1;
     if(rate <= 0) rate = 1;
-    const payAmt = sumG * rate;
+    const payAmt = rate > 0 ? (sumG / rate) : sumG;
     if(sumPayCurEl){
       sumPayCurEl.textContent = fmt(payAmt) + ' ' + cur;
     }

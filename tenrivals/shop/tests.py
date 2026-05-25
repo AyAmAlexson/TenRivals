@@ -222,13 +222,13 @@ class SalesOrderPaymentCurrencyTests(TestCase):
         self.assertEqual(order.exchange_rate, Decimal('1'))
         self.assertEqual(order.amount_in_payment_currency, Decimal('100.00'))
 
-    def test_usd_amount_is_gross_times_rate(self):
+    def test_usd_amount_is_gross_divided_by_rate(self):
         order = SalesOrder(
             invoice_number='2026-000098',
             customer=Customer.objects.create(first_name='C', last_name='D', email='fx2@test.com'),
             order_date='2026-01-01',
         )
         order.payment_currency = 'USD'
-        order.exchange_rate = Decimal('0.37')
+        order.exchange_rate = Decimal('2.70')
         apply_payment_currency_fields(order, Decimal('100.00'))
-        self.assertEqual(order.amount_in_payment_currency, Decimal('37.00'))
+        self.assertEqual(order.amount_in_payment_currency, Decimal('37.04'))

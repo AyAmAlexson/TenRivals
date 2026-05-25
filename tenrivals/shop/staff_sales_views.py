@@ -48,7 +48,7 @@ from .staff_sales_forms import CustomerForm, SalesOrderForm, SalesOrderLineFormS
 from .email_links import absolute_url_for_email
 from .sales_order_currency import (
     apply_payment_currency_fields,
-    convert_gel_amount,
+    convert_gel_to_payment_currency,
     invoice_uses_foreign_currency,
     payment_currency_symbol,
 )
@@ -83,7 +83,7 @@ def _invoice_context(order: SalesOrder, request=None) -> dict:
     def _conv(amount: Decimal) -> Decimal:
         if not use_fx:
             return amount
-        return convert_gel_amount(amount, rate)
+        return convert_gel_to_payment_currency(amount, rate)
 
     lines = []
     any_disc = False

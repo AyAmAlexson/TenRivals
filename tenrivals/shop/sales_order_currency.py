@@ -37,8 +37,10 @@ def payment_currency_symbol(code: str | None) -> str:
     return CURRENCY_SYMBOLS.get(cur, cur)
 
 
-def convert_gel_amount(amount_gel: Decimal, exchange_rate: Decimal) -> Decimal:
-    return (amount_gel * exchange_rate).quantize(Decimal('0.01'))
+def convert_gel_to_payment_currency(amount_gel: Decimal, exchange_rate: Decimal) -> Decimal:
+    """Foreign amount = GEL ÷ rate (rate = ₾ per 1 unit of payment currency, e.g. 2.70 for USD)."""
+    rate = exchange_rate if exchange_rate > 0 else Decimal('1')
+    return (amount_gel / rate).quantize(Decimal('0.01'))
 
 
 def apply_payment_currency_fields(order, gross_total: Decimal) -> None:
@@ -57,7 +59,7 @@ def apply_payment_currency_fields(order, gross_total: Decimal) -> None:
     if rate <= 0:
         rate = Decimal('1')
     order.exchange_rate = rate.quantize(Decimal('0.000001'))
-    order.amount_in_payment_currency = convert_gel_amount(
+    order.amount_in_payment_currency = convert_gel_to_payment_currency(
         Decimal(str(gross_total)),
         order.exchange_rate,
     )

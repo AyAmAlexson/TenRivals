@@ -1231,13 +1231,13 @@ class SalesOrder(models.Model):
         max_digits=14,
         decimal_places=6,
         default=Decimal('1'),
-        help_text=_('Multiplier vs GEL: payment amount = gross_total × rate (1 for GEL).'),
+        help_text=_('₾ per 1 unit of payment currency; foreign amount = gross_total ÷ rate (1 for GEL).'),
     )
     amount_in_payment_currency = models.DecimalField(
         max_digits=12,
         decimal_places=2,
         default=Decimal('0.00'),
-        help_text=_('Order gross total expressed in payment_currency (gross_total × exchange_rate).'),
+        help_text=_('Order gross in payment_currency (gross_total ÷ exchange_rate).'),
     )
 
     class Status(models.TextChoices):

@@ -296,7 +296,7 @@
       <div class="box">
         {% if invoice_use_fx %}
         <div class="line grand"><span>საბოლოო თანხა / Total (VAT incl.)</span><span id="gross" class="mono">{{ invoice_amount_foreign|floatformat:2 }}&nbsp;{{ invoice_currency_symbol }}</span></div>
-        <div class="line"><span>კურსი / Exchange rate</span><span class="mono">{{ invoice_exchange_rate|floatformat:6 }} ({{ invoice_currency }} per 1 ₾ gross)</span></div>
+        <div class="line"><span>კურსი / Exchange rate</span><span class="mono">{{ invoice_exchange_rate|floatformat:6 }}</span></div>
         <div class="line"><span>საბოლოო ლარებში / Total in GEL (equivalent)</span><span class="mono">{{ order.gross_total|floatformat:2 }}&nbsp;₾</span></div>
         <div class="line muted" style="margin-top:10px;font-size:10px"><span>დღგ-ის დაშლა ლარში / VAT split (GEL reference)</span><span></span></div>
         <div class="line"><span>Net (excl. VAT)</span><span id="net" class="mono">{{ order.net_total|floatformat:2 }}&nbsp;₾</span></div>
