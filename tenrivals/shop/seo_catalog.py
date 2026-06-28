@@ -68,9 +68,35 @@ def surf_query_to_surface_slug(surf: str) -> str | None:
     return None
 
 SITE_NAME = 'Tenrivals'
+SEO_BRAND_NAME = 'Tennis Rivals'
 CITY_COUNTRY = 'Tbilisi, Georgia'
 # Link previews (WhatsApp, Telegram, etc.) truncate titles; keep SITE_NAME at the start.
 PDP_SEO_TITLE_MAX_LEN = 72
+
+_CATALOG_CATEGORY_LABELS: dict[str, str] = {
+    ProductType.RACKET: 'Tennis Rackets',
+    ProductType.MENS_APPAREL: "Men's Apparel",
+    ProductType.WOMENS_APPAREL: "Women's Apparel",
+    ProductType.JUNIOR_APPAREL: 'Junior Apparel',
+    ProductType.MENS_SHOES: "Men's Tennis Shoes",
+    ProductType.WOMENS_SHOES: "Women's Tennis Shoes",
+    ProductType.JUNIOR_SHOES: 'Junior Tennis Shoes',
+    ProductType.BAGS: 'Tennis Bags',
+    ProductType.STRINGS: 'Tennis Strings',
+    ProductType.GRIPS: 'Tennis Grips',
+    ProductType.DAMPENERS: 'Tennis Dampeners',
+    ProductType.BALLS: 'Tennis Balls',
+    ProductType.ACCESSORIES: 'Tennis Accessories',
+    'ACC_GEAR': 'Tennis Accessories & Equipment',
+}
+
+_SURFACE_TITLE_LABELS: dict[str, str] = {
+    'clay': 'Clay Court',
+    'hard': 'Hard Court',
+    'allcourt': 'All-Court',
+    'grass': 'Grass',
+    'padel': 'Padel',
+}
 
 
 def type_slug_to_code(slug: str | None) -> str | None:
@@ -160,6 +186,55 @@ def _surface_label(surf: str) -> str:
         'padel': 'padel',
     }
     return m.get(surf, surf)
+
+
+def _catalog_category_label(type_code: str | None) -> str:
+    if not type_code:
+        return 'Tennis Equipment'
+    return _CATALOG_CATEGORY_LABELS.get(
+        type_code,
+        (dict(ProductType.choices).get(type_code) or type_code).strip(),
+    )
+
+
+def _catalog_listing_subject(
+    type_code: str | None,
+    *,
+    racket_brand: str,
+    shoe_brand: str,
+    surface_active: str,
+) -> tuple[str, str, str]:
+    """Return (subject, brand_txt, surf_txt) for catalog title/H1 and meta description."""
+    category = _catalog_category_label(type_code)
+
+    brand_txt = ''
+    if type_code == ProductType.RACKET and racket_brand and racket_brand != 'all':
+        brand_txt = racket_brand.strip()
+    elif type_code in SHOE_TYPES and shoe_brand and shoe_brand != 'all':
+        brand_txt = shoe_brand.strip()
+
+    surf_txt = ''
+    if type_code in SHOE_TYPES and surface_active and surface_active != 'all':
+        surf_txt = _surface_label(surface_active)
+
+    if surf_txt and type_code in SHOE_TYPES and 'Tennis Shoes' in category:
+        surface_title = _SURFACE_TITLE_LABELS.get(surface_active, surf_txt.title())
+        category = category.replace('Tennis Shoes', f'{surface_title} Tennis Shoes')
+
+    subject = f'{brand_txt} {category}'.strip() if brand_txt else category
+    return subject, brand_txt, surf_txt
+
+
+def _catalog_listing_title(browse_mode: str, subject: str) -> str:
+    if browse_mode == 'preorder':
+        return f'{subject} | Preorder to Georgia | {SEO_BRAND_NAME}'
+    return f'{subject} | To Buy in Tbilisi | {SEO_BRAND_NAME}'
+
+
+def _catalog_listing_h1(browse_mode: str, subject: str) -> str:
+    if browse_mode == 'preorder':
+        return f'{subject} • Preorder • {CITY_COUNTRY}'
+    return f'{subject} • In Stock • {CITY_COUNTRY}'
 
 
 def build_stock_catalog_path(
@@ -263,42 +338,15 @@ def catalog_seo_texts(
         if browse_mode == 'preorder'
         else 'Buy in Tbilisi with free city delivery'
     )
-    mode_short = 'Preorder from EU/USA' if browse_mode == 'preorder' else 'In stock in Tbilisi'
 
-    type_label = _type_label(type_code)
-    brand_parts: list[str] = []
-    if type_code == ProductType.RACKET and racket_brand and racket_brand != 'all':
-        brand_parts.append(racket_brand)
-    if type_code in SHOE_TYPES and shoe_brand and shoe_brand != 'all':
-        brand_parts.append(shoe_brand)
-    brand_txt = ', '.join(brand_parts) if brand_parts else ''
-
-    surf_txt = ''
-    if type_code in SHOE_TYPES and surface_active and surface_active != 'all':
-        surf_txt = _surface_label(surface_active)
-
-    gender_txt = ''
-    if type_code in SHOE_TYPES and gender_filter == 'm':
-        gender_txt = "men's "
-    elif type_code in SHOE_TYPES and gender_filter == 'w':
-        gender_txt = "women's "
-
-    head_subject = f'{gender_txt}{type_label}'.strip()
-    if brand_txt:
-        head_subject = f'{head_subject} | {brand_txt}'
-    if surf_txt:
-        head_subject = f'{head_subject} | {surf_txt}'
-
-    # Pipe separators read reliably in link previews (avoid em dash before brand tail).
-    title = f'{head_subject} | {SITE_NAME} | {mode_short}'
-    if len(title) > 72:
-        title = f'{head_subject} | {SITE_NAME}'
-
-    h1 = head_subject or 'Tennis equipment'
-    if browse_mode == 'stock':
-        h1 = f'{h1} · shop in {CITY_COUNTRY}'
-    else:
-        h1 = f'{h1} · preorder to {CITY_COUNTRY}'
+    subject, brand_txt, surf_txt = _catalog_listing_subject(
+        type_code,
+        racket_brand=racket_brand,
+        shoe_brand=shoe_brand,
+        surface_active=surface_active,
+    )
+    title = _catalog_listing_title(browse_mode, subject)
+    h1 = _catalog_listing_h1(browse_mode, subject)
 
     desc_bits = [
         f'{SITE_NAME} online tennis store in {CITY_COUNTRY}.',

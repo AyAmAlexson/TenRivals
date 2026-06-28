@@ -232,3 +232,67 @@ class SalesOrderPaymentCurrencyTests(TestCase):
         order.exchange_rate = Decimal('2.70')
         apply_payment_currency_fields(order, Decimal('100.00'))
         self.assertEqual(order.amount_in_payment_currency, Decimal('37.04'))
+
+
+class CatalogSeoTextsTests(TestCase):
+    def _seo(self, browse_mode, type_code, **kwargs):
+        from shop.seo_catalog import catalog_seo_texts
+
+        defaults = {
+            'racket_brand': 'all',
+            'shoe_brand': 'all',
+            'surface_active': 'all',
+            'gender_filter': 'all',
+            'product_count': 4,
+        }
+        defaults.update(kwargs)
+        return catalog_seo_texts(browse_mode, type_code=type_code, **defaults)
+
+    def test_stock_balls_title_and_h1(self):
+        seo = self._seo('stock', ProductType.BALLS)
+        self.assertEqual(
+            seo['seo_page_title'],
+            'Tennis Balls | To Buy in Tbilisi | Tennis Rivals',
+        )
+        self.assertEqual(
+            seo['seo_page_h1'],
+            'Tennis Balls • In Stock • Tbilisi, Georgia',
+        )
+
+    def test_stock_rackets_with_brand(self):
+        seo = self._seo('stock', ProductType.RACKET, racket_brand='Wilson')
+        self.assertEqual(
+            seo['seo_page_title'],
+            'Wilson Tennis Rackets | To Buy in Tbilisi | Tennis Rivals',
+        )
+        self.assertEqual(
+            seo['seo_page_h1'],
+            'Wilson Tennis Rackets • In Stock • Tbilisi, Georgia',
+        )
+
+    def test_stock_mens_shoes_clay_surface(self):
+        seo = self._seo(
+            'stock',
+            ProductType.MENS_SHOES,
+            shoe_brand='ASICS',
+            surface_active='clay',
+        )
+        self.assertEqual(
+            seo['seo_page_title'],
+            "ASICS Men's Clay Court Tennis Shoes | To Buy in Tbilisi | Tennis Rivals",
+        )
+        self.assertEqual(
+            seo['seo_page_h1'],
+            "ASICS Men's Clay Court Tennis Shoes • In Stock • Tbilisi, Georgia",
+        )
+
+    def test_preorder_all_catalog(self):
+        seo = self._seo('preorder', None)
+        self.assertEqual(
+            seo['seo_page_title'],
+            'Tennis Equipment | Preorder to Georgia | Tennis Rivals',
+        )
+        self.assertEqual(
+            seo['seo_page_h1'],
+            'Tennis Equipment • Preorder • Tbilisi, Georgia',
+        )

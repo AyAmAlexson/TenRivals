@@ -134,6 +134,10 @@ if _DATABASE_URL:
             ssl_require=bool(os.environ.get('DYNO')),
         )
     }
+    # Reuse pooled SSL connections but verify before each request (avoids
+    # OperationalError: SSL error: unexpected eof while reading on Heroku/RDS).
+    if _CONN_MAX_AGE:
+        DATABASES['default']['CONN_HEALTH_CHECKS'] = True
 else:
     DATABASES = {
         'default': {
