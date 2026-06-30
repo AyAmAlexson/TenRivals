@@ -109,7 +109,8 @@
     .pdp-color{font-size:14px; font-weight:400; color:#94a3b8; margin-bottom:20px; text-transform:none; line-height:1.45}
     .pdp-divider{border:none; border-top:1px solid var(--line); margin:0 0 20px}
     .pdp-prices{display:flex; align-items:baseline; gap:12px; margin-bottom:20px}
-    .pdp-price{font-size:22px; font-weight:800; color:var(--accent)}
+    .pdp-price{font-size:22px; font-weight:800; color:var(--ink)}
+    .pdp-price--sale{color:var(--accent)}
     .pdp-price-old{font-size:16px; color:#94a3b8; text-decoration:line-through}
     .pdp-price-muted{font-size:16px; font-weight:400; color:var(--muted); text-transform:none}
 
@@ -404,7 +405,7 @@
         <div class="pdp-prices">
           {% if product.actual_price %}
           <span class="pdp-price-old">{{ product.initial_price }} ₾</span>
-          <span class="pdp-price">{{ product.actual_price }} ₾</span>
+          <span class="pdp-price pdp-price--sale">{{ product.actual_price }} ₾</span>
           {% else %}
           <span class="pdp-price">{{ product.initial_price }} ₾</span>
           {% endif %}
@@ -413,7 +414,7 @@
         <div class="pdp-prices">
           {% if product.actual_price %}
           <span class="pdp-price-old">{{ product.initial_price }} ₾</span>
-          <span class="pdp-price">˜{{ product.margin_price }} ₾</span>
+          <span class="pdp-price pdp-price--sale">˜{{ product.margin_price }} ₾</span>
           {% else %}
           <span class="pdp-price">˜{{ product.margin_price }} ₾</span>
           {% endif %}

@@ -165,7 +165,8 @@
     }
     .article-product-card__name{font-size:14px;line-height:1.35;margin:0 0 4px;font-weight:600;text-transform:none}
     .article-product-card__color{font-size:12px;line-height:1.35;margin:0 0 8px;font-weight:400;color:var(--muted);text-transform:none}
-    .article-product-card__price{font-size:15px;font-weight:800;color:var(--accent);margin:0}
+    .article-product-card__price{font-size:15px;font-weight:800;color:var(--ink, #1a1a1a);margin:0}
+    .article-product-card__price--sale{color:var(--accent)}
     .article-cta{
       margin:36px 0;display:flex;align-items:center;justify-content:flex-start;gap:18px;flex-wrap:nowrap;
       background:linear-gradient(105deg,#b20009 0%,#9f0008 55%,#c50a14 100%);
@@ -245,7 +246,7 @@
                     <p class="article-product-card__brand">{{ p.brand }}</p>
                     <p class="article-product-card__name">{{ p.name }}</p>
                     {% if p.color %}<p class="article-product-card__color">{{ p.color }}</p>{% endif %}
-                    {% if p.primary_price %}<p class="article-product-card__price">{{ p.primary_price }} ₾</p>{% endif %}
+                    {% if p.primary_price %}<p class="article-product-card__price{% if p.actual_price %} article-product-card__price--sale{% endif %}">{{ p.primary_price }} ₾</p>{% endif %}
                   </div>
                 </a>
                 {% endfor %}

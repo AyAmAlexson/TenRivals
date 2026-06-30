@@ -32,7 +32,7 @@
           {% if browse_mode == 'preorder' %}
             {% if po > 0 %}
               {% if p.actual_price %}
-              <span class="product-tile__price">˜{{ p.margin_price }} ₾</span>
+              <span class="product-tile__price product-tile__price--sale">˜{{ p.margin_price }} ₾</span>
               <span class="product-tile__price-old">{{ p.initial_price }} ₾</span>
               {% else %}
               <span class="product-tile__price">˜{{ p.margin_price }} ₾</span>
@@ -44,7 +44,7 @@
             <span class="product-tile__price-muted">In stock soon · Ask us</span>
           {% elif qty > 0 %}
             {% if p.actual_price %}
-            <span class="product-tile__price">{{ p.actual_price }} ₾</span>
+            <span class="product-tile__price product-tile__price--sale">{{ p.actual_price }} ₾</span>
             <span class="product-tile__price-old">{{ p.initial_price }} ₾</span>
             {% else %}
             <span class="product-tile__price">{{ p.initial_price }} ₾</span>
