@@ -96,6 +96,13 @@
       border:1px dashed var(--line);background:#fff;cursor:pointer;font-size:20px;line-height:1;color:var(--muted);
     }
     .attr-add-btn:hover{border-color:var(--accent);color:var(--accent)}
+    .attr-bulk{
+      width:100%;min-height:160px;margin-bottom:14px;padding:10px 12px;
+      font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
+      font-size:13px;line-height:1.5;resize:vertical;border:1px solid var(--line);background:#fff;
+    }
+    .attr-bulk:focus{outline:2px solid rgba(178,0,9,.25);border-color:var(--accent)}
+    .attr-bulk-label{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:14px 0 6px;display:block}
 
     .errorlist{color:#b91c1c;font-size:13px;margin:8px 0;list-style:none}
     .errorlist li{margin-bottom:4px}
@@ -318,9 +325,11 @@
         <div class="field">{{ form.short_description.label_tag }}{{ form.short_description }}</div>
         <div class="field">{{ form.description.label_tag }}{{ form.description }}</div>
         <div class="field">
-          <label for="js-attr-rows" style="margin-bottom:8px">Extra attributes</label>
-          <p class="hint">Shown on the product page as a spec table. Add rows with the plus button; remove with minus.</p>
-          <div id="js-attr-rows" class="attr-rows" aria-label="Attribute pairs"></div>
+          <label for="js-attr-bulk" style="margin-bottom:8px">Extra attributes</label>
+          <p class="hint">Shown on the product page as a spec table. Paste many rows at once below, or edit individual rows with + / −.</p>
+          <textarea id="js-attr-bulk" class="attr-bulk" rows="10" spellcheck="false" placeholder="Parameter;Value&#10;Head size;100 sq in&#10;Weight;300 g"></textarea>
+          <span class="attr-bulk-label" id="js-attr-rows-label">Individual rows</span>
+          <div id="js-attr-rows" class="attr-rows" aria-labelledby="js-attr-rows-label"></div>
           <button type="button" class="attr-add-btn" id="js-attr-add" title="Add attribute" aria-label="Add attribute">+</button>
           {{ form.attributes }}
           {% if form.attributes.errors %}<ul class="errorlist">{% for e in form.attributes.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
@@ -374,9 +383,27 @@
         });
       }
 
-      function syncAttrs(){
-        var hid = document.getElementById('id_attributes');
-        if(!hid) return;
+      function parseBulkLines(text){
+        var o = {};
+        (text || '').split(/\r?\n/).forEach(function(line){
+          line = line.trim();
+          if(!line) return;
+          var idx = line.indexOf(';');
+          if(idx < 0) return;
+          var k = line.slice(0, idx).trim();
+          var v = line.slice(idx + 1).trim();
+          if(k) o[k] = v;
+        });
+        return o;
+      }
+
+      function objectToBulkLines(obj){
+        return Object.keys(obj || {}).map(function(k){
+          return k + ';' + (obj[k] == null ? '' : String(obj[k]));
+        }).join('\n');
+      }
+
+      function collectAttrsFromRows(){
         var o = {};
         document.querySelectorAll('#js-attr-rows .attr-row').forEach(function(row){
           var kEl = row.querySelector('.attr-key');
@@ -386,7 +413,45 @@
           var v = vEl.value.trim();
           if(k) o[k] = v;
         });
+        return o;
+      }
+
+      function rebuildAttrRows(obj){
+        var root = document.getElementById('js-attr-rows');
+        if(!root) return;
+        root.innerHTML = '';
+        var keys = Object.keys(obj || {});
+        if(!keys.length){
+          root.appendChild(makeAttrRow('', ''));
+        } else {
+          keys.forEach(function(k){ root.appendChild(makeAttrRow(k, obj[k])); });
+        }
+      }
+
+      function setBulkText(text){
+        var bulk = document.getElementById('js-attr-bulk');
+        if(!bulk || bulk.dataset.syncing === '1') return;
+        bulk.dataset.syncing = '1';
+        bulk.value = text;
+        delete bulk.dataset.syncing;
+      }
+
+      function syncFromBulk(){
+        var bulk = document.getElementById('js-attr-bulk');
+        var hid = document.getElementById('id_attributes');
+        if(!hid) return;
+        var obj = bulk && bulk.value.trim() ? parseBulkLines(bulk.value) : collectAttrsFromRows();
+        hid.value = JSON.stringify(obj);
+        setBulkText(objectToBulkLines(obj));
+        rebuildAttrRows(obj);
+      }
+
+      function syncAttrs(){
+        var hid = document.getElementById('id_attributes');
+        if(!hid) return;
+        var o = collectAttrsFromRows();
         hid.value = JSON.stringify(o);
+        setBulkText(objectToBulkLines(o));
       }
 
       function bindAttrRow(row){
@@ -414,15 +479,16 @@
       function initAttrs(){
         var root = document.getElementById('js-attr-rows');
         var hid = document.getElementById('id_attributes');
+        var bulk = document.getElementById('js-attr-bulk');
         if(!root || !hid) return;
         var raw = hid.value.trim();
         var obj = {};
         try{ obj = raw ? JSON.parse(raw) : {}; }catch(e){ obj = {}; }
-        var keys = Object.keys(obj);
-        if(!keys.length){
-          root.appendChild(makeAttrRow('', ''));
-        } else {
-          keys.forEach(function(k){ root.appendChild(makeAttrRow(k, obj[k])); });
+        if(bulk) bulk.value = objectToBulkLines(obj);
+        rebuildAttrRows(obj);
+        if(bulk){
+          bulk.addEventListener('input', syncFromBulk);
+          bulk.addEventListener('paste', function(){ setTimeout(syncFromBulk, 0); });
         }
         var addBtn = document.getElementById('js-attr-add');
         if(addBtn){
@@ -431,14 +497,14 @@
             syncAttrs();
           });
         }
-        syncAttrs();
+        syncFromBulk();
       }
 
       var prodForm = document.getElementById('shop-product-form');
       if(prodForm){
         prodForm.addEventListener('submit', function(){
           document.querySelectorAll('.js-size-inventory-grid').forEach(syncSizeGrid);
-          syncAttrs();
+          syncFromBulk();
         });
       }
       initSizeGrids();
