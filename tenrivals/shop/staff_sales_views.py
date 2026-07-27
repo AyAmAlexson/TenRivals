@@ -9,7 +9,7 @@ from decimal import Decimal
 
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
-from django.db.models import Sum
+from django.db.models import Count, Sum
 from django.urls import reverse
 from django.templatetags.static import static
 from django.contrib import messages
@@ -260,7 +260,11 @@ def _product_queryset_for_order(instance: SalesOrder | None):
 @user_passes_test(_staff_ok)
 def staff_customers(request):
     q = (request.GET.get('q') or '').strip()
-    qs = Customer.objects.select_related('user').order_by('last_name', 'first_name', 'id')
+    qs = (
+        Customer.objects.select_related('user')
+        .annotate(orders_count=Count('sales_orders'))
+        .order_by('last_name', 'first_name', 'id')
+    )
     if q:
         qs = qs.filter(
             Q(first_name__icontains=q)
@@ -283,6 +287,89 @@ def staff_customers(request):
     )
 
 
+_REVENUE_EXCLUDED_STATUSES = frozenset(
+    {SalesOrder.Status.CANCELLED, SalesOrder.Status.REFUNDED}
+)
+
+
+@login_required
+@user_passes_test(_staff_ok)
+def staff_customer_detail(request, pk):
+    customer = get_object_or_404(Customer.objects.select_related('user'), pk=pk)
+    orders = list(
+        customer.sales_orders.prefetch_related(_sales_order_lines_prefetch())
+        .order_by('-order_date', '-id')
+    )
+    revenue_orders = [o for o in orders if o.status not in _REVENUE_EXCLUDED_STATUSES]
+
+    total_gross = sum((o.gross_total for o in revenue_orders), Decimal('0.00'))
+    avg_order_gross = (
+        (total_gross / len(revenue_orders)).quantize(Decimal('0.01'))
+        if revenue_orders
+        else Decimal('0.00')
+    )
+    last_order = orders[0] if orders else None
+    first_order = orders[-1] if orders else None
+    days_since_last_order = (
+        (date.today() - last_order.order_date).days if last_order else None
+    )
+
+    items_total = 0
+    product_totals: dict[str, dict] = {}
+    payment_counts: dict[str, int] = {}
+    for o in revenue_orders:
+        pm = (o.payment_method or '').strip()
+        if pm:
+            payment_counts[pm] = payment_counts.get(pm, 0) + 1
+        for line in o.lines.all():
+            qty = int(line.quantity or 0)
+            items_total += qty
+            label = line.product.storefront_cart_line_title()
+            entry = product_totals.setdefault(
+                label, {'label': label, 'qty': 0, 'gross': Decimal('0.00')}
+            )
+            entry['qty'] += qty
+            entry['gross'] += line.line_gross
+    top_products = sorted(
+        product_totals.values(), key=lambda e: (-e['qty'], -e['gross'], e['label'])
+    )[:5]
+    preferred_payment = (
+        max(payment_counts.items(), key=lambda kv: kv[1])[0] if payment_counts else ''
+    )
+
+    status_counts_map: dict[str, int] = {}
+    for o in orders:
+        status_counts_map[o.status] = status_counts_map.get(o.status, 0) + 1
+    status_counts = [
+        {'value': val, 'label': label, 'count': status_counts_map[val]}
+        for val, label in SalesOrder.Status.choices
+        if status_counts_map.get(val)
+    ]
+
+    return render(
+        request,
+        'shop/staff/customer_detail.html',
+        {
+            'customer': customer,
+            'linked_user': customer.user,
+            'orders': orders,
+            'orders_count': len(orders),
+            'revenue_orders_count': len(revenue_orders),
+            'total_gross': total_gross,
+            'avg_order_gross': avg_order_gross,
+            'items_total': items_total,
+            'first_order': first_order,
+            'last_order': last_order,
+            'days_since_last_order': days_since_last_order,
+            'top_products': top_products,
+            'preferred_payment': preferred_payment,
+            'status_counts': status_counts,
+            'staff_nav_active': 'customers',
+            'page_heading': customer.display_name(),
+        },
+    )
+
+
 @login_required
 @user_passes_test(_staff_ok)
 def staff_customer_edit(request, pk=None):
@@ -290,9 +377,9 @@ def staff_customer_edit(request, pk=None):
     if request.method == 'POST':
         form = CustomerForm(request.POST, instance=instance)
         if form.is_valid():
-            form.save()
+            saved = form.save()
             messages.success(request, 'Customer saved.')
-            return redirect('administration:staff_customers')
+            return redirect('administration:staff_customer_detail', pk=saved.pk)
     else:
         form = CustomerForm(instance=instance)
     return render(

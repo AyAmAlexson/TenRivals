@@ -80,7 +80,11 @@
       {% if form.non_field_errors %}<div class="field-errors" style="margin-bottom:12px">{{ form.non_field_errors }}</div>{% endif %}
       <div class="actions">
         <button type="submit" class="btn">Save</button>
+        {% if customer %}
+        <a href="{% url 'administration:staff_customer_detail' customer.pk %}" class="btn btn--outline">Cancel</a>
+        {% else %}
         <a href="{% url 'administration:staff_customers' %}" class="btn btn--outline">Cancel</a>
+        {% endif %}
       </div>
     </form>
   </div>

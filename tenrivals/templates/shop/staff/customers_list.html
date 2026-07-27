@@ -4,6 +4,14 @@
 {% block page_note %}<p class="page-note">Retail customers (POS). <strong>Guest</strong> = no site account (<code>user</code> empty), usually from guest checkout. <strong>Registered</strong> = linked site user. New signups with the same email as an existing guest row are linked to that customer automatically (no duplicate).</p>{% endblock %}
 {% block extra_head %}
 <style>
+  .customers-table{min-width:0}
+  .customers-table td{vertical-align:top}
+  .cust-name-link{font-weight:600;color:var(--accent)}
+  .cust-name-link:hover{text-decoration:underline}
+  .cust-sub{font-size:12px;color:var(--muted);margin-top:2px}
+  .contact-line{display:block;font-size:12px;line-height:1.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px}
+  .customers-table .col-address{max-width:220px;overflow-wrap:anywhere;font-size:12px;line-height:1.5}
+  .customers-table .col-orders{white-space:nowrap}
   .confirm-overlay{
     position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;
     align-items:center;justify-content:center;z-index:12060;padding:16px;
@@ -28,18 +36,14 @@
 <div class="card">
   <h2 class="card-title">All customers (showing up to 500)</h2>
   <div class="table-wrap">
-    <table>
+    <table class="customers-table">
       <thead>
         <tr>
           <th>ID</th>
-          <th>First name</th>
-          <th>Last name</th>
-          <th>Name (local)</th>
-          <th>Telegram</th>
-          <th>Phone</th>
-          <th>Email</th>
+          <th>Customer</th>
+          <th>Contact</th>
           <th>Account</th>
-          <th>Newsletter</th>
+          <th class="col-orders">Orders</th>
           <th>Address</th>
           <th>Actions</th>
         </tr>
@@ -48,24 +52,35 @@
         {% for c in customers %}
         <tr>
           <td class="mono">{{ c.pk }}</td>
-          <td>{{ c.first_name }}</td>
-          <td>{{ c.last_name|default:"—" }}</td>
-          <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="{{ c.name_local }} {{ c.surname_local }}">{% if c.name_local or c.surname_local %}{{ c.name_local }} {{ c.surname_local }}{% else %}—{% endif %}</td>
-          <td class="mono">{{ c.tg_account|default:"—" }}</td>
-          <td class="mono">{{ c.phone|default:"—" }}</td>
-          <td>{{ c.email|default:"—" }}</td>
+          <td>
+            <a href="{% url 'administration:staff_customer_detail' c.pk %}" class="cust-name-link">{{ c.first_name }} {{ c.last_name }}</a>
+            {% if c.name_local or c.surname_local %}<div class="cust-sub">{{ c.name_local }} {{ c.surname_local }}</div>{% endif %}
+          </td>
+          <td>
+            {% if c.phone %}<span class="contact-line mono">{{ c.phone }}</span>{% endif %}
+            {% if c.email %}<span class="contact-line" title="{{ c.email }}">{{ c.email }}</span>{% endif %}
+            {% if c.tg_account %}<span class="contact-line mono" title="Telegram">{{ c.tg_account }}</span>{% endif %}
+            {% if not c.phone and not c.email and not c.tg_account %}—{% endif %}
+          </td>
           <td>
             {% if c.user_id %}
             <span class="badge badge--yes" title="Linked site user ID {{ c.user_id }}">Registered</span>
-            <span class="mono" style="font-size:12px;color:var(--muted)">#{{ c.user_id }}</span>
             {% else %}
             <span class="badge badge--no">Guest</span>
             {% endif %}
+            {% if c.newsletter_opt_in %}<div class="cust-sub">Newsletter: yes</div>{% endif %}
           </td>
-          <td>{% if c.newsletter_opt_in %}<span class="badge badge--yes">Yes</span>{% else %}<span class="badge badge--no">No</span>{% endif %}</td>
-          <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="{{ c.address }}">{{ c.address|default:"—"|truncatechars:40 }}</td>
+          <td class="col-orders">
+            {% if c.orders_count %}
+            <a href="{% url 'administration:staff_customer_detail' c.pk %}" class="mono" style="font-weight:600">{{ c.orders_count }}</a>
+            {% else %}
+            <span class="mono" style="color:var(--muted)">0</span>
+            {% endif %}
+          </td>
+          <td class="col-address">{{ c.address|default:"—"|truncatechars:60 }}</td>
           <td>
             <div class="action-icons">
+              <a href="{% url 'administration:staff_customer_detail' c.pk %}" class="icon-btn" title="Open card" aria-label="Open card">👁</a>
               <a href="{% url 'administration:staff_customer_edit' c.pk %}" class="icon-btn" title="Edit" aria-label="Edit">✎</a>
               <form id="delete-customer-{{ c.pk }}" method="post" action="{% url 'administration:staff_customer_delete' c.pk %}" style="display:inline">
                 {% csrf_token %}
@@ -75,7 +90,7 @@
           </td>
         </tr>
         {% empty %}
-        <tr><td colspan="11" style="color:var(--muted)">No customers found.</td></tr>
+        <tr><td colspan="7" style="color:var(--muted)">No customers found.</td></tr>
         {% endfor %}
       </tbody>
     </table>

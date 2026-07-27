@@ -53,6 +53,11 @@ urlpatterns = [
     ),
     path("customers/new/", staff_sales_views.staff_customer_edit, name="staff_customer_new"),
     path(
+        "customers/<int:pk>/",
+        staff_sales_views.staff_customer_detail,
+        name="staff_customer_detail",
+    ),
+    path(
         "customers/<int:pk>/edit/",
         staff_sales_views.staff_customer_edit,
         name="staff_customer_edit",

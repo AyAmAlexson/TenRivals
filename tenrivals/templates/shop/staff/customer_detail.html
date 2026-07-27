@@ -1,0 +1,169 @@
+{% extends 'persons/staff_base.html' %}
+{% block title %}{{ customer.display_name }} — Customer | Tenrivals{% endblock %}
+{% block page_heading %}{{ page_heading }}{% endblock %}
+{% block page_note %}<p class="page-note">Customer #{{ customer.pk }} · created {{ customer.created_at|date:"Y-m-d" }}{% if linked_user %} · linked to site account #{{ linked_user.pk }}{% endif %}</p>{% endblock %}
+{% block extra_head %}
+<style>
+  .cust-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:24px}
+  .stat-card{background:#fff;border:1px solid var(--line);padding:16px 18px}
+  .stat-card__label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px}
+  .stat-card__value{font-size:24px;font-weight:800;line-height:1.15}
+  .stat-card__hint{font-size:12px;color:var(--muted);margin-top:4px}
+  .cust-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 24px;align-items:start}
+  @media(max-width:900px){.cust-grid{grid-template-columns:1fr}}
+  .kv{display:grid;grid-template-columns:140px 1fr;gap:8px 14px;font-size:14px}
+  .kv dt{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);padding-top:1px}
+  .kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
+  .cust-orders-table{min-width:0}
+  .cust-orders-table .col-items{max-width:320px}
+  .cust-orders-table .item-line{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:320px;font-size:12px;line-height:1.45;padding:1px 0}
+  .status-badge{display:inline-block;padding:2px 8px;font-size:11px;font-weight:700;background:#f3f4f6;color:#374151}
+  .status-badge--CONFIRMED,.status-badge--SHIPPED{background:#eff6ff;color:#1e40af}
+  .status-badge--COMPLETED{background:#ecfdf5;color:#065f46}
+  .status-badge--CANCELLED,.status-badge--REFUNDED{background:#fef2f2;color:#b91c1c}
+  .status-badge--SUBMITTED,.status-badge--AWAITING_PAYMENT{background:#fffbeb;color:#92400e}
+  .status-list{display:flex;flex-wrap:wrap;gap:8px}
+  .status-list .status-badge{padding:4px 10px;font-size:12px}
+  .top-products{width:100%;border-collapse:collapse;font-size:13px;min-width:0}
+  .num{text-align:right}
+</style>
+{% endblock %}
+{% block content %}
+<div class="staff-toolbar">
+  <a href="{% url 'administration:staff_customer_edit' customer.pk %}" class="btn btn--sm">Edit customer</a>
+  <a href="{% url 'administration:staff_sales_order_new' %}" class="btn btn--sm btn--outline" style="margin-right:0">New order</a>
+  {% if linked_user %}
+  <a href="{% url 'administration:superuser_user_edit' linked_user.pk %}" class="btn btn--sm btn--outline" style="margin-right:0">User account</a>
+  {% endif %}
+  <a href="{% url 'administration:staff_customers' %}" class="btn btn--sm btn--outline" style="margin-right:0">All customers</a>
+</div>
+
+<div class="cust-stats">
+  <div class="stat-card">
+    <div class="stat-card__label">Orders</div>
+    <div class="stat-card__value">{{ orders_count }}</div>
+    {% if orders_count != revenue_orders_count %}<div class="stat-card__hint">{{ revenue_orders_count }} excluding cancelled / refunded</div>{% endif %}
+  </div>
+  <div class="stat-card">
+    <div class="stat-card__label">Lifetime value</div>
+    <div class="stat-card__value">{{ total_gross }} ₾</div>
+    <div class="stat-card__hint">gross, excl. cancelled / refunded</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-card__label">Avg order</div>
+    <div class="stat-card__value">{{ avg_order_gross }} ₾</div>
+    <div class="stat-card__hint">{{ items_total }} item{{ items_total|pluralize }} purchased</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-card__label">Last order</div>
+    <div class="stat-card__value">{% if last_order %}{{ last_order.order_date|date:"Y-m-d" }}{% else %}—{% endif %}</div>
+    {% if days_since_last_order is not None %}<div class="stat-card__hint">{{ days_since_last_order }} day{{ days_since_last_order|pluralize }} ago{% if first_order %} · first order {{ first_order.order_date|date:"Y-m-d" }}{% endif %}</div>{% endif %}
+  </div>
+</div>
+
+<div class="cust-grid">
+  <div class="card">
+    <h2 class="card-title">Contact</h2>
+    <dl class="kv">
+      <dt>Name</dt><dd>{{ customer.first_name }} {{ customer.last_name }}</dd>
+      {% if customer.name_local or customer.surname_local %}<dt>Name (local)</dt><dd>{{ customer.name_local }} {{ customer.surname_local }}</dd>{% endif %}
+      <dt>Phone</dt><dd>{% if customer.phone %}<a href="tel:{{ customer.phone }}" class="mono">{{ customer.phone }}</a>{% else %}—{% endif %}</dd>
+      <dt>Email</dt><dd>{% if customer.email %}<a href="mailto:{{ customer.email }}">{{ customer.email }}</a>{% else %}—{% endif %}</dd>
+      <dt>Telegram</dt><dd class="mono">{{ customer.tg_account|default:"—" }}</dd>
+      <dt>Address</dt><dd>{{ customer.address|default:"—" }}</dd>
+      <dt>Newsletter</dt><dd>{% if customer.newsletter_opt_in %}<span class="badge badge--yes">Opted in</span>{% else %}<span class="badge badge--no">No</span>{% endif %}</dd>
+    </dl>
+  </div>
+  <div class="card">
+    <h2 class="card-title">Site account</h2>
+    {% if linked_user %}
+    <dl class="kv">
+      <dt>User</dt><dd><a href="{% url 'administration:superuser_user_edit' linked_user.pk %}" style="font-weight:600;color:var(--accent)">{{ linked_user.get_full_name|default:linked_user.email }} (#{{ linked_user.pk }})</a></dd>
+      <dt>Email</dt><dd>{{ linked_user.email|default:"—" }}</dd>
+      <dt>Joined</dt><dd class="mono">{{ linked_user.date_joined|date:"Y-m-d" }}</dd>
+      <dt>Last login</dt><dd class="mono">{% if linked_user.last_login %}{{ linked_user.last_login|date:"Y-m-d H:i" }}{% else %}never{% endif %}</dd>
+      <dt>Active</dt><dd>{% if linked_user.is_active %}<span class="badge badge--yes">Yes</span>{% else %}<span class="badge badge--no">No</span>{% endif %}</dd>
+    </dl>
+    {% else %}
+    <p style="font-size:14px;color:var(--muted)"><span class="badge badge--no">Guest</span>&nbsp; No linked site account. A new signup with the same email will be linked to this customer automatically.</p>
+    {% endif %}
+  </div>
+</div>
+
+<div class="cust-grid">
+  <div class="card">
+    <h2 class="card-title">Top products</h2>
+    {% if top_products %}
+    <table class="top-products">
+      <thead><tr><th>Product</th><th class="num">Qty</th><th class="num">Gross ₾</th></tr></thead>
+      <tbody>
+        {% for p in top_products %}
+        <tr><td>{{ p.label }}</td><td class="mono num">{{ p.qty }}</td><td class="mono num">{{ p.gross }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p style="font-size:14px;color:var(--muted)">No purchases yet.</p>
+    {% endif %}
+  </div>
+  <div class="card">
+    <h2 class="card-title">Insights</h2>
+    <dl class="kv">
+      <dt>Order statuses</dt>
+      <dd>
+        {% if status_counts %}
+        <div class="status-list">
+          {% for s in status_counts %}<span class="status-badge status-badge--{{ s.value }}">{{ s.label }} × {{ s.count }}</span>{% endfor %}
+        </div>
+        {% else %}—{% endif %}
+      </dd>
+      <dt>Preferred payment</dt><dd>{{ preferred_payment|default:"—" }}</dd>
+      <dt>Customer since</dt><dd class="mono">{{ customer.created_at|date:"Y-m-d" }}</dd>
+      <dt>Updated</dt><dd class="mono">{{ customer.updated_at|date:"Y-m-d H:i" }}</dd>
+    </dl>
+  </div>
+</div>
+
+<div class="card">
+  <h2 class="card-title">Orders ({{ orders_count }})</h2>
+  {% if orders %}
+  <div class="table-wrap">
+    <table class="cust-orders-table">
+      <thead>
+        <tr>
+          <th>Invoice #</th>
+          <th>Date</th>
+          <th>Status</th>
+          <th class="num">Gross ₾</th>
+          <th class="col-items">Items</th>
+          <th>Invoice</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for o in orders %}
+        <tr>
+          <td class="mono"><a href="{% url 'administration:staff_sales_order_edit' o.pk %}" style="font-weight:600;color:var(--accent)">{{ o.invoice_number }}</a></td>
+          <td class="mono">{{ o.order_date|date:"Y-m-d" }}</td>
+          <td><span class="status-badge status-badge--{{ o.status }}">{{ o.get_status_display }}</span></td>
+          <td class="mono num">{{ o.gross_total }}</td>
+          <td class="col-items">
+            {% for line in o.lines.all %}
+              <span class="item-line" title="{{ line.staff_order_item_summary }}">{{ line.staff_order_item_summary }}</span>
+            {% empty %}—{% endfor %}
+          </td>
+          <td>
+            <div class="action-icons">
+              <a href="{% url 'administration:staff_sales_order_invoice' o.pk %}" class="icon-btn" title="View invoice" aria-label="View invoice">👁</a>
+              <a href="{% url 'administration:staff_sales_order_invoice' o.pk %}?print=1" class="icon-btn" title="Print / PDF" aria-label="Print invoice" target="_blank" rel="noopener">🖨</a>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p style="font-size:14px;color:var(--muted)">No orders yet.</p>
+  {% endif %}
+</div>
+{% endblock %}
