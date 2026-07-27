@@ -12,6 +12,16 @@
   .contact-line{display:block;font-size:12px;line-height:1.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px}
   .customers-table .col-address{max-width:220px;overflow-wrap:anywhere;font-size:12px;line-height:1.5}
   .customers-table .col-orders{white-space:nowrap}
+  .pagination{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:18px}
+  .page-btn{
+    display:inline-flex;align-items:center;justify-content:center;
+    min-width:32px;height:32px;padding:0 8px;border:1px solid var(--line);
+    background:#fff;color:var(--ink);font-size:13px;font-weight:600;font-family:inherit;
+  }
+  a.page-btn:hover{border-color:#cbd5e1;background:#f9fafb}
+  .page-btn.is-current{background:var(--accent);border-color:var(--accent);color:#fff}
+  .page-btn.is-disabled{opacity:.4;cursor:default}
+  .page-gap{color:var(--muted);padding:0 2px}
   .confirm-overlay{
     position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;
     align-items:center;justify-content:center;z-index:12060;padding:16px;
@@ -34,7 +44,7 @@
   </form>
 </div>
 <div class="card">
-  <h2 class="card-title">All customers (showing up to 500)</h2>
+  <h2 class="card-title">All customers ({{ paginator.count }})</h2>
   <div class="table-wrap">
     <table class="customers-table">
       <thead>
@@ -53,8 +63,8 @@
         <tr>
           <td class="mono">{{ c.pk }}</td>
           <td>
-            <a href="{% url 'administration:staff_customer_detail' c.pk %}" class="cust-name-link">{{ c.first_name }} {{ c.last_name }}</a>
-            {% if c.name_local or c.surname_local %}<div class="cust-sub">{{ c.name_local }} {{ c.surname_local }}</div>{% endif %}
+            <a href="{% url 'administration:staff_customer_detail' c.pk %}" class="cust-name-link">{% if c.last_name %}{{ c.last_name }} {{ c.first_name }}{% else %}{{ c.first_name }}{% endif %}</a>
+            {% if c.name_local or c.surname_local %}<div class="cust-sub">{% if c.surname_local %}{{ c.surname_local }} {{ c.name_local }}{% else %}{{ c.name_local }}{% endif %}</div>{% endif %}
           </td>
           <td>
             {% if c.phone %}<span class="contact-line mono">{{ c.phone }}</span>{% endif %}
@@ -95,6 +105,29 @@
       </tbody>
     </table>
   </div>
+  {% if paginator.num_pages > 1 %}
+  <nav class="pagination" aria-label="Customers pages">
+    {% if page_obj.has_previous %}
+    <a href="?page={{ page_obj.previous_page_number }}{% if search_q %}&q={{ search_q|urlencode }}{% endif %}" class="page-btn" aria-label="Previous page">‹</a>
+    {% else %}
+    <span class="page-btn is-disabled" aria-hidden="true">‹</span>
+    {% endif %}
+    {% for n in page_numbers %}
+      {% if n == paginator.ELLIPSIS %}
+      <span class="page-gap">{{ n }}</span>
+      {% elif n == page_obj.number %}
+      <span class="page-btn is-current" aria-current="page">{{ n }}</span>
+      {% else %}
+      <a href="?page={{ n }}{% if search_q %}&q={{ search_q|urlencode }}{% endif %}" class="page-btn">{{ n }}</a>
+      {% endif %}
+    {% endfor %}
+    {% if page_obj.has_next %}
+    <a href="?page={{ page_obj.next_page_number }}{% if search_q %}&q={{ search_q|urlencode }}{% endif %}" class="page-btn" aria-label="Next page">›</a>
+    {% else %}
+    <span class="page-btn is-disabled" aria-hidden="true">›</span>
+    {% endif %}
+  </nav>
+  {% endif %}
 </div>
 <div class="confirm-overlay" id="customer-delete-confirm" aria-hidden="true">
   <div class="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="customer-delete-title">

@@ -9,6 +9,7 @@ from decimal import Decimal
 
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
+from django.core.paginator import Paginator
 from django.db.models import Count, Sum
 from django.urls import reverse
 from django.templatetags.static import static
@@ -275,11 +276,19 @@ def staff_customers(request):
             | Q(email__icontains=q)
             | Q(tg_account__icontains=q)
         )
+    paginator = Paginator(qs, 30)
+    page_obj = paginator.get_page(request.GET.get('page'))
+    page_numbers = list(
+        paginator.get_elided_page_range(page_obj.number, on_each_side=2, on_ends=1)
+    )
     return render(
         request,
         'shop/staff/customers_list.html',
         {
-            'customers': qs[:500],
+            'customers': page_obj,
+            'page_obj': page_obj,
+            'paginator': paginator,
+            'page_numbers': page_numbers,
             'search_q': q,
             'staff_nav_active': 'customers',
             'page_heading': 'Customers',
@@ -605,6 +614,14 @@ def staff_sales_order_edit(request, pk=None):
         initial = {}
         if instance is None:
             initial['order_date'] = date.today()
+            # Preselect customer when coming from a customer card (?customer=<pk>).
+            cust_raw = (request.GET.get('customer') or '').strip()
+            if cust_raw.isdigit():
+                cust_pk = Customer.objects.filter(pk=int(cust_raw)).values_list(
+                    'pk', flat=True
+                ).first()
+                if cust_pk:
+                    initial['customer'] = cust_pk
         form = SalesOrderForm(instance=instance, initial=initial)
         formset = SalesOrderLineFormSet(instance=instance or SalesOrder())
 

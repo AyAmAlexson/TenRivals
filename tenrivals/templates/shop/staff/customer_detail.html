@@ -4,6 +4,9 @@
 {% block page_note %}<p class="page-note">Customer #{{ customer.pk }} · created {{ customer.created_at|date:"Y-m-d" }}{% if linked_user %} · linked to site account #{{ linked_user.pk }}{% endif %}</p>{% endblock %}
 {% block extra_head %}
 <style>
+  .back-link{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:600;color:var(--muted);margin-bottom:16px;transition:color .12s}
+  .back-link:hover{color:var(--accent)}
+  .back-link svg{width:15px;height:15px;flex-shrink:0}
   .cust-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:24px}
   .stat-card{background:#fff;border:1px solid var(--line);padding:16px 18px}
   .stat-card__label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px}
@@ -29,13 +32,16 @@
 </style>
 {% endblock %}
 {% block content %}
+<a href="{% url 'administration:staff_customers' %}" class="back-link">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+  Back to customers
+</a>
 <div class="staff-toolbar">
   <a href="{% url 'administration:staff_customer_edit' customer.pk %}" class="btn btn--sm">Edit customer</a>
-  <a href="{% url 'administration:staff_sales_order_new' %}" class="btn btn--sm btn--outline" style="margin-right:0">New order</a>
+  <a href="{% url 'administration:staff_sales_order_new' %}?customer={{ customer.pk }}" class="btn btn--sm btn--outline" style="margin-right:0">New order</a>
   {% if linked_user %}
   <a href="{% url 'administration:superuser_user_edit' linked_user.pk %}" class="btn btn--sm btn--outline" style="margin-right:0">User account</a>
   {% endif %}
-  <a href="{% url 'administration:staff_customers' %}" class="btn btn--sm btn--outline" style="margin-right:0">All customers</a>
 </div>
 
 <div class="cust-stats">
