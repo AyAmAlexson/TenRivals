@@ -65,6 +65,17 @@ class Product(models.Model):
     # Pricing and availability
     initial_price = models.DecimalField(max_digits=10, decimal_places=2)
     actual_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    # Staff-only economics; must never leak to storefront, invoices, or customer emails.
+    landed_cost_gel = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text=_(
+            'Staff-only: weighted-average landed cost per unit (₾). '
+            'Updated via stock receipts; never shown to shoppers.'
+        ),
+    )
     in_stock = models.BooleanField(default=True)
     is_active = models.BooleanField(default=True)
     featured_product = models.BooleanField(
@@ -877,6 +888,50 @@ class ProductListing(models.Model):
         return f'{self.product_id} {self.channel} ×{self.quantity}'
 
 
+class StockReceipt(models.Model):
+    """Staff-only journal of incoming batches.
+
+    Each receipt recomputes Product.landed_cost_gel as a weighted average of the
+    on-hand units (at their current average cost) and the new batch. Quantities on
+    listings / size grids are managed separately; the receipt only does cost math,
+    so already-sold order lines (frozen snapshots) are never affected.
+    """
+
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.PROTECT,
+        related_name='stock_receipts',
+    )
+    quantity = models.PositiveIntegerField(help_text=_('Units in this batch.'))
+    unit_landed_cost_gel = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        help_text=_('Landed cost per unit for this batch (₾).'),
+    )
+    on_hand_before = models.PositiveIntegerField(
+        help_text=_('Units on hand before this batch (averaging basis).'),
+    )
+    landed_cost_before = models.DecimalField(
+        max_digits=10, decimal_places=2, null=True, blank=True
+    )
+    landed_cost_after = models.DecimalField(max_digits=10, decimal_places=2)
+    note = models.CharField(max_length=200, blank=True, default='')
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='stock_receipts',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at', '-id']
+
+    def __str__(self):
+        return f'Receipt #{self.pk}: {self.product_id} ×{self.quantity} @ {self.unit_landed_cost_gel} ₾'
+
+
 class UserCart(models.Model):
     """Persistent cart for authenticated users (cross-browser/session)."""
 
@@ -1305,6 +1360,17 @@ class SalesOrderLine(models.Model):
         max_length=48,
         blank=True,
         help_text=_('Grip size (L2, …) or shoe US size when product uses size grid.'),
+    )
+    # Staff-only economics; frozen at order save, never recalculated retroactively.
+    landed_cost_gel = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text=_(
+            'Staff-only: per-unit landed cost (₾), snapshotted when the order is saved. '
+            'Never shown on invoices or to customers.'
+        ),
     )
     line_gross = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
     line_vat = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))

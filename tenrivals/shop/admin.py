@@ -16,6 +16,7 @@ from .models import (
     ShopOrder,
     ShopOrderItem,
     ProductListing,
+    StockReceipt,
 )
 
 
@@ -81,6 +82,24 @@ class ProductListingAdmin(admin.ModelAdmin):
     list_display = ("id", "product", "channel", "quantity")
     list_filter = ("channel",)
     raw_id_fields = ("product",)
+
+
+@admin.register(StockReceipt)
+class StockReceiptAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "created_at",
+        "product",
+        "quantity",
+        "unit_landed_cost_gel",
+        "landed_cost_before",
+        "landed_cost_after",
+        "created_by",
+    )
+    list_filter = ("created_at",)
+    search_fields = ("product__name", "product__brand", "note")
+    raw_id_fields = ("product", "created_by")
+    readonly_fields = ("created_at",)
 
 
 @admin.register(HomePromoStripSettings)

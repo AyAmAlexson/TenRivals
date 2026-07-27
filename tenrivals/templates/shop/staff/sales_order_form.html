@@ -4,6 +4,7 @@
 {% block extra_head %}
 {{ product_prices|json_script:"product-prices-data" }}
 {{ product_variants_json|json_script:"product-variants-data" }}
+{{ product_landed_costs|json_script:"product-costs-data" }}
 <style>
   @media(min-width:900px){
     .sales-order-top-row.form-row{grid-template-columns:1.2fr 1fr 1fr}
@@ -96,6 +97,7 @@
             <th class="num">Qty</th>
             <th class="num">Unit (₾ gross)</th>
             <th class="num">Disc %</th>
+            <th class="num" title="Per-unit landed cost (staff-only, frozen on save; never shown to the customer)">Cost ₾</th>
             <th class="num">Line gross</th>
             <th class="num">VAT</th>
             <th class="num">Net</th>
@@ -112,6 +114,7 @@
             <td class="num">{{ f.quantity }}</td>
             <td class="num">{{ f.unit_price_gross }}</td>
             <td class="num">{{ f.discount_percent }}</td>
+            <td class="num">{{ f.landed_cost_gel.errors }}{{ f.landed_cost_gel }}</td>
             <td class="num line-gross mono">—</td>
             <td class="num line-vat mono">—</td>
             <td class="num line-net mono">—</td>
@@ -147,6 +150,7 @@
       <div class="form-group" style="margin:0;display:flex;justify-content:space-between;gap:12px"><span>Total gross</span><span class="mono" id="sum-gross">0.00</span></div>
       <div class="form-group" style="margin:0;display:flex;justify-content:space-between;gap:12px"><span>Total VAT</span><span class="mono" id="sum-vat">0.00</span></div>
       <div class="form-group" style="margin:0;display:flex;justify-content:space-between;gap:12px;font-weight:700"><span>Total net</span><span class="mono" id="sum-net">0.00</span></div>
+      <div class="form-group" style="margin:8px 0 0;padding-top:8px;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:12px;color:var(--muted)" title="Staff-only: sum of qty × landed cost for lines with a known cost. Not shown to the customer."><span>Total landed cost</span><span class="mono" id="sum-landed">0.00</span></div>
     </div>
 
     <div class="actions">
@@ -169,6 +173,7 @@
   <td class="num">{{ f.quantity }}</td>
   <td class="num">{{ f.unit_price_gross }}</td>
   <td class="num">{{ f.discount_percent }}</td>
+  <td class="num">{{ f.landed_cost_gel }}</td>
   <td class="num line-gross mono">—</td>
   <td class="num line-vat mono">—</td>
   <td class="num line-net mono">—</td>
@@ -192,6 +197,7 @@
   const prefix = "{{ formset.prefix|escapejs }}";
   const prices = JSON.parse(document.getElementById('product-prices-data').textContent);
   const variants = JSON.parse(document.getElementById('product-variants-data').textContent);
+  const landedCosts = JSON.parse(document.getElementById('product-costs-data').textContent);
   const totalInput = document.getElementById('id_' + prefix + '-TOTAL_FORMS');
   const servicesHidden = document.getElementById('id_services_json');
   const tbody = document.getElementById('lines-tbody');
@@ -295,10 +301,18 @@
   }
   function recalcTotals(){
     let sumG = 0;
+    let sumLanded = 0;
     tbody.querySelectorAll('.line-row').forEach(function(row){
       const r = lineCalc(row);
       if(r) sumG += r.gross;
+      const del = row.querySelector('input[name$="-DELETE"]');
+      if(del && del.checked) return;
+      const cRaw = row.querySelector('input[name$="-landed_cost_gel"]');
+      const q = parseNum(row.querySelector('input[name$="-quantity"]') && row.querySelector('input[name$="-quantity"]').value);
+      if(cRaw && cRaw.value !== '' && q > 0) sumLanded += q * parseNum(cRaw.value);
     });
+    const landedEl = document.getElementById('sum-landed');
+    if(landedEl) landedEl.textContent = fmt(sumLanded);
     sumG += collectServicesGross();
     sumG += parseNum(deliveryEl && deliveryEl.value);
     const t = splitVatNet(sumG);
@@ -358,6 +372,13 @@
     if(p!=null){
       const u = row.querySelector('input[name$="-unit_price_gross"]');
       if(u) u.value = p;
+    }
+    // Landed cost refills ONLY when the product selection changes; existing
+    // order lines keep their frozen snapshot on page load.
+    const cEl = row.querySelector('input[name$="-landed_cost_gel"]');
+    if(cEl){
+      const cv = landedCosts[String(sel.value)];
+      cEl.value = (cv != null && cv !== '') ? cv : '';
     }
     fillVariantSelect(row, false);
     recalcRow(row);

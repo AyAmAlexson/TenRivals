@@ -547,6 +547,11 @@ def staff_sales_order_edit(request, pk=None):
     instance = get_object_or_404(SalesOrder, pk=pk) if pk else None
     stock_qs = _product_queryset_for_order(instance)
     product_prices = {p.pk: str(product_unit_gross_price(p)) for p in stock_qs}
+    # Staff-only page: per-unit landed costs for JS autofill on product change.
+    product_landed_costs = {
+        p.pk: (str(p.landed_cost_gel) if p.landed_cost_gel is not None else '')
+        for p in stock_qs
+    }
 
     if request.method == 'POST':
         form = SalesOrderForm(request.POST, instance=instance)
@@ -594,6 +599,7 @@ def staff_sales_order_edit(request, pk=None):
                                 order=order,
                                 product=cd.get('product'),
                                 custom_label=(cd.get('custom_label') or '').strip(),
+                                landed_cost_gel=cd.get('landed_cost_gel'),
                                 variant_label=vl,
                                 quantity=cd['quantity'],
                                 unit_price_gross=cd['unit_price_gross'],
@@ -670,6 +676,7 @@ def staff_sales_order_edit(request, pk=None):
             'formset': formset,
             'order': instance,
             'product_prices': product_prices,
+            'product_landed_costs': product_landed_costs,
             # Pass a dict; |json_script in the template serializes once. json.dumps here
             # would double-encode and JSON.parse in the browser yields a string, not an object.
             'product_variants_json': catalog_variants,

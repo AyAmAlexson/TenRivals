@@ -42,8 +42,10 @@ from shop.models import (
     ProductListing,
     ProductListingChannel,
     SalesOrder,
+    StockReceipt,
 )
 from shop.staff_stock_stats import build_stock_stats
+from shop.stock_receipts import receive_stock_batch, stock_on_hand
 from shop.sales_order_utils import allocate_order_for_me_number
 import hashlib
 import hmac
@@ -1160,6 +1162,109 @@ def _staff_listings_page(request, channel: str, nav_key: str):
 @user_passes_test(_superuser_required)
 def staff_stock_list(request):
     return _staff_listings_page(request, ProductListingChannel.STOCK, "stock")
+
+
+@login_required
+@user_passes_test(_superuser_required)
+def staff_stock_receive(request):
+    """Receive a purchase batch: weighted-average landed cost update + journal row."""
+    from decimal import Decimal, InvalidOperation
+
+    if request.method == "POST":
+        errors = []
+        product = None
+        try:
+            product = Product.objects.get(pk=int(request.POST.get("product") or 0))
+        except (TypeError, ValueError, Product.DoesNotExist):
+            errors.append("Select a product.")
+        try:
+            qty = int(request.POST.get("quantity") or 0)
+        except (TypeError, ValueError):
+            qty = 0
+        if qty < 1:
+            errors.append("Batch quantity must be at least 1.")
+        unit_cost = None
+        try:
+            unit_cost = Decimal(
+                str(request.POST.get("unit_cost") or "").replace(",", ".").strip()
+            )
+        except (InvalidOperation, ValueError):
+            pass
+        if unit_cost is None or unit_cost < 0:
+            errors.append("Enter a valid landed cost per unit (₾).")
+        on_hand = None
+        on_hand_raw = (request.POST.get("on_hand") or "").strip()
+        if on_hand_raw == "" and product is not None:
+            on_hand = stock_on_hand(product.pk)
+        else:
+            try:
+                on_hand = int(on_hand_raw)
+            except (TypeError, ValueError):
+                pass
+        if on_hand is None or on_hand < 0:
+            errors.append("On-hand quantity must be 0 or more.")
+        if errors:
+            for e in errors:
+                messages.error(request, e)
+        else:
+            receipt = receive_stock_batch(
+                product=product,
+                quantity=qty,
+                unit_landed_cost_gel=unit_cost,
+                on_hand_before=on_hand,
+                note=request.POST.get("note") or "",
+                created_by=request.user,
+            )
+            before_txt = (
+                f"{receipt.landed_cost_before} ₾"
+                if receipt.landed_cost_before is not None
+                else "—"
+            )
+            messages.success(
+                request,
+                f"Received {qty} × {product.name} @ {unit_cost} ₾. "
+                f"Average landed cost: {before_txt} → {receipt.landed_cost_after} ₾. "
+                "Remember to update stock quantities / size grid separately.",
+            )
+            return redirect("administration:staff_stock_receive")
+
+    products = list(
+        Product.objects.filter(is_active=True)
+        .only("pk", "brand", "name", "color", "landed_cost_gel")
+        .order_by("brand", "name", "id")
+    )
+    stock_qty_map = {
+        str(pid): int(q)
+        for pid, q in ProductListing.objects.filter(
+            channel=ProductListingChannel.STOCK
+        ).values_list("product_id", "quantity")
+    }
+    cost_map = {
+        str(p.pk): (str(p.landed_cost_gel) if p.landed_cost_gel is not None else "")
+        for p in products
+    }
+    preselect = 0
+    raw_pre = request.POST.get("product") or request.GET.get("product") or ""
+    if str(raw_pre).isdigit():
+        preselect = int(raw_pre)
+    receipts = (
+        StockReceipt.objects.select_related("product", "created_by")
+        .order_by("-created_at", "-id")[:20]
+    )
+    return render(
+        request,
+        "persons/staff_stock_receive.html",
+        {
+            "products": products,
+            "stock_qty_map": stock_qty_map,
+            "cost_map": cost_map,
+            "preselect_product_id": preselect,
+            "form_values": request.POST if request.method == "POST" else {},
+            "receipts": receipts,
+            "staff_nav_active": "stock",
+            "page_heading": "Receive stock",
+        },
+    )
 
 
 @login_required

@@ -6,6 +6,7 @@
 {% block extra_head %}
 <style>
   .staff-listings .col-sizes{max-width:220px;font-size:12px;line-height:1.35;color:var(--muted);word-break:break-word}
+  .staff-listings .num{text-align:right}
   .bulk-toolbar{display:inline-flex;align-items:center;gap:8px}
   .confirm-overlay{
     position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;
@@ -43,6 +44,9 @@
   {% endif %}
   <div class="staff-toolbar" style="flex-wrap:wrap;gap:10px 14px;align-items:center">
     <a class="btn btn--sm" href="{% shop_url 'shop:product_create' %}?channel={{ listing_channel }}&next={{ request.get_full_path|urlencode }}">Add product</a>
+    {% if listing_channel == 'STOCK' %}
+    <a class="btn btn--sm btn--outline" style="margin-right:0" href="{% url 'administration:staff_stock_receive' %}">Receive stock</a>
+    {% endif %}
     <form method="post" action="" style="display:inline" onsubmit="return confirm('Create a catalog row (qty 0) for every active product that does not have one in this channel?');">
       {% csrf_token %}
       <input type="hidden" name="action" value="backfill_listings">
@@ -77,6 +81,7 @@
             <th>SKU</th>
             <th>Type</th>
             <th>Qty</th>
+            {% if listing_channel == 'STOCK' %}<th class="num" title="Weighted-average landed cost per unit (staff-only)">Cost ₾</th>{% endif %}
             <th>Actions</th>
           </tr>
         </thead>
@@ -96,8 +101,14 @@
             <td class="mono">{{ row.product.sku|default:"—" }}</td>
             <td class="mono">{{ row.product.type }}</td>
             <td>{{ row.quantity }}</td>
+            {% if listing_channel == 'STOCK' %}<td class="mono num">{{ row.product.landed_cost_gel|default:"—" }}</td>{% endif %}
             <td>
               <div class="action-icons">
+                {% if listing_channel == 'STOCK' %}
+                <a class="icon-btn" href="{% url 'administration:staff_stock_receive' %}?product={{ row.product.pk }}" title="Receive batch (landed cost)" aria-label="Receive batch">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                </a>
+                {% endif %}
                 <a class="icon-btn" href="{% shop_url 'shop:product_detail' row.product.pk %}?channel={{ listing_channel }}" target="_blank" rel="noopener noreferrer" title="Open product in shop" aria-label="Open product in shop">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M14 3h7v7"></path>
@@ -124,7 +135,7 @@
             </td>
           </tr>
           {% empty %}
-          <tr><td colspan="10">{% if search_q %}No rows match your search. <a href="{{ request.path }}">Clear filter</a>{% else %}No listings yet. Add a product with this channel, or import from shop admin.{% endif %}</td></tr>
+          <tr><td colspan="{% if listing_channel == 'STOCK' %}11{% else %}10{% endif %}">{% if search_q %}No rows match your search. <a href="{{ request.path }}">Clear filter</a>{% else %}No listings yet. Add a product with this channel, or import from shop admin.{% endif %}</td></tr>
           {% endfor %}
         </tbody>
       </table>

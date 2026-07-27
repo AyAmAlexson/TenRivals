@@ -48,6 +48,7 @@ class ProductForm(forms.ModelForm):
             'sku',
             'initial_price',
             'actual_price',
+            'landed_cost_gel',
             'in_stock',
             'is_active',
             'featured_product',
@@ -70,6 +71,7 @@ class ProductForm(forms.ModelForm):
         self.fields['listing_channel'].choices = list(ProductListingChannel.choices)
         self.fields['type'].label = 'Product type'
         self.fields['name'].label = 'Model'
+        self.fields['landed_cost_gel'].label = 'Landed cost (₾)'
 
         self.fields['attributes'].widget = forms.HiddenInput()
         self.fields['attributes'].required = False

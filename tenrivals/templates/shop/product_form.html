@@ -203,6 +203,10 @@
           <div class="col"><div class="field">{{ form.actual_price.label_tag }}{{ form.actual_price }}<p class="hint">Optional sale / current price</p>{% if form.actual_price.errors %}<ul class="errorlist">{% for e in form.actual_price.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}</div></div>
       </div>
       <div class="row">
+          <div class="col"><div class="field">{{ form.landed_cost_gel.label_tag }}{{ form.landed_cost_gel }}<p class="hint">Staff-only avg landed cost per unit (₾); use Receive stock for batches. Never shown to shoppers.</p>{% if form.landed_cost_gel.errors %}<ul class="errorlist">{% for e in form.landed_cost_gel.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}</div></div>
+          <div class="col"></div>
+      </div>
+      <div class="row">
           <div class="col field-check"><div class="field">{{ form.in_stock }}{{ form.in_stock.label_tag }}</div></div>
           <div class="col field-check"><div class="field">{{ form.is_active }}{{ form.is_active.label_tag }}</div></div>
           <div class="col field-check"><div class="field">{{ form.featured_product }}{{ form.featured_product.label_tag }}{% if form.featured_product.help_text %}<p class="hint">{{ form.featured_product.help_text }}</p>{% endif %}</div></div>

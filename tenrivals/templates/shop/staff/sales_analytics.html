@@ -1,0 +1,405 @@
+{% extends 'persons/staff_base.html' %}
+{% block title %}Sales analytics — Staff | Tenrivals{% endblock %}
+{% block page_heading %}{{ page_heading }}{% endblock %}
+{% block page_note %}<p class="page-note">Staff-only economics. Cancelled / refunded orders excluded. TAX = {{ tax_rate_pct|floatformat:0 }}% turnover on gross; acquiring = {{ acquiring_rate_pct|floatformat:0 }}% of gross for card payments (payment method mentions card / terminal / POS). Lines without landed cost count in revenue but not in COGS — watch cost coverage.</p>{% endblock %}
+{% block extra_head %}
+{{ chart|json_script:"analytics-chart-data" }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  .an-filters{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:flex-end;margin-bottom:22px}
+  .an-filters .form-group{margin:0}
+  .an-filters label{display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em}
+  .an-filters input[type="date"]{padding:8px 10px;border:1px solid var(--line);font-family:inherit;font-size:13px;background:#fff}
+  .g-switch{display:inline-flex}
+  .g-switch a{padding:8px 14px;border:1px solid var(--line);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;background:#fff;color:var(--ink)}
+  .g-switch a + a{border-left:none}
+  .g-switch a.is-active{background:var(--accent);border-color:var(--accent);color:#fff}
+  .an-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:24px}
+  .stat-card{background:#fff;border:1px solid var(--line);padding:14px 16px}
+  .stat-card__label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px}
+  .stat-card__value{font-size:22px;font-weight:800;line-height:1.15}
+  .stat-card__hint{font-size:12px;color:var(--muted);margin-top:4px}
+  .stat-card--good .stat-card__value{color:#065f46}
+  .stat-card--warn .stat-card__value{color:#92400e}
+  .an-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 24px;align-items:start}
+  .an-cat-grid{display:grid;grid-template-columns:340px 1fr;gap:24px;align-items:start}
+  @media(max-width:1100px){.an-grid,.an-cat-grid{grid-template-columns:1fr}}
+  .chart-box{position:relative;height:300px}
+  .num{text-align:right}
+  .an-table{min-width:0;font-size:12.5px}
+  .an-table th,.an-table td{padding:8px 10px}
+  .neg{color:#b91c1c}
+  .kv{display:grid;grid-template-columns:200px 1fr;gap:8px 14px;font-size:14px}
+  .kv dt{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);padding-top:1px}
+  .kv dd{margin:0;min-width:0}
+</style>
+{% endblock %}
+{% block content %}
+<form method="get" class="an-filters">
+  <div class="form-group">
+    <label for="id_an_start">From</label>
+    <input type="date" id="id_an_start" name="start" value="{{ start|date:'Y-m-d' }}">
+  </div>
+  <div class="form-group">
+    <label for="id_an_end">To</label>
+    <input type="date" id="id_an_end" name="end" value="{{ end|date:'Y-m-d' }}">
+  </div>
+  <input type="hidden" name="g" value="{{ granularity }}">
+  <button type="submit" class="btn btn--sm">Apply</button>
+  <div class="g-switch" role="group" aria-label="Granularity">
+    <a href="?start={{ start|date:'Y-m-d' }}&end={{ end|date:'Y-m-d' }}&g=day" class="{% if granularity == 'day' %}is-active{% endif %}">Day</a>
+    <a href="?start={{ start|date:'Y-m-d' }}&end={{ end|date:'Y-m-d' }}&g=week" class="{% if granularity == 'week' %}is-active{% endif %}">Week</a>
+    <a href="?start={{ start|date:'Y-m-d' }}&end={{ end|date:'Y-m-d' }}&g=month" class="{% if granularity == 'month' %}is-active{% endif %}">Month</a>
+  </div>
+</form>
+
+<div class="an-stats">
+  <div class="stat-card">
+    <div class="stat-card__label">Revenue</div>
+    <div class="stat-card__value">{{ totals.revenue }} ₾</div>
+    <div class="stat-card__hint">{{ totals.orders }} order{{ totals.orders|pluralize }} · AOV {% if totals.aov %}{{ totals.aov }} ₾{% else %}—{% endif %}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-card__label">VAT (18% incl.)</div>
+    <div class="stat-card__value">{{ totals.vat }} ₾</div>
+    <div class="stat-card__hint">net revenue {{ totals.net }} ₾</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-card__label">COGS</div>
+    <div class="stat-card__value">{{ totals.cogs }} ₾</div>
+    <div class="stat-card__hint">known landed costs only</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-card__label">Income</div>
+    <div class="stat-card__value">{{ totals.income }} ₾</div>
+    <div class="stat-card__hint">(Revenue − VAT) − COGS</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-card__label">TAX + Acquiring</div>
+    <div class="stat-card__value">{{ totals.tax }} + {{ totals.acquiring }} ₾</div>
+    <div class="stat-card__hint">{{ tax_rate_pct|floatformat:0 }}% turnover · {{ acquiring_rate_pct|floatformat:0 }}% card</div>
+  </div>
+  <div class="stat-card stat-card--good">
+    <div class="stat-card__label">Profit</div>
+    <div class="stat-card__value">{{ totals.profit }} ₾</div>
+    <div class="stat-card__hint">Income − TAX − Acquiring</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-card__label">Margin / ROI</div>
+    <div class="stat-card__value">{% if totals.margin_pct is not None %}{{ totals.margin_pct }}%{% else %}—{% endif %}</div>
+    <div class="stat-card__hint">ROI {% if totals.roi_pct is not None %}{{ totals.roi_pct }}%{% else %}—{% endif %} (Profit / COGS)</div>
+  </div>
+  <div class="stat-card {% if totals.coverage_pct is not None and totals.coverage_pct < 90 %}stat-card--warn{% endif %}">
+    <div class="stat-card__label">Cost coverage</div>
+    <div class="stat-card__value">{% if totals.coverage_pct is not None %}{{ totals.coverage_pct }}%{% else %}—{% endif %}</div>
+    <div class="stat-card__hint">{{ unknown_cost_gross }} ₾ revenue without landed cost</div>
+  </div>
+</div>
+
+<div class="an-grid">
+  <div class="card">
+    <h2 class="card-title">Revenue / Income / Profit</h2>
+    <div class="chart-box"><canvas id="chart-money"></canvas></div>
+  </div>
+  <div class="card">
+    <h2 class="card-title">Orders &amp; margin</h2>
+    <div class="chart-box"><canvas id="chart-orders"></canvas></div>
+  </div>
+  <div class="card">
+    <h2 class="card-title">Average order value</h2>
+    <div class="chart-box"><canvas id="chart-aov"></canvas></div>
+  </div>
+  <div class="card">
+    <h2 class="card-title">Sales by weekday</h2>
+    <div class="chart-box"><canvas id="chart-weekday"></canvas></div>
+  </div>
+</div>
+
+<div class="card">
+  <h2 class="card-title">By period</h2>
+  <div class="table-wrap">
+    <table class="an-table">
+      <thead>
+        <tr>
+          <th>Period</th>
+          <th class="num">Orders</th>
+          <th class="num">Revenue ₾</th>
+          <th class="num">VAT ₾</th>
+          <th class="num">TAX ₾</th>
+          <th class="num">Acquiring ₾</th>
+          <th class="num">COGS ₾</th>
+          <th class="num">Income ₾</th>
+          <th class="num">Profit ₾</th>
+          <th class="num">Margin</th>
+          <th class="num">Coverage</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in bucket_rows %}
+        <tr>
+          <td class="mono">{{ r.label }}</td>
+          <td class="mono num">{{ r.orders }}</td>
+          <td class="mono num">{{ r.revenue }}</td>
+          <td class="mono num">{{ r.vat }}</td>
+          <td class="mono num">{{ r.tax }}</td>
+          <td class="mono num">{{ r.acquiring }}</td>
+          <td class="mono num">{{ r.cogs }}</td>
+          <td class="mono num {% if r.income < 0 %}neg{% endif %}">{{ r.income }}</td>
+          <td class="mono num {% if r.profit < 0 %}neg{% endif %}">{{ r.profit }}</td>
+          <td class="mono num">{% if r.margin_pct is not None %}{{ r.margin_pct }}%{% else %}—{% endif %}</td>
+          <td class="mono num">{% if r.coverage_pct is not None %}{{ r.coverage_pct }}%{% else %}—{% endif %}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="11" style="color:var(--muted)">No orders in the selected period.</td></tr>
+        {% endfor %}
+      </tbody>
+      {% if bucket_rows %}
+      <tfoot>
+        <tr style="font-weight:700;background:#f9fafb">
+          <td>Total</td>
+          <td class="mono num">{{ totals.orders }}</td>
+          <td class="mono num">{{ totals.revenue }}</td>
+          <td class="mono num">{{ totals.vat }}</td>
+          <td class="mono num">{{ totals.tax }}</td>
+          <td class="mono num">{{ totals.acquiring }}</td>
+          <td class="mono num">{{ totals.cogs }}</td>
+          <td class="mono num {% if totals.income < 0 %}neg{% endif %}">{{ totals.income }}</td>
+          <td class="mono num {% if totals.profit < 0 %}neg{% endif %}">{{ totals.profit }}</td>
+          <td class="mono num">{% if totals.margin_pct is not None %}{{ totals.margin_pct }}%{% endif %}</td>
+          <td class="mono num">{% if totals.coverage_pct is not None %}{{ totals.coverage_pct }}%{% endif %}</td>
+        </tr>
+      </tfoot>
+      {% endif %}
+    </table>
+  </div>
+</div>
+
+<div class="card">
+  <h2 class="card-title">By category</h2>
+  {% if type_breakdown %}
+  <div class="an-cat-grid">
+    <div class="chart-box" style="height:260px"><canvas id="chart-types"></canvas></div>
+    <div class="table-wrap">
+      <table class="an-table">
+        <thead>
+          <tr><th>Category</th><th class="num">Qty</th><th class="num">Revenue ₾</th><th class="num">Share</th><th class="num">COGS ₾</th><th class="num">Income ₾</th><th class="num">ROI</th><th class="num">Coverage</th></tr>
+        </thead>
+        <tbody>
+          {% for t in type_breakdown %}
+          <tr>
+            <td>{{ t.label }}</td>
+            <td class="mono num">{{ t.qty }}</td>
+            <td class="mono num">{{ t.revenue }}</td>
+            <td class="mono num">{% if t.share_pct is not None %}{{ t.share_pct }}%{% else %}—{% endif %}</td>
+            <td class="mono num">{{ t.cogs }}</td>
+            <td class="mono num {% if t.income < 0 %}neg{% endif %}">{{ t.income }}</td>
+            <td class="mono num">{% if t.roi_pct is not None %}{{ t.roi_pct }}%{% else %}—{% endif %}</td>
+            <td class="mono num">{% if t.coverage_pct is not None %}{{ t.coverage_pct }}%{% else %}—{% endif %}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <p class="page-meta" style="margin:10px 0 0;font-size:12px">Category ROI = income / COGS over lines with a known landed cost (before order-level TAX and acquiring).</p>
+  {% else %}
+  <p style="font-size:14px;color:var(--muted)">No line data in the selected period.</p>
+  {% endif %}
+</div>
+
+<div class="card">
+  <h2 class="card-title">By weekday</h2>
+  <div class="table-wrap">
+    <table class="an-table">
+      <thead>
+        <tr><th>Weekday</th><th class="num">Orders</th><th class="num">Revenue ₾</th><th class="num">Share</th><th class="num">Income ₾</th><th class="num">Profit ₾</th><th class="num">AOV ₾</th></tr>
+      </thead>
+      <tbody>
+        {% for w in weekday_rows %}
+        <tr>
+          <td>{{ w.label }}</td>
+          <td class="mono num">{{ w.orders }}</td>
+          <td class="mono num">{{ w.revenue }}</td>
+          <td class="mono num">{% if w.share_pct is not None %}{{ w.share_pct }}%{% else %}—{% endif %}</td>
+          <td class="mono num {% if w.income < 0 %}neg{% endif %}">{{ w.income }}</td>
+          <td class="mono num {% if w.profit < 0 %}neg{% endif %}">{{ w.profit }}</td>
+          <td class="mono num">{% if w.aov is not None %}{{ w.aov }}{% else %}—{% endif %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="an-grid">
+  <div class="card">
+    <h2 class="card-title">Top customers</h2>
+    {% if top_customers %}
+    <div class="table-wrap">
+      <table class="an-table">
+        <thead>
+          <tr><th>Customer</th><th class="num">Orders</th><th class="num">Revenue ₾</th><th class="num">Profit ₾</th><th class="num">Last order</th></tr>
+        </thead>
+        <tbody>
+          {% for c in top_customers %}
+          <tr>
+            <td><a href="{% url 'administration:staff_customer_detail' c.pk %}">{{ c.label }}</a></td>
+            <td class="mono num">{{ c.orders }}</td>
+            <td class="mono num">{{ c.revenue }}</td>
+            <td class="mono num {% if c.profit < 0 %}neg{% endif %}">{{ c.profit }}</td>
+            <td class="mono num">{{ c.last_order|date:'Y-m-d' }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p style="font-size:14px;color:var(--muted)">No orders in the selected period.</p>
+    {% endif %}
+  </div>
+  <div class="card">
+    <h2 class="card-title">Top products by income</h2>
+    {% if top_products %}
+    <div class="table-wrap">
+      <table class="an-table">
+        <thead>
+          <tr><th>Product</th><th class="num">Qty</th><th class="num">Revenue ₾</th><th class="num">Income ₾</th></tr>
+        </thead>
+        <tbody>
+          {% for p in top_products %}
+          <tr>
+            <td>{{ p.label }}</td>
+            <td class="mono num">{{ p.qty }}</td>
+            <td class="mono num">{{ p.revenue }}</td>
+            <td class="mono num {% if p.income < 0 %}neg{% endif %}">{{ p.income }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <p class="page-meta" style="margin-top:10px;font-size:12px">Only lines with a known landed cost.</p>
+    {% else %}
+    <p style="font-size:14px;color:var(--muted)">No lines with landed cost yet — record costs to unlock this table.</p>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card">
+  <h2 class="card-title">Insights</h2>
+  <dl class="kv">
+    <dt>Best period</dt>
+    <dd>{% if best_bucket %}{{ best_bucket.label }} — profit {{ best_bucket.profit }} ₾ on {{ best_bucket.revenue }} ₾ revenue ({{ best_bucket.orders }} order{{ best_bucket.orders|pluralize }}){% else %}—{% endif %}</dd>
+    <dt>Best weekday</dt>
+    <dd>{% if best_weekday %}{{ best_weekday.label }} — {{ best_weekday.revenue }} ₾ revenue{% if best_weekday.share_pct is not None %} ({{ best_weekday.share_pct }}% of total){% endif %}, {{ best_weekday.orders }} order{{ best_weekday.orders|pluralize }}{% else %}—{% endif %}</dd>
+    <dt>Latest period trend</dt>
+    <dd>{% if revenue_growth_pct is not None %}{% if revenue_growth_pct >= 0 %}+{% endif %}{{ revenue_growth_pct }}% revenue vs previous {{ granularity }}{% else %}not enough data{% endif %}</dd>
+    <dt>Per order</dt>
+    <dd>{% if totals.orders %}AOV {{ totals.aov }} ₾ · profit {{ avg_profit_per_order }} ₾ · {{ avg_items_per_order }} items per order{% else %}—{% endif %}</dd>
+    <dt>Customers</dt>
+    <dd>{{ unique_customers }} unique, {{ repeat_customers }} repeat buyer{{ repeat_customers|pluralize }} in the period</dd>
+    <dt>Card payments share</dt>
+    <dd>{% if totals.card_share_pct is not None %}{{ totals.card_share_pct }}% of revenue ({{ totals.card_revenue }} ₾) → acquiring {{ totals.acquiring }} ₾{% else %}—{% endif %}</dd>
+    <dt>Items sold</dt>
+    <dd>{{ totals.items }}</dd>
+    <dt>Services &amp; delivery</dt>
+    <dd>{{ services_delivery_gross }} ₾ of revenue is services / delivery / adjustments (no COGS)</dd>
+    <dt>Unknown-cost revenue</dt>
+    <dd>{{ unknown_cost_gross }} ₾ — backfill landed costs in these orders to make profit figures exact</dd>
+  </dl>
+</div>
+
+<script>
+(function(){
+  const data = JSON.parse(document.getElementById('analytics-chart-data').textContent);
+  if(!data.labels.length) return;
+  const gridColor = 'rgba(0,0,0,.06)';
+  new Chart(document.getElementById('chart-money'), {
+    type: 'line',
+    data: {
+      labels: data.labels,
+      datasets: [
+        { label: 'Revenue ₾', data: data.revenue, borderColor: '#1a1a1a', backgroundColor: 'rgba(26,26,26,.08)', tension: .25, fill: false },
+        { label: 'Income ₾', data: data.income, borderColor: '#2563eb', backgroundColor: 'rgba(37,99,235,.08)', tension: .25, fill: false },
+        { label: 'Profit ₾', data: data.profit, borderColor: '#B20009', backgroundColor: 'rgba(178,0,9,.10)', tension: .25, fill: true }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      scales: { y: { grid: { color: gridColor } }, x: { grid: { display: false } } },
+      plugins: { legend: { labels: { font: { family: 'Saira' } } } }
+    }
+  });
+  new Chart(document.getElementById('chart-orders'), {
+    data: {
+      labels: data.labels,
+      datasets: [
+        { type: 'bar', label: 'Orders', data: data.orders, backgroundColor: 'rgba(26,26,26,.25)', yAxisID: 'y' },
+        { type: 'line', label: 'Margin %', data: data.margin, borderColor: '#B20009', tension: .25, spanGaps: true, yAxisID: 'y1' }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      scales: {
+        y: { position: 'left', grid: { color: gridColor }, ticks: { precision: 0 } },
+        y1: { position: 'right', grid: { display: false }, ticks: { callback: function(v){ return v + '%'; } } },
+        x: { grid: { display: false } }
+      },
+      plugins: { legend: { labels: { font: { family: 'Saira' } } } }
+    }
+  });
+  new Chart(document.getElementById('chart-aov'), {
+    type: 'line',
+    data: {
+      labels: data.labels,
+      datasets: [
+        { label: 'AOV ₾', data: data.aov, borderColor: '#0f766e', backgroundColor: 'rgba(15,118,110,.10)', tension: .25, spanGaps: true, fill: true }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      scales: { y: { grid: { color: gridColor } }, x: { grid: { display: false } } },
+      plugins: { legend: { labels: { font: { family: 'Saira' } } } }
+    }
+  });
+  new Chart(document.getElementById('chart-weekday'), {
+    data: {
+      labels: data.weekday_labels,
+      datasets: [
+        { type: 'bar', label: 'Revenue ₾', data: data.weekday_revenue, backgroundColor: 'rgba(178,0,9,.35)', yAxisID: 'y' },
+        { type: 'line', label: 'Orders', data: data.weekday_orders, borderColor: '#1a1a1a', tension: .25, yAxisID: 'y1' }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      scales: {
+        y: { position: 'left', grid: { color: gridColor } },
+        y1: { position: 'right', grid: { display: false }, ticks: { precision: 0 } },
+        x: { grid: { display: false } }
+      },
+      plugins: { legend: { labels: { font: { family: 'Saira' } } } }
+    }
+  });
+  const typesEl = document.getElementById('chart-types');
+  if(typesEl && data.type_labels.length){
+    new Chart(typesEl, {
+      type: 'doughnut',
+      data: {
+        labels: data.type_labels,
+        datasets: [{
+          data: data.type_revenue,
+          backgroundColor: ['#B20009','#1a1a1a','#2563eb','#0f766e','#d97706','#7c3aed','#db2777','#64748b','#84cc16','#0891b2','#9f1239','#4b5563','#f59e0b','#10b981']
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'right', labels: { font: { family: 'Saira', size: 11 }, boxWidth: 12 } } }
+      }
+    });
+  }
+})();
+</script>
+{% endblock %}

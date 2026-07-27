@@ -156,6 +156,7 @@ class SalesOrderLineForm(forms.ModelForm):
             'quantity',
             'unit_price_gross',
             'discount_percent',
+            'landed_cost_gel',
         ]
         widgets = {
             'custom_label': forms.TextInput(
@@ -164,6 +165,17 @@ class SalesOrderLineForm(forms.ModelForm):
                     'placeholder': 'Item name (free text, incl. size/grip)',
                     'maxlength': '200',
                     'autocomplete': 'off',
+                }
+            ),
+            # Staff-only column; frozen snapshot, JS refills it only when the
+            # product selection changes (never on page load).
+            'landed_cost_gel': forms.NumberInput(
+                attrs={
+                    'class': 'sales-line-cost',
+                    'step': '0.01',
+                    'min': '0',
+                    'inputmode': 'decimal',
+                    'placeholder': '—',
                 }
             ),
         }

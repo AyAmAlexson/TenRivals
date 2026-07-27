@@ -1,0 +1,135 @@
+{% extends 'persons/staff_base.html' %}
+{% block title %}Receive stock — Staff | Tenrivals{% endblock %}
+{% block page_heading %}{{ page_heading }}{% endblock %}
+{% block page_note %}<p class="page-note">Record an incoming batch: the product's average landed cost is recalculated as a weighted average of on-hand units and the new batch. Quantities on the stock listing / size grid are managed separately. Sold orders keep their frozen costs.</p>{% endblock %}
+{% block extra_head %}
+{{ stock_qty_map|json_script:"stock-qty-data" }}
+{{ cost_map|json_script:"cost-data" }}
+<style>
+  .receive-grid{display:grid;grid-template-columns:minmax(0,520px) minmax(0,1fr);gap:0 24px;align-items:start}
+  @media(max-width:1100px){.receive-grid{grid-template-columns:1fr}}
+  .avg-preview{font-size:13px;color:var(--muted);margin-top:6px}
+  .avg-preview strong{color:var(--ink)}
+  .receipts-table{min-width:0}
+</style>
+{% endblock %}
+{% block content %}
+<div class="receive-grid">
+  <div class="card">
+    <h2 class="card-title">New batch</h2>
+    <form method="post">
+      {% csrf_token %}
+      <div class="form-group">
+        <label for="id_receive_product">Product</label>
+        <select name="product" id="id_receive_product" required>
+          <option value="">Select product…</option>
+          {% for p in products %}
+          <option value="{{ p.pk }}" {% if p.pk == preselect_product_id %}selected{% endif %}>{{ p.brand|default:"" }} {{ p.name }}{% if p.color %} — {{ p.color }}{% endif %}</option>
+          {% endfor %}
+        </select>
+        <div class="avg-preview" id="current-cost-line">Current average landed cost: <strong id="current-cost">—</strong></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="id_receive_quantity">Batch quantity</label>
+          <input type="number" name="quantity" id="id_receive_quantity" min="1" step="1" value="{{ form_values.quantity|default:'' }}" required>
+        </div>
+        <div class="form-group">
+          <label for="id_receive_unit_cost">Landed cost / unit (₾)</label>
+          <input type="number" name="unit_cost" id="id_receive_unit_cost" min="0" step="0.01" inputmode="decimal" value="{{ form_values.unit_cost|default:'' }}" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="id_receive_on_hand">On hand before this batch (units)</label>
+        <input type="number" name="on_hand" id="id_receive_on_hand" min="0" step="1" value="{{ form_values.on_hand|default:'' }}" placeholder="auto from stock listing">
+        <div class="avg-preview">Prefilled from the STOCK listing; correct it if the listing is not up to date. New average: <strong id="new-avg-preview">—</strong></div>
+      </div>
+      <div class="form-group">
+        <label for="id_receive_note">Note (supplier, invoice #, …)</label>
+        <input type="text" name="note" id="id_receive_note" maxlength="200" value="{{ form_values.note|default:'' }}">
+      </div>
+      <div class="actions">
+        <button type="submit" class="btn">Record batch</button>
+        <a href="{% url 'administration:staff_stock' %}" class="btn btn--outline">Back to stock</a>
+      </div>
+    </form>
+  </div>
+  <div class="card">
+    <h2 class="card-title">Recent receipts</h2>
+    {% if receipts %}
+    <div class="table-wrap">
+      <table class="receipts-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Product</th>
+            <th class="num">Qty</th>
+            <th class="num">Unit cost ₾</th>
+            <th class="num">Avg before</th>
+            <th class="num">Avg after</th>
+            <th>Note</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in receipts %}
+          <tr>
+            <td class="mono">{{ r.created_at|date:"Y-m-d H:i" }}</td>
+            <td>{{ r.product.brand|default:"" }} {{ r.product.name }}</td>
+            <td class="mono num">{{ r.quantity }}</td>
+            <td class="mono num">{{ r.unit_landed_cost_gel }}</td>
+            <td class="mono num">{{ r.landed_cost_before|default:"—" }}</td>
+            <td class="mono num">{{ r.landed_cost_after }}</td>
+            <td style="font-size:12px;color:var(--muted)">{{ r.note|default:"—" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p style="font-size:14px;color:var(--muted)">No receipts recorded yet.</p>
+    {% endif %}
+  </div>
+</div>
+<style>.num{text-align:right}</style>
+<script>
+(function(){
+  const qtyMap = JSON.parse(document.getElementById('stock-qty-data').textContent);
+  const costMap = JSON.parse(document.getElementById('cost-data').textContent);
+  const sel = document.getElementById('id_receive_product');
+  const onHand = document.getElementById('id_receive_on_hand');
+  const qtyInp = document.getElementById('id_receive_quantity');
+  const costInp = document.getElementById('id_receive_unit_cost');
+  const curCost = document.getElementById('current-cost');
+  const preview = document.getElementById('new-avg-preview');
+
+  function num(v){ const n = parseFloat(String(v||'').replace(',','.')); return isNaN(n)?null:n; }
+
+  function syncProduct(fillOnHand){
+    const pid = sel.value;
+    const cost = pid ? costMap[pid] : '';
+    curCost.textContent = cost ? (cost + ' ₾') : '—';
+    if(fillOnHand){
+      onHand.value = pid && qtyMap[pid] != null ? qtyMap[pid] : '';
+    }
+    syncPreview();
+  }
+  function syncPreview(){
+    const pid = sel.value;
+    const oh = num(onHand.value);
+    const q = num(qtyInp.value);
+    const c = num(costInp.value);
+    if(!pid || q == null || q <= 0 || c == null || c < 0){ preview.textContent = '—'; return; }
+    const cur = num(costMap[pid]);
+    let avg;
+    if(oh == null || oh <= 0 || cur == null) avg = c;
+    else avg = ((oh * cur) + (q * c)) / (oh + q);
+    preview.textContent = (Math.round(avg * 100) / 100).toFixed(2) + ' ₾';
+  }
+
+  sel.addEventListener('change', function(){ syncProduct(true); });
+  [onHand, qtyInp, costInp].forEach(function(el){ el.addEventListener('input', syncPreview); });
+  // Initial: keep posted values after errors; only prefill on-hand when empty.
+  syncProduct(onHand.value === '' && sel.value !== '');
+})();
+</script>
+{% endblock %}

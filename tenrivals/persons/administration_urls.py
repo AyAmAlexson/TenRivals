@@ -2,7 +2,7 @@ from django.urls import path
 
 from . import views
 from . import staff_promo_views
-from shop import staff_sales_views
+from shop import staff_analytics, staff_sales_views
 
 app_name = "administration"
 
@@ -20,6 +20,7 @@ urlpatterns = [
     ),
     path("stock/", views.staff_stock_list, name="staff_stock"),
     path("stock/stats/", views.staff_stock_stats, name="staff_stock_stats"),
+    path("stock/receive/", views.staff_stock_receive, name="staff_stock_receive"),
     path("preorder/", views.staff_preorder_list, name="staff_preorder"),
     path("blog/", views.staff_blog_posts, name="staff_blog_posts"),
     path("blog/new/", views.staff_blog_edit, name="staff_blog_new"),
@@ -67,6 +68,11 @@ urlpatterns = [
         "customers/<int:pk>/delete/",
         staff_sales_views.staff_customer_delete,
         name="staff_customer_delete",
+    ),
+    path(
+        "analytics/",
+        staff_analytics.staff_sales_analytics,
+        name="staff_sales_analytics",
     ),
     path("orders/new/", staff_sales_views.staff_sales_order_edit, name="staff_sales_order_new"),
     path(
