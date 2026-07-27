@@ -35,39 +35,19 @@
     .user-menu:hover .user-dropdown{display:block}
     .user-dropdown a{display:block; padding:8px 16px; color:rgba(255,255,255,.8); font-size:13px; font-weight:600; transition:color .15s}
     .user-dropdown a:hover{color:#fff; background:rgba(255,255,255,.05)}
-    .container{max-width:1200px; margin:0 auto; padding:0 20px}
-    .page-main{flex:1; padding:32px 0}
+    .container{max-width:1600px; margin:0 auto; padding:0 24px}
+    .page-main{flex:1; padding:28px 0}
     .page-title{font-size:22px; font-weight:800; text-transform:uppercase; letter-spacing:.5px; margin:0 0 8px}
     .page-note,.page-meta{font-size:13px; color:var(--muted); margin-bottom:24px}
-    .staff-tabs{display:flex; gap:8px; flex-wrap:wrap; margin:0 0 24px}
-    .staff-tab{display:inline-flex; padding:8px 16px; font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:.4px; border:1px solid var(--line); background:#fff; color:var(--ink)}
-    .staff-tab:hover{border-color:#cbd5e1}
-    .staff-tab.is-active{background:var(--accent); border-color:var(--accent); color:#fff}
-    .header-row .staff-tabs{
-      margin:0;
-      gap:6px;
-      align-items:center;
-      justify-content:flex-end;
-      max-width:100%;
-    }
-    .header-row .staff-tab{
-      padding:6px 10px;
-      font-size:11px;
-      letter-spacing:.06em;
-      border-color:#3f3f46;
-      background:#1a1a1a;
-      color:rgba(255,255,255,.86);
-    }
-    .header-row .staff-tab:hover{
-      border-color:#71717a;
-      color:#fff;
-      background:#222;
-    }
-    .header-row .staff-tab.is-active{
-      background:var(--accent);
-      border-color:var(--accent);
-      color:#fff;
-    }
+    .staff-shell{display:grid; grid-template-columns:236px minmax(0,1fr); gap:28px; align-items:start}
+    .staff-content{min-width:0}
+    .staff-sidebar{position:sticky; top:20px; max-height:calc(100vh - 40px); overflow-y:auto; background:#fff; border:1px solid var(--line); padding:6px 0 8px}
+    .staff-nav__group{padding:10px 0 8px}
+    .staff-nav__group + .staff-nav__group{border-top:1px solid var(--line)}
+    .staff-nav__label{padding:2px 16px 7px; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.12em; color:var(--muted)}
+    .staff-nav__link{display:block; padding:8px 16px 8px 13px; font-size:13px; font-weight:600; text-transform:uppercase; letter-spacing:.04em; color:var(--ink); border-left:3px solid transparent; transition:background .12s,color .12s}
+    .staff-nav__link:hover{background:#f3f4f6}
+    .staff-nav__link.is-active{border-left-color:var(--accent); background:#fdf2f2; color:var(--accent)}
     .staff-topbar{display:block}
     .staff-menu-btn{
       display:none;
@@ -110,28 +90,17 @@
     .staff-drawer-toplinks a{display:block;padding:12px 4px;font-size:14px;font-weight:600;color:rgba(255,255,255,.88);border-top:1px solid rgba(255,255,255,.06)}
     .staff-drawer-toplinks a:first-child{border-top:none}
     .staff-drawer-cityline{display:flex;align-items:center;padding:12px 4px;font-size:14px;font-weight:600;color:rgba(255,255,255,.72);border-top:1px solid rgba(255,255,255,.06)}
-    .staff-drawer-nav .staff-tabs{flex-direction:column;align-items:stretch;gap:0;margin:0}
-    .staff-drawer-nav .staff-tab{
-      justify-content:flex-start;
-      border-radius:0;
-      border:none;
-      border-bottom:1px solid rgba(255,255,255,.1);
-      padding:12px 14px;
-      font-size:12px;
-      letter-spacing:.08em;
-      background:rgba(255,255,255,.04);
-      color:rgba(255,255,255,.9);
-    }
-    .staff-drawer-nav .staff-tab:hover{background:rgba(255,255,255,.08);color:#fff}
-    .staff-drawer-nav .staff-tab.is-active{background:var(--accent);border-color:var(--accent);color:#fff}
-    @media(max-width:1080px){
-      .header-row{flex-wrap:wrap}
-      .header-right{width:100%;justify-content:space-between}
-    }
+    .staff-drawer-nav .staff-nav__group{padding:10px 0 6px}
+    .staff-drawer-nav .staff-nav__group + .staff-nav__group{border-top:1px solid rgba(255,255,255,.1)}
+    .staff-drawer-nav .staff-nav__label{padding:4px 4px 8px; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.12em; color:rgba(255,255,255,.45)}
+    .staff-drawer-nav .staff-nav__link{display:block; padding:11px 12px; font-size:13px; font-weight:600; text-transform:uppercase; letter-spacing:.06em; color:rgba(255,255,255,.9); border-left:3px solid transparent; background:rgba(255,255,255,.03); margin-bottom:2px}
+    .staff-drawer-nav .staff-nav__link:hover{background:rgba(255,255,255,.08);color:#fff}
+    .staff-drawer-nav .staff-nav__link.is-active{border-left-color:#fff;background:var(--accent);color:#fff}
     @media(max-width:959px){
       .staff-topbar{display:none!important}
       .staff-menu-btn{display:inline-flex}
-      .staff-header-nav-desktop{display:none!important}
+      .staff-shell{display:block}
+      .staff-sidebar{display:none}
       .staff-nav-scrim{display:block;position:fixed;inset:0;z-index:35990;background:rgba(0,0,0,.45);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .2s,visibility .2s}
       html.staff-mobile-nav-open .staff-nav-scrim{opacity:1;visibility:visible;pointer-events:auto}
       html.staff-mobile-nav-open{overflow:hidden}
@@ -222,9 +191,6 @@
           <img class="logo" src="{% static 'assets/img/TR Logo 25/TR 25 LOGO HOR RED.svg' %}" alt="Tenrivals">
         </a>
         <div class="header-right">
-          <div class="staff-header-nav-desktop">
-            {% include 'persons/staff_nav.html' %}
-          </div>
           <div class="auth">
             {% if user.is_authenticated %}
             <div class="user-menu">
@@ -268,16 +234,23 @@
 
   <div class="page-main">
     <div class="container">
-      <h1 class="page-title">{% block page_heading %}Staff{% endblock %}</h1>
-      {% block page_note %}{% endblock %}
+      <div class="staff-shell">
+        <aside class="staff-sidebar">
+          {% include 'persons/staff_nav.html' %}
+        </aside>
+        <div class="staff-content">
+          <h1 class="page-title">{% block page_heading %}Staff{% endblock %}</h1>
+          {% block page_note %}{% endblock %}
 
-      {% if messages %}
-        {% for message in messages %}
-          <div class="alert alert-{{ message.level_tag }}">{{ message }}</div>
-        {% endfor %}
-      {% endif %}
+          {% if messages %}
+            {% for message in messages %}
+              <div class="alert alert-{{ message.level_tag }}">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
 
-      {% block content %}{% endblock %}
+          {% block content %}{% endblock %}
+        </div>
+      </div>
     </div>
   </div>
 

@@ -1,13 +1,28 @@
-<nav class="staff-tabs" aria-label="Staff navigation">
-  <a href="{% url 'administration:staff_users' %}" class="staff-tab {% if staff_nav_active == 'users' %}is-active{% endif %}">Users</a>
-  <a href="{% url 'administration:staff_stock' %}" class="staff-tab {% if staff_nav_active == 'stock' %}is-active{% endif %}">In stock</a>
-  <a href="{% url 'administration:staff_stock_stats' %}" class="staff-tab {% if staff_nav_active == 'stock_stats' %}is-active{% endif %}">Stock stats</a>
-  <a href="{% url 'administration:staff_preorder' %}" class="staff-tab {% if staff_nav_active == 'preorder' %}is-active{% endif %}">Preorder</a>
-  <a href="{% url 'administration:staff_blog_posts' %}" class="staff-tab {% if staff_nav_active == 'blog' %}is-active{% endif %}">Blog</a>
-  <a href="{% url 'administration:staff_home_banners' %}" class="staff-tab {% if staff_nav_active == 'banners' %}is-active{% endif %}">Shop home</a>
-  <a href="{% url 'administration:staff_collections' %}" class="staff-tab {% if staff_nav_active == 'collections' %}is-active{% endif %}">Collections</a>
-  <a href="{% url 'administration:staff_promo_codes' %}" class="staff-tab {% if staff_nav_active == 'promo_codes' %}is-active{% endif %}">Promo codes</a>
-  <a href="{% url 'administration:staff_order_for_me_list' %}" class="staff-tab {% if staff_nav_active == 'order_for_me' %}is-active{% endif %}">Order for me</a>
-  <a href="{% url 'administration:staff_customers' %}" class="staff-tab {% if staff_nav_active == 'customers' %}is-active{% endif %}">Customers</a>
-  <a href="{% url 'administration:staff_sales_orders' %}" class="staff-tab {% if staff_nav_active == 'sales_orders' %}is-active{% endif %}">Orders</a>
+<nav class="staff-nav" aria-label="Staff navigation">
+  <div class="staff-nav__group">
+    <div class="staff-nav__label">Catalog</div>
+    <a href="{% url 'administration:staff_stock' %}" class="staff-nav__link {% if staff_nav_active == 'stock' %}is-active{% endif %}">In stock</a>
+    <a href="{% url 'administration:staff_preorder' %}" class="staff-nav__link {% if staff_nav_active == 'preorder' %}is-active{% endif %}">Preorder</a>
+    <a href="{% url 'administration:staff_stock_stats' %}" class="staff-nav__link {% if staff_nav_active == 'stock_stats' %}is-active{% endif %}">Stock stats</a>
+    <a href="{% url 'administration:staff_collections' %}" class="staff-nav__link {% if staff_nav_active == 'collections' %}is-active{% endif %}">Collections</a>
+  </div>
+  <div class="staff-nav__group">
+    <div class="staff-nav__label">Sales</div>
+    <a href="{% url 'administration:staff_sales_orders' %}" class="staff-nav__link {% if staff_nav_active == 'sales_orders' %}is-active{% endif %}">Orders</a>
+    <a href="{% url 'administration:staff_customers' %}" class="staff-nav__link {% if staff_nav_active == 'customers' %}is-active{% endif %}">Customers</a>
+    <a href="{% url 'administration:staff_order_for_me_list' %}" class="staff-nav__link {% if staff_nav_active == 'order_for_me' %}is-active{% endif %}">Order for me</a>
+  </div>
+  <div class="staff-nav__group">
+    <div class="staff-nav__label">Marketing</div>
+    <a href="{% url 'administration:staff_home_banners' %}" class="staff-nav__link {% if staff_nav_active == 'banners' %}is-active{% endif %}">Shop home</a>
+    <a href="{% url 'administration:staff_blog_posts' %}" class="staff-nav__link {% if staff_nav_active == 'blog' %}is-active{% endif %}">Blog</a>
+    <a href="{% url 'administration:staff_promo_codes' %}" class="staff-nav__link {% if staff_nav_active == 'promo_codes' %}is-active{% endif %}">Promo codes</a>
+  </div>
+  <div class="staff-nav__group">
+    <div class="staff-nav__label">Administration</div>
+    <a href="{% url 'administration:staff_users' %}" class="staff-nav__link {% if staff_nav_active == 'users' %}is-active{% endif %}">Users</a>
+    {% if user.is_superuser %}
+    <a href="{% url 'admin:index' %}" class="staff-nav__link">Django admin</a>
+    {% endif %}
+  </div>
 </nav>
