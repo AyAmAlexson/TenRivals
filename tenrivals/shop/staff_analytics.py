@@ -53,6 +53,16 @@ def _bucket_start(d: date, granularity: str) -> date:
     return d.replace(day=1)
 
 
+def _next_bucket(d: date, granularity: str) -> date:
+    if granularity == 'day':
+        return d + timedelta(days=1)
+    if granularity == 'week':
+        return d + timedelta(days=7)
+    if d.month == 12:
+        return date(d.year + 1, 1, 1)
+    return date(d.year, d.month + 1, 1)
+
+
 def _bucket_label(d: date, granularity: str) -> str:
     if granularity == 'day':
         return d.strftime('%Y-%m-%d')
@@ -247,6 +257,14 @@ def build_sales_analytics(
 
     _finalize_metrics(totals)
 
+    # Fill gaps so charts/tables show zero periods too (days/weeks/months
+    # without sales must still appear on the timeline).
+    cur = _bucket_start(start, granularity)
+    last_bucket = _bucket_start(end, granularity)
+    while cur <= last_bucket:
+        buckets.setdefault(cur, _zero_metrics())
+        cur = _next_bucket(cur, granularity)
+
     bucket_rows = []
     for b in sorted(buckets.keys()):
         row = _finalize_metrics(buckets[b])
@@ -295,19 +313,24 @@ def build_sales_analytics(
     )[:5]
     repeat_customers = sum(1 for r in customer_rows.values() if r['orders'] > 1)
 
-    best_bucket = max(bucket_rows, key=lambda r: r['profit']) if bucket_rows else None
+    active_rows = [r for r in bucket_rows if r['orders']]
+    best_bucket = max(active_rows, key=lambda r: r['profit']) if active_rows else None
     best_weekday = (
         max(weekday_rows, key=lambda r: r['revenue'])
         if totals['orders']
         else None
     )
+    # Trend: last bucket with sales vs the bucket right before it (trailing
+    # empty buckets would otherwise always read as -100%).
     revenue_growth_pct = None
-    if len(bucket_rows) >= 2 and bucket_rows[-2]['revenue']:
-        revenue_growth_pct = (
-            (bucket_rows[-1]['revenue'] - bucket_rows[-2]['revenue'])
-            / bucket_rows[-2]['revenue']
-            * 100
-        ).quantize(_Q2)
+    if active_rows:
+        i = bucket_rows.index(active_rows[-1])
+        if i >= 1 and bucket_rows[i - 1]['revenue']:
+            revenue_growth_pct = (
+                (bucket_rows[i]['revenue'] - bucket_rows[i - 1]['revenue'])
+                / bucket_rows[i - 1]['revenue']
+                * 100
+            ).quantize(_Q2)
     avg_profit_per_order = (
         _q2(totals['profit'] / totals['orders']) if totals['orders'] else None
     )

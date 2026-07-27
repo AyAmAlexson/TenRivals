@@ -1324,6 +1324,23 @@ class SalesOrder(models.Model):
 
         return normalize_payment_currency(self.payment_currency)
 
+    def cogs_fill_status(self) -> str:
+        """Staff traffic light: 'green' — every line has a non-zero landed
+        cost, 'yellow' — some lines have it, 'red' — none do (or no lines).
+        Relies on prefetched lines; call from list views only."""
+        lines = list(self.lines.all())
+        if not lines:
+            return 'red'
+        filled = [
+            line.landed_cost_gel is not None and line.landed_cost_gel != 0
+            for line in lines
+        ]
+        if all(filled):
+            return 'green'
+        if any(filled):
+            return 'yellow'
+        return 'red'
+
 
 class SalesOrderLine(models.Model):
     order = models.ForeignKey(

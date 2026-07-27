@@ -17,6 +17,7 @@
     padding:2px 0;
   }
   .orders-table .col-actions{white-space:nowrap;width:1%;vertical-align:middle}
+  .cogs-light{font-size:10px;margin-right:6px;cursor:help;vertical-align:1px}
   .order-actions-menu{position:relative;display:inline-block;text-align:left}
   .order-actions-menu > summary{list-style:none;cursor:pointer}
   .order-actions-menu > summary::-webkit-details-marker{display:none}
@@ -161,7 +162,12 @@
       <tbody>
         {% for o in orders %}
         <tr>
-          <td class="mono">{{ o.invoice_number }}</td>
+          <td class="mono">
+            {% with cs=o.cogs_fill_status %}
+            <span class="cogs-light" title="{% if cs == 'green' %}Landed cost filled for all lines{% elif cs == 'yellow' %}Landed cost missing in some lines{% else %}Landed cost not filled for any line{% endif %}">{% if cs == 'green' %}&#128994;{% elif cs == 'yellow' %}&#128993;{% else %}&#128308;{% endif %}</span>
+            {% endwith %}
+            {{ o.invoice_number }}
+          </td>
           <td class="mono">{{ o.fiscal_receipt|default:"—" }}</td>
           <td class="mono">{{ o.order_date|date:"Y-m-d" }}</td>
           <td>
