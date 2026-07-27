@@ -79,8 +79,8 @@
     <p class="page-meta" style="margin-bottom:16px">Invoice # is assigned automatically on save.</p>
     {% endif %}
 
-    <h3 class="card-title" style="margin-top:8px;font-size:14px">Line items (stock)</h3>
-    <p class="page-meta" style="margin-bottom:10px;font-size:12px">Products show <strong>brand — model — type — specs — variants</strong>. Rackets and shoes need <strong>Size / grip</strong>. Stock is reserved when the order status is not Cancelled/Refunded.</p>
+    <h3 class="card-title" style="margin-top:8px;font-size:14px">Line items</h3>
+    <p class="page-meta" style="margin-bottom:10px;font-size:12px">Products show <strong>brand — model — type — specs — variants</strong>. Rackets and shoes need <strong>Size / grip</strong>. Stock is reserved when the order status is not Cancelled/Refunded. Untick <strong>In stock</strong> to type a free-text item (legacy orders): such lines are not checked against and do not affect the warehouse — include size/grip in the name.</p>
     <div class="form-group" style="margin-bottom:12px;max-width:420px">
       <label for="id_product_filter_lines">Filter products (all rows)</label>
       <input type="search" id="id_product_filter_lines" placeholder="Type to filter dropdown options…" autocomplete="off" style="width:100%;padding:9px 12px;border:1px solid var(--line);font-family:inherit;font-size:14px">
@@ -90,6 +90,7 @@
       <table id="lines-table" style="min-width:900px">
         <thead>
           <tr>
+            <th title="Ticked: pick a product from stock (checked and reserved). Unticked: free-text item, no stock effect.">In stock</th>
             <th>Product</th>
             <th>Size / grip</th>
             <th class="num">Qty</th>
@@ -105,7 +106,8 @@
           {% for f in formset %}
           <tr class="line-row" data-form-index="{{ forloop.counter0 }}">
             {% for hidden in f.hidden_fields %}{{ hidden }}{% endfor %}
-            <td>{{ f.product.errors }}{{ f.product }}</td>
+            <td style="text-align:center">{{ f.from_stock }}</td>
+            <td>{{ f.product.errors }}{{ f.custom_label.errors }}{{ f.product }}{{ f.custom_label }}</td>
             <td>{{ f.variant_label.errors }}{{ f.variant_label }}</td>
             <td class="num">{{ f.quantity }}</td>
             <td class="num">{{ f.unit_price_gross }}</td>
@@ -161,7 +163,8 @@
 <tr class="line-row">
   {% with f=formset.empty_form %}
   {% for hidden in f.hidden_fields %}{{ hidden }}{% endfor %}
-  <td>{{ f.product }}</td>
+  <td style="text-align:center">{{ f.from_stock }}</td>
+  <td>{{ f.product }}{{ f.custom_label }}</td>
   <td>{{ f.variant_label }}</td>
   <td class="num">{{ f.quantity }}</td>
   <td class="num">{{ f.unit_price_gross }}</td>
@@ -179,6 +182,8 @@
   #lines-table input,#lines-table select{width:100%;min-width:0;font-size:13px;padding:6px 8px;border:1px solid var(--line);font-family:inherit}
   #lines-table select[name$="-product"]{min-width:280px}
   #lines-table input[type="checkbox"]{width:auto!important;min-width:auto}
+  #lines-table input.sales-line-custom{display:none;min-width:280px}
+  #lines-table select.sales-line-variant:disabled{opacity:.45;background:#f3f4f6}
   .order-services-wrap table input{width:100%;box-sizing:border-box;font-size:13px;padding:6px 8px;border:1px solid var(--line);font-family:inherit}
 </style>
 <script>
@@ -211,6 +216,25 @@
     const vat = Math.round((g-net)*100)/100;
     return { gross:g, vat, net };
   }
+  function isFromStock(row){
+    const cb = row.querySelector('input[name$="-from_stock"]');
+    return !cb || cb.checked;
+  }
+  function syncStockMode(row){
+    const stock = isFromStock(row);
+    const selP = row.querySelector('select[name$="-product"]');
+    const custom = row.querySelector('input[name$="-custom_label"]');
+    const selV = row.querySelector('select[name$="-variant_label"]');
+    if(selP){
+      selP.style.display = stock ? '' : 'none';
+      if(!stock) selP.value = '';
+    }
+    if(custom) custom.style.display = stock ? 'none' : 'block';
+    if(selV){
+      if(!stock) selV.value = '';
+      selV.disabled = !stock;
+    }
+  }
   function lineCalc(row){
     const sel = row.querySelector('select[name$="-product"]');
     const qty = parseNum(row.querySelector('input[name$="-quantity"]') && row.querySelector('input[name$="-quantity"]').value);
@@ -218,7 +242,11 @@
     const disc = parseNum(row.querySelector('input[name$="-discount_percent"]') && row.querySelector('input[name$="-discount_percent"]').value);
     const del = row.querySelector('input[name$="-DELETE"]');
     if(del && del.checked) return null;
-    if(!sel || !sel.value) return null;
+    if(isFromStock(row)){
+      if(!sel || !sel.value) return null;
+    } else {
+      if(qty <= 0) return null;
+    }
     const base = qty*unit;
     const pct = Math.max(0, Math.min(100, disc));
     const g = base * (1 - pct/100);
@@ -349,7 +377,8 @@
   function bindRow(row){
     row.querySelectorAll('input,select').forEach(function(el){
       el.addEventListener('change', function(){
-        if(el.name && el.name.indexOf('-product') !== -1) onProductChange(row);
+        if(el.name && el.name.indexOf('-from_stock') !== -1){ syncStockMode(row); recalcRow(row); recalcTotals(); }
+        else if(el.name && el.name.indexOf('-product') !== -1) onProductChange(row);
         else { recalcRow(row); recalcTotals(); }
       });
       el.addEventListener('input', function(){
@@ -357,6 +386,7 @@
       });
     });
     fillVariantSelect(row, true);
+    syncStockMode(row);
     recalcRow(row);
   }
   tbody.querySelectorAll('.line-row').forEach(bindRow);

@@ -1278,8 +1278,17 @@ class SalesOrderLine(models.Model):
     )
     product = models.ForeignKey(
         Product,
+        null=True,
+        blank=True,
         on_delete=models.PROTECT,
         related_name='sales_order_lines',
+        help_text=_('Empty for non-stock (legacy / free-text) lines.'),
+    )
+    custom_label = models.CharField(
+        max_length=200,
+        blank=True,
+        default='',
+        help_text=_('Free-text item name for non-stock lines (when product is empty).'),
     )
     quantity = models.PositiveIntegerField()
     unit_price_gross = models.DecimalField(
@@ -1304,12 +1313,22 @@ class SalesOrderLine(models.Model):
     class Meta:
         ordering = ['id']
 
+    @property
+    def is_stock_line(self) -> bool:
+        return self.product_id is not None
+
+    def display_title(self) -> str:
+        """Item name: catalog title for stock lines, typed text for custom lines."""
+        if self.product_id:
+            return self.product.storefront_cart_line_title()
+        return (self.custom_label or '').strip() or 'Custom item'
+
     def __str__(self):
-        return f'{self.product.name} ×{self.quantity}'
+        return f'{self.display_title()} ×{self.quantity}'
 
     def staff_order_item_summary(self) -> str:
         """One line for orders list: qty× brand model + color (+ variant)."""
-        base = self.product.storefront_cart_line_title()
+        base = self.display_title()
         v = (self.variant_label or '').strip()
         if v:
             base = f'{base} ({v})'
@@ -1317,6 +1336,8 @@ class SalesOrderLine(models.Model):
 
     def invoice_display_label(self) -> str:
         """Line text for PDF / invoice table."""
+        if not self.product_id:
+            return (self.custom_label or '').strip() or 'Custom item'
         base = self.product.invoice_line_label()
         if (self.variant_label or '').strip():
             return f'{base} / {self.variant_label}'

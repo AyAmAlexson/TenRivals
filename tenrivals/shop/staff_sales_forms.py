@@ -133,6 +133,12 @@ class SalesOrderForm(forms.ModelForm):
 
 
 class SalesOrderLineForm(forms.ModelForm):
+    # Not a model field: unchecked means a free-text (non-stock) line; persisted as product=None.
+    from_stock = forms.BooleanField(
+        required=False,
+        initial=True,
+        widget=forms.CheckboxInput(attrs={'class': 'sales-line-from-stock'}),
+    )
     variant_label = forms.CharField(
         required=False,
         max_length=48,
@@ -143,12 +149,31 @@ class SalesOrderLineForm(forms.ModelForm):
 
     class Meta:
         model = SalesOrderLine
-        fields = ['product', 'variant_label', 'quantity', 'unit_price_gross', 'discount_percent']
+        fields = [
+            'product',
+            'custom_label',
+            'variant_label',
+            'quantity',
+            'unit_price_gross',
+            'discount_percent',
+        ]
+        widgets = {
+            'custom_label': forms.TextInput(
+                attrs={
+                    'class': 'sales-line-custom',
+                    'placeholder': 'Item name (free text, incl. size/grip)',
+                    'maxlength': '200',
+                    'autocomplete': 'off',
+                }
+            ),
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if 'product' in self.fields:
             self.fields['product'].label_from_instance = _product_choice_label
+        if self.instance and getattr(self.instance, 'pk', None):
+            self.fields['from_stock'].initial = self.instance.product_id is not None
         vf = self.fields['variant_label']
         vf.label = 'Size / grip'
         vf.widget.choices = [('', '—')]
@@ -179,11 +204,24 @@ class SalesOrderLineForm(forms.ModelForm):
         cd = super().clean()
         if cd.get('DELETE'):
             return cd
+        from_stock = bool(cd.get('from_stock'))
         product = cd.get('product')
         variant = (cd.get('variant_label') or '').strip()
-        if product and product_requires_variant(product) and not variant:
+        if not from_stock:
+            # Free-text legacy line: no product link, no stock checks.
+            if not (cd.get('custom_label') or '').strip():
+                self.add_error('custom_label', 'Enter item name for a non-stock line.')
+            cd['product'] = None
+            cd['variant_label'] = ''
+            cd['custom_label'] = (cd.get('custom_label') or '').strip()
+            return cd
+        cd['custom_label'] = ''
+        if not product:
+            self.add_error('product', 'Select a product, or untick "In stock" for a free-text line.')
+            return cd
+        if product_requires_variant(product) and not variant:
             raise ValidationError('Select size / grip for this product.')
-        if product and not product_requires_variant(product) and variant:
+        if not product_requires_variant(product) and variant:
             cd['variant_label'] = ''
         return cd
 

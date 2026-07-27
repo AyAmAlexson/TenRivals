@@ -102,7 +102,7 @@
                     {% for line in order.lines.all %}
                     <tr>
                       <td>
-                        {{ line.product.storefront_cart_line_title }}
+                        {{ line.display_title }}
                       </td>
                       <td>{{ line.variant_label|default:"—" }}</td>
                       <td style="text-align:right">{{ line.quantity }}</td>

@@ -231,6 +231,9 @@ def adjust_product_variant_stock(product: Product, variant_key: str, delta: int)
 def release_lines_to_stock(lines: list) -> None:
     """Return reserved units to listing / variant JSON. Best-effort if legacy lines lack variant."""
     for line in lines:
+        if line.product_id is None:
+            # Free-text (non-stock) line: never reserved, nothing to return.
+            continue
         try:
             adjust_product_variant_stock(line.product, line.variant_label or '', line.quantity)
         except ValueError as exc:
@@ -250,6 +253,9 @@ def release_lines_to_stock(lines: list) -> None:
 
 def take_lines_from_stock(lines: list) -> None:
     for line in lines:
+        if line.product_id is None:
+            # Free-text (non-stock) line: does not touch warehouse.
+            continue
         adjust_product_variant_stock(line.product, line.variant_label or '', -int(line.quantity))
 
 

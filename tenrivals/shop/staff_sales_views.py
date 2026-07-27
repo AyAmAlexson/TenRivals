@@ -239,7 +239,11 @@ def _product_queryset_for_order(instance: SalesOrder | None):
     base = stock_products_for_select()
     base_ids = list(base.values_list('pk', flat=True))
     if instance and instance.pk:
-        line_ids = list(instance.lines.values_list('product_id', flat=True))
+        line_ids = [
+            pid
+            for pid in instance.lines.values_list('product_id', flat=True)
+            if pid is not None  # free-text lines have no product
+        ]
         all_ids = set(base_ids) | set(line_ids)
         return (
             Product.objects.filter(pk__in=all_ids)
@@ -333,7 +337,7 @@ def staff_customer_detail(request, pk):
         for line in o.lines.all():
             qty = int(line.quantity or 0)
             items_total += qty
-            label = line.product.storefront_cart_line_title()
+            label = line.display_title()
             entry = product_totals.setdefault(
                 label, {'label': label, 'qty': 0, 'gross': Decimal('0.00')}
             )
@@ -588,7 +592,8 @@ def staff_sales_order_edit(request, pk=None):
                             vl = (cd.get('variant_label') or '').strip()
                             SalesOrderLine.objects.create(
                                 order=order,
-                                product=cd['product'],
+                                product=cd.get('product'),
+                                custom_label=(cd.get('custom_label') or '').strip(),
                                 variant_label=vl,
                                 quantity=cd['quantity'],
                                 unit_price_gross=cd['unit_price_gross'],
@@ -725,6 +730,7 @@ def staff_sales_order_set_status(request, pk):
                         int(ln.quantity),
                     )
                     for ln in lines
+                    if ln.product_id is not None
                 ]
                 v_errs = validate_order_line_demands(
                     demands,
