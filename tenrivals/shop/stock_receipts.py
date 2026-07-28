@@ -42,50 +42,108 @@ def weighted_average_cost(
     return (total_value / Decimal(on_hand + batch_qty)).quantize(Decimal('0.01'))
 
 
+def _receive_one(
+    *,
+    product: Product,
+    quantity: int,
+    unit_landed_cost_gel: Decimal,
+    on_hand_before: int | None,
+    note: str,
+    created_by,
+    add_to_stock: bool,
+    variant_key: str,
+) -> StockReceipt:
+    """Persist one receipt line. Caller must be inside transaction.atomic()."""
+    locked = Product.objects.select_for_update().get(pk=product.pk)
+    before = locked.landed_cost_gel
+    oh = stock_on_hand(locked.pk) if on_hand_before is None else int(on_hand_before)
+    if oh < 0:
+        raise ValueError(f'On-hand quantity must be 0 or more for {locked.name}.')
+    after = weighted_average_cost(oh, before, quantity, unit_landed_cost_gel)
+    locked.landed_cost_gel = after
+    locked.save(update_fields=['landed_cost_gel', 'updated_at'])
+    if add_to_stock:
+        # First batch of a new product may have no STOCK row yet.
+        ProductListing.objects.get_or_create(
+            product=locked,
+            channel=ProductListingChannel.STOCK,
+            defaults={'quantity': 0},
+        )
+        adjust_product_variant_stock(locked, variant_key, quantity)
+    return StockReceipt.objects.create(
+        product=locked,
+        quantity=quantity,
+        unit_landed_cost_gel=unit_landed_cost_gel,
+        on_hand_before=oh,
+        landed_cost_before=before,
+        landed_cost_after=after,
+        variant_label=(variant_key or '').strip()[:48],
+        stock_added=add_to_stock,
+        note=(note or '').strip()[:200],
+        created_by=created_by,
+    )
+
+
 def receive_stock_batch(
     *,
     product: Product,
     quantity: int,
     unit_landed_cost_gel: Decimal,
-    on_hand_before: int,
+    on_hand_before: int | None = None,
     note: str = '',
     created_by=None,
     add_to_stock: bool = True,
     variant_key: str = '',
 ) -> StockReceipt:
-    """Record a batch, update the weighted-average landed cost, and (unless
-    ``add_to_stock`` is off) add the units to the STOCK listing / size grid.
-
-    ``variant_key`` (grip / shoe or apparel size / string gauge) is required
-    for size-grid products when adding to stock; raises ValueError if it is
-    ambiguous. Everything runs in one transaction — a stock failure rolls
-    back the cost update too.
-    """
+    """Record a single product batch (cost update ± stock increment)."""
     with transaction.atomic():
-        locked = Product.objects.select_for_update().get(pk=product.pk)
-        before = locked.landed_cost_gel
-        after = weighted_average_cost(
-            on_hand_before, before, quantity, unit_landed_cost_gel
-        )
-        locked.landed_cost_gel = after
-        locked.save(update_fields=['landed_cost_gel', 'updated_at'])
-        if add_to_stock:
-            # First batch of a new product may have no STOCK row yet.
-            ProductListing.objects.get_or_create(
-                product=locked,
-                channel=ProductListingChannel.STOCK,
-                defaults={'quantity': 0},
-            )
-            adjust_product_variant_stock(locked, variant_key, quantity)
-        return StockReceipt.objects.create(
-            product=locked,
+        return _receive_one(
+            product=product,
             quantity=quantity,
             unit_landed_cost_gel=unit_landed_cost_gel,
             on_hand_before=on_hand_before,
-            landed_cost_before=before,
-            landed_cost_after=after,
-            variant_label=(variant_key or '').strip()[:48],
-            stock_added=add_to_stock,
-            note=(note or '').strip()[:200],
+            note=note,
             created_by=created_by,
+            add_to_stock=add_to_stock,
+            variant_key=variant_key,
         )
+
+
+def receive_stock_lines(
+    *,
+    lines: list[dict],
+    note: str = '',
+    created_by=None,
+) -> list[StockReceipt]:
+    """Record several product lines as one supplier batch (one shared note).
+
+    Each ``lines`` item::
+
+        {
+            'product': Product,
+            'quantity': int,
+            'unit_landed_cost_gel': Decimal,
+            'on_hand_before': int | None,  # None → live STOCK qty at write time
+            'add_to_stock': bool,
+            'variant_key': str,
+        }
+
+    Runs in one transaction: a failure on any line rolls everything back.
+    Sequential same-product lines see updated on-hand / average from prior lines.
+    """
+    if not lines:
+        raise ValueError('Add at least one product line.')
+    with transaction.atomic():
+        return [
+            _receive_one(
+                product=line['product'],
+                quantity=line['quantity'],
+                unit_landed_cost_gel=line['unit_landed_cost_gel'],
+                on_hand_before=line.get('on_hand_before'),
+                note=note,
+                created_by=created_by,
+                add_to_stock=bool(line.get('add_to_stock', True)),
+                variant_key=(line.get('variant_key') or ''),
+            )
+            for line in lines
+        ]

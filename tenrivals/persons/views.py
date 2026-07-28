@@ -45,7 +45,7 @@ from shop.models import (
     StockReceipt,
 )
 from shop.staff_stock_stats import build_stock_stats
-from shop.stock_receipts import receive_stock_batch, stock_on_hand
+from shop.stock_receipts import receive_stock_lines
 from shop.sales_order_utils import allocate_order_for_me_number
 import hashlib
 import hmac
@@ -1167,81 +1167,110 @@ def staff_stock_list(request):
 @login_required
 @user_passes_test(_superuser_required)
 def staff_stock_receive(request):
-    """Receive a purchase batch: weighted-average landed cost update + journal row."""
+    """Receive a purchase batch: multi-line cost update ± stock increment."""
     from decimal import Decimal, InvalidOperation
 
     if request.method == "POST":
-        errors = []
-        product = None
+        errors: list[str] = []
+        note = (request.POST.get("note") or "").strip()
         try:
-            product = Product.objects.get(pk=int(request.POST.get("product") or 0))
-        except (TypeError, ValueError, Product.DoesNotExist):
-            errors.append("Select a product.")
-        try:
-            qty = int(request.POST.get("quantity") or 0)
+            total_forms = int(request.POST.get("lines-TOTAL_FORMS") or 0)
         except (TypeError, ValueError):
-            qty = 0
-        if qty < 1:
-            errors.append("Batch quantity must be at least 1.")
-        unit_cost = None
-        try:
-            unit_cost = Decimal(
-                str(request.POST.get("unit_cost") or "").replace(",", ".").strip()
-            )
-        except (InvalidOperation, ValueError):
-            pass
-        if unit_cost is None or unit_cost < 0:
-            errors.append("Enter a valid landed cost per unit (₾).")
-        on_hand = None
-        on_hand_raw = (request.POST.get("on_hand") or "").strip()
-        if on_hand_raw == "" and product is not None:
-            on_hand = stock_on_hand(product.pk)
-        else:
+            total_forms = 0
+        if total_forms < 1:
+            errors.append("Add at least one product line.")
+        if total_forms > 80:
+            errors.append("Too many lines (max 80).")
+
+        line_specs: list[dict] = []
+        for i in range(max(0, total_forms)):
+            prefix = f"lines-{i}"
+            if request.POST.get(f"{prefix}-DELETE"):
+                continue
+            product = None
+            raw_pid = (request.POST.get(f"{prefix}-product") or "").strip()
+            if not raw_pid:
+                continue  # blank trailing row
             try:
-                on_hand = int(on_hand_raw)
+                product = Product.objects.get(pk=int(raw_pid))
+            except (TypeError, ValueError, Product.DoesNotExist):
+                errors.append(f"Line {i + 1}: select a valid product.")
+                continue
+            try:
+                qty = int(request.POST.get(f"{prefix}-quantity") or 0)
             except (TypeError, ValueError):
+                qty = 0
+            if qty < 1:
+                errors.append(f"Line {i + 1} ({product.name}): quantity must be at least 1.")
+            unit_cost = None
+            try:
+                unit_cost = Decimal(
+                    str(request.POST.get(f"{prefix}-unit_cost") or "")
+                    .replace(",", ".")
+                    .strip()
+                )
+            except (InvalidOperation, ValueError):
                 pass
-        if on_hand is None or on_hand < 0:
-            errors.append("On-hand quantity must be 0 or more.")
-        add_to_stock = bool(request.POST.get("add_to_stock"))
-        variant_key = (request.POST.get("variant") or "").strip()
+            if unit_cost is None or unit_cost < 0:
+                errors.append(
+                    f"Line {i + 1} ({product.name}): enter a valid landed cost / unit (₾)."
+                )
+            on_hand = None
+            on_hand_raw = (request.POST.get(f"{prefix}-on_hand") or "").strip()
+            if on_hand_raw == "":
+                on_hand = None  # live STOCK qty at write time (after prior lines)
+            else:
+                try:
+                    on_hand = int(on_hand_raw)
+                except (TypeError, ValueError):
+                    errors.append(
+                        f"Line {i + 1} ({product.name}): on-hand must be 0 or more."
+                    )
+                else:
+                    if on_hand < 0:
+                        errors.append(
+                            f"Line {i + 1} ({product.name}): on-hand must be 0 or more."
+                        )
+            add_to_stock = bool(request.POST.get(f"{prefix}-add_to_stock"))
+            variant_key = (request.POST.get(f"{prefix}-variant") or "").strip()
+            if product is not None and qty >= 1 and unit_cost is not None and unit_cost >= 0:
+                if on_hand_raw == "" or (on_hand is not None and on_hand >= 0):
+                    line_specs.append(
+                        {
+                            "product": product,
+                            "quantity": qty,
+                            "unit_landed_cost_gel": unit_cost,
+                            "on_hand_before": on_hand,
+                            "add_to_stock": add_to_stock,
+                            "variant_key": variant_key,
+                        }
+                    )
+
+        if not line_specs and not errors:
+            errors.append("Add at least one filled product line.")
+
         if errors:
             for e in errors:
                 messages.error(request, e)
         else:
             try:
-                receipt = receive_stock_batch(
-                    product=product,
-                    quantity=qty,
-                    unit_landed_cost_gel=unit_cost,
-                    on_hand_before=on_hand,
-                    note=request.POST.get("note") or "",
+                receipts = receive_stock_lines(
+                    lines=line_specs,
+                    note=note,
                     created_by=request.user,
-                    add_to_stock=add_to_stock,
-                    variant_key=variant_key,
                 )
             except ValueError as exc:
-                receipt = None
                 messages.error(request, f"Batch not recorded: {exc}")
-            if receipt is not None:
-                before_txt = (
-                    f"{receipt.landed_cost_before} ₾"
-                    if receipt.landed_cost_before is not None
-                    else "—"
-                )
-                if add_to_stock:
-                    stock_txt = (
-                        f"Stock increased to {stock_on_hand(product.pk)} units"
-                        + (f" ({variant_key})" if variant_key else "")
-                        + "."
-                    )
-                else:
-                    stock_txt = "Stock quantity NOT changed (cost update only)."
+            else:
+                n = len(receipts)
+                units = sum(r.quantity for r in receipts)
+                added = sum(1 for r in receipts if r.stock_added)
                 messages.success(
                     request,
-                    f"Received {qty} × {product.name} @ {unit_cost} ₾. "
-                    f"Average landed cost: {before_txt} → {receipt.landed_cost_after} ₾. "
-                    f"{stock_txt}",
+                    f"Received {n} line{'s' if n != 1 else ''} "
+                    f"({units} unit{'s' if units != 1 else ''})"
+                    f"{' — stock updated for ' + str(added) + ' line(s)' if added else ' — cost only'}."
+                    + (f" Note: {note}" if note else ""),
                 )
                 return redirect("administration:staff_stock_receive")
 
@@ -1271,13 +1300,48 @@ def staff_stock_receive(request):
     for p in variant_products:
         if product_requires_variant(p):
             variant_map[str(p.pk)] = sorted(get_variant_qty_map(p).keys())
-    preselect = 0
-    raw_pre = request.POST.get("product") or request.GET.get("product") or ""
-    if str(raw_pre).isdigit():
-        preselect = int(raw_pre)
+
+    # Rebuild posted rows after validation errors; otherwise one empty starter row.
+    initial_rows: list[dict] = []
+    if request.method == "POST":
+        try:
+            posted_n = int(request.POST.get("lines-TOTAL_FORMS") or 0)
+        except (TypeError, ValueError):
+            posted_n = 0
+        for i in range(posted_n):
+            prefix = f"lines-{i}"
+            if request.POST.get(f"{prefix}-DELETE"):
+                continue
+            initial_rows.append(
+                {
+                    "product": request.POST.get(f"{prefix}-product") or "",
+                    "variant": request.POST.get(f"{prefix}-variant") or "",
+                    "quantity": request.POST.get(f"{prefix}-quantity") or "",
+                    "unit_cost": request.POST.get(f"{prefix}-unit_cost") or "",
+                    "on_hand": request.POST.get(f"{prefix}-on_hand") or "",
+                    "add_to_stock": bool(request.POST.get(f"{prefix}-add_to_stock")),
+                }
+            )
+    if not initial_rows:
+        preselect = ""
+        raw_pre = request.GET.get("product") or ""
+        if str(raw_pre).isdigit():
+            preselect = str(int(raw_pre))
+        initial_rows = [
+            {
+                "product": preselect,
+                "variant": "",
+                "quantity": "",
+                "unit_cost": "",
+                "on_hand": "",
+                "add_to_stock": True,
+            }
+        ]
+
+    note_value = request.POST.get("note", "") if request.method == "POST" else ""
     receipts = (
         StockReceipt.objects.select_related("product", "created_by")
-        .order_by("-created_at", "-id")[:20]
+        .order_by("-created_at", "-id")[:40]
     )
     return render(
         request,
@@ -1287,8 +1351,8 @@ def staff_stock_receive(request):
             "stock_qty_map": stock_qty_map,
             "cost_map": cost_map,
             "variant_map": variant_map,
-            "preselect_product_id": preselect,
-            "form_values": request.POST if request.method == "POST" else {},
+            "initial_rows": initial_rows,
+            "note_value": note_value,
             "receipts": receipts,
             "staff_nav_active": "stock",
             "page_heading": "Receive stock",
