@@ -103,24 +103,26 @@
   <div class="table-wrap">
     <table class="receipts-table">
       <thead>
-        <tr>
-          <th>Date</th>
-          <th>Product</th>
-          <th>Variant</th>
-          <th class="num">Qty</th>
-          <th>Stock</th>
-          <th class="num">Unit cost ₾</th>
-          <th class="num">Avg before</th>
-          <th class="num">Avg after</th>
-          <th>Note</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for r in receipts %}
-        <tr>
-          <td class="mono">{{ r.created_at|date:"Y-m-d H:i" }}</td>
-          <td>{{ r.product.brand|default:"" }} {{ r.product.name }}</td>
-          <td class="mono">{{ r.variant_label|default:"—" }}</td>
+          <tr>
+            <th>Date</th>
+            <th>Product</th>
+            <th>Color</th>
+            <th>Variant</th>
+            <th class="num">Qty</th>
+            <th>Stock</th>
+            <th class="num">Unit cost ₾</th>
+            <th class="num">Avg before</th>
+            <th class="num">Avg after</th>
+            <th>Note</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in receipts %}
+          <tr>
+            <td class="mono">{{ r.created_at|date:"Y-m-d H:i" }}</td>
+            <td>{{ r.product.brand|default:"" }} {{ r.product.name }}</td>
+            <td>{{ r.product.color|default:"—" }}</td>
+            <td class="mono">{{ r.variant_label|default:"—" }}</td>
           <td class="mono num">{{ r.quantity }}</td>
           <td title="{% if r.stock_added %}Batch was added to the stock quantity{% else %}Cost update only, stock unchanged{% endif %}">{% if r.stock_added %}+{{ r.quantity }}{% else %}—{% endif %}</td>
           <td class="mono num">{{ r.unit_landed_cost_gel }}</td>
