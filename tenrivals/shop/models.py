@@ -892,9 +892,9 @@ class StockReceipt(models.Model):
     """Staff-only journal of incoming batches.
 
     Each receipt recomputes Product.landed_cost_gel as a weighted average of the
-    on-hand units (at their current average cost) and the new batch. Quantities on
-    listings / size grids are managed separately; the receipt only does cost math,
-    so already-sold order lines (frozen snapshots) are never affected.
+    on-hand units (at their current average cost) and the new batch, and (when
+    ``stock_added``) adds the units to the STOCK listing / size grid.
+    Already-sold order lines (frozen snapshots) are never affected.
     """
 
     product = models.ForeignKey(
@@ -915,6 +915,16 @@ class StockReceipt(models.Model):
         max_digits=10, decimal_places=2, null=True, blank=True
     )
     landed_cost_after = models.DecimalField(max_digits=10, decimal_places=2)
+    variant_label = models.CharField(
+        max_length=48,
+        blank=True,
+        default='',
+        help_text=_('Grip / shoe or apparel size / string gauge the batch was added to.'),
+    )
+    stock_added = models.BooleanField(
+        default=False,
+        help_text=_('Whether this receipt also increased the STOCK listing quantity.'),
+    )
     note = models.CharField(max_length=200, blank=True, default='')
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,

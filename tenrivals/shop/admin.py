@@ -90,13 +90,15 @@ class StockReceiptAdmin(admin.ModelAdmin):
         "id",
         "created_at",
         "product",
+        "variant_label",
         "quantity",
+        "stock_added",
         "unit_landed_cost_gel",
         "landed_cost_before",
         "landed_cost_after",
         "created_by",
     )
-    list_filter = ("created_at",)
+    list_filter = ("created_at", "stock_added")
     search_fields = ("product__name", "product__brand", "note")
     raw_id_fields = ("product", "created_by")
     readonly_fields = ("created_at",)

@@ -208,6 +208,25 @@ def adjust_product_variant_stock(product: Product, variant_key: str, delta: int)
         row.save(update_fields=['quantity'])
         return
 
+    if product.type in APPAREL_TYPES:
+        from .models import Apparel
+
+        ap = Apparel.objects.select_for_update().get(pk=product.pk)
+        row = _listing_row_for_update(product.pk)
+        if not row:
+            raise ValueError('No STOCK listing for apparel')
+        d = normalize_sizes_to_qty_map(ap.sizes, fallback_total=int(row.quantity))
+        cur = int(d.get(vk, 0))
+        new_v = cur + delta
+        if new_v < 0:
+            raise ValueError(f'Insufficient stock for size {vk}')
+        d[vk] = new_v
+        ap.sizes = d
+        ap.save(update_fields=['sizes'])
+        row.quantity = sum(int(x or 0) for x in d.values())
+        row.save(update_fields=['quantity'])
+        return
+
     if product.type == ProductType.STRINGS:
         st = String.objects.select_for_update().get(pk=product.pk)
         row = _listing_row_for_update(product.pk)

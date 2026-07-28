@@ -1203,30 +1203,47 @@ def staff_stock_receive(request):
                 pass
         if on_hand is None or on_hand < 0:
             errors.append("On-hand quantity must be 0 or more.")
+        add_to_stock = bool(request.POST.get("add_to_stock"))
+        variant_key = (request.POST.get("variant") or "").strip()
         if errors:
             for e in errors:
                 messages.error(request, e)
         else:
-            receipt = receive_stock_batch(
-                product=product,
-                quantity=qty,
-                unit_landed_cost_gel=unit_cost,
-                on_hand_before=on_hand,
-                note=request.POST.get("note") or "",
-                created_by=request.user,
-            )
-            before_txt = (
-                f"{receipt.landed_cost_before} ₾"
-                if receipt.landed_cost_before is not None
-                else "—"
-            )
-            messages.success(
-                request,
-                f"Received {qty} × {product.name} @ {unit_cost} ₾. "
-                f"Average landed cost: {before_txt} → {receipt.landed_cost_after} ₾. "
-                "Remember to update stock quantities / size grid separately.",
-            )
-            return redirect("administration:staff_stock_receive")
+            try:
+                receipt = receive_stock_batch(
+                    product=product,
+                    quantity=qty,
+                    unit_landed_cost_gel=unit_cost,
+                    on_hand_before=on_hand,
+                    note=request.POST.get("note") or "",
+                    created_by=request.user,
+                    add_to_stock=add_to_stock,
+                    variant_key=variant_key,
+                )
+            except ValueError as exc:
+                receipt = None
+                messages.error(request, f"Batch not recorded: {exc}")
+            if receipt is not None:
+                before_txt = (
+                    f"{receipt.landed_cost_before} ₾"
+                    if receipt.landed_cost_before is not None
+                    else "—"
+                )
+                if add_to_stock:
+                    stock_txt = (
+                        f"Stock increased to {stock_on_hand(product.pk)} units"
+                        + (f" ({variant_key})" if variant_key else "")
+                        + "."
+                    )
+                else:
+                    stock_txt = "Stock quantity NOT changed (cost update only)."
+                messages.success(
+                    request,
+                    f"Received {qty} × {product.name} @ {unit_cost} ₾. "
+                    f"Average landed cost: {before_txt} → {receipt.landed_cost_after} ₾. "
+                    f"{stock_txt}",
+                )
+                return redirect("administration:staff_stock_receive")
 
     products = list(
         Product.objects.filter(is_active=True)
@@ -1243,6 +1260,17 @@ def staff_stock_receive(request):
         str(p.pk): (str(p.landed_cost_gel) if p.landed_cost_gel is not None else "")
         for p in products
     }
+    # Size-grid products: existing variant keys for the datalist; presence of a
+    # key in this map also tells the JS that a variant input is required.
+    from shop.sales_order_stock import get_variant_qty_map, product_requires_variant
+
+    variant_map = {}
+    variant_products = Product.objects.filter(is_active=True).select_related(
+        "racket", "shoe", "apparel", "string"
+    )
+    for p in variant_products:
+        if product_requires_variant(p):
+            variant_map[str(p.pk)] = sorted(get_variant_qty_map(p).keys())
     preselect = 0
     raw_pre = request.POST.get("product") or request.GET.get("product") or ""
     if str(raw_pre).isdigit():
@@ -1258,6 +1286,7 @@ def staff_stock_receive(request):
             "products": products,
             "stock_qty_map": stock_qty_map,
             "cost_map": cost_map,
+            "variant_map": variant_map,
             "preselect_product_id": preselect,
             "form_values": request.POST if request.method == "POST" else {},
             "receipts": receipts,
