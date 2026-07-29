@@ -72,6 +72,7 @@ class SalesOrderForm(forms.ModelForm):
             'order_date',
             'status',
             'delivery_gross',
+            'delivery_cost_gel',
             'fiscal_receipt',
             'payment_method',
             'payment_currency',
@@ -97,6 +98,8 @@ class SalesOrderForm(forms.ModelForm):
         self.fields['customer'].queryset = Customer.objects.all().order_by(
             'last_name', 'first_name', 'id'
         )
+        self.fields['delivery_cost_gel'].label = 'Delivery cost (₾, staff-only)'
+        self.fields['delivery_cost_gel'].required = False
         self.fields['exchange_rate'].required = False
         cur = 'GEL'
         if self.instance.pk:
@@ -114,6 +117,14 @@ class SalesOrderForm(forms.ModelForm):
         if not raw:
             raise ValidationError('Enter a payment currency code.')
         return normalize_payment_currency(raw)
+
+    def clean_delivery_cost_gel(self):
+        v = self.cleaned_data.get('delivery_cost_gel')
+        if v is None or v == '':
+            return Decimal('0.00')
+        if v < 0:
+            raise ValidationError('Delivery cost cannot be negative.')
+        return Decimal(v).quantize(Decimal('0.01'))
 
     def clean(self):
         cleaned = super().clean()

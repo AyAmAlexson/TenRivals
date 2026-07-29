@@ -231,7 +231,14 @@ def _rebuild_order_from_formset(
             }
         )
     gross, vat, net = compute_order_totals(line_grosses, svc_gross, delivery)
-    ser_out = [{'name': s['name'], 'gross': str(s['gross'])} for s in services]
+    ser_out = [
+        {
+            'name': s['name'],
+            'gross': str(s['gross']),
+            'cost': str(s.get('cost') or Decimal('0.00')),
+        }
+        for s in services
+    ]
     return gross, vat, net, ser_out, line_specs
 
 

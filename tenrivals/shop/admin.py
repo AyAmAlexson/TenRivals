@@ -17,6 +17,7 @@ from .models import (
     ShopOrderItem,
     ProductListing,
     StockReceipt,
+    StockValueSnapshot,
 )
 
 
@@ -102,6 +103,21 @@ class StockReceiptAdmin(admin.ModelAdmin):
     search_fields = ("product__name", "product__brand", "note")
     raw_id_fields = ("product", "created_by")
     readonly_fields = ("created_at",)
+
+
+@admin.register(StockValueSnapshot)
+class StockValueSnapshotAdmin(admin.ModelAdmin):
+    list_display = (
+        "snapshot_date",
+        "units",
+        "shelf_value_gel",
+        "landed_value_gel",
+        "source",
+        "updated_at",
+    )
+    list_filter = ("source",)
+    ordering = ("-snapshot_date",)
+    readonly_fields = ("created_at", "updated_at")
 
 
 @admin.register(HomePromoStripSettings)

@@ -4,6 +4,7 @@
 {% block page_note %}<p class="page-note">Staff-only economics. Cancelled / refunded orders excluded. TAX = {{ tax_rate_pct|floatformat:0 }}% turnover on gross; acquiring = {{ acquiring_rate_pct|floatformat:0 }}% of gross for card payments (payment method mentions card / terminal / POS). Lines without landed cost count in revenue but not in COGS — watch cost coverage.</p>{% endblock %}
 {% block extra_head %}
 {{ chart|json_script:"analytics-chart-data" }}
+{{ stock_value_chart|json_script:"stock-value-chart-data" }}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
   .an-filters{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:flex-end;margin-bottom:22px}
@@ -25,6 +26,7 @@
   .an-cat-grid{display:grid;grid-template-columns:340px 1fr;gap:24px;align-items:start}
   @media(max-width:1100px){.an-grid,.an-cat-grid{grid-template-columns:1fr}}
   .chart-box{position:relative;height:300px}
+  .chart-box--tall{height:340px}
   .num{text-align:right}
   .an-table{min-width:0;font-size:12.5px}
   .an-table th,.an-table td{padding:8px 10px}
@@ -113,6 +115,39 @@
     <h2 class="card-title">Sales by weekday</h2>
     <div class="chart-box"><canvas id="chart-weekday"></canvas></div>
   </div>
+</div>
+
+<div class="card">
+  <h2 class="card-title">Stock volume (daily)</h2>
+  <div class="an-stats" style="margin-bottom:16px">
+    <div class="stat-card">
+      <div class="stat-card__label">Shelf value now</div>
+      <div class="stat-card__value">{{ stock_value_chart.today.shelf_value_gel }} ₾</div>
+      <div class="stat-card__hint">Expected revenue at current shelf prices</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card__label">Landed value now</div>
+      <div class="stat-card__value">{{ stock_value_chart.today.landed_value_gel }} ₾</div>
+      <div class="stat-card__hint">Σ qty × landed cost (known costs only)</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card__label">Units on hand</div>
+      <div class="stat-card__value">{{ stock_value_chart.today.units }}</div>
+      <div class="stat-card__hint">STOCK listing qty &gt; 0</div>
+    </div>
+  </div>
+  <div class="chart-box chart-box--tall"><canvas id="chart-stock-value"></canvas></div>
+  <p class="page-meta" style="margin:10px 0 0;font-size:12px">
+    Two smooth daily lines for the selected period: shelf value (min of actual/initial price × qty) and landed cost value.
+    Today is always measured from live stock.
+    {% if stock_value_chart.estimated_days %}
+    {{ stock_value_chart.estimated_days }} day{{ stock_value_chart.estimated_days|pluralize }} in this range are <strong style="font-weight:600">estimated</strong>
+    (walked back from today using stock receipts + reserving orders, valued at today’s prices/costs — manual qty edits and pre-receipt history are invisible).
+    {% endif %}
+    {% if stock_value_chart.measured_days %}
+    {{ stock_value_chart.measured_days }} measured snapshot{{ stock_value_chart.measured_days|pluralize }}.
+    {% endif %}
+  </p>
 </div>
 
 <div class="card">
@@ -302,7 +337,7 @@
     <dt>Items sold</dt>
     <dd>{{ totals.items }}</dd>
     <dt>Services &amp; delivery</dt>
-    <dd>{{ services_delivery_gross }} ₾ of revenue is services / delivery / adjustments (no COGS)</dd>
+    <dd>{{ services_delivery_gross }} ₾ of revenue is services / delivery / adjustments (their contractor costs still count in COGS when set on the order)</dd>
     <dt>Unknown-cost revenue</dt>
     <dd>{{ unknown_cost_gross }} ₾ — backfill landed costs in these orders to make profit figures exact</dd>
   </dl>
@@ -399,6 +434,62 @@
         plugins: { legend: { position: 'right', labels: { font: { family: 'Saira', size: 11 }, boxWidth: 12 } } }
       }
     });
+  }
+
+  const stockEl = document.getElementById('chart-stock-value');
+  const stockDataNode = document.getElementById('stock-value-chart-data');
+  if(stockEl && stockDataNode){
+    const sd = JSON.parse(stockDataNode.textContent);
+    if(sd.labels && sd.labels.length){
+      new Chart(stockEl, {
+        type: 'line',
+        data: {
+          labels: sd.labels,
+          datasets: [
+            {
+              label: 'Shelf value ₾ (expected revenue)',
+              data: sd.shelf,
+              borderColor: '#1a1a1a',
+              backgroundColor: 'rgba(26,26,26,.06)',
+              tension: .35,
+              fill: false,
+              pointRadius: 0,
+              borderWidth: 2
+            },
+            {
+              label: 'Landed value ₾ (COGS of stock)',
+              data: sd.landed,
+              borderColor: '#B20009',
+              backgroundColor: 'rgba(178,0,9,.08)',
+              tension: .35,
+              fill: true,
+              pointRadius: 0,
+              borderWidth: 2
+            }
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          scales: {
+            y: { grid: { color: gridColor }, ticks: { callback: function(v){ return v + ' ₾'; } } },
+            x: {
+              grid: { display: false },
+              ticks: {
+                maxTicksLimit: 12,
+                callback: function(val, i){
+                  const lab = this.getLabelForValue(val);
+                  // Show fewer labels on long ranges for a smoother read.
+                  if(sd.labels.length > 60 && i % 7 !== 0) return '';
+                  return lab;
+                }
+              }
+            }
+          },
+          plugins: { legend: { labels: { font: { family: 'Saira' } } } }
+        }
+      });
+    }
   }
 })();
 </script>

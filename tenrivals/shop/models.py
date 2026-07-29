@@ -942,6 +942,46 @@ class StockReceipt(models.Model):
         return f'Receipt #{self.pk}: {self.product_id} ×{self.quantity} @ {self.unit_landed_cost_gel} ₾'
 
 
+class StockValueSnapshot(models.Model):
+    """Daily on-hand stock value for the analytics chart (staff-only).
+
+    ``measured`` rows are written by the nightly job / live upsert from the
+    current STOCK listings. ``estimated`` rows come from a back-reconstruction
+    (receipts + reserving order lines) and are approximate.
+    """
+
+    class Source(models.TextChoices):
+        MEASURED = 'measured', _('Measured')
+        ESTIMATED = 'estimated', _('Estimated')
+
+    snapshot_date = models.DateField(unique=True, db_index=True)
+    units = models.PositiveIntegerField(default=0)
+    shelf_value_gel = models.DecimalField(
+        max_digits=14,
+        decimal_places=2,
+        help_text=_('Σ qty × min(actual, initial) shelf price (₾).'),
+    )
+    landed_value_gel = models.DecimalField(
+        max_digits=14,
+        decimal_places=2,
+        help_text=_('Σ qty × Product.landed_cost_gel for units with a known cost (₾).'),
+    )
+    source = models.CharField(
+        max_length=16,
+        choices=Source.choices,
+        default=Source.MEASURED,
+        db_index=True,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-snapshot_date']
+
+    def __str__(self):
+        return f'{self.snapshot_date} shelf={self.shelf_value_gel} landed={self.landed_value_gel}'
+
+
 class UserCart(models.Model):
     """Persistent cart for authenticated users (cross-browser/session)."""
 
@@ -1266,12 +1306,25 @@ class SalesOrder(models.Model):
         default=Decimal('0.00'),
         help_text=_('Delivery / extra charge, VAT-inclusive (₾).'),
     )
+    # Staff-only contractor cost for delivery; never shown on invoices or to customers.
+    delivery_cost_gel = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        help_text=_(
+            'Staff-only: what we pay the delivery contractor (₾). '
+            'Counts toward order COGS with product landed costs. Never shown to customers.'
+        ),
+    )
     fiscal_receipt = models.CharField(max_length=64, blank=True)
     payment_method = models.CharField(max_length=200, blank=True)
     services = models.JSONField(
         default=list,
         blank=True,
-        help_text=_('List of {"name": str, "gross": str|number} — VAT-inclusive amounts.'),
+        help_text=_(
+            'List of {"name": str, "gross": str|number, "cost": str|number} — '
+            'VAT-inclusive customer amounts; cost is staff-only contractor pay (₾).'
+        ),
     )
     notes = models.TextField(blank=True)
     promo_code_label = models.CharField(

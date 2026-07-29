@@ -6,6 +6,7 @@ Metric definitions (agreed with the owner):
     TAX       = 1% turnover tax on gross
     Acquiring = 2% of gross for card payments (payment_method heuristic)
     COGS      = Σ qty × landed_cost_gel over lines with a known cost
+              + Σ service contractor costs + delivery_cost_gel
     Income    = (Revenue − VAT) − COGS
     Profit    = Income − TAX − Acquiring
     Margin    = Profit / Revenue
@@ -26,6 +27,8 @@ from django.db.models import Prefetch
 from django.shortcuts import render
 
 from .models import SalesOrder, SalesOrderLine
+from .sales_order_utils import order_services_and_delivery_cogs
+from .stock_value_history import build_stock_value_series
 
 TURNOVER_TAX_RATE = Decimal('0.01')
 ACQUIRING_RATE = Decimal('0.02')
@@ -123,6 +126,8 @@ def compute_order_economics(order: SalesOrder) -> dict:
         if line.landed_cost_gel is not None:
             cogs += Decimal(line.quantity) * line.landed_cost_gel
             covered_gross += line.line_gross or Decimal('0.00')
+    # Contractor costs for services + delivery (stored on the order only).
+    cogs += order_services_and_delivery_cogs(order)
     tax = _q2(gross * TURNOVER_TAX_RATE)
     card = is_card_payment(order.payment_method)
     acquiring = _q2(gross * ACQUIRING_RATE) if card else Decimal('0.00')
@@ -380,6 +385,7 @@ def build_sales_analytics(
         'services_delivery_gross': _q2(services_delivery_gross),
         'chart': chart,
         'orders_scanned': len(orders),
+        'stock_value_chart': build_stock_value_series(start, end),
     }
 
 

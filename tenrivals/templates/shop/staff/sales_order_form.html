@@ -130,16 +130,28 @@
     <div class="table-wrap order-services-wrap" style="margin-bottom:12px;width:100%">
       <table id="services-table" style="width:100%;table-layout:fixed">
         <thead>
-          <tr><th style="width:65%">Service name</th><th class="num" style="width:28%">Gross ₾</th><th style="width:7%"></th></tr>
+          <tr>
+            <th style="width:48%">Service name</th>
+            <th class="num" style="width:20%">Gross ₾</th>
+            <th class="num" style="width:20%" title="Staff-only contractor cost; never shown to the customer">Cost ₾</th>
+            <th style="width:12%"></th>
+          </tr>
         </thead>
         <tbody id="services-tbody"></tbody>
       </table>
     </div>
     <button type="button" class="btn btn--sm btn--outline" id="btn-add-service" style="margin-bottom:20px">+ Add service</button>
 
-    <div class="form-group">
-      <label for="{{ form.delivery_gross.id_for_label }}">Delivery (gross ₾, VAT incl.)</label>
-      {{ form.delivery_gross }}
+    <div class="form-row" style="margin-bottom:16px">
+      <div class="form-group">
+        <label for="{{ form.delivery_gross.id_for_label }}">Delivery (gross ₾, VAT incl.)</label>
+        {{ form.delivery_gross }}
+      </div>
+      <div class="form-group">
+        <label for="{{ form.delivery_cost_gel.id_for_label }}">{{ form.delivery_cost_gel.label }}</label>
+        {{ form.delivery_cost_gel }}
+        <div class="page-meta" style="margin:6px 0 0;font-size:12px">What we pay the courier / contractor. Counts in total landed cost.</div>
+      </div>
     </div>
     <div class="form-group">
       <label for="{{ form.notes.id_for_label }}">Notes</label>
@@ -150,7 +162,7 @@
       <div class="form-group" style="margin:0;display:flex;justify-content:space-between;gap:12px"><span>Total gross</span><span class="mono" id="sum-gross">0.00</span></div>
       <div class="form-group" style="margin:0;display:flex;justify-content:space-between;gap:12px"><span>Total VAT</span><span class="mono" id="sum-vat">0.00</span></div>
       <div class="form-group" style="margin:0;display:flex;justify-content:space-between;gap:12px;font-weight:700"><span>Total net</span><span class="mono" id="sum-net">0.00</span></div>
-      <div class="form-group" style="margin:8px 0 0;padding-top:8px;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:12px;color:var(--muted)" title="Staff-only: sum of qty × landed cost for lines with a known cost. Not shown to the customer."><span>Total landed cost</span><span class="mono" id="sum-landed">0.00</span></div>
+      <div class="form-group" style="margin:8px 0 0;padding-top:8px;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:12px;color:var(--muted)" title="Staff-only: product landed costs + service costs + delivery cost. Not shown to the customer."><span>Total landed cost</span><span class="mono" id="sum-landed">0.00</span></div>
     </div>
 
     <div class="actions">
@@ -203,6 +215,7 @@
   const tbody = document.getElementById('lines-tbody');
   const servicesBody = document.getElementById('services-tbody');
   const deliveryEl = document.getElementById('id_delivery_gross');
+  const deliveryCostEl = document.getElementById('id_delivery_cost_gel');
   const currencyEl = document.getElementById('id_payment_currency');
   const rateEl = document.getElementById('id_exchange_rate');
   const rateGroup = document.getElementById('exchange-rate-group');
@@ -281,7 +294,8 @@
     servicesBody.querySelectorAll('tr').forEach(function(tr){
       const nm = (tr.querySelector('.svc-name') && tr.querySelector('.svc-name').value || '').trim();
       const g = parseNum(tr.querySelector('.svc-gross') && tr.querySelector('.svc-gross').value);
-      if(nm) arr.push({ name: nm, gross: fmt(g) });
+      const c = parseNum(tr.querySelector('.svc-cost') && tr.querySelector('.svc-cost').value);
+      if(nm) arr.push({ name: nm, gross: fmt(g), cost: fmt(c) });
     });
     servicesHidden.value = JSON.stringify(arr);
   }
@@ -311,6 +325,12 @@
       const q = parseNum(row.querySelector('input[name$="-quantity"]') && row.querySelector('input[name$="-quantity"]').value);
       if(cRaw && cRaw.value !== '' && q > 0) sumLanded += q * parseNum(cRaw.value);
     });
+    servicesBody.querySelectorAll('tr').forEach(function(tr){
+      const nm = (tr.querySelector('.svc-name') && tr.querySelector('.svc-name').value || '').trim();
+      if(!nm) return;
+      sumLanded += parseNum(tr.querySelector('.svc-cost') && tr.querySelector('.svc-cost').value);
+    });
+    sumLanded += parseNum(deliveryCostEl && deliveryCostEl.value);
     const landedEl = document.getElementById('sum-landed');
     if(landedEl) landedEl.textContent = fmt(sumLanded);
     sumG += collectServicesGross();
@@ -432,7 +452,7 @@
     recalcTotals();
   });
 
-  function addServiceRow(name, gross){
+  function addServiceRow(name, gross, cost){
     const tr = document.createElement('tr');
     const tdN = document.createElement('td');
     const inpN = document.createElement('input');
@@ -449,6 +469,16 @@
     inpG.style.cssText = 'width:100%;padding:6px 8px;border:1px solid var(--line);font:inherit;text-align:right';
     if(gross!=null && gross!=='') inpG.value = String(gross);
     tdG.appendChild(inpG);
+    const tdC = document.createElement('td');
+    tdC.className = 'num';
+    const inpC = document.createElement('input');
+    inpC.type = 'text';
+    inpC.className = 'svc-cost';
+    inpC.style.cssText = 'width:100%;padding:6px 8px;border:1px solid var(--line);font:inherit;text-align:right';
+    inpC.title = 'Staff-only contractor cost';
+    if(cost!=null && cost!=='') inpC.value = String(cost);
+    else inpC.value = '0.00';
+    tdC.appendChild(inpC);
     const tdX = document.createElement('td');
     const rm = document.createElement('button');
     rm.type = 'button';
@@ -458,23 +488,26 @@
     tdX.appendChild(rm);
     tr.appendChild(tdN);
     tr.appendChild(tdG);
+    tr.appendChild(tdC);
     tr.appendChild(tdX);
     inpN.addEventListener('input', recalcTotals);
     inpG.addEventListener('input', recalcTotals);
+    inpC.addEventListener('input', recalcTotals);
     servicesBody.appendChild(tr);
   }
-  document.getElementById('btn-add-service').addEventListener('click', function(){ addServiceRow('', ''); recalcTotals(); });
+  document.getElementById('btn-add-service').addEventListener('click', function(){ addServiceRow('', '', '0.00'); recalcTotals(); });
 
   try{
     const initial = JSON.parse(servicesHidden.value || '[]');
     if(Array.isArray(initial)){
       initial.forEach(function(x){
-        if(x && x.name) addServiceRow(x.name, x.gross!=null?x.gross:'');
+        if(x && x.name) addServiceRow(x.name, x.gross!=null?x.gross:'', x.cost!=null?x.cost:'0.00');
       });
     }
   }catch(e){}
 
   if(deliveryEl) deliveryEl.addEventListener('input', recalcTotals);
+  if(deliveryCostEl) deliveryCostEl.addEventListener('input', recalcTotals);
   if(currencyEl){
     currencyEl.addEventListener('change', recalcTotals);
     currencyEl.addEventListener('input', recalcTotals);

@@ -151,9 +151,11 @@ def allocate_order_for_me_number(order_year: int) -> str:
 
 
 def parse_services_payload(raw: Any) -> list[dict[str, Any]]:
-    """Normalize services from JSON / form into [{'name': str, 'gross': Decimal}, ...].
+    """Normalize services from JSON / form into
+    [{'name': str, 'gross': Decimal, 'cost': Decimal}, ...].
 
-    Gross may be 0 (complimentary service); lines without a name are skipped.
+    Gross may be 0 (complimentary service); cost is staff-only contractor pay
+    (defaults to 0). Lines without a name are skipped.
     """
     if not raw:
         return []
@@ -181,8 +183,25 @@ def parse_services_payload(raw: Any) -> list[dict[str, Any]]:
             g = Decimal('0')
         if g < 0:
             continue
-        out.append({'name': name, 'gross': g})
+        try:
+            c = Decimal(str(item.get('cost', '0') or '0')).quantize(Decimal('0.01'))
+        except Exception:
+            c = Decimal('0')
+        if c < 0:
+            c = Decimal('0')
+        out.append({'name': name, 'gross': g, 'cost': c})
     return out
+
+
+def order_services_and_delivery_cogs(order) -> Decimal:
+    """Staff-only COGS from service contractor costs + delivery_cost_gel."""
+    cogs = Decimal('0.00')
+    for s in parse_services_payload(getattr(order, 'services', None) or []):
+        cogs += s.get('cost') or Decimal('0')
+    dc = getattr(order, 'delivery_cost_gel', None)
+    if dc is not None:
+        cogs += Decimal(dc)
+    return cogs.quantize(Decimal('0.01'))
 
 
 def compute_order_totals(

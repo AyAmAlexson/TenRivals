@@ -498,6 +498,11 @@ CELERY_BEAT_SCHEDULE = {
         'task': 'persons.tasks.delete_outdated_password_reset_tokens',
         'schedule': crontab(hour=0, minute=0),  # Выполнять в полночь каждый день
     },
+
+    'snapshot-stock-value-daily': {
+        'task': 'shop.tasks.snapshot_stock_value',
+        'schedule': crontab(hour=23, minute=55),  # end-of-day measured stock value
+    },
 }
 
 
