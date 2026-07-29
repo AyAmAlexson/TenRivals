@@ -159,33 +159,35 @@
           <th>Period</th>
           <th class="num">Orders</th>
           <th class="num">Revenue ₾</th>
+          <th class="num">Income ₾</th>
+          <th class="num">Profit ₾</th>
+          <th class="num">Margin</th>
+          <th class="num">ROI</th>
           <th class="num">VAT ₾</th>
           <th class="num">TAX ₾</th>
           <th class="num">Acquiring ₾</th>
           <th class="num">COGS ₾</th>
-          <th class="num">Income ₾</th>
-          <th class="num">Profit ₾</th>
-          <th class="num">Margin</th>
           <th class="num">Coverage</th>
         </tr>
       </thead>
       <tbody>
-        {% for r in bucket_rows %}
+        {% for r in bucket_rows reversed %}
         <tr>
           <td class="mono">{{ r.label }}</td>
           <td class="mono num">{{ r.orders }}</td>
           <td class="mono num">{{ r.revenue }}</td>
+          <td class="mono num {% if r.income < 0 %}neg{% endif %}">{{ r.income }}</td>
+          <td class="mono num {% if r.profit < 0 %}neg{% endif %}">{{ r.profit }}</td>
+          <td class="mono num">{% if r.margin_pct is not None %}{{ r.margin_pct }}%{% else %}—{% endif %}</td>
+          <td class="mono num">{% if r.roi_pct is not None %}{{ r.roi_pct }}%{% else %}—{% endif %}</td>
           <td class="mono num">{{ r.vat }}</td>
           <td class="mono num">{{ r.tax }}</td>
           <td class="mono num">{{ r.acquiring }}</td>
           <td class="mono num">{{ r.cogs }}</td>
-          <td class="mono num {% if r.income < 0 %}neg{% endif %}">{{ r.income }}</td>
-          <td class="mono num {% if r.profit < 0 %}neg{% endif %}">{{ r.profit }}</td>
-          <td class="mono num">{% if r.margin_pct is not None %}{{ r.margin_pct }}%{% else %}—{% endif %}</td>
           <td class="mono num">{% if r.coverage_pct is not None %}{{ r.coverage_pct }}%{% else %}—{% endif %}</td>
         </tr>
         {% empty %}
-        <tr><td colspan="11" style="color:var(--muted)">No orders in the selected period.</td></tr>
+        <tr><td colspan="12" style="color:var(--muted)">No orders in the selected period.</td></tr>
         {% endfor %}
       </tbody>
       {% if bucket_rows %}
@@ -194,14 +196,15 @@
           <td>Total</td>
           <td class="mono num">{{ totals.orders }}</td>
           <td class="mono num">{{ totals.revenue }}</td>
+          <td class="mono num {% if totals.income < 0 %}neg{% endif %}">{{ totals.income }}</td>
+          <td class="mono num {% if totals.profit < 0 %}neg{% endif %}">{{ totals.profit }}</td>
+          <td class="mono num">{% if totals.margin_pct is not None %}{{ totals.margin_pct }}%{% else %}—{% endif %}</td>
+          <td class="mono num">{% if totals.roi_pct is not None %}{{ totals.roi_pct }}%{% else %}—{% endif %}</td>
           <td class="mono num">{{ totals.vat }}</td>
           <td class="mono num">{{ totals.tax }}</td>
           <td class="mono num">{{ totals.acquiring }}</td>
           <td class="mono num">{{ totals.cogs }}</td>
-          <td class="mono num {% if totals.income < 0 %}neg{% endif %}">{{ totals.income }}</td>
-          <td class="mono num {% if totals.profit < 0 %}neg{% endif %}">{{ totals.profit }}</td>
-          <td class="mono num">{% if totals.margin_pct is not None %}{{ totals.margin_pct }}%{% endif %}</td>
-          <td class="mono num">{% if totals.coverage_pct is not None %}{{ totals.coverage_pct }}%{% endif %}</td>
+          <td class="mono num">{% if totals.coverage_pct is not None %}{{ totals.coverage_pct }}%{% else %}—{% endif %}</td>
         </tr>
       </tfoot>
       {% endif %}
