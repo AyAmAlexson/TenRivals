@@ -338,12 +338,12 @@
     {% endif %}
   </div>
   <div class="card">
-    <h2 class="card-title">Top products by income</h2>
+    <h2 class="card-title">Top products by profit</h2>
     {% if top_products %}
     <div class="table-wrap">
       <table class="an-table">
         <thead>
-          <tr><th>Product</th><th class="num">Qty</th><th class="num">Revenue ₾</th><th class="num">Income ₾</th></tr>
+          <tr><th>Product</th><th class="num">Qty</th><th class="num">Revenue ₾</th><th class="num">Income ₾</th><th class="num">Profit ₾</th></tr>
         </thead>
         <tbody>
           {% for p in top_products %}
@@ -352,12 +352,13 @@
             <td class="mono num">{{ p.qty }}</td>
             <td class="mono num">{{ p.revenue }}</td>
             <td class="mono num {% if p.income < 0 %}neg{% endif %}">{{ p.income }}</td>
+            <td class="mono num {% if p.profit < 0 %}neg{% endif %}">{{ p.profit }}</td>
           </tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
-    <p class="page-meta" style="margin-top:10px;font-size:12px">Only lines with a known landed cost.</p>
+    <p class="page-meta" style="margin-top:10px;font-size:12px">Only lines with a known landed cost. Profit = income − TAX (1% of line gross) − acquiring (2% if the order was card).</p>
     {% else %}
     <p style="font-size:14px;color:var(--muted)">No lines with landed cost yet — record costs to unlock this table.</p>
     {% endif %}

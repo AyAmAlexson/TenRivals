@@ -281,6 +281,14 @@ def build_sales_analytics(
 
             if line_cogs is not None:
                 plabel = line.display_title()
+                line_income = line_net - line_cogs
+                line_tax = _q2(line_gross * TURNOVER_TAX_RATE)
+                line_acq = (
+                    _q2(line_gross * ACQUIRING_RATE)
+                    if is_card_payment(o.payment_method)
+                    else Decimal('0.00')
+                )
+                line_profit = _q2(line_income - line_tax - line_acq)
                 prow = product_rows.setdefault(
                     plabel,
                     {
@@ -288,11 +296,13 @@ def build_sales_analytics(
                         'qty': 0,
                         'revenue': Decimal('0.00'),
                         'income': Decimal('0.00'),
+                        'profit': Decimal('0.00'),
                     },
                 )
                 prow['qty'] += int(line.quantity or 0)
                 prow['revenue'] += line_gross
-                prow['income'] += line_net - line_cogs
+                prow['income'] += line_income
+                prow['profit'] += line_profit
 
     _finalize_metrics(totals)
 
@@ -366,7 +376,7 @@ def build_sales_analytics(
         channel_breakdown.append(crow)
 
     top_products = sorted(
-        product_rows.values(), key=lambda r: (-r['income'], r['label'])
+        product_rows.values(), key=lambda r: (-r['profit'], r['label'])
     )[:10]
 
     weekday_rows = []
