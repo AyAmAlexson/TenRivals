@@ -168,6 +168,7 @@ class SalesOrderLineForm(forms.ModelForm):
             'unit_price_gross',
             'discount_percent',
             'landed_cost_gel',
+            'sale_channel',
         ]
         widgets = {
             'custom_label': forms.TextInput(
@@ -189,6 +190,7 @@ class SalesOrderLineForm(forms.ModelForm):
                     'placeholder': '—',
                 }
             ),
+            'sale_channel': forms.Select(attrs={'class': 'sales-line-channel'}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -197,6 +199,9 @@ class SalesOrderLineForm(forms.ModelForm):
             self.fields['product'].label_from_instance = _product_choice_label
         if self.instance and getattr(self.instance, 'pk', None):
             self.fields['from_stock'].initial = self.instance.product_id is not None
+        self.fields['sale_channel'].label = 'Channel'
+        if not (self.instance and getattr(self.instance, 'pk', None)):
+            self.fields['sale_channel'].initial = SalesOrderLine.SaleChannel.STOCK
         vf = self.fields['variant_label']
         vf.label = 'Size / grip'
         vf.widget.choices = [('', '—')]

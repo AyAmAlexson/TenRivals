@@ -30,6 +30,15 @@ from .models import SalesOrder, SalesOrderLine
 from .sales_order_utils import order_services_and_delivery_cogs
 from .stock_value_history import build_stock_value_series
 
+_CHANNEL_ORDER = (
+    SalesOrderLine.SaleChannel.STOCK,
+    SalesOrderLine.SaleChannel.PREORDER,
+)
+_CHANNEL_LABELS = {
+    SalesOrderLine.SaleChannel.STOCK: 'In stock',
+    SalesOrderLine.SaleChannel.PREORDER: 'Preorder',
+}
+
 TURNOVER_TAX_RATE = Decimal('0.01')
 ACQUIRING_RATE = Decimal('0.02')
 _CARD_MARKERS = ('card', 'terminal', 'pos', 'visa', 'master', 'amex', 'acquir')
@@ -185,6 +194,19 @@ def build_sales_analytics(
     weekdays: dict[int, dict] = {i: _zero_metrics() for i in range(7)}
     type_rows: dict[str, dict] = {}
     product_rows: dict[str, dict] = {}
+    channel_rows: dict[str, dict] = {
+        key: {
+            'key': key,
+            'label': _CHANNEL_LABELS[key],
+            'qty': 0,
+            'revenue': Decimal('0.00'),
+            'cogs': Decimal('0.00'),
+            'income': Decimal('0.00'),
+            'covered_gross': Decimal('0.00'),
+            'lines': 0,
+        }
+        for key in _CHANNEL_ORDER
+    }
     customer_rows: dict[int, dict] = {}
     services_delivery_gross = Decimal('0.00')
 
@@ -223,6 +245,18 @@ def build_sales_analytics(
                 if line.landed_cost_gel is not None
                 else None
             )
+            ch = line.sale_channel or SalesOrderLine.SaleChannel.STOCK
+            if ch not in channel_rows:
+                ch = SalesOrderLine.SaleChannel.STOCK
+            crow_ch = channel_rows[ch]
+            crow_ch['qty'] += int(line.quantity or 0)
+            crow_ch['revenue'] += line_gross
+            crow_ch['lines'] += 1
+            if line_cogs is not None:
+                crow_ch['cogs'] += line_cogs
+                crow_ch['income'] += line_net - line_cogs
+                crow_ch['covered_gross'] += line_gross
+
             if line.product_id:
                 type_label = line.product.get_type_display()
             else:
@@ -291,12 +325,45 @@ def build_sales_analytics(
             if trow['cogs']
             else None
         )
+        trow['margin_pct'] = (
+            (trow['income'] / trow['revenue'] * 100).quantize(_Q2)
+            if trow['revenue']
+            else None
+        )
         trow['share_pct'] = (
             (trow['revenue'] / totals['revenue'] * 100).quantize(_Q2)
             if totals['revenue']
             else None
         )
         type_breakdown.append(trow)
+
+    channel_line_revenue = sum(
+        (r['revenue'] for r in channel_rows.values()), Decimal('0.00')
+    )
+    channel_breakdown = []
+    for key in _CHANNEL_ORDER:
+        crow = channel_rows[key]
+        crow['coverage_pct'] = (
+            (crow['covered_gross'] / crow['revenue'] * 100).quantize(_Q2)
+            if crow['revenue']
+            else None
+        )
+        crow['roi_pct'] = (
+            (crow['income'] / crow['cogs'] * 100).quantize(_Q2)
+            if crow['cogs']
+            else None
+        )
+        crow['margin_pct'] = (
+            (crow['income'] / crow['revenue'] * 100).quantize(_Q2)
+            if crow['revenue']
+            else None
+        )
+        crow['share_pct'] = (
+            (crow['revenue'] / channel_line_revenue * 100).quantize(_Q2)
+            if channel_line_revenue
+            else None
+        )
+        channel_breakdown.append(crow)
 
     top_products = sorted(
         product_rows.values(), key=lambda r: (-r['income'], r['label'])
@@ -365,6 +432,15 @@ def build_sales_analytics(
         'weekday_orders': [r['orders'] for r in weekday_rows],
         'type_labels': [r['label'] for r in type_breakdown],
         'type_revenue': [float(r['revenue']) for r in type_breakdown],
+        'channel_labels': [r['label'] for r in channel_breakdown],
+        'channel_revenue': [float(r['revenue']) for r in channel_breakdown],
+        'channel_income': [float(r['income']) for r in channel_breakdown],
+        'channel_cogs': [float(r['cogs']) for r in channel_breakdown],
+        'channel_qty': [r['qty'] for r in channel_breakdown],
+        'channel_margin': [
+            float(r['margin_pct']) if r['margin_pct'] is not None else None
+            for r in channel_breakdown
+        ],
     }
 
     return {
@@ -372,6 +448,7 @@ def build_sales_analytics(
         'bucket_rows': bucket_rows,
         'weekday_rows': weekday_rows,
         'type_breakdown': type_breakdown,
+        'channel_breakdown': channel_breakdown,
         'top_products': top_products,
         'top_customers': top_customers,
         'repeat_customers': repeat_customers,

@@ -607,6 +607,10 @@ def staff_sales_order_edit(request, pk=None):
                                 product=cd.get('product'),
                                 custom_label=(cd.get('custom_label') or '').strip(),
                                 landed_cost_gel=cd.get('landed_cost_gel'),
+                                sale_channel=(
+                                    cd.get('sale_channel')
+                                    or SalesOrderLine.SaleChannel.STOCK
+                                ),
                                 variant_label=vl,
                                 quantity=cd['quantity'],
                                 unit_price_gross=cd['unit_price_gross'],

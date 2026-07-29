@@ -213,6 +213,48 @@
 </div>
 
 <div class="card">
+  <h2 class="card-title">In stock vs Preorder</h2>
+  <div class="an-cat-grid">
+    <div class="chart-box" style="height:260px"><canvas id="chart-channel"></canvas></div>
+    <div class="table-wrap">
+      <table class="an-table">
+        <thead>
+          <tr>
+            <th>Channel</th>
+            <th class="num">Lines</th>
+            <th class="num">Qty</th>
+            <th class="num">Revenue ₾</th>
+            <th class="num">Share</th>
+            <th class="num">Income ₾</th>
+            <th class="num">Margin</th>
+            <th class="num">ROI</th>
+            <th class="num">COGS ₾</th>
+            <th class="num">Coverage</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in channel_breakdown %}
+          <tr>
+            <td>{{ c.label }}</td>
+            <td class="mono num">{{ c.lines }}</td>
+            <td class="mono num">{{ c.qty }}</td>
+            <td class="mono num">{{ c.revenue }}</td>
+            <td class="mono num">{% if c.share_pct is not None %}{{ c.share_pct }}%{% else %}—{% endif %}</td>
+            <td class="mono num {% if c.income < 0 %}neg{% endif %}">{{ c.income }}</td>
+            <td class="mono num">{% if c.margin_pct is not None %}{{ c.margin_pct }}%{% else %}—{% endif %}</td>
+            <td class="mono num">{% if c.roi_pct is not None %}{{ c.roi_pct }}%{% else %}—{% endif %}</td>
+            <td class="mono num">{{ c.cogs }}</td>
+            <td class="mono num">{% if c.coverage_pct is not None %}{{ c.coverage_pct }}%{% else %}—{% endif %}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <p class="page-meta" style="margin:10px 0 0;font-size:12px">Line-level income (before order TAX / acquiring). Tag lines as Preorder on the order form to move them out of In stock. Past orders default to In stock until you change them.</p>
+</div>
+
+<div class="card">
   <h2 class="card-title">By category</h2>
   {% if type_breakdown %}
   <div class="an-cat-grid">
@@ -435,6 +477,30 @@
       options: {
         responsive: true, maintainAspectRatio: false,
         plugins: { legend: { position: 'right', labels: { font: { family: 'Saira', size: 11 }, boxWidth: 12 } } }
+      }
+    });
+  }
+
+  const channelEl = document.getElementById('chart-channel');
+  if(channelEl && data.channel_labels && data.channel_labels.length){
+    new Chart(channelEl, {
+      type: 'bar',
+      data: {
+        labels: data.channel_labels,
+        datasets: [
+          { label: 'Revenue ₾', data: data.channel_revenue, backgroundColor: 'rgba(26,26,26,.75)' },
+          { label: 'Income ₾', data: data.channel_income, backgroundColor: 'rgba(37,99,235,.75)' },
+          { label: 'COGS ₾', data: data.channel_cogs, backgroundColor: 'rgba(178,0,9,.55)' }
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        scales: {
+          y: { grid: { color: gridColor }, beginAtZero: true },
+          x: { grid: { display: false } }
+        },
+        plugins: { legend: { labels: { font: { family: 'Saira' } } } }
       }
     });
   }

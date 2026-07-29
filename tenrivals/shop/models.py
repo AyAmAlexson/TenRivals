@@ -1452,6 +1452,22 @@ class SalesOrderLine(models.Model):
             'Never shown on invoices or to customers.'
         ),
     )
+
+    class SaleChannel(models.TextChoices):
+        STOCK = 'STOCK', _('In stock')
+        PREORDER = 'PREORDER', _('Preorder')
+
+    # Analytics tag only — independent of the "In stock" checkbox (warehouse link).
+    sale_channel = models.CharField(
+        max_length=16,
+        choices=SaleChannel.choices,
+        default=SaleChannel.STOCK,
+        db_index=True,
+        help_text=_(
+            'Staff analytics: sold from shelf stock or as a preorder. '
+            'Defaults to In stock; change retrospectively as needed.'
+        ),
+    )
     line_gross = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
     line_vat = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
     line_net = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
