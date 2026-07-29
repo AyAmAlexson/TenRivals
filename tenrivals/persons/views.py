@@ -45,7 +45,11 @@ from shop.models import (
     StockReceipt,
 )
 from shop.staff_stock_stats import build_stock_stats
-from shop.stock_receipts import receive_stock_lines
+from shop.stock_receipts import (
+    latest_receipt_ids_by_product,
+    receive_stock_lines,
+    undo_stock_receipt,
+)
 from shop.sales_order_utils import allocate_order_for_me_number
 import hashlib
 import hmac
@@ -1339,10 +1343,13 @@ def staff_stock_receive(request):
         ]
 
     note_value = request.POST.get("note", "") if request.method == "POST" else ""
-    receipts = (
+    receipts = list(
         StockReceipt.objects.select_related("product", "created_by")
         .order_by("-created_at", "-id")[:40]
     )
+    undoable = latest_receipt_ids_by_product([r.product_id for r in receipts])
+    for r in receipts:
+        r.can_undo = r.pk in undoable
     return render(
         request,
         "persons/staff_stock_receive.html",
@@ -1358,6 +1365,38 @@ def staff_stock_receive(request):
             "page_heading": "Receive stock",
         },
     )
+
+
+@login_required
+@user_passes_test(_superuser_required)
+@require_POST
+def staff_stock_receipt_undo(request, receipt_id: int):
+    """Undo the latest receipt for a product: reverse stock, restore cost, delete row."""
+    try:
+        summary = undo_stock_receipt(receipt_id)
+    except ValueError as exc:
+        messages.error(request, str(exc))
+    except Exception as exc:  # noqa: BLE001 — surface unexpected failures to staff
+        messages.error(request, f"Could not undo receipt: {exc}")
+    else:
+        cost_txt = (
+            f"{summary['cost_restored_to']} ₾"
+            if summary["cost_restored_to"] is not None
+            else "—"
+        )
+        stock_txt = (
+            f"stock −{summary['quantity']}"
+            + (f" ({summary['variant']})" if summary["variant"] else "")
+            if summary["stock_reversed"]
+            else "stock unchanged (cost-only receipt)"
+        )
+        messages.success(
+            request,
+            f"Undid receipt #{summary['receipt_id']}: "
+            f"{summary['quantity']} × {summary['product_name']} @ {summary['unit_cost']} ₾. "
+            f"{stock_txt}; average cost restored to {cost_txt}.",
+        )
+    return redirect("administration:staff_stock_receive")
 
 
 @login_required

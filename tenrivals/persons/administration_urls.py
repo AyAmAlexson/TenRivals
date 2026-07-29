@@ -21,6 +21,11 @@ urlpatterns = [
     path("stock/", views.staff_stock_list, name="staff_stock"),
     path("stock/stats/", views.staff_stock_stats, name="staff_stock_stats"),
     path("stock/receive/", views.staff_stock_receive, name="staff_stock_receive"),
+    path(
+        "stock/receive/<int:receipt_id>/undo/",
+        views.staff_stock_receipt_undo,
+        name="staff_stock_receipt_undo",
+    ),
     path("preorder/", views.staff_preorder_list, name="staff_preorder"),
     path("blog/", views.staff_blog_posts, name="staff_blog_posts"),
     path("blog/new/", views.staff_blog_edit, name="staff_blog_new"),

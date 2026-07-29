@@ -10,6 +10,7 @@ from __future__ import annotations
 from decimal import Decimal
 
 from django.db import transaction
+from django.db.models import Q
 
 from .models import Product, ProductListing, ProductListingChannel, StockReceipt
 from .sales_order_stock import adjust_product_variant_stock
@@ -147,3 +148,83 @@ def receive_stock_lines(
             )
             for line in lines
         ]
+
+
+def latest_receipt_ids_by_product(product_ids: list[int] | None = None) -> set[int]:
+    """PK of the newest receipt per product (safe undo targets)."""
+    qs = StockReceipt.objects.all()
+    if product_ids is not None:
+        qs = qs.filter(product_id__in=product_ids)
+    # Order newest first; first seen per product wins.
+    latest: dict[int, int] = {}
+    for pid, pk in qs.order_by('-created_at', '-pk').values_list('product_id', 'pk'):
+        if pid not in latest:
+            latest[pid] = pk
+    return set(latest.values())
+
+
+def undo_stock_receipt(receipt: StockReceipt | int) -> dict:
+    """Reverse one receipt: stock (−qty if added), restore average cost, delete row.
+
+    Only the chronologically latest receipt for that product may be undone —
+    otherwise the weighted-average chain would be wrong. Raises ValueError
+    with a staff-readable message on any refusal.
+    """
+    receipt_pk = receipt.pk if isinstance(receipt, StockReceipt) else int(receipt)
+    with transaction.atomic():
+        locked_receipt = (
+            StockReceipt.objects.select_for_update()
+            .select_related('product')
+            .filter(pk=receipt_pk)
+            .first()
+        )
+        if locked_receipt is None:
+            raise ValueError('Receipt not found (already undone?).')
+
+        product = Product.objects.select_for_update().get(pk=locked_receipt.product_id)
+
+        later = (
+            StockReceipt.objects.filter(product_id=product.pk)
+            .filter(
+                Q(created_at__gt=locked_receipt.created_at)
+                | Q(created_at=locked_receipt.created_at, pk__gt=locked_receipt.pk)
+            )
+            .order_by('created_at', 'pk')
+            .first()
+        )
+        if later is not None:
+            raise ValueError(
+                f'Cannot undo: a newer receipt #{later.pk} exists for this product. '
+                f'Undo newer receipts first (LIFO).'
+            )
+
+        stock_reversed = False
+        if locked_receipt.stock_added:
+            try:
+                adjust_product_variant_stock(
+                    product,
+                    locked_receipt.variant_label or '',
+                    -int(locked_receipt.quantity),
+                )
+            except ValueError as exc:
+                raise ValueError(
+                    f'Cannot undo stock for {product.name}: {exc}. '
+                    f'Reduce sales reservations or fix listing qty first.'
+                ) from exc
+            stock_reversed = True
+
+        before = locked_receipt.landed_cost_before
+        product.landed_cost_gel = before
+        product.save(update_fields=['landed_cost_gel', 'updated_at'])
+
+        summary = {
+            'product_name': product.name,
+            'quantity': int(locked_receipt.quantity),
+            'variant': (locked_receipt.variant_label or '').strip(),
+            'stock_reversed': stock_reversed,
+            'cost_restored_to': before,
+            'unit_cost': locked_receipt.unit_landed_cost_gel,
+            'receipt_id': locked_receipt.pk,
+        }
+        locked_receipt.delete()
+        return summary

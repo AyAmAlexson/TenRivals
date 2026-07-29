@@ -99,6 +99,7 @@
 
 <div class="card">
   <h2 class="card-title">Recent receipts</h2>
+  <p class="page-meta" style="margin-top:-8px;margin-bottom:12px;font-size:12px">Undo is available only on the latest receipt per product (LIFO). It reverses stock if it was added, restores the previous average landed cost, and deletes the journal row.</p>
   {% if receipts %}
   <div class="table-wrap">
     <table class="receipts-table">
@@ -114,6 +115,7 @@
             <th class="num">Avg before</th>
             <th class="num">Avg after</th>
             <th>Note</th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
@@ -129,6 +131,16 @@
           <td class="mono num">{{ r.landed_cost_before|default:"—" }}</td>
           <td class="mono num">{{ r.landed_cost_after }}</td>
           <td style="font-size:12px;color:var(--muted)">{{ r.note|default:"—" }}</td>
+          <td style="white-space:nowrap">
+            {% if r.can_undo %}
+            <form method="post" action="{% url 'administration:staff_stock_receipt_undo' r.pk %}" class="js-undo-receipt" style="display:inline;margin:0" data-label="{{ r.quantity }} × {{ r.product.brand|default:'' }} {{ r.product.name }}{% if r.variant_label %} ({{ r.variant_label }}){% endif %}">
+              {% csrf_token %}
+              <button type="submit" class="btn btn--sm btn--outline" style="color:#b91c1c;border-color:#b91c1c" title="Undo this receipt">Undo</button>
+            </form>
+            {% else %}
+            <span class="page-meta" style="font-size:11px;margin:0" title="Undo newer receipts for this product first">—</span>
+            {% endif %}
+          </td>
         </tr>
         {% endfor %}
       </tbody>
@@ -139,6 +151,18 @@
   {% endif %}
 </div>
 <style>.num{text-align:right}</style>
+<script>
+(function(){
+  document.querySelectorAll('form.js-undo-receipt').forEach(function(form){
+    form.addEventListener('submit', function(e){
+      var label = form.getAttribute('data-label') || 'this receipt';
+      if(!window.confirm('Undo receipt for ' + label + '?\n\nThis reverses stock (if added), restores the previous average landed cost, and deletes the journal row.')){
+        e.preventDefault();
+      }
+    });
+  });
+})();
+</script>
 
 <template id="receive-row-template">
   <tr class="receive-row" data-index="__INDEX__">
