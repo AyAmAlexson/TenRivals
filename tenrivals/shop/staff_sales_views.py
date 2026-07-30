@@ -602,10 +602,15 @@ def staff_sales_order_edit(request, pk=None):
                         for spec in line_specs:
                             cd = spec['cleaned']
                             vl = (cd.get('variant_label') or '').strip()
+                            product = cd.get('product')
+                            ptype = (cd.get('product_type') or '').strip()
+                            if product is not None and not ptype:
+                                ptype = product.type or ''
                             SalesOrderLine.objects.create(
                                 order=order,
-                                product=cd.get('product'),
+                                product=product,
                                 custom_label=(cd.get('custom_label') or '').strip(),
+                                product_type=ptype,
                                 landed_cost_gel=cd.get('landed_cost_gel'),
                                 sale_channel=(
                                     cd.get('sale_channel')

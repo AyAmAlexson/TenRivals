@@ -4,7 +4,7 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.forms import BaseInlineFormSet, inlineformset_factory
 
-from .models import Customer, SalesOrder, SalesOrderLine
+from .models import Customer, ProductType, SalesOrder, SalesOrderLine
 from .sales_order_currency import normalize_payment_currency
 from .sales_order_stock import (
     product_requires_variant,
@@ -163,6 +163,7 @@ class SalesOrderLineForm(forms.ModelForm):
         fields = [
             'product',
             'custom_label',
+            'product_type',
             'variant_label',
             'quantity',
             'unit_price_gross',
@@ -179,6 +180,7 @@ class SalesOrderLineForm(forms.ModelForm):
                     'autocomplete': 'off',
                 }
             ),
+            'product_type': forms.Select(attrs={'class': 'sales-line-type'}),
             # Staff-only column; frozen snapshot, JS refills it only when the
             # product selection changes (never on page load).
             'landed_cost_gel': forms.NumberInput(
@@ -202,6 +204,10 @@ class SalesOrderLineForm(forms.ModelForm):
         self.fields['sale_channel'].label = 'Channel'
         if not (self.instance and getattr(self.instance, 'pk', None)):
             self.fields['sale_channel'].initial = SalesOrderLine.SaleChannel.STOCK
+        pt = self.fields['product_type']
+        pt.label = 'Category'
+        pt.required = False
+        pt.choices = [('', '— Category —')] + list(ProductType.choices)
         vf = self.fields['variant_label']
         vf.label = 'Size / grip'
         vf.widget.choices = [('', '—')]
@@ -235,18 +241,27 @@ class SalesOrderLineForm(forms.ModelForm):
         from_stock = bool(cd.get('from_stock'))
         product = cd.get('product')
         variant = (cd.get('variant_label') or '').strip()
+        ptype = (cd.get('product_type') or '').strip()
         if not from_stock:
             # Free-text legacy line: no product link, no stock checks.
             if not (cd.get('custom_label') or '').strip():
                 self.add_error('custom_label', 'Enter item name for a non-stock line.')
+            if not ptype:
+                self.add_error(
+                    'product_type',
+                    'Select a category for analytics (required on free-text lines).',
+                )
             cd['product'] = None
             cd['variant_label'] = ''
             cd['custom_label'] = (cd.get('custom_label') or '').strip()
+            cd['product_type'] = ptype
             return cd
         cd['custom_label'] = ''
         if not product:
             self.add_error('product', 'Select a product, or untick "In stock" for a free-text line.')
             return cd
+        # Snapshot category from catalog; ignore any posted value in stock mode.
+        cd['product_type'] = product.type or ''
         if product_requires_variant(product) and not variant:
             raise ValidationError('Select size / grip for this product.')
         if not product_requires_variant(product) and variant:

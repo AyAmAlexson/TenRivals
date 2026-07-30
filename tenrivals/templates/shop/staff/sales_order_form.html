@@ -81,7 +81,7 @@
     {% endif %}
 
     <h3 class="card-title" style="margin-top:8px;font-size:14px">Line items</h3>
-    <p class="page-meta" style="margin-bottom:10px;font-size:12px">Products show <strong>brand — model — type — specs — variants</strong>. Rackets and shoes need <strong>Size / grip</strong>. Stock is reserved when the order status is not Cancelled/Refunded. Untick <strong>In stock</strong> to type a free-text item (legacy orders): such lines are not checked against and do not affect the warehouse — include size/grip in the name. <strong>Channel</strong> (In stock / Preorder) is an analytics tag only — it does not change warehouse behaviour.</p>
+    <p class="page-meta" style="margin-bottom:10px;font-size:12px">Products show <strong>brand — model — type — specs — variants</strong>. Rackets and shoes need <strong>Size / grip</strong>. Stock is reserved when the order status is not Cancelled/Refunded. Untick <strong>In stock</strong> to type a free-text item (legacy orders): such lines are not checked against and do not affect the warehouse — include size/grip in the name and pick a <strong>Category</strong> for analytics. <strong>Channel</strong> (In stock / Preorder) is an analytics tag only — it does not change warehouse behaviour.</p>
     <div class="form-group" style="margin-bottom:12px;max-width:420px">
       <label for="id_product_filter_lines">Filter products (all rows)</label>
       <input type="search" id="id_product_filter_lines" placeholder="Type to filter dropdown options…" autocomplete="off" style="width:100%;padding:9px 12px;border:1px solid var(--line);font-family:inherit;font-size:14px">
@@ -94,6 +94,7 @@
             <th title="Ticked: pick a product from stock (checked and reserved). Unticked: free-text item, no stock effect.">In stock</th>
             <th title="Analytics tag: sold from shelf or as preorder (independent of warehouse checkbox)">Channel</th>
             <th>Product</th>
+            <th title="Required on free-text lines. For stock lines, taken from the catalog product.">Category</th>
             <th>Size / grip</th>
             <th class="num">Qty</th>
             <th class="num">Unit (₾ gross)</th>
@@ -112,6 +113,7 @@
             <td style="text-align:center">{{ f.from_stock }}</td>
             <td>{{ f.sale_channel.errors }}{{ f.sale_channel }}</td>
             <td>{{ f.product.errors }}{{ f.custom_label.errors }}{{ f.product }}{{ f.custom_label }}</td>
+            <td>{{ f.product_type.errors }}{{ f.product_type }}</td>
             <td>{{ f.variant_label.errors }}{{ f.variant_label }}</td>
             <td class="num">{{ f.quantity }}</td>
             <td class="num">{{ f.unit_price_gross }}</td>
@@ -184,6 +186,7 @@
   <td style="text-align:center">{{ f.from_stock }}</td>
   <td>{{ f.sale_channel }}</td>
   <td>{{ f.product }}{{ f.custom_label }}</td>
+  <td>{{ f.product_type }}</td>
   <td>{{ f.variant_label }}</td>
   <td class="num">{{ f.quantity }}</td>
   <td class="num">{{ f.unit_price_gross }}</td>
@@ -203,6 +206,7 @@
   #lines-table select[name$="-product"]{min-width:280px}
   #lines-table input[type="checkbox"]{width:auto!important;min-width:auto}
   #lines-table input.sales-line-custom{display:none;min-width:280px}
+  #lines-table select.sales-line-type{display:none;min-width:140px}
   #lines-table select.sales-line-variant:disabled{opacity:.45;background:#f3f4f6}
   .order-services-wrap table input{width:100%;box-sizing:border-box;font-size:13px;padding:6px 8px;border:1px solid var(--line);font-family:inherit}
 </style>
@@ -246,12 +250,17 @@
     const stock = isFromStock(row);
     const selP = row.querySelector('select[name$="-product"]');
     const custom = row.querySelector('input[name$="-custom_label"]');
+    const selType = row.querySelector('select[name$="-product_type"]');
     const selV = row.querySelector('select[name$="-variant_label"]');
     if(selP){
       selP.style.display = stock ? '' : 'none';
       if(!stock) selP.value = '';
     }
     if(custom) custom.style.display = stock ? 'none' : 'block';
+    if(selType){
+      selType.style.display = stock ? 'none' : 'block';
+      if(stock) selType.value = '';
+    }
     if(selV){
       if(!stock) selV.value = '';
       selV.disabled = !stock;
@@ -422,7 +431,7 @@
     row.querySelectorAll('input,select').forEach(function(el){
       el.addEventListener('change', function(){
         if(el.name && el.name.indexOf('-from_stock') !== -1){ syncStockMode(row); recalcRow(row); recalcTotals(); }
-        else if(el.name && el.name.indexOf('-product') !== -1) onProductChange(row);
+        else if(el.name && el.name.endsWith('-product')) onProductChange(row);
         else { recalcRow(row); recalcTotals(); }
       });
       el.addEventListener('input', function(){

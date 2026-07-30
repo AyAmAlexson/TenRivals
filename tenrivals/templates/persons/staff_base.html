@@ -9,7 +9,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Saira:wght@400;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Saira:wght@400;600;800&display=swap" rel="stylesheet">
   <link rel="icon" href="{% static 'assets/img/favicon.png' %}">
   <style>
     :root{--accent:#B20009; --accent-dark:#8E0007; --ink:#1a1a1a; --muted:#64748b; --line:#e5e7eb}
@@ -41,13 +41,13 @@
     .page-note,.page-meta{font-size:13px; color:var(--muted); margin-bottom:24px}
     .staff-shell{display:grid; grid-template-columns:236px minmax(0,1fr); gap:28px; align-items:start}
     .staff-content{min-width:0}
-    .staff-sidebar{position:sticky; top:20px; max-height:calc(100vh - 40px); overflow-y:auto; background:#fff; border:1px solid var(--line); padding:6px 0 8px}
-    .staff-nav__group{padding:10px 0 8px}
+    .staff-sidebar{position:sticky; top:20px; max-height:calc(100vh - 40px); overflow-y:auto; background:#fff; border:1px solid var(--line); padding:8px 0 10px}
+    .staff-nav__group{padding:12px 0 6px}
     .staff-nav__group + .staff-nav__group{border-top:1px solid var(--line)}
-    .staff-nav__label{padding:2px 16px 7px; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.12em; color:var(--muted)}
-    .staff-nav__link{display:block; padding:8px 16px 8px 13px; font-size:13px; font-weight:600; text-transform:uppercase; letter-spacing:.04em; color:var(--ink); border-left:3px solid transparent; transition:background .12s,color .12s}
-    .staff-nav__link:hover{background:#f3f4f6}
-    .staff-nav__link.is-active{border-left-color:var(--accent); background:#fdf2f2; color:var(--accent)}
+    .staff-nav__label{padding:2px 16px 8px; font-size:11px; font-weight:400; text-transform:uppercase; letter-spacing:.1em; color:var(--muted)}
+    .staff-nav__link{display:block; padding:7px 16px 7px 13px; font-size:14px; font-weight:400; text-transform:none; letter-spacing:0; color:#334155; border-left:3px solid transparent; transition:background .12s,color .12s}
+    .staff-nav__link:hover{background:#f8fafc; color:var(--ink)}
+    .staff-nav__link.is-active{border-left-color:var(--accent); background:#fdf2f2; color:var(--accent); font-weight:600}
     .staff-topbar{display:block}
     .staff-menu-btn{
       display:none;
@@ -92,10 +92,10 @@
     .staff-drawer-cityline{display:flex;align-items:center;padding:12px 4px;font-size:14px;font-weight:600;color:rgba(255,255,255,.72);border-top:1px solid rgba(255,255,255,.06)}
     .staff-drawer-nav .staff-nav__group{padding:10px 0 6px}
     .staff-drawer-nav .staff-nav__group + .staff-nav__group{border-top:1px solid rgba(255,255,255,.1)}
-    .staff-drawer-nav .staff-nav__label{padding:4px 4px 8px; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.12em; color:rgba(255,255,255,.45)}
-    .staff-drawer-nav .staff-nav__link{display:block; padding:11px 12px; font-size:13px; font-weight:600; text-transform:uppercase; letter-spacing:.06em; color:rgba(255,255,255,.9); border-left:3px solid transparent; background:rgba(255,255,255,.03); margin-bottom:2px}
+    .staff-drawer-nav .staff-nav__label{padding:4px 4px 8px; font-size:11px; font-weight:400; text-transform:uppercase; letter-spacing:.1em; color:rgba(255,255,255,.45)}
+    .staff-drawer-nav .staff-nav__link{display:block; padding:11px 12px; font-size:15px; font-weight:400; text-transform:none; letter-spacing:0; color:rgba(255,255,255,.9); border-left:3px solid transparent; background:rgba(255,255,255,.03); margin-bottom:2px}
     .staff-drawer-nav .staff-nav__link:hover{background:rgba(255,255,255,.08);color:#fff}
-    .staff-drawer-nav .staff-nav__link.is-active{border-left-color:#fff;background:var(--accent);color:#fff}
+    .staff-drawer-nav .staff-nav__link.is-active{border-left-color:#fff;background:var(--accent);color:#fff;font-weight:600}
     @media(max-width:959px){
       .staff-topbar{display:none!important}
       .staff-menu-btn{display:inline-flex}

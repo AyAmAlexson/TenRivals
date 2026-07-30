@@ -2034,6 +2034,7 @@ def checkout(request):
                             line = SalesOrderLine.objects.create(
                                 order=order,
                                 product=r['product'],
+                                product_type=r['product'].type or '',
                                 quantity=qty,
                                 unit_price_gross=unit,
                                 discount_percent=Decimal('0.00'),

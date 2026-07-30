@@ -79,6 +79,11 @@ urlpatterns = [
         staff_analytics.staff_sales_analytics,
         name="staff_sales_analytics",
     ),
+    path(
+        "analytics/orders/",
+        staff_analytics.staff_order_finance,
+        name="staff_order_finance",
+    ),
     path("orders/new/", staff_sales_views.staff_sales_order_edit, name="staff_sales_order_new"),
     path(
         "orders/report/",

@@ -1468,6 +1468,19 @@ class SalesOrderLine(models.Model):
             'Defaults to In stock; change retrospectively as needed.'
         ),
     )
+    # Snapshot for By category analytics. Copied from product.type for stock
+    # lines; chosen manually for free-text (legacy) lines without a product FK.
+    product_type = models.CharField(
+        max_length=16,
+        choices=ProductType.choices,
+        blank=True,
+        default='',
+        db_index=True,
+        help_text=_(
+            'Product category for analytics. Auto-set from the catalog product; '
+            'required on legacy free-text lines.'
+        ),
+    )
     line_gross = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
     line_vat = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
     line_net = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
@@ -1478,6 +1491,14 @@ class SalesOrderLine(models.Model):
     @property
     def is_stock_line(self) -> bool:
         return self.product_id is not None
+
+    def analytics_category_label(self) -> str:
+        """Display label for By category analytics."""
+        if self.product_type:
+            return str(dict(ProductType.choices).get(self.product_type, self.product_type))
+        if self.product_id:
+            return self.product.get_type_display()
+        return 'Custom / legacy'
 
     def display_title(self) -> str:
         """Item name: catalog title for stock lines, typed text for custom lines."""

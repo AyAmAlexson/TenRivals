@@ -257,10 +257,7 @@ def build_sales_analytics(
                 crow_ch['income'] += line_net - line_cogs
                 crow_ch['covered_gross'] += line_gross
 
-            if line.product_id:
-                type_label = line.product.get_type_display()
-            else:
-                type_label = 'Custom / legacy'
+            type_label = line.analytics_category_label()
             trow = type_rows.setdefault(
                 type_label,
                 {
@@ -506,3 +503,182 @@ def staff_sales_analytics(request):
         }
     )
     return render(request, 'shop/staff/sales_analytics.html', ctx)
+
+
+_ORDER_SORT_KEYS = frozenset(
+    {
+        'date',
+        'invoice',
+        'status',
+        'customer',
+        'revenue',
+        'vat',
+        'net',
+        'cogs',
+        'income',
+        'tax',
+        'acquiring',
+        'profit',
+        'margin',
+        'roi',
+    }
+)
+
+
+def _order_row_sort_key(row: dict, sort: str, *, reverse: bool):
+    order = row['order']
+    m = row['metrics']
+
+    def _nullable(v):
+        # Keep empty ratios at the bottom for both directions.
+        if v is None:
+            return Decimal('-Infinity') if reverse else Decimal('Infinity')
+        return v
+
+    if sort == 'date':
+        return order.order_date or date.min
+    if sort == 'invoice':
+        return (order.invoice_number or '').lower()
+    if sort == 'status':
+        return order.status or ''
+    if sort == 'customer':
+        cust = order.customer
+        name = cust.display_name() if cust is not None else ''
+        return name.lower()
+    if sort == 'revenue':
+        return m['revenue']
+    if sort == 'vat':
+        return m['vat']
+    if sort == 'net':
+        return m['net']
+    if sort == 'cogs':
+        return m['cogs']
+    if sort == 'income':
+        return m['income']
+    if sort == 'tax':
+        return m['tax']
+    if sort == 'acquiring':
+        return m['acquiring']
+    if sort == 'profit':
+        return m['profit']
+    if sort == 'margin':
+        return _nullable(m['margin_pct'])
+    if sort == 'roi':
+        return _nullable(m['roi_pct'])
+    return order.order_date or date.min
+
+
+def build_order_finance_table(
+    start: date,
+    end: date,
+    *,
+    invoice_q: str = '',
+    sort: str = 'date',
+    direction: str = 'desc',
+) -> dict:
+    """Per-order P&L rows for the Orders finance staff page."""
+    qs = (
+        SalesOrder.objects.filter(order_date__gte=start, order_date__lte=end)
+        .select_related('customer')
+        .prefetch_related(
+            Prefetch(
+                'lines',
+                queryset=SalesOrderLine.objects.only(
+                    'id',
+                    'order_id',
+                    'quantity',
+                    'line_gross',
+                    'landed_cost_gel',
+                ),
+            )
+        )
+    )
+    q = (invoice_q or '').strip()
+    if q:
+        qs = qs.filter(invoice_number__icontains=q)
+
+    rows = []
+    for order in qs:
+        raw = compute_order_economics(order)
+        metrics = _finalize_metrics(dict(raw))
+        rows.append(
+            {
+                'order': order,
+                'metrics': metrics,
+                'raw': raw,
+                'excluded': order.status in _EXCLUDED_STATUSES,
+            }
+        )
+
+    if sort not in _ORDER_SORT_KEYS:
+        sort = 'date'
+    reverse = (direction or 'desc').lower() != 'asc'
+    rows.sort(
+        key=lambda r: _order_row_sort_key(r, sort, reverse=reverse),
+        reverse=reverse,
+    )
+
+    totals_acc = _zero_metrics()
+    included = 0
+    for row in rows:
+        if row['excluded']:
+            continue
+        _add_metrics(totals_acc, row['raw'])
+        included += 1
+    totals = _finalize_metrics(totals_acc)
+
+    return {
+        'rows': rows,
+        'totals': totals,
+        'orders_count': len(rows),
+        'included_count': included,
+        'sort': sort,
+        'direction': 'asc' if not reverse else 'desc',
+    }
+
+@login_required
+@user_passes_test(_staff_ok)
+def staff_order_finance(request):
+    """Separate tab: per-order financial breakdown with filters and sort."""
+    today = date.today()
+    default_start = today - timedelta(days=365)
+    start = _parse_date(request.GET.get('start'), default_start)
+    end = _parse_date(request.GET.get('end'), today)
+    if start > end:
+        start, end = end, start
+    invoice_q = (request.GET.get('q') or '').strip()
+    sort = (request.GET.get('sort') or 'date').strip()
+    direction = (request.GET.get('dir') or 'desc').strip().lower()
+    if direction not in ('asc', 'desc'):
+        direction = 'desc'
+
+    table = build_order_finance_table(
+        start, end, invoice_q=invoice_q, sort=sort, direction=direction
+    )
+    ctx = {
+        **table,
+        'start': start,
+        'end': end,
+        'invoice_q': invoice_q,
+        'tax_rate_pct': TURNOVER_TAX_RATE * 100,
+        'acquiring_rate_pct': ACQUIRING_RATE * 100,
+        'staff_nav_active': 'order_finance',
+        'page_heading': 'Orders finance',
+        'sort_columns': [
+            {'key': 'invoice', 'label': 'Invoice', 'num': False},
+            {'key': 'date', 'label': 'Date', 'num': False},
+            {'key': 'status', 'label': 'Status', 'num': False},
+            {'key': 'customer', 'label': 'Customer', 'num': False},
+            {'key': 'revenue', 'label': 'Revenue', 'num': True},
+            {'key': 'vat', 'label': 'VAT', 'num': True},
+            {'key': 'net', 'label': 'Net', 'num': True},
+            {'key': 'cogs', 'label': 'COGS', 'num': True},
+            {'key': 'income', 'label': 'Income', 'num': True},
+            {'key': 'tax', 'label': 'TAX', 'num': True},
+            {'key': 'acquiring', 'label': 'Acquiring', 'num': True},
+            {'key': 'profit', 'label': 'Profit', 'num': True},
+            {'key': 'margin', 'label': 'Margin', 'num': True},
+            {'key': 'roi', 'label': 'ROI', 'num': True},
+        ],
+    }
+    return render(request, 'shop/staff/order_finance.html', ctx)

@@ -1,0 +1,122 @@
+{% extends 'persons/staff_base.html' %}
+{% block title %}Orders finance — Staff | Tenrivals{% endblock %}
+{% block page_heading %}{{ page_heading }}{% endblock %}
+{% block page_note %}<p class="page-note">Per-order economics (same formulas as Analytics). Cancelled / refunded rows are shown dimmed and excluded from footer totals. Click a row to open the order. TAX = {{ tax_rate_pct|floatformat:0 }}% of gross; acquiring = {{ acquiring_rate_pct|floatformat:0 }}% of gross for card payments.</p>{% endblock %}
+{% block extra_head %}
+<style>
+  .of-filters{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:flex-end;margin-bottom:18px}
+  .of-filters .form-group{margin:0}
+  .of-filters label{display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em}
+  .of-filters input[type="date"],
+  .of-filters input[type="search"]{padding:8px 10px;border:1px solid var(--line);font-family:inherit;font-size:13px;background:#fff;min-width:150px}
+  .of-filters input[type="search"]{min-width:200px}
+  .of-meta{font-size:13px;color:var(--muted);margin:0 0 12px}
+  .of-table-wrap{overflow:auto;border:1px solid var(--line);background:#fff;max-height:calc(100vh - 260px)}
+  .of-table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:1180px}
+  .of-table th,.of-table td{padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+  .of-table thead th{position:sticky;top:0;z-index:1;background:#f9fafb;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+  .of-table thead th a{color:inherit;display:inline-flex;align-items:center;gap:4px}
+  .of-table thead th a:hover{color:var(--ink)}
+  .of-table thead th.is-sorted a{color:var(--ink)}
+  .of-sort{font-size:10px;opacity:.7}
+  .of-table tbody tr{cursor:pointer;transition:background .1s}
+  .of-table tbody tr:hover{background:#f8fafc}
+  .of-table tbody tr.is-excluded{opacity:.55}
+  .of-table tbody tr.is-excluded:hover{opacity:.75}
+  .of-table tfoot td{background:#f9fafb;font-weight:600;border-top:2px solid var(--line);position:sticky;bottom:0}
+  .of-table .num{text-align:right;font-variant-numeric:tabular-nums}
+  .of-table .neg{color:#b91c1c}
+  .of-inv{font-weight:600;color:var(--accent)}
+  .of-status{font-size:11px;color:var(--muted)}
+  .of-cust{max-width:160px;overflow:hidden;text-overflow:ellipsis}
+</style>
+{% endblock %}
+{% block content %}
+<form method="get" class="of-filters">
+  <div class="form-group">
+    <label for="id_of_start">From</label>
+    <input type="date" id="id_of_start" name="start" value="{{ start|date:'Y-m-d' }}">
+  </div>
+  <div class="form-group">
+    <label for="id_of_end">To</label>
+    <input type="date" id="id_of_end" name="end" value="{{ end|date:'Y-m-d' }}">
+  </div>
+  <div class="form-group">
+    <label for="id_of_q">Invoice #</label>
+    <input type="search" id="id_of_q" name="q" value="{{ invoice_q }}" placeholder="Search invoice…" autocomplete="off">
+  </div>
+  <input type="hidden" name="sort" value="{{ sort }}">
+  <input type="hidden" name="dir" value="{{ direction }}">
+  <button type="submit" class="btn btn--sm">Apply</button>
+</form>
+
+<p class="of-meta">{{ orders_count }} order{{ orders_count|pluralize }} in range · totals over {{ included_count }} active (non-cancelled / non-refunded)</p>
+
+<div class="of-table-wrap">
+  <table class="of-table">
+    <thead>
+      <tr>
+        {% for col in sort_columns %}
+        <th class="{% if col.num %}num {% endif %}{% if sort == col.key %}is-sorted{% endif %}">
+          <a href="?start={{ start|date:'Y-m-d' }}&end={{ end|date:'Y-m-d' }}&q={{ invoice_q|urlencode }}&sort={{ col.key }}&dir={% if sort == col.key and direction == 'desc' %}asc{% else %}desc{% endif %}">
+            {{ col.label }}{% if sort == col.key %}<span class="of-sort">{% if direction == 'asc' %}▲{% else %}▼{% endif %}</span>{% endif %}
+          </a>
+        </th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in rows %}
+      {% with o=row.order m=row.metrics %}
+      <tr class="{% if row.excluded %}is-excluded{% endif %}" data-href="{% url 'administration:staff_sales_order_edit' o.pk %}">
+        <td><a class="of-inv" href="{% url 'administration:staff_sales_order_edit' o.pk %}">{{ o.invoice_number }}</a></td>
+        <td>{{ o.order_date|date:'Y-m-d' }}</td>
+        <td class="of-status">{{ o.get_status_display }}</td>
+        <td class="of-cust" title="{% if o.customer %}{{ o.customer.display_name }}{% endif %}">{% if o.customer %}{{ o.customer.display_name }}{% else %}—{% endif %}</td>
+        <td class="num">{{ m.revenue }}</td>
+        <td class="num">{{ m.vat }}</td>
+        <td class="num">{{ m.net }}</td>
+        <td class="num">{{ m.cogs }}</td>
+        <td class="num {% if m.income < 0 %}neg{% endif %}">{{ m.income }}</td>
+        <td class="num">{{ m.tax }}</td>
+        <td class="num">{{ m.acquiring }}</td>
+        <td class="num {% if m.profit < 0 %}neg{% endif %}">{{ m.profit }}</td>
+        <td class="num">{% if m.margin_pct is not None %}{{ m.margin_pct }}%{% else %}—{% endif %}</td>
+        <td class="num">{% if m.roi_pct is not None %}{{ m.roi_pct }}%{% else %}—{% endif %}</td>
+      </tr>
+      {% endwith %}
+      {% empty %}
+      <tr><td colspan="14" style="padding:24px;text-align:center;color:var(--muted)">No orders for these filters.</td></tr>
+      {% endfor %}
+    </tbody>
+    {% if rows %}
+    <tfoot>
+      <tr>
+        <td colspan="4">Totals (active orders)</td>
+        <td class="num">{{ totals.revenue }}</td>
+        <td class="num">{{ totals.vat }}</td>
+        <td class="num">{{ totals.net }}</td>
+        <td class="num">{{ totals.cogs }}</td>
+        <td class="num {% if totals.income < 0 %}neg{% endif %}">{{ totals.income }}</td>
+        <td class="num">{{ totals.tax }}</td>
+        <td class="num">{{ totals.acquiring }}</td>
+        <td class="num {% if totals.profit < 0 %}neg{% endif %}">{{ totals.profit }}</td>
+        <td class="num">{% if totals.margin_pct is not None %}{{ totals.margin_pct }}%{% else %}—{% endif %}</td>
+        <td class="num">{% if totals.roi_pct is not None %}{{ totals.roi_pct }}%{% else %}—{% endif %}</td>
+      </tr>
+    </tfoot>
+    {% endif %}
+  </table>
+</div>
+<script>
+(function(){
+  document.querySelectorAll('.of-table tbody tr[data-href]').forEach(function(tr){
+    tr.addEventListener('click', function(e){
+      if(e.target.closest('a')) return;
+      var href = tr.getAttribute('data-href');
+      if(href) window.location.href = href;
+    });
+  });
+})();
+</script>
+{% endblock %}
