@@ -152,12 +152,12 @@
     <div class="chart-box"><canvas id="chart-money"></canvas></div>
   </div>
   <div class="card">
-    <h2 class="card-title">Orders &amp; AOV</h2>
-    <div class="chart-box"><canvas id="chart-orders"></canvas></div>
-  </div>
-  <div class="card">
     <h2 class="card-title">Revenue</h2>
     <div class="chart-box"><canvas id="chart-aov"></canvas></div>
+  </div>
+  <div class="card">
+    <h2 class="card-title">Orders &amp; AOV</h2>
+    <div class="chart-box"><canvas id="chart-orders"></canvas></div>
   </div>
   <div class="card">
     <h2 class="card-title">Sales by weekday</h2>
@@ -174,7 +174,7 @@
   <div class="card">
     <h2 class="card-title">This month vs average pace</h2>
     <div class="chart-box chart-box--tall"><canvas id="chart-profit-pace"></canvas></div>
-    <p class="page-meta" style="margin:10px 0 0;font-size:12px">Day-of-month cumulative profit: average of complete months in the filter vs {{ chart.pace_current_label }} ({{ chart.pace_avg_months }} month{{ chart.pace_avg_months|pluralize }} in average).</p>
+    <p class="page-meta" style="margin:10px 0 0;font-size:12px">Day-of-month cumulative profit: average of months with sales in the filter (empty months excluded) vs {{ chart.pace_current_label }} ({{ chart.pace_avg_months }} month{{ chart.pace_avg_months|pluralize }} in average).</p>
   </div>
 </div>
 

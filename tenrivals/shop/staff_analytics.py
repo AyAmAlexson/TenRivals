@@ -194,6 +194,9 @@ def _build_profit_accumulation(
         within_values.append(float(_q2(running)))
         d += timedelta(days=1)
 
+    # Months that actually had orders (days present in daily_profit).
+    months_with_data = {(d.year, d.month) for d in daily_profit}
+
     month_day_profit: dict[tuple[int, int], dict[int, Decimal]] = defaultdict(dict)
     d = start
     while d <= end:
@@ -209,6 +212,9 @@ def _build_profit_accumulation(
 
     for (y, m), day_map in sorted(month_day_profit.items()):
         if (y, m) == cur_ym:
+            continue
+        if (y, m) not in months_with_data:
+            # Skip empty calendar months inside the filter — they dilute the average.
             continue
         month_start = date(y, m, 1)
         # Average only months that start inside the filter (full pace from day 1).
