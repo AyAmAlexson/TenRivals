@@ -491,6 +491,7 @@ def staff_sales_analytics(request):
         granularity = 'month'
 
     ctx = build_sales_analytics(start, end, granularity)
+    month_metrics = build_current_month_metrics(today)
     ctx.update(
         {
             'start': start,
@@ -500,9 +501,42 @@ def staff_sales_analytics(request):
             'acquiring_rate_pct': ACQUIRING_RATE * 100,
             'staff_nav_active': 'sales_analytics',
             'page_heading': 'Sales analytics',
+            'month_metrics': month_metrics,
         }
     )
     return render(request, 'shop/staff/sales_analytics.html', ctx)
+
+
+def build_current_month_metrics(today: date | None = None) -> dict:
+    """Calendar-month snapshot (1st → today), independent of the page date filter."""
+    today = today or date.today()
+    month_start = today.replace(day=1)
+    orders = (
+        SalesOrder.objects.filter(order_date__gte=month_start, order_date__lte=today)
+        .exclude(status__in=_EXCLUDED_STATUSES)
+        .prefetch_related(
+            Prefetch(
+                'lines',
+                queryset=SalesOrderLine.objects.only(
+                    'id',
+                    'order_id',
+                    'quantity',
+                    'line_gross',
+                    'landed_cost_gel',
+                ),
+            )
+        )
+    )
+    totals = _zero_metrics()
+    for order in orders:
+        _add_metrics(totals, compute_order_economics(order))
+    metrics = _finalize_metrics(totals)
+    return {
+        'label': month_start.strftime('%B %Y'),
+        'start': month_start,
+        'end': today,
+        'metrics': metrics,
+    }
 
 
 _ORDER_SORT_KEYS = frozenset(

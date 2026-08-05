@@ -22,6 +22,23 @@
   .stat-card__hint{font-size:12px;color:var(--muted);margin-top:4px}
   .stat-card--good .stat-card__value{color:#065f46}
   .stat-card--warn .stat-card__value{color:#92400e}
+  .an-month{margin:0 0 26px;padding:18px 20px 20px;background:#fff;border:1px solid var(--line)}
+  .an-month__head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+  .an-month__title{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;margin:0}
+  .an-month__range{font-size:12px;color:var(--muted);font-weight:400}
+  .an-month__grid{display:grid;grid-template-columns:1.35fr repeat(3,minmax(0,1fr));gap:14px}
+  @media(max-width:900px){.an-month__grid{grid-template-columns:1fr 1fr}}
+  @media(max-width:560px){.an-month__grid{grid-template-columns:1fr}}
+  .an-kpi{padding:14px 16px;border:1px solid var(--line);background:#fafafa;min-width:0}
+  .an-kpi--profit{background:#fdf2f2;border-color:#f0c4c7}
+  .an-kpi__label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+  .an-kpi__value{font-size:34px;font-weight:800;line-height:1.1;margin-top:8px;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+  .an-kpi--profit .an-kpi__value{color:var(--accent);font-size:40px}
+  .an-kpi__value.neg{color:#b91c1c}
+  .an-kpi__hint{font-size:12px;color:var(--muted);margin-top:6px;font-weight:400}
+  .an-table th.col-profit,.an-table td.col-profit{background:#fdf2f2;color:#7f1d1d;font-weight:700}
+  .an-table th.col-profit{color:var(--accent);font-weight:800;text-transform:uppercase}
+  .an-table tfoot td.col-profit{background:#fce8e9}
   .an-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 24px;align-items:start}
   .an-cat-grid{display:grid;grid-template-columns:340px 1fr;gap:24px;align-items:start}
   @media(max-width:1100px){.an-grid,.an-cat-grid{grid-template-columns:1fr}}
@@ -37,6 +54,37 @@
 </style>
 {% endblock %}
 {% block content %}
+{% with mm=month_metrics.metrics %}
+<section class="an-month" aria-label="Current month key metrics">
+  <div class="an-month__head">
+    <h2 class="an-month__title">This month · {{ month_metrics.label }}</h2>
+    <span class="an-month__range">{{ month_metrics.start|date:'Y-m-d' }} → {{ month_metrics.end|date:'Y-m-d' }}</span>
+  </div>
+  <div class="an-month__grid">
+    <div class="an-kpi an-kpi--profit">
+      <div class="an-kpi__label">Profit</div>
+      <div class="an-kpi__value {% if mm.profit < 0 %}neg{% endif %}">{{ mm.profit }} ₾</div>
+      <div class="an-kpi__hint">Income − TAX − Acquiring</div>
+    </div>
+    <div class="an-kpi">
+      <div class="an-kpi__label">Orders</div>
+      <div class="an-kpi__value">{{ mm.orders }}</div>
+      <div class="an-kpi__hint">Sales this month</div>
+    </div>
+    <div class="an-kpi">
+      <div class="an-kpi__label">Avg check</div>
+      <div class="an-kpi__value">{% if mm.aov is not None %}{{ mm.aov }} ₾{% else %}—{% endif %}</div>
+      <div class="an-kpi__hint">Revenue / orders</div>
+    </div>
+    <div class="an-kpi">
+      <div class="an-kpi__label">ROI</div>
+      <div class="an-kpi__value">{% if mm.roi_pct is not None %}{{ mm.roi_pct }}%{% else %}—{% endif %}</div>
+      <div class="an-kpi__hint">Profit / COGS</div>
+    </div>
+  </div>
+</section>
+{% endwith %}
+
 <form method="get" class="an-filters">
   <div class="form-group">
     <label for="id_an_start">From</label>
@@ -160,7 +208,7 @@
           <th class="num">Orders</th>
           <th class="num">Revenue ₾</th>
           <th class="num">Income ₾</th>
-          <th class="num">Profit ₾</th>
+          <th class="num col-profit">Profit ₾</th>
           <th class="num">Margin</th>
           <th class="num">ROI</th>
           <th class="num">VAT ₾</th>
@@ -177,7 +225,7 @@
           <td class="mono num">{{ r.orders }}</td>
           <td class="mono num">{{ r.revenue }}</td>
           <td class="mono num {% if r.income < 0 %}neg{% endif %}">{{ r.income }}</td>
-          <td class="mono num {% if r.profit < 0 %}neg{% endif %}">{{ r.profit }}</td>
+          <td class="mono num col-profit {% if r.profit < 0 %}neg{% endif %}">{{ r.profit }}</td>
           <td class="mono num">{% if r.margin_pct is not None %}{{ r.margin_pct }}%{% else %}—{% endif %}</td>
           <td class="mono num">{% if r.roi_pct is not None %}{{ r.roi_pct }}%{% else %}—{% endif %}</td>
           <td class="mono num">{{ r.vat }}</td>
@@ -197,7 +245,7 @@
           <td class="mono num">{{ totals.orders }}</td>
           <td class="mono num">{{ totals.revenue }}</td>
           <td class="mono num {% if totals.income < 0 %}neg{% endif %}">{{ totals.income }}</td>
-          <td class="mono num {% if totals.profit < 0 %}neg{% endif %}">{{ totals.profit }}</td>
+          <td class="mono num col-profit {% if totals.profit < 0 %}neg{% endif %}">{{ totals.profit }}</td>
           <td class="mono num">{% if totals.margin_pct is not None %}{{ totals.margin_pct }}%{% else %}—{% endif %}</td>
           <td class="mono num">{% if totals.roi_pct is not None %}{{ totals.roi_pct }}%{% else %}—{% endif %}</td>
           <td class="mono num">{{ totals.vat }}</td>
