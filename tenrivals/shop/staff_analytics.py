@@ -19,8 +19,10 @@ coverage" so profit figures can be read with the right confidence.
 
 from __future__ import annotations
 
+import calendar
 from datetime import date, timedelta
 from decimal import Decimal
+from collections import defaultdict
 
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.db.models import Prefetch
@@ -173,6 +175,89 @@ def _parse_date(raw: str, default: date) -> date:
 _WEEKDAY_LABELS = ('Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun')
 
 
+def _build_profit_accumulation(
+    daily_profit: dict[date, Decimal],
+    start: date,
+    end: date,
+    today: date,
+) -> dict:
+    """Within-month cumulative (selected range) + current month vs average pace."""
+    within_labels: list[str] = []
+    within_values: list[float] = []
+    running = Decimal('0.00')
+    d = start
+    while d <= end:
+        if d.day == 1 or d == start:
+            running = Decimal('0.00')
+        running += daily_profit.get(d, Decimal('0.00'))
+        within_labels.append(d.isoformat())
+        within_values.append(float(_q2(running)))
+        d += timedelta(days=1)
+
+    month_day_profit: dict[tuple[int, int], dict[int, Decimal]] = defaultdict(dict)
+    d = start
+    while d <= end:
+        month_day_profit[(d.year, d.month)][d.day] = daily_profit.get(
+            d, Decimal('0.00')
+        )
+        d += timedelta(days=1)
+
+    avg_sums = [Decimal('0.00')] * 32
+    avg_counts = [0] * 32
+    cur_ym = (today.year, today.month)
+    months_in_average = 0
+
+    for (y, m), day_map in sorted(month_day_profit.items()):
+        if (y, m) == cur_ym:
+            continue
+        month_start = date(y, m, 1)
+        # Average only months that start inside the filter (full pace from day 1).
+        if month_start < start:
+            continue
+        month_last = calendar.monthrange(y, m)[1]
+        last_day = min(date(y, m, month_last), end).day
+        months_in_average += 1
+        total = Decimal('0.00')
+        for day in range(1, last_day + 1):
+            total += day_map.get(day, Decimal('0.00'))
+            avg_sums[day] += total
+            avg_counts[day] += 1
+
+    max_day = 31
+    avg_curve: list[float | None] = []
+    for day in range(1, max_day + 1):
+        if avg_counts[day]:
+            avg_curve.append(float(_q2(avg_sums[day] / avg_counts[day])))
+        else:
+            avg_curve.append(None)
+
+    current_curve: list[float | None] = [None] * max_day
+    cur_map = month_day_profit.get(cur_ym, {})
+    cur_start = date(today.year, today.month, 1)
+    cur_end = date(
+        today.year, today.month, calendar.monthrange(today.year, today.month)[1]
+    )
+    if not (cur_end < start or cur_start > end):
+        through_date = min(today, end, cur_end)
+        if through_date >= max(start, cur_start):
+            total = Decimal('0.00')
+            for day in range(1, through_date.day + 1):
+                day_date = date(today.year, today.month, day)
+                if day_date >= start:
+                    total += cur_map.get(day, Decimal('0.00'))
+                current_curve[day - 1] = float(_q2(total))
+
+    return {
+        'within_month_labels': within_labels,
+        'within_month_cumulative': within_values,
+        'pace_labels': [str(i) for i in range(1, max_day + 1)],
+        'pace_average': avg_curve,
+        'pace_current': current_curve,
+        'pace_avg_months': months_in_average,
+        'pace_current_label': cur_start.strftime('%B %Y'),
+    }
+
+
 def build_sales_analytics(
     start: date, end: date, granularity: str
 ) -> dict:
@@ -209,6 +294,7 @@ def build_sales_analytics(
     }
     customer_rows: dict[int, dict] = {}
     services_delivery_gross = Decimal('0.00')
+    daily_profit: dict[date, Decimal] = {}
 
     for o in orders:
         m = compute_order_economics(o)
@@ -219,6 +305,9 @@ def build_sales_analytics(
         _add_metrics(buckets[b], m)
         _add_metrics(weekdays[o.order_date.weekday()], m)
         services_delivery_gross += m['revenue'] - m['product_gross']
+        daily_profit[o.order_date] = (
+            daily_profit.get(o.order_date, Decimal('0.00')) + m['profit']
+        )
 
         crow = customer_rows.setdefault(
             o.customer_id,
@@ -431,6 +520,10 @@ def build_sales_analytics(
             float(r['margin_pct']) if r['margin_pct'] is not None else None
             for r in bucket_rows
         ],
+        'roi': [
+            float(r['roi_pct']) if r['roi_pct'] is not None else None
+            for r in bucket_rows
+        ],
         'aov': [
             float(r['aov']) if r['aov'] is not None else None for r in bucket_rows
         ],
@@ -449,6 +542,9 @@ def build_sales_analytics(
             for r in channel_breakdown
         ],
     }
+    chart.update(
+        _build_profit_accumulation(daily_profit, start, end, date.today())
+    )
 
     return {
         'totals': totals,

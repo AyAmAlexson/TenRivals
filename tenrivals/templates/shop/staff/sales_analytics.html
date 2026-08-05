@@ -148,20 +148,33 @@
 
 <div class="an-grid">
   <div class="card">
-    <h2 class="card-title">Revenue / Income / Profit</h2>
+    <h2 class="card-title">Profit &amp; ROI</h2>
     <div class="chart-box"><canvas id="chart-money"></canvas></div>
   </div>
   <div class="card">
-    <h2 class="card-title">Orders &amp; margin</h2>
+    <h2 class="card-title">Orders &amp; AOV</h2>
     <div class="chart-box"><canvas id="chart-orders"></canvas></div>
   </div>
   <div class="card">
-    <h2 class="card-title">Average order value</h2>
+    <h2 class="card-title">Revenue</h2>
     <div class="chart-box"><canvas id="chart-aov"></canvas></div>
   </div>
   <div class="card">
     <h2 class="card-title">Sales by weekday</h2>
     <div class="chart-box"><canvas id="chart-weekday"></canvas></div>
+  </div>
+</div>
+
+<div class="an-grid">
+  <div class="card">
+    <h2 class="card-title">Profit accumulation (resets monthly)</h2>
+    <div class="chart-box chart-box--tall"><canvas id="chart-profit-within-month"></canvas></div>
+    <p class="page-meta" style="margin:10px 0 0;font-size:12px">Cumulative profit by day in the selected range. Resets to zero on the 1st of each month.</p>
+  </div>
+  <div class="card">
+    <h2 class="card-title">This month vs average pace</h2>
+    <div class="chart-box chart-box--tall"><canvas id="chart-profit-pace"></canvas></div>
+    <p class="page-meta" style="margin:10px 0 0;font-size:12px">Day-of-month cumulative profit: average of complete months in the filter vs {{ chart.pace_current_label }} ({{ chart.pace_avg_months }} month{{ chart.pace_avg_months|pluralize }} in average).</p>
   </div>
 </div>
 
@@ -443,19 +456,45 @@
   if(!data.labels.length) return;
   const gridColor = 'rgba(0,0,0,.06)';
   new Chart(document.getElementById('chart-money'), {
-    type: 'line',
     data: {
       labels: data.labels,
       datasets: [
-        { label: 'Revenue ₾', data: data.revenue, borderColor: '#1a1a1a', backgroundColor: 'rgba(26,26,26,.08)', tension: .25, fill: false },
-        { label: 'Income ₾', data: data.income, borderColor: '#2563eb', backgroundColor: 'rgba(37,99,235,.08)', tension: .25, fill: false },
-        { label: 'Profit ₾', data: data.profit, borderColor: '#B20009', backgroundColor: 'rgba(178,0,9,.10)', tension: .25, fill: true }
+        {
+          type: 'bar',
+          label: 'Profit ₾',
+          data: data.profit,
+          backgroundColor: 'rgba(178,0,9,.55)',
+          yAxisID: 'y'
+        },
+        {
+          type: 'line',
+          label: 'ROI %',
+          data: data.roi,
+          borderColor: '#1a1a1a',
+          backgroundColor: 'rgba(26,26,26,.08)',
+          tension: .25,
+          spanGaps: true,
+          yAxisID: 'y1'
+        }
       ]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
       interaction: { mode: 'index', intersect: false },
-      scales: { y: { grid: { color: gridColor } }, x: { grid: { display: false } } },
+      scales: {
+        y: {
+          position: 'left',
+          title: { display: true, text: 'Profit ₾', font: { family: 'Saira', size: 11 } },
+          grid: { color: gridColor }
+        },
+        y1: {
+          position: 'right',
+          title: { display: true, text: 'ROI %', font: { family: 'Saira', size: 11 } },
+          grid: { display: false },
+          ticks: { callback: function(v){ return v + '%'; } }
+        },
+        x: { grid: { display: false } }
+      },
       plugins: { legend: { labels: { font: { family: 'Saira' } } } }
     }
   });
@@ -464,15 +503,33 @@
       labels: data.labels,
       datasets: [
         { type: 'bar', label: 'Orders', data: data.orders, backgroundColor: 'rgba(26,26,26,.25)', yAxisID: 'y' },
-        { type: 'line', label: 'Margin %', data: data.margin, borderColor: '#B20009', tension: .25, spanGaps: true, yAxisID: 'y1' }
+        {
+          type: 'line',
+          label: 'AOV ₾',
+          data: data.aov,
+          borderColor: '#0f766e',
+          backgroundColor: 'rgba(15,118,110,.10)',
+          tension: .25,
+          spanGaps: true,
+          yAxisID: 'y1'
+        }
       ]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
       interaction: { mode: 'index', intersect: false },
       scales: {
-        y: { position: 'left', grid: { color: gridColor }, ticks: { precision: 0 } },
-        y1: { position: 'right', grid: { display: false }, ticks: { callback: function(v){ return v + '%'; } } },
+        y: {
+          position: 'left',
+          title: { display: true, text: 'Orders', font: { family: 'Saira', size: 11 } },
+          grid: { color: gridColor },
+          ticks: { precision: 0 }
+        },
+        y1: {
+          position: 'right',
+          title: { display: true, text: 'AOV ₾', font: { family: 'Saira', size: 11 } },
+          grid: { display: false }
+        },
         x: { grid: { display: false } }
       },
       plugins: { legend: { labels: { font: { family: 'Saira' } } } }
@@ -483,7 +540,14 @@
     data: {
       labels: data.labels,
       datasets: [
-        { label: 'AOV ₾', data: data.aov, borderColor: '#0f766e', backgroundColor: 'rgba(15,118,110,.10)', tension: .25, spanGaps: true, fill: true }
+        {
+          label: 'Revenue ₾',
+          data: data.revenue,
+          borderColor: '#B20009',
+          backgroundColor: 'rgba(178,0,9,.10)',
+          tension: .25,
+          fill: true
+        }
       ]
     },
     options: {
@@ -512,6 +576,83 @@
       plugins: { legend: { labels: { font: { family: 'Saira' } } } }
     }
   });
+
+  const withinEl = document.getElementById('chart-profit-within-month');
+  if(withinEl && data.within_month_labels && data.within_month_labels.length){
+    new Chart(withinEl, {
+      type: 'line',
+      data: {
+        labels: data.within_month_labels,
+        datasets: [{
+          label: 'Cumulative profit ₾',
+          data: data.within_month_cumulative,
+          borderColor: '#B20009',
+          backgroundColor: 'rgba(178,0,9,.10)',
+          tension: .15,
+          fill: true,
+          pointRadius: 0,
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        scales: {
+          y: { grid: { color: gridColor }, title: { display: true, text: 'Profit ₾', font: { family: 'Saira', size: 11 } } },
+          x: { grid: { display: false }, ticks: { maxTicksLimit: 12, maxRotation: 0 } }
+        },
+        plugins: { legend: { labels: { font: { family: 'Saira' } } } }
+      }
+    });
+  }
+
+  const paceEl = document.getElementById('chart-profit-pace');
+  if(paceEl && data.pace_labels && data.pace_labels.length){
+    new Chart(paceEl, {
+      type: 'line',
+      data: {
+        labels: data.pace_labels,
+        datasets: [
+          {
+            label: 'Average months',
+            data: data.pace_average,
+            borderColor: '#64748b',
+            backgroundColor: 'rgba(100,116,139,.08)',
+            tension: .25,
+            spanGaps: true,
+            fill: false,
+            pointRadius: 0,
+            borderWidth: 2,
+            borderDash: [6, 4]
+          },
+          {
+            label: data.pace_current_label || 'This month',
+            data: data.pace_current,
+            borderColor: '#B20009',
+            backgroundColor: 'rgba(178,0,9,.10)',
+            tension: .25,
+            spanGaps: true,
+            fill: true,
+            pointRadius: 0,
+            borderWidth: 2.5
+          }
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        scales: {
+          y: { grid: { color: gridColor }, title: { display: true, text: 'Cumulative profit ₾', font: { family: 'Saira', size: 11 } } },
+          x: {
+            grid: { display: false },
+            title: { display: true, text: 'Day of month', font: { family: 'Saira', size: 11 } }
+          }
+        },
+        plugins: { legend: { labels: { font: { family: 'Saira' } } } }
+      }
+    });
+  }
+
   const typesEl = document.getElementById('chart-types');
   if(typesEl && data.type_labels.length){
     new Chart(typesEl, {
