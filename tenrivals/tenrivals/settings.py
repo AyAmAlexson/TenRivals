@@ -68,6 +68,8 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'tenrivals.canonical_host_middleware.CanonicalHostMiddleware',
+    # Reject crawl/filter spam before session/auth work (keeps dyno alive under bot floods).
+    'shop.middleware.AbuseShieldMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
