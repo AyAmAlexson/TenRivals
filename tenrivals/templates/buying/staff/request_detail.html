@@ -1,0 +1,166 @@
+{% extends 'persons/staff_base.html' %}
+{% block title %}Buying request #{{ buying_request.pk }} | Staff{% endblock %}
+{% block page_heading %}Buying request #{{ buying_request.pk }}{% endblock %}
+{% block page_note %}
+<p class="page-note">
+  {{ buying_request.created_at|date:'Y-m-d H:i' }} · {{ buying_request.staff_user.get_full_name|default:buying_request.staff_user.email }}
+  {% if buying_request.client %} · Client: {{ buying_request.client }}{% endif %}
+  · Status: <strong>{{ buying_request.get_status_display }}</strong>
+</p>
+{% endblock %}
+{% block content %}
+
+<div class="card">
+  <h2 class="card-title">Client request</h2>
+  <p style="font-size:15px; white-space:pre-wrap">{{ buying_request.original_query }}</p>
+  {% if buying_request.notes %}<p class="page-note" style="margin:10px 0 0">Notes: {{ buying_request.notes }}</p>{% endif %}
+  <div class="actions" style="display:flex; gap:10px; flex-wrap:wrap">
+    {% if perms.buying.create %}
+    <form method="post">{% csrf_token %}
+      <button type="submit" name="action" value="normalize" class="btn">Normalize</button>
+    </form>
+    <form method="post">{% csrf_token %}
+      <button type="submit" name="action" value="duplicate" class="btn btn--outline" style="margin:0">Duplicate</button>
+    </form>
+    <form method="post">{% csrf_token %}
+      <button type="submit" name="action" value="recalculate" class="btn btn--outline" style="margin:0">Recalculate</button>
+    </form>
+    {% if buying_request.status != 'cancelled' %}
+    <form method="post" onsubmit="return confirm('Cancel this buying request?')">{% csrf_token %}
+      <button type="submit" name="action" value="cancel" class="btn btn--danger">Cancel request</button>
+    </form>
+    {% endif %}
+    <form method="post">{% csrf_token %}
+      <button type="submit" name="action" value="archive" class="btn btn--outline" style="margin:0">Archive</button>
+    </form>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card">
+  <h2 class="card-title">Normalized product</h2>
+  {% if buying_request.normalized_product %}
+  <p class="page-note">
+    AI: {{ buying_request.normalized_product.model_version|default:'—' }} / {{ buying_request.normalized_product.prompt_version|default:'—' }}
+    {% if buying_request.normalized_product.edited_by_staff %} · edited by staff{% endif %}
+  </p>
+  {% else %}
+  <p class="page-note">Not normalized yet. Run “Normalize” or fill the fields manually and save.</p>
+  {% endif %}
+  {% if uncertainties %}
+  <div class="alert alert-info">AI uncertainties: {{ uncertainties|join:'; ' }}</div>
+  {% endif %}
+  {% if perms.buying.create %}
+  <form method="post">
+    {% csrf_token %}
+    <div class="form-row">
+      {% for field in normalized_form.visible_fields %}
+      <div class="form-group">
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {% if field.errors %}<div class="field-errors">{{ field.errors }}</div>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    <div class="actions">
+      <button type="submit" name="action" value="save_normalized" class="btn">Save normalized product</button>
+    </div>
+  </form>
+  {% endif %}
+</div>
+
+<div class="card">
+  <h2 class="card-title">Supplier offers</h2>
+  <p class="page-note">Automatic search across all active suppliers arrives in Phase 3. Until then offers are entered manually from supplier pages.</p>
+  {% if perms.buying.create %}
+  <p><a class="btn btn--sm" href="{% url 'administration:buying_offer_new' buying_request.pk %}">Add supplier offer</a></p>
+  {% endif %}
+  {% if offers %}
+  <div class="table-wrap" style="margin-top:14px">
+    <table>
+      <thead>
+        <tr><th>Supplier</th><th>Product</th><th>Price</th><th>Variant OK</th><th>Match</th><th>Checked</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for offer in offers %}
+        <tr>
+          <td>{{ offer.supplier.name }}</td>
+          <td style="max-width:280px">
+            {% if offer.product_url %}<a href="{{ offer.product_url }}" target="_blank" rel="noopener" style="text-decoration:underline">{{ offer.title|truncatechars:70 }}</a>
+            {% else %}{{ offer.title|truncatechars:70 }}{% endif %}
+          </td>
+          <td>{{ offer.current_price }} {{ offer.currency }}{% if offer.discount_percent %} <span class="badge badge--yes">−{{ offer.discount_percent }}%</span>{% endif %}{% if offer.version > 1 %} <span class="badge">v{{ offer.version }}</span>{% endif %}</td>
+          <td>{% if offer.requested_variant_available %}<span class="badge badge--yes">Yes</span>{% elif offer.requested_variant_available == False %}<span class="badge badge--no">No</span>{% else %}—{% endif %}</td>
+          <td>{{ offer.get_match_status_display }}</td>
+          <td>{{ offer.checked_at|date:'Y-m-d H:i' }}</td>
+          <td>{% if perms.buying.create %}<a class="btn btn--sm" href="{% url 'administration:buying_offer_edit' buying_request.pk offer.pk %}">Edit</a>{% endif %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+</div>
+
+<div class="card">
+  <h2 class="card-title">Cost scenarios</h2>
+  {% if scenarios %}
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Rank</th><th>Recommendation</th><th>Supplier</th><th>Route</th><th>Item</th><th>Local ship</th>
+          <th>Intl ship</th><th>Import VAT</th><th>Pay fee</th><th>Landed</th><th>Break-even</th><th>Customer price</th>
+          <th>Confidence</th><th>ETA</th><th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in scenarios %}
+        <tr {% if s.is_hidden %}style="opacity:.45"{% endif %}>
+          <td>{{ s.rank|default:'—' }}{% for label in s.rank_labels %}<div><span class="badge {% if 'Lowest' in label or label == 'Exact match' %}badge--yes{% else %}badge--no{% endif %}">{{ label }}</span></div>{% endfor %}</td>
+          <td>
+            {% if s.recommendation %}<span class="badge {% if s.recommendation == 'recommended' %}badge--yes{% else %}badge--no{% endif %}">{{ s.get_recommendation_display }}</span>
+            {% if s.recommendation_reasons %}<div class="page-note" style="margin:4px 0 0">{{ s.recommendation_reasons|join:'; ' }}</div>{% endif %}
+            {% else %}—{% endif %}
+          </td>
+          <td>{{ s.supplier_offer.supplier.name }}</td>
+          <td>{{ s.fulfillment_route.name }}</td>
+          <td>{{ s.item_cost }} ₾</td>
+          <td>{{ s.local_shipping }} ₾</td>
+          <td>{{ s.international_shipping }} ₾</td>
+          <td>{{ s.georgia_vat }} ₾</td>
+          <td>{{ s.payment_fee }} ₾</td>
+          <td><strong>{{ s.landed_cost }} ₾</strong></td>
+          <td>{{ s.break_even_price }} ₾</td>
+          <td><strong>{{ s.customer_price }} ₾</strong>
+            {% if s.calculation_details.manual_price %}<div class="page-note" style="margin:2px 0 0">manual · auto {{ s.calculation_details.auto_customer_price }} ₾</div>
+            {% elif s.price_minimum %}<div class="page-note" style="margin:2px 0 0">min {{ s.price_minimum }} · prem {{ s.price_premium }}</div>{% endif %}</td>
+          <td><span class="badge {% if s.confidence == 'exact' %}badge--yes{% else %}badge--no{% endif %}">{{ s.get_confidence_display }}</span></td>
+          <td>{% if s.estimated_min_days %}{{ s.estimated_min_days }}–{{ s.estimated_max_days }} d{% else %}—{% endif %}</td>
+          <td><a class="btn btn--sm" href="{% url 'administration:buying_scenario_detail' s.pk %}">Details</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="page-note">No scenarios yet — add a supplier offer; scenarios are calculated automatically for every applicable fulfillment route.</p>
+  {% endif %}
+  {% if blocked_scenarios %}
+  <div class="alert alert-info" style="margin-top:14px">
+    {% for s in blocked_scenarios %}
+    Calculation blocked (excluded from ranking): {{ s.supplier_offer.supplier.name }} via {{ s.fulfillment_route.name }} —
+    {{ s.warnings|join:'; ' }}
+    · <a href="{% url 'administration:buying_scenario_detail' s.pk %}" style="text-decoration:underline">details</a><br>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% if failed_scenarios %}
+  <div class="alert alert-danger" style="margin-top:14px">
+    {% for s in failed_scenarios %}
+    Failed: {{ s.supplier_offer.supplier.name }} via {{ s.fulfillment_route.name }} — {{ s.warnings|join:'; ' }}<br>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

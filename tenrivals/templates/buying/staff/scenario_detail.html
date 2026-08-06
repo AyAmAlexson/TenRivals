@@ -1,0 +1,283 @@
+{% extends 'persons/staff_base.html' %}
+{% block title %}Cost scenario #{{ scenario.pk }} | Staff{% endblock %}
+{% block page_heading %}Cost scenario #{{ scenario.pk }}{% endblock %}
+{% block page_note %}
+<p class="page-note">
+  <a href="{% url 'administration:buying_request_detail' scenario.buying_request_id %}" style="text-decoration:underline">Buying request #{{ scenario.buying_request_id }}</a>
+  · {{ scenario.get_scenario_type_display }} · calc {{ scenario.calculation_version }} · {{ scenario.created_at|date:'Y-m-d H:i' }}
+</p>
+{% endblock %}
+{% block content %}
+
+{% if scenario.status == 'superseded' %}
+<div class="alert alert-info">
+  This is a historical snapshot (superseded){% if scenario.superseded_by_id %} —
+  <a href="{% url 'administration:buying_scenario_detail' scenario.superseded_by_id %}" style="text-decoration:underline">open the current version</a>{% endif %}.
+  Its numbers are kept exactly as calculated at the time.
+</div>
+{% elif scenario.status == 'calculation_blocked' %}
+<div class="alert alert-danger">
+  Calculation blocked — required inputs are missing ({{ scenario.warnings|join:'; ' }}).
+  This scenario is excluded from ranking until the missing rules are configured.
+</div>
+{% endif %}
+
+<div class="card">
+  <h2 class="card-title">Product</h2>
+  <div class="form-row">
+    <div>
+      <p class="page-note" style="margin:0 0 4px">Original request</p>
+      <p style="white-space:pre-wrap">{{ scenario.buying_request.original_query }}</p>
+    </div>
+    <div>
+      <p class="page-note" style="margin:0 0 4px">Normalized</p>
+      <p>{{ scenario.buying_request.normalized_product.display_summary|default:'—' }}</p>
+    </div>
+  </div>
+  <div class="form-row" style="margin-top:10px">
+    <div>
+      <p class="page-note" style="margin:0 0 4px">Found at {{ offer.supplier.name }}</p>
+      <p>{% if offer.product_url %}<a href="{{ offer.product_url }}" target="_blank" rel="noopener" style="text-decoration:underline">{{ offer.title }}</a>{% else %}{{ offer.title }}{% endif %}</p>
+      <p class="mono">SKU {{ offer.supplier_sku|default:'—' }} · MPN {{ offer.manufacturer_code|default:'—' }} · EAN {{ offer.ean|default:'—' }} · UPC {{ offer.upc|default:'—' }}</p>
+    </div>
+    <div>
+      <p class="page-note" style="margin:0 0 4px">Availability</p>
+      <p>
+        {{ offer.get_stock_status_display }} ·
+        requested variant: {% if offer.requested_variant_available %}available{% elif offer.requested_variant_available == False %}NOT available{% else %}unknown{% endif %}
+        · checked {{ offer.checked_at|date:'Y-m-d H:i' }}
+      </p>
+      <p class="page-note" style="margin:4px 0 0">Match: {{ offer.get_match_status_display }}{% if offer.match_score %} ({{ offer.match_score }}){% endif %}</p>
+    </div>
+  </div>
+  {% if scenario.warnings %}
+  <div class="alert alert-info" style="margin-top:12px">Warnings: {{ scenario.warnings|join:'; ' }}</div>
+  {% endif %}
+</div>
+
+<div class="card">
+  <h2 class="card-title">Fulfillment route &amp; weight</h2>
+  <p>
+    <strong>{{ route.name }}</strong> — {{ route.provider.name }}, {{ route.warehouse }} ·
+    {{ route.origin_country }} → {{ route.destination_country }} · {{ route.get_delivery_method_display }}
+    {% if scenario.estimated_min_days %} · {{ scenario.estimated_min_days }}–{{ scenario.estimated_max_days }} days{% endif %}
+  </p>
+  {% with w=scenario.calculation_details.weight %}
+  {% if w %}
+  <p class="page-note" style="margin:6px 0 0">
+    Actual weight: {% if w.actual_total_g %}{{ w.actual_total_g }} g ({{ w.actual_source }}{% if w.packaging_g %}, incl. {{ w.packaging_g }} g packaging{% endif %}){% else %}unknown{% endif %}
+    · Volumetric weight: {% if w.volumetric_total_g %}{{ w.volumetric_total_g }} g ({{ w.volumetric_source }}){% else %}—{% endif %}
+    · <strong>Chargeable: {% if w.chargeable_g %}{{ w.chargeable_g }} g (max → {{ w.basis }}){% else %}unknown{% endif %}</strong>
+  </p>
+  {% endif %}
+  {% endwith %}
+  {% with imp=scenario.calculation_details.import %}
+  {% if imp %}
+  <p class="page-note" style="margin:6px 0 0">
+    Local cost (product + local shipping): <strong>{{ imp.local_cost_gel }} ₾</strong>
+    {% if imp.threshold_gel %} · import threshold {{ imp.threshold_gel }} ₾{% endif %}
+    · declaration: <span class="badge {% if imp.declaration_required %}badge--no{% else %}badge--yes{% endif %}">{% if imp.declaration_required %}required{% else %}not required{% endif %}</span>
+  </p>
+  {% endif %}
+  {% endwith %}
+  {% with fx=scenario.calculation_details.fx %}
+  {% if fx %}
+  <p class="page-note" style="margin:6px 0 0">
+    FX: <strong>{{ fx.currency }}</strong>
+    · unit {{ fx.unit_rate_gel|default:fx.rate_gel }} GEL
+    {% if fx.quantity and fx.quantity != '1' %}· official {{ fx.official_rate }} / {{ fx.quantity }}{% endif %}
+    {% if fx.rate_date %}· rate date {{ fx.rate_date }}{% endif %}
+    · source <span class="badge {% if fx.stale %}badge--no{% else %}badge--yes{% endif %}">{{ fx.source }}{% if fx.stale %} (stale){% endif %}</span>
+  </p>
+  {% endif %}
+  {% endwith %}
+</div>
+
+<div class="card">
+  <h2 class="card-title">Calculation</h2>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Component</th><th>Amount (GEL)</th><th>Original</th><th>Source</th><th>Precision</th><th>Rule</th><th>Note</th></tr>
+      </thead>
+      <tbody>
+        {% for c in components %}
+        <tr>
+          <td>{{ c.label }}</td>
+          <td><strong>{{ c.amount_gel }}</strong></td>
+          <td>{% if c.amount_original %}{{ c.amount_original }} {{ c.currency }}{% else %}—{% endif %}</td>
+          <td>{{ c.source }}</td>
+          <td><span class="badge {% if c.exact %}badge--yes{% else %}badge--no{% endif %}">{% if c.exact %}exact{% else %}estimated{% endif %}</span></td>
+          <td>{% if c.rule %}{{ c.rule.name }} v{{ c.rule.version }}{% else %}—{% endif %}</td>
+          <td class="page-note" style="margin:0">{{ c.note }}</td>
+        </tr>
+        {% endfor %}
+        <tr>
+          <td><strong>Landed cost</strong></td>
+          <td><strong>{{ scenario.landed_cost }}</strong></td>
+          <td colspan="5"></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card">
+  <h2 class="card-title">Selling price</h2>
+  {% with p=scenario.calculation_details.pricing %}
+  <div class="table-wrap">
+    <table>
+      <tbody>
+        {% if p.sales_vat %}
+        <tr>
+          <td>Sales VAT rate</td>
+          <td>{{ p.sales_vat.params.rate }}</td>
+          <td class="page-note">{{ p.sales_vat.params.mode }} · {{ p.sales_vat.name }} v{{ p.sales_vat.version }}</td>
+        </tr>
+        {% endif %}
+        {% if p.small_business_tax %}
+        <tr>
+          <td>Small business tax rate</td>
+          <td>{{ p.small_business_tax.params.rate }}</td>
+          <td class="page-note">{{ p.small_business_tax.params.mode }} · {{ p.small_business_tax.name }} v{{ p.small_business_tax.version }}</td>
+        </tr>
+        {% endif %}
+        {% if p.net_sales_coefficient %}
+        <tr>
+          <td>Net sales coefficient</td>
+          <td class="mono">{{ p.net_sales_coefficient }}</td>
+          <td class="page-note">1 − VAT/(1+VAT) − small business tax; snapshot at calculation time</td>
+        </tr>
+        <tr>
+          <td><strong>Break-even price</strong></td>
+          <td><strong>{{ scenario.break_even_price }} ₾</strong></td>
+          <td class="page-note">Landed cost / net sales coefficient</td>
+        </tr>
+        {% endif %}
+        {% if p.prices %}
+        <tr>
+          <td>Price (+{% widthratio p.markups.minimum 1 100 %}%)</td>
+          <td>{{ scenario.price_minimum }} ₾</td>
+          <td class="page-note">Minimum</td>
+        </tr>
+        <tr>
+          <td><strong>Price (+{% widthratio p.markups.standard 1 100 %}%)</strong></td>
+          <td><strong>{{ scenario.price_standard }} ₾</strong></td>
+          <td class="page-note">Standard — used as the customer price in ranking</td>
+        </tr>
+        <tr>
+          <td>Price (+{% widthratio p.markups.premium 1 100 %}%)</td>
+          <td>{{ scenario.price_premium }} ₾</td>
+          <td class="page-note">Premium</td>
+        </tr>
+        {% endif %}
+        {% if scenario.calculation_details.manual_price %}
+        <tr>
+          <td>Auto-calculated price</td>
+          <td>{{ scenario.calculation_details.auto_customer_price }} ₾</td>
+          <td class="page-note">Computed by the rules before the manual final-price override</td>
+        </tr>
+        <tr>
+          <td><strong>Current customer price</strong></td>
+          <td><strong>{{ scenario.customer_price }} ₾</strong> <span class="badge badge--no">Manual price</span></td>
+          <td><span class="badge {% if scenario.confidence == 'exact' %}badge--yes{% else %}badge--no{% endif %}">{{ scenario.get_confidence_display }}</span></td>
+        </tr>
+        {% else %}
+        <tr>
+          <td><strong>Current customer price</strong></td>
+          <td><strong>{{ scenario.customer_price }} ₾</strong></td>
+          <td><span class="badge {% if scenario.confidence == 'exact' %}badge--yes{% else %}badge--no{% endif %}">{{ scenario.get_confidence_display }}</span></td>
+        </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+  {% endwith %}
+  {% if scenario.recommendation %}
+  <p style="margin-top:10px">
+    Recommendation: <span class="badge {% if scenario.recommendation == 'recommended' %}badge--yes{% else %}badge--no{% endif %}">{{ scenario.get_recommendation_display }}</span>
+    {% if scenario.recommendation_reasons %}<span class="page-note"> — {{ scenario.recommendation_reasons|join:'; ' }}</span>{% endif %}
+  </p>
+  {% endif %}
+</div>
+
+{% if perms.buying.override_calculation and scenario.status != 'superseded' %}
+<div class="card">
+  <h2 class="card-title">Manual override</h2>
+  <p class="page-note">Applying or removing an override creates a new scenario version; the current numbers stay in history.</p>
+  {% if active_overrides %}
+  <div class="table-wrap" style="margin-bottom:14px">
+    <table>
+      <thead><tr><th>Active override</th><th>Amount (GEL)</th><th></th></tr></thead>
+      <tbody>
+        {% for code, amount in active_overrides.items %}
+        <tr>
+          <td class="mono">{{ code }}</td>
+          <td>{{ amount }}</td>
+          <td>
+            <form method="post" style="display:inline">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="remove_override">
+              <input type="hidden" name="component" value="{{ code }}">
+              <input type="hidden" name="reason" value="Override removed by staff">
+              <button type="submit" class="btn btn--sm btn--outline">Remove &amp; restore automatic</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="override">
+    <div class="form-row">
+      <div class="form-group">
+        <label for="{{ override_form.component.id_for_label }}">Component</label>
+        {{ override_form.component }}
+      </div>
+      <div class="form-group">
+        <label for="{{ override_form.new_amount.id_for_label }}">New amount (GEL)</label>
+        {{ override_form.new_amount }}
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="{{ override_form.reason.id_for_label }}">Reason (required, stored in the audit trail)</label>
+      {{ override_form.reason }}
+    </div>
+    <div class="actions" style="display:flex; gap:10px">
+      <button type="submit" class="btn">Apply override &amp; recalculate</button>
+    </div>
+  </form>
+  <form method="post" style="margin-top:10px">
+    {% csrf_token %}
+    <button type="submit" name="action" value="toggle_hide" class="btn btn--outline">{% if scenario.is_hidden %}Unhide scenario{% else %}Hide scenario{% endif %}</button>
+  </form>
+</div>
+{% endif %}
+
+{% if overrides_history %}
+<div class="card">
+  <h2 class="card-title">Override history</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>When</th><th>User</th><th>Kind</th><th>Field</th><th>Old</th><th>New</th><th>Reason</th></tr></thead>
+      <tbody>
+        {% for o in overrides_history %}
+        <tr>
+          <td>{{ o.created_at|date:'Y-m-d H:i' }}</td>
+          <td>{{ o.user.get_full_name|default:o.user.email }}</td>
+          <td>{{ o.get_kind_display }}</td>
+          <td class="mono">{{ o.field }}</td>
+          <td>{{ o.old_value|default:'—' }}</td>
+          <td>{{ o.new_value|default:'—' }}</td>
+          <td>{{ o.reason }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

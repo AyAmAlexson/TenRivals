@@ -1,0 +1,29 @@
+{% extends 'persons/staff_base.html' %}
+{% block title %}Product mappings | Buying | Staff{% endblock %}
+{% block page_heading %}Product mappings{% endblock %}
+{% block page_note %}<p class="page-note">Knowledge base: canonical products linked to supplier product cards. Populated by the matching pipeline (Phase 4) and staff confirmations.</p>{% endblock %}
+{% block content %}
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>Canonical product</th><th>Supplier</th><th>Supplier card</th><th>Source</th><th>Status</th><th>Confidence</th><th>Confirmed by</th><th>Last checked</th></tr>
+    </thead>
+    <tbody>
+      {% for m in mappings %}
+      <tr>
+        <td>{{ m.canonical_product }}</td>
+        <td>{{ m.supplier.name }}</td>
+        <td><a href="{{ m.supplier_product_url }}" target="_blank" rel="noopener" style="text-decoration:underline">{{ m.supplier_title|default:m.supplier_product_url|truncatechars:70 }}</a></td>
+        <td>{{ m.get_source_display }}</td>
+        <td><span class="badge {% if m.mapping_status == 'confirmed' %}badge--yes{% else %}badge--no{% endif %}">{{ m.get_mapping_status_display }}</span></td>
+        <td>{{ m.confidence|default:'—' }}</td>
+        <td>{{ m.confirmed_by.get_full_name|default:'—' }}</td>
+        <td>{{ m.last_checked_at|date:'Y-m-d H:i'|default:'—' }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="8">No mappings yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

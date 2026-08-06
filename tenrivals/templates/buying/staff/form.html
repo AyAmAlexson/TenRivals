@@ -1,0 +1,42 @@
+{% extends 'persons/staff_base.html' %}
+{% block title %}{{ page_heading }} | Buying | Staff{% endblock %}
+{% block page_heading %}{{ page_heading }}{% endblock %}
+{% block page_note %}{% if page_note_text %}<p class="page-note">{{ page_note_text }}</p>{% endif %}{% endblock %}
+{% block content %}
+<div class="staff-narrow">
+  <div class="card">
+    <form method="post">
+      {% csrf_token %}
+      {% if form.non_field_errors %}<div class="field-errors">{{ form.non_field_errors }}</div>{% endif %}
+      <div class="form-row">
+        {% for field in form.visible_fields %}
+          <div class="form-group{% if field.field.widget.input_type == 'checkbox' %} check-row{% endif %}">
+            {% if field.field.widget.input_type == 'checkbox' %}
+              {{ field }} <label for="{{ field.id_for_label }}" style="margin:0">{{ field.label }}</label>
+            {% else %}
+              <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+              {{ field }}
+            {% endif %}
+            {% if field.help_text %}<div class="page-note" style="margin:4px 0 0">{{ field.help_text }}</div>{% endif %}
+            {% if field.errors %}<div class="field-errors">{{ field.errors }}</div>{% endif %}
+          </div>
+        {% endfor %}
+      </div>
+      {% if show_reason %}
+      <div class="form-group">
+        <label for="id_change_reason">Change reason (stored in the audit trail)</label>
+        <input type="text" name="change_reason" id="id_change_reason" maxlength="300">
+      </div>
+      {% endif %}
+      <div class="actions">
+        {% if back_url_arg %}
+          <a class="btn btn--outline" href="{% url back_url_name back_url_arg %}">Cancel</a>
+        {% elif back_url_name %}
+          <a class="btn btn--outline" href="{% url back_url_name %}">Cancel</a>
+        {% endif %}
+        <button type="submit" class="btn">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

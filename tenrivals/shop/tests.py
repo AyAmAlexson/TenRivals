@@ -12,7 +12,14 @@ from shop.catalog_utils import (
     stock_catalog_in_stock_queryset,
     stock_catalog_storefront_queryset,
 )
-from shop.models import Customer, Product, ProductListing, ProductListingChannel, ProductType
+from shop.models import (
+    Customer,
+    Product,
+    ProductListing,
+    ProductListingChannel,
+    ProductType,
+    SalesOrder,
+)
 from shop.promo_codes import PromoEvaluation
 from shop.sales_order_currency import apply_payment_currency_fields
 

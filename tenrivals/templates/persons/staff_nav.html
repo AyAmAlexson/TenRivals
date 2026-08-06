@@ -14,6 +14,20 @@
     <a href="{% url 'administration:staff_order_finance' %}" class="staff-nav__link {% if staff_nav_active == 'order_finance' %}is-active{% endif %}">Orders finance</a>
     <a href="{% url 'administration:staff_order_for_me_list' %}" class="staff-nav__link {% if staff_nav_active == 'order_for_me' %}is-active{% endif %}">Order for me</a>
   </div>
+  {% if perms.buying.view %}
+  <div class="staff-nav__group">
+    <div class="staff-nav__label">Buying</div>
+    <a href="{% url 'administration:buying_requests' %}" class="staff-nav__link {% if staff_nav_active == 'buying_requests' %}is-active{% endif %}">Buying requests</a>
+    <a href="{% url 'administration:buying_request_new' %}" class="staff-nav__link {% if staff_nav_active == 'buying_new' %}is-active{% endif %}">New request</a>
+    <a href="{% url 'administration:buying_suppliers' %}" class="staff-nav__link {% if staff_nav_active == 'buying_suppliers' %}is-active{% endif %}">Suppliers</a>
+    <a href="{% url 'administration:buying_connectors' %}" class="staff-nav__link {% if staff_nav_active == 'buying_connectors' %}is-active{% endif %}">Connector status</a>
+    <a href="{% url 'administration:buying_mappings' %}" class="staff-nav__link {% if staff_nav_active == 'buying_mappings' %}is-active{% endif %}">Product mappings</a>
+    <a href="{% url 'administration:buying_routes' %}" class="staff-nav__link {% if staff_nav_active == 'buying_routes' %}is-active{% endif %}">Fulfillment routes</a>
+    <a href="{% url 'administration:buying_pricing_rules' %}" class="staff-nav__link {% if staff_nav_active == 'buying_rules' %}is-active{% endif %}">Pricing rules</a>
+    <a href="{% url 'administration:buying_fx_rates' %}" class="staff-nav__link {% if staff_nav_active == 'buying_fx' %}is-active{% endif %}">FX rates</a>
+    <a href="{% url 'administration:buying_optimization_rules' %}" class="staff-nav__link {% if staff_nav_active == 'buying_optimization' %}is-active{% endif %}">Optimization rules</a>
+  </div>
+  {% endif %}
   <div class="staff-nav__group">
     <div class="staff-nav__label">Marketing</div>
     <a href="{% url 'administration:staff_home_banners' %}" class="staff-nav__link {% if staff_nav_active == 'banners' %}is-active{% endif %}">Shop home</a>

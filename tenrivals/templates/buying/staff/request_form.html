@@ -1,0 +1,38 @@
+{% extends 'persons/staff_base.html' %}
+{% block title %}New buying request | Staff{% endblock %}
+{% block page_heading %}New buying request{% endblock %}
+{% block page_note %}<p class="page-note">Paste the client request as-is. Normalization runs on the next screen, where you can review and correct every field before searching.</p>{% endblock %}
+{% block content %}
+<div class="staff-narrow">
+  <div class="card">
+    <form method="post">
+      {% csrf_token %}
+      <div class="form-group">
+        <label for="{{ form.original_query.id_for_label }}">Client request</label>
+        {{ form.original_query }}
+        {% if form.original_query.errors %}<div class="field-errors">{{ form.original_query.errors }}</div>{% endif %}
+        <div class="page-note" style="margin:6px 0 0">Examples: “ASICS Gel Resolution X Clay, men, white, EU 44” · “Blade 100 V10, 300 г, ручка 3”</div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="{{ form.client.id_for_label }}">Client (optional)</label>
+          {{ form.client }}
+        </div>
+        <div class="form-group">
+          <label for="{{ form.quantity.id_for_label }}">Quantity</label>
+          {{ form.quantity }}
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="{{ form.notes.id_for_label }}">Notes</label>
+        {{ form.notes }}
+      </div>
+      <div class="actions">
+        <a class="btn btn--outline" href="{% url 'administration:buying_requests' %}">Cancel</a>
+        <button type="submit" name="action" value="save_draft" class="btn btn--outline">Save draft</button>
+        <button type="submit" class="btn">Create &amp; open</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,32 @@
+{% extends 'persons/staff_base.html' %}
+{% block title %}Suppliers | Buying | Staff{% endblock %}
+{% block page_heading %}Suppliers{% endblock %}
+{% block page_note %}<p class="page-note">Shops the buying process can source from. Connectors attach to these records in Phase 3.</p>{% endblock %}
+{% block content %}
+{% if perms.buying.manage_suppliers %}
+<div class="staff-toolbar"><a class="btn btn--sm" href="{% url 'administration:buying_supplier_new' %}">New supplier</a></div>
+{% endif %}
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>Name</th><th>Code</th><th>Country</th><th>Currency</th><th>Tax mode</th><th>Enabled</th><th>Connector</th><th></th></tr>
+    </thead>
+    <tbody>
+      {% for s in suppliers %}
+      <tr>
+        <td><a href="{{ s.base_url }}" target="_blank" rel="noopener" style="text-decoration:underline">{{ s.name }}</a></td>
+        <td class="mono">{{ s.code }}</td>
+        <td>{{ s.country }}</td>
+        <td>{{ s.currency }}</td>
+        <td>{{ s.get_tax_display_mode_display }}</td>
+        <td>{% if s.enabled %}<span class="badge badge--yes">Yes</span>{% else %}<span class="badge badge--no">No</span>{% endif %}</td>
+        <td>{% if s.connector_class %}<span class="mono">{{ s.connector_class }}</span>{% else %}manual only{% endif %}</td>
+        <td>{% if perms.buying.manage_suppliers %}<a class="btn btn--sm" href="{% url 'administration:buying_supplier_edit' s.pk %}">Edit</a>{% endif %}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="8">No suppliers yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends 'persons/staff_base.html' %}
+{% block title %}Connector status | Buying | Staff{% endblock %}
+{% block page_heading %}Connector status{% endblock %}
+{% block page_note %}<p class="page-note">Health of supplier connectors. Automatic health checks, diagnostics and retries arrive with connectors in Phase 3; history is stored per check.</p>{% endblock %}
+{% block content %}
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>Supplier</th><th>Enabled</th><th>Latest status</th><th>Last success</th><th>Last failure</th><th>Response time</th><th>Parser</th></tr>
+    </thead>
+    <tbody>
+      {% for s in suppliers %}
+      <tr>
+        <td>{{ s.name }}</td>
+        <td>{% if s.enabled %}<span class="badge badge--yes">Yes</span>{% else %}<span class="badge badge--no">No</span>{% endif %}</td>
+        <td>
+          {% if s.latest_status %}
+            <span class="badge {% if s.latest_status.status == 'available' %}badge--yes{% else %}badge--no{% endif %}">{{ s.latest_status.get_status_display }}</span>
+            <div class="page-note" style="margin:4px 0 0">{{ s.latest_status.checked_at|date:'Y-m-d H:i' }}{% if s.latest_status.error_message %} · {{ s.latest_status.error_message|truncatechars:80 }}{% endif %}</div>
+          {% else %}—{% endif %}
+        </td>
+        <td>{{ s.last_successful_check|date:'Y-m-d H:i'|default:'—' }}</td>
+        <td>{{ s.last_failed_check|date:'Y-m-d H:i'|default:'—' }}</td>
+        <td>{% if s.latest_status.response_time_ms %}{{ s.latest_status.response_time_ms }} ms{% else %}—{% endif %}</td>
+        <td>{{ s.latest_status.parser_version|default:'—' }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="7">No suppliers configured.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

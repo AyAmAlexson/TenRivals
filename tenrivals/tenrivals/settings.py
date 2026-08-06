@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'persons',
     'rivals.apps.RivalsConfig',
     'shop.apps.ShopConfig',
+    'buying.apps.BuyingConfig',
 
     'allauth',
     'allauth.account',
@@ -450,8 +451,27 @@ LOGGING = {
             'level': _APP_LOG_LEVEL,
             'propagate': False,
         },
+        'buying': {
+            'handlers': _LOG_HANDLERS,
+            'level': _APP_LOG_LEVEL,
+            'propagate': False,
+        },
     },
 }
+
+# Buying module (staff sourcing tool). AI provider is pluggable; see buying/ai/.
+BUYING_AI_PROVIDER = env.str('BUYING_AI_PROVIDER', default='openai')
+BUYING_OPENAI_MODEL = env.str('BUYING_OPENAI_MODEL', default='gpt-4o-mini')
+BUYING_OPENAI_API_KEY = env.str('OPENAI_API_KEY', default='')
+BUYING_AI_TIMEOUT_SECONDS = env.int('BUYING_AI_TIMEOUT_SECONDS', default=45)
+BUYING_NBG_CURRENCIES = env.list('BUYING_NBG_CURRENCIES', default=['USD', 'EUR', 'GBP', 'CNY'])
+BUYING_NBG_TIMEOUT_SECONDS = env.int('BUYING_NBG_TIMEOUT_SECONDS', default=15)
+BUYING_NBG_API_URL = env.str(
+    'BUYING_NBG_API_URL',
+    default='https://nbg.gov.ge/gw/api/ct/monetarypolicy/currencies/en/json/',
+)
+BUYING_FX_TIMEZONE = env.str('BUYING_FX_TIMEZONE', default='Asia/Tbilisi')
+BUYING_NBG_LIVE_FETCH_ON_MISS = env.bool('BUYING_NBG_LIVE_FETCH_ON_MISS', default=True)
 
 MESSAGE_TAGS = {
     messages.DEBUG: 'secondary',
@@ -504,6 +524,17 @@ CELERY_BEAT_SCHEDULE = {
     'snapshot-stock-value-daily': {
         'task': 'shop.tasks.snapshot_stock_value',
         'schedule': crontab(hour=23, minute=55),  # end-of-day measured stock value
+    },
+
+    # Buying FX: Georgia is UTC+4 — 05:05 UTC ≈ 09:05 Tbilisi (morning),
+    # 09:05 UTC ≈ 13:05 Tbilisi (midday retry if today's rate is not yet out).
+    'fetch-nbg-rates-morning': {
+        'task': 'buying.tasks.fetch_nbg_rates',
+        'schedule': crontab(hour=5, minute=5),
+    },
+    'fetch-nbg-rates-midday': {
+        'task': 'buying.tasks.fetch_nbg_rates',
+        'schedule': crontab(hour=9, minute=5),
     },
 }
 

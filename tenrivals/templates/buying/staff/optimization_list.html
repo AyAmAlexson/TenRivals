@@ -1,0 +1,34 @@
+{% extends 'persons/staff_base.html' %}
+{% block title %}Optimization rules | Buying | Staff{% endblock %}
+{% block page_heading %}Optimization rules{% endblock %}
+{% block page_note %}<p class="page-note">Items the Optimization Engine (Phase 5) is allowed to add to purchases. The engine never suggests random products — only this pool and open buying requests.</p>{% endblock %}
+{% block content %}
+{% if perms.buying.manage_optimization_rules %}
+<div class="staff-toolbar"><a class="btn btn--sm" href="{% url 'administration:buying_candidate_new' %}">New candidate</a></div>
+{% endif %}
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>Item</th><th>Supplier</th><th>Category</th><th>Est. price</th><th>Max qty</th><th>Exp. margin</th><th>Inventory risk</th><th>Allowed</th><th>Priority</th><th></th></tr>
+    </thead>
+    <tbody>
+      {% for c in candidates %}
+      <tr>
+        <td>{{ c }}</td>
+        <td>{{ c.supplier.name|default:'Any' }}</td>
+        <td>{{ c.get_category_display|default:'—' }}</td>
+        <td>{% if c.estimated_price %}{{ c.estimated_price }} {{ c.currency }}{% else %}—{% endif %}</td>
+        <td>{{ c.maximum_quantity }}</td>
+        <td>{{ c.expected_margin|default:'—' }}</td>
+        <td>{{ c.get_inventory_risk_display }}</td>
+        <td>{% if c.allowed_for_optimization %}<span class="badge badge--yes">Yes</span>{% else %}<span class="badge badge--no">No</span>{% endif %}</td>
+        <td>{{ c.priority }}</td>
+        <td>{% if perms.buying.manage_optimization_rules %}<a class="btn btn--sm" href="{% url 'administration:buying_candidate_edit' c.pk %}">Edit</a>{% endif %}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="10">No optimization candidates yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import include, path
 
 from . import views
 from . import staff_promo_views
@@ -7,6 +7,7 @@ from shop import staff_analytics, staff_sales_views
 app_name = "administration"
 
 urlpatterns = [
+    path("buying/", include("buying.staff_urls")),
     path("users/", views.staff_users, name="staff_users"),
     path(
         "users/<int:user_id>/send-email-verification/",

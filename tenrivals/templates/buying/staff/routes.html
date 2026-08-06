@@ -1,0 +1,90 @@
+{% extends 'persons/staff_base.html' %}
+{% block title %}Fulfillment routes | Buying | Staff{% endblock %}
+{% block page_heading %}Fulfillment routes{% endblock %}
+{% block page_note %}<p class="page-note">Forwarders, their warehouses and delivery schemes to Georgia. A supplier offer is priced through every applicable route — never through a hardcoded shipping cost.</p>{% endblock %}
+{% block content %}
+
+<div class="card">
+  <h2 class="card-title">Providers</h2>
+  {% if perms.buying.manage_fulfillment_routes %}
+  <div class="staff-toolbar"><a class="btn btn--sm" href="{% url 'administration:buying_provider_new' %}">New provider</a></div>
+  {% endif %}
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Name</th><th>Code</th><th>Enabled</th><th>Website</th><th></th></tr></thead>
+      <tbody>
+        {% for p in providers %}
+        <tr>
+          <td>{{ p.name }}</td>
+          <td class="mono">{{ p.code }}</td>
+          <td>{% if p.enabled %}<span class="badge badge--yes">Yes</span>{% else %}<span class="badge badge--no">No</span>{% endif %}</td>
+          <td>{% if p.website %}<a href="{{ p.website }}" target="_blank" rel="noopener" style="text-decoration:underline">{{ p.website }}</a>{% else %}—{% endif %}</td>
+          <td>{% if perms.buying.manage_fulfillment_routes %}<a class="btn btn--sm" href="{% url 'administration:buying_provider_edit' p.pk %}">Edit</a>{% endif %}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5">No providers yet. Create Onex here for the MVP.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card">
+  <h2 class="card-title">Warehouses</h2>
+  {% if perms.buying.manage_fulfillment_routes %}
+  <div class="staff-toolbar"><a class="btn btn--sm" href="{% url 'administration:buying_warehouse_new' %}">New warehouse</a></div>
+  {% endif %}
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Provider</th><th>Country</th><th>City</th><th>Currency</th><th>Enabled</th><th></th></tr></thead>
+      <tbody>
+        {% for w in warehouses %}
+        <tr>
+          <td>{{ w.provider.name }}</td>
+          <td>{{ w.country }}{% if w.state_or_region %} / {{ w.state_or_region }}{% endif %}</td>
+          <td>{{ w.city|default:'—' }}</td>
+          <td>{{ w.currency|default:'—' }}</td>
+          <td>{% if w.enabled %}<span class="badge badge--yes">Yes</span>{% else %}<span class="badge badge--no">No</span>{% endif %}</td>
+          <td>{% if perms.buying.manage_fulfillment_routes %}<a class="btn btn--sm" href="{% url 'administration:buying_warehouse_edit' w.pk %}">Edit</a>{% endif %}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6">No warehouses yet (e.g. Onex USA / Germany / UK).</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card">
+  <h2 class="card-title">Routes</h2>
+  {% if perms.buying.manage_fulfillment_routes %}
+  <div class="staff-toolbar"><a class="btn btn--sm" href="{% url 'administration:buying_route_new' %}">New route</a></div>
+  {% endif %}
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Name</th><th>Provider</th><th>Warehouse</th><th>Origin</th><th>Method</th><th>Supplier</th><th>Category</th><th>ETA</th><th>Priority</th><th>Enabled</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for r in routes %}
+        <tr>
+          <td>{{ r.name }}</td>
+          <td>{{ r.provider.name }}</td>
+          <td>{{ r.warehouse }}</td>
+          <td>{{ r.origin_country }} → {{ r.destination_country }}</td>
+          <td>{{ r.get_delivery_method_display }}</td>
+          <td>{{ r.supplier.name|default:'Any' }}</td>
+          <td>{{ r.get_category_display|default:'Any' }}</td>
+          <td>{% if r.estimated_min_days %}{{ r.estimated_min_days }}–{{ r.estimated_max_days }} d{% else %}—{% endif %}</td>
+          <td>{{ r.priority }}</td>
+          <td>{% if r.enabled %}<span class="badge badge--yes">Yes</span>{% else %}<span class="badge badge--no">No</span>{% endif %}</td>
+          <td>{% if perms.buying.manage_fulfillment_routes %}<a class="btn btn--sm" href="{% url 'administration:buying_route_edit' r.pk %}">Edit</a>{% endif %}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="11">No routes yet (e.g. “US shops → Onex USA → Georgia”).</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

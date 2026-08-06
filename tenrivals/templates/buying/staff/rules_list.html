@@ -1,0 +1,50 @@
+{% extends 'persons/staff_base.html' %}
+{% block title %}Pricing rules | Buying | Staff{% endblock %}
+{% block page_heading %}Pricing rules{% endblock %}
+{% block page_note %}<p class="page-note">Versioned calculation rules: taxes, tariffs, FX, margin, weight norms, rounding. The most specific enabled rule wins; every scenario records which rule versions it used.</p>{% endblock %}
+{% block content %}
+<div class="staff-toolbar">
+  <form method="get">
+    <select name="type" onchange="this.form.submit()" style="padding:8px 12px; border:1px solid var(--line); font-family:inherit">
+      <option value="">All rule types</option>
+      {% for value, label in rule_types %}
+      <option value="{{ value }}" {% if filter_type == value %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+  </form>
+  {% if perms.buying.manage_pricing_rules %}
+  <a class="btn btn--sm" href="{% url 'administration:buying_rule_new' %}" style="margin-left:auto">New rule</a>
+  {% endif %}
+</div>
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>Type</th><th>Name</th><th>Scope</th><th>Params</th><th>Version</th><th>Priority</th><th>Active</th><th>Enabled</th><th></th></tr>
+    </thead>
+    <tbody>
+      {% for r in rules %}
+      <tr>
+        <td>{{ r.get_rule_type_display }}</td>
+        <td>{{ r.name }}</td>
+        <td class="page-note" style="margin:0">
+          {% if r.country %}country {{ r.country }} {% endif %}
+          {% if r.supplier %}· {{ r.supplier.name }} {% endif %}
+          {% if r.provider %}· {{ r.provider.name }} {% endif %}
+          {% if r.warehouse %}· {{ r.warehouse }} {% endif %}
+          {% if r.category %}· {{ r.get_category_display }}{% endif %}
+          {% if not r.country and not r.supplier and not r.provider and not r.warehouse and not r.category %}global{% endif %}
+        </td>
+        <td class="mono" style="max-width:280px; overflow:hidden; text-overflow:ellipsis">{{ r.params }}</td>
+        <td>v{{ r.version }}</td>
+        <td>{{ r.priority }}</td>
+        <td>{% if r.active_from or r.active_to %}{{ r.active_from|date:'Y-m-d'|default:'…' }} → {{ r.active_to|date:'Y-m-d'|default:'…' }}{% else %}always{% endif %}</td>
+        <td>{% if r.enabled %}<span class="badge badge--yes">Yes</span>{% else %}<span class="badge badge--no">No</span>{% endif %}</td>
+        <td>{% if perms.buying.manage_pricing_rules %}<a class="btn btn--sm" href="{% url 'administration:buying_rule_edit' r.pk %}">Edit</a>{% endif %}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="9">No rules yet. Start with: FX rates, margin, Georgia VAT, international shipping tariff, category weights.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
