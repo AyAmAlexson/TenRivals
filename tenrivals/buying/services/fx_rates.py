@@ -92,7 +92,7 @@ def sync_nbg_rates(
 
     provider = provider or NbgRateProvider()
     try:
-        rows = provider.fetch_rates(rate_date=rate_date, currencies=currencies)
+        rows = provider.fetch_rates(rate_date=target_date, currencies=currencies)
     except NbgApiError:
         logger.exception('Failed to fetch NBG FX rates for %s', target_date)
         try:

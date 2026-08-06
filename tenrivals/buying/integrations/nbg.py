@@ -86,11 +86,11 @@ class NbgRateProvider:
         rate_date: date | None = None,
         currencies: list[str] | None = None,
     ) -> list[FxRateData]:
+        # NBG's `currencies` query param returns [] for comma-separated codes —
+        # always fetch the full day board and filter client-side.
         params: dict[str, str] = {}
         if rate_date is not None:
             params['date'] = rate_date.isoformat()
-        if currencies:
-            params['currencies'] = ','.join(c.upper() for c in currencies)
 
         try:
             response = httpx.get(self.base_url, params=params or None, timeout=self.timeout)
@@ -105,7 +105,13 @@ class NbgRateProvider:
         except ValueError as exc:
             raise NbgApiError('NBG API returned non-JSON body') from exc
 
-        return self._parse_payload(payload, requested_date=rate_date)
+        rows = self._parse_payload(payload, requested_date=rate_date)
+        if currencies:
+            wanted = {c.upper() for c in currencies}
+            filtered = [r for r in rows if r.currency in wanted]
+            if filtered:
+                return filtered
+        return rows
 
     def _parse_payload(self, payload, *, requested_date: date | None) -> list[FxRateData]:
         if not isinstance(payload, list) or not payload:

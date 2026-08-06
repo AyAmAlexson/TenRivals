@@ -83,6 +83,21 @@ class NbgProviderTests(TestCase):
         with self.assertRaises(NbgApiError):
             NbgRateProvider()._parse_payload([], requested_date=None)
 
+    @patch('buying.integrations.nbg.httpx.get')
+    def test_fetch_filters_currencies_client_side_without_api_param(self, mock_get):
+        """NBG returns [] for currencies= query — never send it; filter locally."""
+        mock_resp = mock_get.return_value
+        mock_resp.raise_for_status.return_value = None
+        mock_resp.json.return_value = _payload(SAMPLE_USD, SAMPLE_CNY)
+        rows = NbgRateProvider().fetch_rates(
+            rate_date=date(2026, 8, 6),
+            currencies=['USD'],
+        )
+        self.assertEqual([r.currency for r in rows], ['USD'])
+        _args, kwargs = mock_get.call_args
+        self.assertEqual(kwargs['params'], {'date': '2026-08-06'})
+        self.assertNotIn('currencies', kwargs['params'])
+
 
 @override_settings(BUYING_NBG_LIVE_FETCH_ON_MISS=False, BUYING_FX_TIMEZONE='Asia/Tbilisi')
 class FxResolutionTests(TestCase):
