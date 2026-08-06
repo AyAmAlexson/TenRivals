@@ -44,6 +44,11 @@ class NormalizedProduct(models.Model):
     weight_g = models.PositiveIntegerField(null=True, blank=True, help_text='Racquet weight, grams')
     head_size = models.CharField(max_length=20, blank=True)
     string_pattern = models.CharField(max_length=20, blank=True)
+    variant = models.CharField(
+        max_length=60, blank=True,
+        help_text='Team / Lite / Tour / Plus / Junior / empty for standard',
+    )
+    length_cm = models.DecimalField(max_digits=5, decimal_places=1, null=True, blank=True)
     quantity = models.PositiveIntegerField(default=1)
     required_attributes = models.JSONField(default=list, blank=True)
     optional_attributes = models.JSONField(default=list, blank=True)
@@ -52,6 +57,11 @@ class NormalizedProduct(models.Model):
     ean = models.CharField(max_length=20, blank=True)
     upc = models.CharField(max_length=20, blank=True)
     aliases = models.JSONField(default=list, blank=True)
+
+    # Per-field provenance: client | ai | canonical | staff
+    field_sources = models.JSONField(default=dict, blank=True)
+    # Snapshot of RacquetSpecification values applied at enrichment time
+    enrichment_snapshot = models.JSONField(default=dict, blank=True)
 
     canonical_product = models.ForeignKey(
         'buying.CanonicalProduct',

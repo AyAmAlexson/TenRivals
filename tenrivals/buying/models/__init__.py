@@ -1,4 +1,4 @@
-from .canonical import CanonicalProduct
+from .canonical import CanonicalProduct, RacquetSpecification
 from .requests import BuyingRequest, NormalizedProduct, ProductCategory
 from .suppliers import (
     ConnectorResponse,
@@ -41,6 +41,7 @@ __all__ = [
     'ProductCategory',
     'ProductMapping',
     'PurchaseContextStatus',
+    'RacquetSpecification',
     'Supplier',
     'SupplierConnectorStatus',
     'SupplierOffer',

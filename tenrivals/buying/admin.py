@@ -15,6 +15,7 @@ from .models import (
     OptimizationCandidate,
     OptimizationScenario,
     ProductMapping,
+    RacquetSpecification,
     Supplier,
     SupplierConnectorStatus,
     SupplierOffer,
@@ -53,6 +54,16 @@ class FxRateAdmin(admin.ModelAdmin):
     list_display = ['currency', 'rate_date', 'quantity', 'rate_gel', 'source', 'fetched_at']
     list_filter = ['source', 'currency']
     search_fields = ['currency']
+
+
+@admin.register(RacquetSpecification)
+class RacquetSpecificationAdmin(admin.ModelAdmin):
+    list_display = [
+        'brand', 'model_family', 'generation', 'variant',
+        'head_size_sqin', 'weight_g_unstrung', 'string_pattern', 'enabled',
+    ]
+    list_filter = ['brand', 'enabled', 'generation']
+    search_fields = ['brand', 'model_family', 'variant', 'manufacturer_code']
 
 
 for model in (

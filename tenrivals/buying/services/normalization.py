@@ -1,4 +1,9 @@
-"""Normalization service: free-form client request -> NormalizedProduct."""
+"""Normalization service: free-form client request -> NormalizedProduct.
+
+Flow: AI normalize → racquet enrichment (CanonicalProduct / RacquetSpecification)
+→ staff review. Enrichment snapshots specs onto the product so later KB edits
+do not rewrite historical requests.
+"""
 
 from __future__ import annotations
 
@@ -9,6 +14,12 @@ from django.db import transaction
 from buying.ai.base import AIProvider, AIProviderError
 from buying.ai.registry import get_ai_provider
 from buying.models import BuyingRequest, NormalizedProduct
+from buying.services.enrichment import (
+    SOURCE_STAFF,
+    apply_enrichment_to_product,
+    enrich_racquet,
+    enrichment_input_from_ai,
+)
 
 logger = logging.getLogger('buying')
 
@@ -17,7 +28,7 @@ logger = logging.getLogger('buying')
 def normalize_buying_request(
     buying_request: BuyingRequest, provider: AIProvider | None = None
 ) -> NormalizedProduct:
-    """Run AI normalization for a request and persist the result.
+    """Run AI normalization + tennis enrichment for a request and persist.
 
     Raises AIProviderError on provider failures; the caller decides how to
     surface it (the request itself is left untouched in that case).
@@ -32,25 +43,32 @@ def normalize_buying_request(
         'grip_size', 'color', 'head_size', 'string_pattern', 'manufacturer_code',
         'ean', 'upc',
     ):
-        setattr(product, key, data.get(key, ''))
-    product.model_name = data.get('model', '')
+        setattr(product, key, data.get(key, '') or '')
+    product.model_name = data.get('model', '') or ''
+    product.variant = data.get('variant', '') or ''
     product.weight_g = _parse_weight_g(data.get('weight', ''))
     product.quantity = data.get('quantity', 1)
     product.required_attributes = data.get('required_attributes', [])
     product.optional_attributes = data.get('optional_attributes', [])
     product.uncertainties = data.get('uncertainties', [])
     product.aliases = data.get('aliases', [])
-    product.color_policy = (
-        NormalizedProduct.ColorPolicy.REQUIRED
-        if 'color' in product.required_attributes
-        else NormalizedProduct.ColorPolicy.PREFERRED
-        if 'color' in product.optional_attributes
-        else NormalizedProduct.ColorPolicy.OPTIONAL
-    )
     product.raw_ai_output = result.raw_response
     product.prompt_version = result.prompt_version
     product.model_version = result.model_version
     product.edited_by_staff = False
+
+    enrichment = enrich_racquet(
+        enrichment_input_from_ai(data, original_query=buying_request.original_query)
+    )
+    apply_enrichment_to_product(product, enrichment)
+
+    product.color_policy = (
+        NormalizedProduct.ColorPolicy.REQUIRED
+        if 'color' in (product.required_attributes or [])
+        else NormalizedProduct.ColorPolicy.PREFERRED
+        if 'color' in (product.optional_attributes or [])
+        else NormalizedProduct.ColorPolicy.OPTIONAL
+    )
     product.save()
 
     buying_request.normalized_product = product
@@ -58,10 +76,18 @@ def normalize_buying_request(
     buying_request.status = BuyingRequest.Status.NORMALIZED
     buying_request.save(update_fields=['normalized_product', 'quantity', 'status', 'updated_at'])
     logger.info(
-        'Normalized buying request #%s via %s (%s / %s)',
+        'Normalized buying request #%s via %s (%s / %s); enrichment resolved=%s ambiguous=%s',
         buying_request.pk, provider.name, result.model_version, result.prompt_version,
+        enrichment.resolved, enrichment.ambiguous,
     )
     return product
+
+
+def mark_staff_field_sources(product: NormalizedProduct, changed_fields: list[str]) -> None:
+    sources = dict(product.field_sources or {})
+    for name in changed_fields:
+        sources[name] = SOURCE_STAFF
+    product.field_sources = sources
 
 
 def _parse_weight_g(raw: str) -> int | None:

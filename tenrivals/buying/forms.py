@@ -41,9 +41,9 @@ class NormalizedProductForm(forms.ModelForm):
     class Meta:
         model = NormalizedProduct
         fields = [
-            'brand', 'model_name', 'generation', 'category', 'gender', 'court',
+            'brand', 'model_name', 'generation', 'variant', 'category', 'gender', 'court',
             'size', 'size_system', 'grip_size', 'color', 'color_policy',
-            'weight_g', 'head_size', 'string_pattern', 'quantity',
+            'weight_g', 'head_size', 'string_pattern', 'length_cm', 'quantity',
             'required_attributes', 'optional_attributes', 'aliases',
             'manufacturer_code', 'ean', 'upc',
         ]

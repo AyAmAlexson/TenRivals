@@ -144,8 +144,11 @@ def buying_request_detail(request, pk: int):
             product = buying_request.normalized_product or NormalizedProduct()
             form = NormalizedProductForm(request.POST, instance=product)
             if form.is_valid():
+                from buying.services.normalization import mark_staff_field_sources
+
                 product = form.save(commit=False)
                 product.edited_by_staff = True
+                mark_staff_field_sources(product, list(form.changed_data))
                 product.save()
                 if not buying_request.normalized_product_id:
                     buying_request.normalized_product = product
@@ -244,6 +247,11 @@ def buying_request_detail(request, pk: int):
                 buying_request.normalized_product.uncertainties
                 if buying_request.normalized_product_id
                 else []
+            ),
+            'field_sources': (
+                buying_request.normalized_product.field_sources
+                if buying_request.normalized_product_id
+                else {}
             ),
         },
     )

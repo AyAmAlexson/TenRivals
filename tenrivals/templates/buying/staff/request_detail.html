@@ -87,12 +87,20 @@
   <p class="page-note">
     AI: {{ buying_request.normalized_product.model_version|default:'—' }} / {{ buying_request.normalized_product.prompt_version|default:'—' }}
     {% if buying_request.normalized_product.edited_by_staff %} · edited by staff{% endif %}
+    {% if buying_request.normalized_product.enrichment_snapshot %} · canonical enrichment applied{% endif %}
+  </p>
+  <p class="page-note">
+    Field sources:
+    <span class="badge">client</span> request text ·
+    <span class="badge">ai</span> AI ·
+    <span class="badge badge--yes">canonical</span> racquet KB ·
+    <span class="badge badge--no">staff</span> manual edit
   </p>
   {% else %}
   <p class="page-note">Not normalized yet. Run “Normalize” or fill the fields manually and save.</p>
   {% endif %}
   {% if uncertainties %}
-  <div class="alert alert-info">AI uncertainties: {{ uncertainties|join:'; ' }}</div>
+  <div class="alert alert-info">Uncertainties: {{ uncertainties|join:'; ' }}</div>
   {% endif %}
   {% if perms.buying.create %}
   <form method="post">
@@ -100,7 +108,17 @@
     <div class="form-row">
       {% for field in normalized_form.visible_fields %}
       <div class="form-group">
-        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        <label for="{{ field.id_for_label }}">
+          {{ field.label }}
+          {% if field_sources %}
+            {% for key, src in field_sources.items %}
+              {% if key == field.name %}
+              <span class="badge {% if src == 'canonical' %}badge--yes{% elif src == 'staff' %}badge--no{% endif %}"
+                    style="font-weight:400;text-transform:none;letter-spacing:0;margin-left:6px">{{ src }}</span>
+              {% endif %}
+            {% endfor %}
+          {% endif %}
+        </label>
         {{ field }}
         {% if field.errors %}<div class="field-errors">{{ field.errors }}</div>{% endif %}
       </div>
