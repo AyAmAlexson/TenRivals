@@ -419,12 +419,30 @@ def staff_customer_edit(request, pk=None):
 @user_passes_test(_staff_ok)
 @require_POST
 def staff_customer_delete(request, pk):
-    c = get_object_or_404(Customer, pk=pk)
+    c = get_object_or_404(Customer.objects.select_related('user'), pk=pk)
     if c.sales_orders.exists():
-        messages.error(request, 'Cannot delete: customer has sales orders.')
-        return redirect('administration:staff_customers')
+        messages.error(
+            request,
+            'Cannot delete: customer has sales orders. Remove or reassign orders first.',
+        )
+        return redirect('administration:staff_customer_detail', pk=c.pk)
+
+    linked_user = c.user
+    label = c.display_name()
+    # FK lives on Customer → deleting the customer never cascades to CustomUser.
+    # Clear the link explicitly so the site account stays intact.
+    if c.user_id:
+        c.user = None
+        c.save(update_fields=['user', 'updated_at'])
     c.delete()
-    messages.success(request, 'Customer deleted.')
+    if linked_user is not None:
+        messages.success(
+            request,
+            f'Customer {label} deleted. Linked user account '
+            f'{linked_user.email} (#{linked_user.pk}) was kept.',
+        )
+    else:
+        messages.success(request, f'Customer {label} deleted.')
     return redirect('administration:staff_customers')
 
 

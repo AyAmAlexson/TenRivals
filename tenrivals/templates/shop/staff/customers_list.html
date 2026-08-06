@@ -156,7 +156,8 @@
   function openModal(formEl, label){
     pending = formEl;
     const name = (label || '').trim();
-    text.textContent = name ? ('Delete customer ' + name + '?') : 'Delete this customer?';
+    text.textContent = (name ? ('Delete customer ' + name + '?') : 'Delete this customer?')
+      + ' Linked site user accounts are kept.';
     overlay.classList.add('is-open');
     overlay.setAttribute('aria-hidden', 'false');
   }

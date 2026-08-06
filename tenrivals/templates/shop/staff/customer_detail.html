@@ -29,6 +29,17 @@
   .status-list .status-badge{padding:4px 10px;font-size:12px}
   .top-products{width:100%;border-collapse:collapse;font-size:13px;min-width:0}
   .num{text-align:right}
+  .confirm-overlay{
+    position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;
+    align-items:center;justify-content:center;z-index:12060;padding:16px;
+  }
+  .confirm-overlay.is-open{display:flex}
+  .confirm-modal{
+    width:min(420px,100%);background:#fff;border:1px solid var(--line);padding:18px;
+  }
+  .confirm-modal__title{margin:0 0 10px;font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+  .confirm-modal__text{margin:0 0 14px;font-size:14px;color:var(--muted);line-height:1.5}
+  .confirm-modal__actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
 </style>
 {% endblock %}
 {% block content %}
@@ -42,6 +53,14 @@
   {% if linked_user %}
   <a href="{% url 'administration:superuser_user_edit' linked_user.pk %}" class="btn btn--sm btn--outline" style="margin-right:0">User account</a>
   {% endif %}
+  <form id="delete-customer-detail" method="post" action="{% url 'administration:staff_customer_delete' customer.pk %}" style="display:inline;margin-left:auto">
+    {% csrf_token %}
+    <button type="button" class="btn btn--sm btn--danger js-delete-customer-detail"
+            data-customer-name="{{ customer.display_name|escape }}"
+            data-has-orders="{% if orders_count %}1{% else %}0{% endif %}"
+            data-has-user="{% if linked_user %}1{% else %}0{% endif %}"
+            title="Delete customer (site user account is kept)">Delete customer</button>
+  </form>
 </div>
 
 <div class="cust-stats">
@@ -174,4 +193,56 @@
   <p style="font-size:14px;color:var(--muted)">No orders yet.</p>
   {% endif %}
 </div>
+
+<div class="confirm-overlay" id="customer-delete-confirm" aria-hidden="true">
+  <div class="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="customer-delete-title">
+    <h3 class="confirm-modal__title" id="customer-delete-title">Delete customer</h3>
+    <p class="confirm-modal__text" id="customer-delete-text">Delete this customer?</p>
+    <div class="confirm-modal__actions">
+      <button type="button" class="btn btn--sm btn--outline" id="customer-delete-cancel">Cancel</button>
+      <button type="button" class="btn btn--sm btn--danger" id="customer-delete-submit">Delete</button>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  const overlay = document.getElementById('customer-delete-confirm');
+  const text = document.getElementById('customer-delete-text');
+  const cancelBtn = document.getElementById('customer-delete-cancel');
+  const submitBtn = document.getElementById('customer-delete-submit');
+  const btn = document.querySelector('.js-delete-customer-detail');
+  const form = document.getElementById('delete-customer-detail');
+  if(!overlay || !btn || !form) return;
+
+  function closeModal(){
+    overlay.classList.remove('is-open');
+    overlay.setAttribute('aria-hidden', 'true');
+  }
+
+  btn.addEventListener('click', function(){
+    if(btn.getAttribute('data-has-orders') === '1'){
+      text.textContent = 'This customer has sales orders and cannot be deleted. Reassign or remove orders first.';
+      submitBtn.style.display = 'none';
+    } else {
+      const name = (btn.getAttribute('data-customer-name') || '').trim();
+      let msg = name ? ('Delete customer ' + name + '?') : 'Delete this customer?';
+      if(btn.getAttribute('data-has-user') === '1'){
+        msg += ' The linked site user account will be kept.';
+      }
+      text.textContent = msg;
+      submitBtn.style.display = '';
+    }
+    overlay.classList.add('is-open');
+    overlay.setAttribute('aria-hidden', 'false');
+  });
+
+  cancelBtn.addEventListener('click', closeModal);
+  overlay.addEventListener('click', function(e){ if(e.target === overlay) closeModal(); });
+  document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && overlay.classList.contains('is-open')) closeModal(); });
+  submitBtn.addEventListener('click', function(){
+    closeModal();
+    form.submit();
+  });
+})();
+</script>
 {% endblock %}

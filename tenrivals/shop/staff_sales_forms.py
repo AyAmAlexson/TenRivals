@@ -1,6 +1,7 @@
 from decimal import Decimal
 
 from django import forms
+from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.forms import BaseInlineFormSet, inlineformset_factory
 
@@ -67,9 +68,37 @@ class CustomerForm(forms.ModelForm):
     def clean_tg_account(self):
         return normalize_telegram_username(self.cleaned_data.get('tg_account'))
 
+    def clean_email(self):
+        email = (self.cleaned_data.get('email') or '').strip()
+        if not email:
+            return ''
+        qs = Customer.objects.filter(email__iexact=email)
+        if self.instance.pk:
+            qs = qs.exclude(pk=self.instance.pk)
+        other = qs.order_by('pk').first()
+        if other:
+            raise ValidationError(
+                f'A customer with this email already exists '
+                f'(#{other.pk}: {other.display_name()}). '
+                f'Open that record instead of creating a duplicate.'
+            )
+        return email
+
     def save(self, commit=True):
-        customer = super().save(commit=commit)
+        customer = super().save(commit=False)
+        # New staff-created rows: attach existing site account with the same email
+        # when that user does not already have a retail Customer (avoids a later
+        # signup/signal creating a second card for the same person).
+        if not customer.user_id:
+            email = (customer.email or '').strip()
+            if email:
+                User = get_user_model()
+                user = User.objects.filter(email__iexact=email).first()
+                if user is not None and not Customer.objects.filter(user_id=user.pk).exists():
+                    customer.user = user
         if commit:
+            customer.save()
+            self.save_m2m()
             sync_customer_to_user(customer)
         return customer
 

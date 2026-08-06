@@ -181,6 +181,58 @@ class CustomerEditPersistTests(TestCase):
 
 
 @override_settings(SECURE_SSL_REDIRECT=False)
+@override_settings(SECURE_SSL_REDIRECT=False)
+class CustomerDuplicateAndDeleteTests(TestCase):
+    def setUp(self):
+        User = get_user_model()
+        self.staff = User.objects.create_superuser(
+            email='staff-dup@test.com',
+            password='secret-secret',
+        )
+        self.client.force_login(self.staff)
+
+    def test_staff_create_rejects_duplicate_email(self):
+        Customer.objects.create(
+            first_name='Existing',
+            last_name='One',
+            email='dup@test.com',
+        )
+        form = CustomerForm(
+            {
+                'first_name': 'New',
+                'last_name': 'Two',
+                'name_local': '',
+                'surname_local': '',
+                'phone': '',
+                'email': 'dup@test.com',
+                'tg_account': '',
+                'address': '',
+                'source': '',
+                'comment': '',
+            }
+        )
+        self.assertFalse(form.is_valid())
+        self.assertIn('email', form.errors)
+
+    def test_delete_customer_keeps_linked_user(self):
+        User = get_user_model()
+        user = User.objects.create_user(
+            email='keep-user@test.com',
+            password='secret-secret',
+            first_name='Keep',
+            last_name='Me',
+        )
+        customer = Customer.objects.get(user=user)
+        url = reverse('administration:staff_customer_delete', kwargs={'pk': customer.pk})
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(Customer.objects.filter(pk=customer.pk).exists())
+        self.assertTrue(User.objects.filter(pk=user.pk).exists())
+        user.refresh_from_db()
+        self.assertEqual(user.email, 'keep-user@test.com')
+
+
+@override_settings(SECURE_SSL_REDIRECT=False)
 class CustomerAttributionTests(TestCase):
     def test_format_utm_and_organic_default(self):
         self.assertEqual(

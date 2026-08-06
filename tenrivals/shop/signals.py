@@ -93,6 +93,10 @@ def create_retail_customer_for_new_user(sender, instance, created, **kwargs):
                 ]
             )
             return
+        # Staff (or checkout) may already have created a customer card with this
+        # email. Never open a second Customer for the same email on user create.
+        if Customer.objects.filter(email__iexact=email).exists():
+            return
     Customer.objects.create(
         user=instance,
         first_name=(instance.first_name or '').strip() or 'Customer',
