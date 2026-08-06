@@ -624,7 +624,19 @@ sequenceDiagram
 
 **Phase 2 — Onex MVP (реализовано)**: Weight Engine `max(actual, volumetric)`; Onex provider + warehouses + routes + tariffs via `seed_onex`; import threshold на Local Cost; import VAT / customs / declaration service; Onex payment fee (% of intl); sales VAT + small business tax → net sales coefficient → break-even + three selling prices; full breakdown UI; FX as editable rules (NBG auto-fetch — follow-up).
 
-**Phase 3 — Supplier Connectors**: base/registry/http, health checks + Connector Status page, Celery-конвейер (runs, chord, polling UI, retry), коннекторы по согласованному списку (приоритет — магазины с JSON/JSON-LD), извлечение цены/скидки/вариаций, диагностика ошибок. Один запрос — все активные магазины.
+**Phase 3 — Supplier Connectors**: реализовано — `buying/connectors/` (base/registry/http/jsonld + 20 store modules), `PurchaseContext`/`OfferData`, `ConnectorResponse`, `onex_applicability`, Celery/sync search orchestration (`services/search.py`), deterministic matching, `seed_suppliers`, staff search/progress/auth UI. Playwright — Phase 6. AI matching — Phase 4.
+
+### Credentials (authenticated connectors)
+
+| Variable | Supplier |
+|---|---|
+| `BUYING_ITF_TENNIS_POINT_USERNAME` / `BUYING_ITF_TENNIS_POINT_PASSWORD` | ITF Tennis Point |
+| `BUYING_CENTRAL_TENNIS_USERNAME` / `BUYING_CENTRAL_TENNIS_PASSWORD` | Central Tennis |
+
+Set via Heroku Config Vars only. Staff → Connector status → **Test authentication** reports status without exposing secrets.
+
+`manage.py seed_suppliers` — register all 20 shops. `BUYING_SEARCH_SYNC_FALLBACK=True` runs search in-process when Celery worker is not scaled.
+
 
 **Phase 4 — AI Matching**: генерация поисковых вариантов, semantic matching + strict rules, ProductMapping (mapping-first поиск), staff confirmation UI.
 

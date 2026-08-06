@@ -12,11 +12,17 @@ from .requests import ProductCategory
 
 
 class TaxDisplayMode(models.TextChoices):
-    PRICES_INCLUDE_VAT = 'prices_include_vat', 'Prices include VAT'
-    TAX_AT_CHECKOUT = 'tax_at_checkout', 'Tax added at checkout'
-    SALES_TAX_BY_STATE = 'sales_tax_by_state', 'Sales tax by state/address'
+    # Phase 3 canonical modes
+    VAT_INCLUDED = 'vat_included', 'VAT included'
+    VAT_EXCLUDED = 'vat_excluded', 'VAT excluded'
+    SALES_TAX_AT_CHECKOUT = 'sales_tax_at_checkout', 'Sales tax at checkout'
+    DESTINATION_BASED_TAX = 'destination_based_tax', 'Destination-based tax'
     NO_LOCAL_TAX = 'no_local_tax', 'No local tax'
     UNKNOWN = 'unknown', 'Unknown'
+    # Legacy aliases (kept for existing rows / forms)
+    PRICES_INCLUDE_VAT = 'prices_include_vat', 'Prices include VAT (legacy)'
+    TAX_AT_CHECKOUT = 'tax_at_checkout', 'Tax added at checkout (legacy)'
+    SALES_TAX_BY_STATE = 'sales_tax_by_state', 'Sales tax by state/address (legacy)'
 
 
 class ValueSource(models.TextChoices):
@@ -26,6 +32,25 @@ class ValueSource(models.TextChoices):
     HISTORICAL_ESTIMATE = 'historical_estimate', 'Historical estimate'
     MANUAL_OVERRIDE = 'manual_override', 'Manual override'
     MANUAL_ENTRY = 'manual_entry', 'Manual entry'
+    UNKNOWN = 'unknown', 'Unknown'
+
+
+class OnexApplicability(models.TextChoices):
+    SUPPORTED = 'supported', 'Supported'
+    UNSUPPORTED = 'unsupported', 'Unsupported'
+    MANUAL_REVIEW = 'manual_review', 'Manual review'
+
+
+class FreeShippingStatus(models.TextChoices):
+    FREE_SHIPPING_REACHED = 'free_shipping_reached', 'Free shipping reached'
+    PAID_SHIPPING = 'paid_shipping', 'Paid shipping'
+    THRESHOLD_UNKNOWN = 'threshold_unknown', 'Threshold unknown'
+    SHIPPING_CALCULATED_AT_CHECKOUT = 'shipping_calculated_at_checkout', 'Calculated at checkout'
+
+
+class PurchaseContextStatus(models.TextChoices):
+    CONFIRMED = 'confirmed', 'Confirmed'
+    UNCONFIRMED = 'purchase_context_unconfirmed', 'Purchase context unconfirmed'
 
 
 class Supplier(models.Model):
@@ -38,12 +63,26 @@ class Supplier(models.Model):
     name = models.CharField(max_length=120)
     code = models.SlugField(max_length=60, unique=True, help_text='Connector registry key')
     base_url = models.URLField()
-    country = models.CharField(max_length=2, help_text='ISO 3166-1 alpha-2')
+    country = models.CharField(
+        max_length=2,
+        help_text='ISO 3166-1 alpha-2 — Onex receiving warehouse country for local delivery',
+    )
     currency = models.CharField(max_length=3, help_text='ISO 4217')
     connector_class = models.CharField(
-        max_length=200, blank=True, help_text='Filled in Phase 3; empty = manual-only supplier'
+        max_length=200, blank=True, help_text='Registry connector code; empty = manual-only'
     )
     enabled = models.BooleanField(default=True)
+    onex_applicability = models.CharField(
+        max_length=20,
+        choices=OnexApplicability.choices,
+        default=OnexApplicability.SUPPORTED,
+        help_text='Whether an Onex CostScenario may be built for this supplier',
+    )
+    default_destination_country = models.CharField(
+        max_length=2, blank=True,
+        help_text='Default PurchaseContext destination (usually Onex warehouse country)',
+    )
+    default_destination_postal_code = models.CharField(max_length=20, blank=True)
     reliability_score = models.DecimalField(
         max_digits=4, decimal_places=2, null=True, blank=True, help_text='0.00–1.00'
     )
@@ -172,6 +211,26 @@ class SupplierSearchResult(models.Model):
         return f'{self.supplier.code}: {self.title[:60]}'
 
 
+class ConnectorResponse(models.Model):
+    """Sanitized technical payload from a connector fetch (not a business object)."""
+
+    supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, related_name='connector_responses')
+    url = models.URLField(max_length=600)
+    fetched_at = models.DateTimeField()
+    content_type = models.CharField(max_length=80, blank=True)
+    payload = models.JSONField(default=dict, blank=True)
+    parser_version = models.CharField(max_length=40, blank=True)
+    http_status = models.PositiveSmallIntegerField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-fetched_at']
+        default_permissions = ()
+
+    def __str__(self):
+        return f'{self.supplier.code} @ {self.fetched_at:%Y-%m-%d %H:%M}'
+
+
 class SupplierOffer(models.Model):
     """Verified shop offer: an IMMUTABLE snapshot of what the shop showed at
     checked_at. Ends at shop-level data; no international shipping, no customer
@@ -202,6 +261,9 @@ class SupplierOffer(models.Model):
     search_result = models.ForeignKey(
         SupplierSearchResult, null=True, blank=True, on_delete=models.SET_NULL, related_name='offers'
     )
+    connector_response = models.ForeignKey(
+        ConnectorResponse, null=True, blank=True, on_delete=models.SET_NULL, related_name='offers'
+    )
     is_manual = models.BooleanField(default=False, help_text='Entered by staff, not by a connector')
     version = models.PositiveIntegerField(default=1)
     superseded_by = models.OneToOneField(
@@ -217,9 +279,18 @@ class SupplierOffer(models.Model):
 
     original_price = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
     current_price = models.DecimalField(max_digits=12, decimal_places=2)
+    displayed_price = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    effective_price = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    public_price = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    authenticated_price = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    authentication_status = models.CharField(max_length=40, blank=True, default='not_applicable')
     discount_amount = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
     discount_percent = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
     currency = models.CharField(max_length=3)
+
+    promotions = models.JSONField(default=list, blank=True)
+    applied_promotion_ids = models.JSONField(default=list, blank=True)
+    unapplied_eligible_promotions = models.JSONField(default=list, blank=True)
 
     requested_variant = models.JSONField(default=dict, blank=True)
     available_variants = models.JSONField(default=list, blank=True)
@@ -248,12 +319,32 @@ class SupplierOffer(models.Model):
     free_shipping_threshold = models.DecimalField(
         max_digits=12, decimal_places=2, null=True, blank=True
     )
+    free_shipping_status = models.CharField(
+        max_length=40,
+        choices=FreeShippingStatus.choices,
+        default=FreeShippingStatus.THRESHOLD_UNKNOWN,
+    )
+    free_shipping_currency = models.CharField(max_length=3, blank=True)
+    threshold_basis = models.CharField(max_length=40, blank=True, default='unknown')
+    amount_missing_for_free_shipping = models.DecimalField(
+        max_digits=12, decimal_places=2, null=True, blank=True
+    )
     tax_display_mode = models.CharField(
         max_length=25, choices=TaxDisplayMode.choices, default=TaxDisplayMode.UNKNOWN
     )
     supplier_tax_amount = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
     supplier_tax_source = models.CharField(
         max_length=25, choices=ValueSource.choices, default=ValueSource.CONFIGURED_RULE
+    )
+
+    selected_destination_country = models.CharField(max_length=2, blank=True)
+    selected_destination_postal_code = models.CharField(max_length=20, blank=True)
+    destination_selection_source = models.CharField(max_length=40, blank=True)
+    destination_selection_confirmed = models.BooleanField(default=False)
+    purchase_context_status = models.CharField(
+        max_length=40,
+        choices=PurchaseContextStatus.choices,
+        default=PurchaseContextStatus.CONFIRMED,
     )
 
     match_score = models.DecimalField(max_digits=4, decimal_places=2, null=True, blank=True)
@@ -264,10 +355,7 @@ class SupplierOffer(models.Model):
     warnings = models.JSONField(default=list, blank=True)
 
     checked_at = models.DateTimeField()
-    # Temporary home for raw connector payloads; moves to ConnectorResponse in
-    # Phase 3 (ADD §4.5). Business logic (pricing, matching, UI, optimization)
-    # must NEVER read values from here — every business value gets an explicit
-    # field on this model.
+    # Deprecated for new connector rows — use connector_response. Kept for manual offers.
     raw_data = models.JSONField(default=dict, blank=True)
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL,

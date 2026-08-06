@@ -10,6 +10,11 @@ urlpatterns = [
     path('new/', staff_views.buying_request_new, name='buying_request_new'),
     path('<int:pk>/', staff_views.buying_request_detail, name='buying_request_detail'),
     path(
+        '<int:pk>/progress/',
+        staff_views.buying_request_progress,
+        name='buying_request_progress',
+    ),
+    path(
         '<int:request_pk>/offers/new/',
         staff_views.buying_offer_edit,
         name='buying_offer_new',

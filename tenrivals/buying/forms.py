@@ -87,7 +87,8 @@ class SupplierForm(forms.ModelForm):
     class Meta:
         model = Supplier
         fields = [
-            'name', 'code', 'base_url', 'country', 'currency', 'enabled',
+            'name', 'code', 'base_url', 'country', 'currency', 'connector_class', 'enabled',
+            'onex_applicability', 'default_destination_country', 'default_destination_postal_code',
             'tax_display_mode', 'free_shipping_threshold', 'average_delivery_days',
             'return_complexity', 'reliability_score', 'risk_score', 'notes',
         ]

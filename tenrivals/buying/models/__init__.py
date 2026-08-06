@@ -1,12 +1,18 @@
 from .canonical import CanonicalProduct
 from .requests import BuyingRequest, NormalizedProduct, ProductCategory
 from .suppliers import (
+    ConnectorResponse,
+    FreeShippingStatus,
+    OnexApplicability,
     ProductMapping,
+    PurchaseContextStatus,
     Supplier,
     SupplierConnectorStatus,
     SupplierOffer,
     SupplierSearchResult,
     SupplierSearchRun,
+    TaxDisplayMode,
+    ValueSource,
 )
 from .fulfillment import FulfillmentProvider, FulfillmentRoute, FulfillmentWarehouse
 from .pricing import CalculationRule, CostScenario
@@ -20,20 +26,26 @@ __all__ = [
     'BuyingRequest',
     'CalculationRule',
     'CanonicalProduct',
+    'ConnectorResponse',
     'CostScenario',
+    'FreeShippingStatus',
     'FulfillmentProvider',
     'FulfillmentRoute',
     'FulfillmentWarehouse',
     'FxRate',
     'ManualOverride',
     'NormalizedProduct',
+    'OnexApplicability',
     'OptimizationCandidate',
     'OptimizationScenario',
     'ProductCategory',
     'ProductMapping',
+    'PurchaseContextStatus',
     'Supplier',
     'SupplierConnectorStatus',
     'SupplierOffer',
     'SupplierSearchResult',
     'SupplierSearchRun',
+    'TaxDisplayMode',
+    'ValueSource',
 ]

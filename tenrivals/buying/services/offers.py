@@ -221,6 +221,10 @@ def _recommendation(scenario: CostScenario) -> tuple[str, list[str]]:
 
     if offer.requested_variant_available is False:
         return CostScenario.Recommendation.NOT_RECOMMENDED, ['Requested variant is not available']
+    if getattr(offer, 'purchase_context_status', '') == 'purchase_context_unconfirmed':
+        return CostScenario.Recommendation.NOT_RECOMMENDED, ['Destination not confirmed']
+    if any('Onex route unsupported' in (w or '') for w in (offer.warnings or [])):
+        return CostScenario.Recommendation.NOT_RECOMMENDED, ['Onex route unsupported']
     if offer.match_status == 'manual_review':
         reasons.append('Product match needs manual review')
     if offer.match_status in ('alternative_color', 'alternative_version'):
@@ -231,6 +235,12 @@ def _recommendation(scenario: CostScenario) -> tuple[str, list[str]]:
         reasons.append('Final price was set manually')
     if any(w.startswith('rule_conflict:') for w in scenario.warnings):
         reasons.append('Conflicting pricing rules were tie-broken — review the rules')
+    if any('stale' in (w or '').lower() for w in (offer.warnings or [])):
+        reasons.append('Offer freshness not confirmed (stale search cache)')
+    if any('Authenticated session expired' in (w or '') for w in (offer.warnings or [])):
+        reasons.append('Authenticated session expired')
+    if any('Promotion shown but not confirmed' in (w or '') for w in (offer.warnings or [])):
+        reasons.append('Promotion shown but not confirmed')
 
     if reasons:
         return CostScenario.Recommendation.REVIEW, reasons

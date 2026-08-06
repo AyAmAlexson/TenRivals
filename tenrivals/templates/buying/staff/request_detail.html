@@ -6,6 +6,11 @@
   {{ buying_request.created_at|date:'Y-m-d H:i' }} · {{ buying_request.staff_user.get_full_name|default:buying_request.staff_user.email }}
   {% if buying_request.client %} · Client: {{ buying_request.client }}{% endif %}
   · Status: <strong>{{ buying_request.get_status_display }}</strong>
+  {% if search_progress.total %}
+  · Connectors: Completed {{ search_progress.completed }}/{{ search_progress.total }}
+  {% if search_progress.running %} · In progress {{ search_progress.running }}{% endif %}
+  {% if search_progress.failed %} · Failed {{ search_progress.failed }}{% endif %}
+  {% endif %}
 </p>
 {% endblock %}
 {% block content %}
@@ -34,8 +39,47 @@
       <button type="submit" name="action" value="archive" class="btn btn--outline" style="margin:0">Archive</button>
     </form>
     {% endif %}
+    {% if perms.buying.run_search and buying_request.normalized_product_id %}
+    <form method="post">{% csrf_token %}
+      <button type="submit" name="action" value="run_search" class="btn">Search all suppliers</button>
+    </form>
+    <form method="post">{% csrf_token %}
+      <button type="submit" name="action" value="force_search" class="btn btn--outline" style="margin:0">Force refresh</button>
+    </form>
+    {% endif %}
+    {% if perms.buying.retry_connectors and search_progress.failed %}
+    <form method="post">{% csrf_token %}
+      <button type="submit" name="action" value="retry_failed" class="btn btn--outline" style="margin:0">Retry failed connectors</button>
+    </form>
+    {% endif %}
   </div>
 </div>
+
+{% if search_progress.total %}
+<div class="card" id="search-progress-card">
+  <h2 class="card-title">Connector progress</h2>
+  <p class="page-note" id="search-progress-summary">
+    Completed {{ search_progress.completed }}/{{ search_progress.total }}
+    · Pending {{ search_progress.pending }} · Running {{ search_progress.running }} · Failed {{ search_progress.failed }}
+  </p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Supplier</th><th>Status</th><th>Candidates</th><th>Offers</th><th>Error</th></tr></thead>
+      <tbody id="search-progress-body">
+        {% for run in search_progress.runs %}
+        <tr>
+          <td>{{ run.supplier_name }}</td>
+          <td>{{ run.status }}</td>
+          <td>{{ run.candidates_found }}</td>
+          <td>{{ run.offers_created }}</td>
+          <td>{% if run.error_message %}{{ run.error_type }}: {{ run.error_message|truncatechars:80 }}{% else %}—{% endif %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
 
 <div class="card">
   <h2 class="card-title">Normalized product</h2>
@@ -71,7 +115,7 @@
 
 <div class="card">
   <h2 class="card-title">Supplier offers</h2>
-  <p class="page-note">Automatic search across all active suppliers arrives in Phase 3. Until then offers are entered manually from supplier pages.</p>
+  <p class="page-note">Automatic search checks every enabled supplier. You can still add a manual offer.</p>
   {% if perms.buying.create %}
   <p><a class="btn btn--sm" href="{% url 'administration:buying_offer_new' buying_request.pk %}">Add supplier offer</a></p>
   {% endif %}
@@ -79,17 +123,41 @@
   <div class="table-wrap" style="margin-top:14px">
     <table>
       <thead>
-        <tr><th>Supplier</th><th>Product</th><th>Price</th><th>Variant OK</th><th>Match</th><th>Checked</th><th></th></tr>
+        <tr>
+          <th>Supplier</th><th>Product</th><th>Price</th><th>Tax</th><th>Destination</th>
+          <th>Ship</th><th>Auth</th><th>Context</th><th>Onex</th><th>Variant</th><th>Match</th><th>Checked</th><th></th>
+        </tr>
       </thead>
       <tbody>
         {% for offer in offers %}
         <tr>
           <td>{{ offer.supplier.name }}</td>
-          <td style="max-width:280px">
-            {% if offer.product_url %}<a href="{{ offer.product_url }}" target="_blank" rel="noopener" style="text-decoration:underline">{{ offer.title|truncatechars:70 }}</a>
-            {% else %}{{ offer.title|truncatechars:70 }}{% endif %}
+          <td style="max-width:220px">
+            {% if offer.product_url %}<a href="{{ offer.product_url }}" target="_blank" rel="noopener" style="text-decoration:underline">{{ offer.title|truncatechars:60 }}</a>
+            {% else %}{{ offer.title|truncatechars:60 }}{% endif %}
+            {% if offer.warnings %}
+            <div class="page-note" style="margin:4px 0 0;color:#a33">{{ offer.warnings|join:'; ' }}</div>
+            {% endif %}
           </td>
-          <td>{{ offer.current_price }} {{ offer.currency }}{% if offer.discount_percent %} <span class="badge badge--yes">−{{ offer.discount_percent }}%</span>{% endif %}{% if offer.version > 1 %} <span class="badge">v{{ offer.version }}</span>{% endif %}</td>
+          <td>
+            {{ offer.effective_price|default:offer.current_price }} {{ offer.currency }}
+            {% if offer.public_price %}<div class="page-note" style="margin:2px 0 0">Public {{ offer.public_price }}</div>{% endif %}
+            {% if offer.authenticated_price %}<div class="page-note" style="margin:2px 0 0">Auth {{ offer.authenticated_price }}</div>{% endif %}
+            {% if offer.discount_percent %}<span class="badge badge--yes">−{{ offer.discount_percent }}%</span>{% endif %}
+          </td>
+          <td>{{ offer.get_tax_display_mode_display }}</td>
+          <td>
+            {{ offer.selected_destination_country|default:'—' }}
+            {% if offer.destination_selection_confirmed %}<span class="badge badge--yes">OK</span>{% else %}<span class="badge badge--no">?</span>{% endif %}
+          </td>
+          <td>
+            {% if offer.local_shipping_cost != None %}{{ offer.local_shipping_cost }}{% else %}—{% endif %}
+            <div class="page-note" style="margin:2px 0 0">{{ offer.get_free_shipping_status_display }}</div>
+            {% if offer.amount_missing_for_free_shipping %}<div class="page-note">Need {{ offer.amount_missing_for_free_shipping }} more</div>{% endif %}
+          </td>
+          <td>{{ offer.authentication_status|default:'—' }}</td>
+          <td>{{ offer.get_purchase_context_status_display }}</td>
+          <td>{{ offer.supplier.get_onex_applicability_display }}</td>
           <td>{% if offer.requested_variant_available %}<span class="badge badge--yes">Yes</span>{% elif offer.requested_variant_available == False %}<span class="badge badge--no">No</span>{% else %}—{% endif %}</td>
           <td>{{ offer.get_match_status_display }}</td>
           <td>{{ offer.checked_at|date:'Y-m-d H:i' }}</td>
@@ -109,7 +177,7 @@
     <table>
       <thead>
         <tr>
-          <th>Rank</th><th>Recommendation</th><th>Supplier</th><th>Route</th><th>Item</th><th>Local ship</th>
+          <th>Rank</th><th>Recommendation</th><th>Supplier</th><th>Route</th><th>Dest</th><th>Item</th><th>Local ship</th>
           <th>Intl ship</th><th>Import VAT</th><th>Pay fee</th><th>Landed</th><th>Break-even</th><th>Customer price</th>
           <th>Confidence</th><th>ETA</th><th></th>
         </tr>
@@ -125,6 +193,7 @@
           </td>
           <td>{{ s.supplier_offer.supplier.name }}</td>
           <td>{{ s.fulfillment_route.name }}</td>
+          <td>{{ s.supplier_offer.selected_destination_country|default:s.supplier_offer.supplier.country }}</td>
           <td>{{ s.item_cost }} ₾</td>
           <td>{{ s.local_shipping }} ₾</td>
           <td>{{ s.international_shipping }} ₾</td>
@@ -144,7 +213,7 @@
     </table>
   </div>
   {% else %}
-  <p class="page-note">No scenarios yet — add a supplier offer; scenarios are calculated automatically for every applicable fulfillment route.</p>
+  <p class="page-note">No Onex scenarios yet — run supplier search (supported suppliers) or add a manual offer.</p>
   {% endif %}
   {% if blocked_scenarios %}
   <div class="alert alert-info" style="margin-top:14px">
@@ -163,4 +232,23 @@
   </div>
   {% endif %}
 </div>
+
+{% if search_progress.running or search_progress.pending %}
+<script>
+(function(){
+  var url = "{% url 'administration:buying_request_progress' buying_request.pk %}";
+  function tick(){
+    fetch(url, {credentials:'same-origin'}).then(function(r){ return r.json(); }).then(function(data){
+      var sum = document.getElementById('search-progress-summary');
+      if(sum){
+        sum.textContent = 'Completed '+data.completed+'/'+data.total
+          +' · Pending '+data.pending+' · Running '+data.running+' · Failed '+data.failed;
+      }
+      if(data.pending===0 && data.running===0){ location.reload(); }
+    }).catch(function(){});
+  }
+  setInterval(tick, 3000);
+})();
+</script>
+{% endif %}
 {% endblock %}

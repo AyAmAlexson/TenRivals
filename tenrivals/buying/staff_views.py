@@ -183,6 +183,25 @@ def buying_request_detail(request, pk: int):
             )
             messages.success(request, 'Request duplicated.')
             return redirect('administration:buying_request_detail', pk=clone.pk)
+        elif action in ('run_search', 'force_search'):
+            _require(request, 'buying.run_search')
+            if not buying_request.normalized_product_id:
+                messages.error(request, 'Normalize the product before running supplier search.')
+                return redirect('administration:buying_request_detail', pk=pk)
+            from buying.services.search import start_search
+            result = start_search(buying_request, force=(action == 'force_search'))
+            messages.success(
+                request,
+                f'Search started across {result["runs"]} suppliers '
+                f'({"sync" if result["sync"] else "async"}).',
+            )
+            return redirect('administration:buying_request_detail', pk=pk)
+        elif action == 'retry_failed':
+            _require(request, 'buying.retry_connectors')
+            from buying.services.search import retry_failed
+            result = retry_failed(buying_request)
+            messages.success(request, f'Retried {result["retried"]} failed connector(s).')
+            return redirect('administration:buying_request_detail', pk=pk)
         else:
             form = None
     if request.method != 'POST' or form is None:
@@ -203,6 +222,7 @@ def buying_request_detail(request, pk: int):
     failed_scenarios = buying_request.cost_scenarios.filter(
         status=CostScenario.Status.FAILED
     ).select_related('supplier_offer__supplier', 'fulfillment_route')
+    from buying.services.search import progress_payload
     return render(
         request,
         'buying/staff/request_detail.html',
@@ -215,6 +235,7 @@ def buying_request_detail(request, pk: int):
             'scenarios': scenarios,
             'blocked_scenarios': blocked_scenarios,
             'failed_scenarios': failed_scenarios,
+            'search_progress': progress_payload(buying_request),
             'uncertainties': (
                 buying_request.normalized_product.uncertainties
                 if buying_request.normalized_product_id
@@ -222,6 +243,18 @@ def buying_request_detail(request, pk: int):
             ),
         },
     )
+
+
+@buying_permission_required('buying.view')
+def buying_request_progress(request, pk: int):
+    from django.http import JsonResponse
+
+    from buying.services.search import finalize_search, progress_payload
+
+    buying_request = get_object_or_404(BuyingRequest, pk=pk)
+    finalize_search(buying_request.pk)
+    buying_request.refresh_from_db()
+    return JsonResponse(progress_payload(buying_request))
 
 
 # --------------------------------------------------------------------------- #
@@ -422,6 +455,53 @@ def buying_supplier_edit(request, pk: int | None = None):
 
 @buying_permission_required('buying.view')
 def buying_connectors(request):
+    if request.method == 'POST':
+        action = request.POST.get('action', '')
+        supplier_id = request.POST.get('supplier_id')
+        if action == 'health_all':
+            _require(request, 'buying.manage_suppliers')
+            from buying.services.search import run_health_check
+            count = 0
+            for supplier in Supplier.objects.filter(enabled=True):
+                run_health_check(supplier)
+                count += 1
+            messages.success(request, f'Health-checked {count} supplier(s).')
+            return redirect('administration:buying_connectors')
+        if action == 'health_one' and supplier_id:
+            _require(request, 'buying.manage_suppliers')
+            from buying.services.search import run_health_check
+            supplier = get_object_or_404(Supplier, pk=supplier_id)
+            row = run_health_check(supplier)
+            messages.success(request, f'{supplier.name}: {row.status}')
+            return redirect('administration:buying_connectors')
+        if action == 'test_auth' and supplier_id:
+            _require(request, 'buying.manage_suppliers')
+            supplier = get_object_or_404(Supplier, pk=supplier_id)
+            from buying.connectors.registry import get_connector, get_connector_class
+            code = supplier.connector_class or supplier.code
+            if not get_connector_class(code):
+                messages.error(request, f'No connector for {code}')
+                return redirect('administration:buying_connectors')
+            connector = get_connector(code)
+            if not connector.capabilities.authenticated_pricing:
+                messages.info(request, f'{supplier.name} does not use authenticated pricing.')
+                return redirect('administration:buying_connectors')
+            status = connector.authentication_status()
+            if status.status in ('session_expired', 'credentials_missing'):
+                result = connector.login()
+                messages.info(
+                    request,
+                    f'{supplier.name} auth: {result.status}'
+                    + (f' — {result.message}' if result.message else ''),
+                )
+            else:
+                messages.info(
+                    request,
+                    f'{supplier.name} auth: {status.status}'
+                    + (f' — {status.message}' if status.message else ''),
+                )
+            return redirect('administration:buying_connectors')
+
     suppliers = Supplier.objects.all()
     for supplier in suppliers:
         supplier.latest_status = supplier.connector_statuses.first()
@@ -432,6 +512,7 @@ def buying_connectors(request):
             'staff_nav_active': 'buying_connectors',
             'page_heading': 'Connector status',
             'suppliers': suppliers,
+            'auth_codes': ('itf-tennis-point', 'central-tennis'),
         },
     )
 

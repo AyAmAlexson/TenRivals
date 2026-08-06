@@ -4,6 +4,7 @@ from .models import (
     BuyingRequest,
     CalculationRule,
     CanonicalProduct,
+    ConnectorResponse,
     CostScenario,
     FulfillmentProvider,
     FulfillmentRoute,
@@ -31,8 +32,8 @@ class BuyingRequestAdmin(admin.ModelAdmin):
 
 @admin.register(Supplier)
 class SupplierAdmin(admin.ModelAdmin):
-    list_display = ['name', 'code', 'country', 'currency', 'enabled']
-    list_filter = ['enabled', 'country']
+    list_display = ['name', 'code', 'country', 'currency', 'onex_applicability', 'enabled']
+    list_filter = ['enabled', 'country', 'onex_applicability']
 
 
 @admin.register(CalculationRule)
@@ -57,6 +58,7 @@ class FxRateAdmin(admin.ModelAdmin):
 for model in (
     NormalizedProduct,
     CanonicalProduct,
+    ConnectorResponse,
     SupplierConnectorStatus,
     SupplierSearchRun,
     SupplierSearchResult,

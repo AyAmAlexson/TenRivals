@@ -28,15 +28,21 @@ def make_supplier(**kwargs):
         country='US',
         currency='USD',
         tax_display_mode='prices_include_vat',
+        onex_applicability='supported',
+        default_destination_country='US',
     )
     defaults.update(kwargs)
     return Supplier.objects.create(**defaults)
 
 
 def make_route(supplier_country='US', **kwargs):
-    provider = FulfillmentProvider.objects.create(name='Onex', code='onex')
-    warehouse = FulfillmentWarehouse.objects.create(
-        provider=provider, country=supplier_country, currency='USD'
+    provider, _ = FulfillmentProvider.objects.get_or_create(
+        code='onex', defaults={'name': 'Onex'}
+    )
+    warehouse, _ = FulfillmentWarehouse.objects.get_or_create(
+        provider=provider,
+        country=supplier_country,
+        defaults={'currency': 'USD' if supplier_country == 'US' else 'EUR'},
     )
     defaults = dict(
         name=f'{supplier_country} shops → Onex → Georgia',
