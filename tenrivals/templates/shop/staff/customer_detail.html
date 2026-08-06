@@ -78,6 +78,8 @@
       <dt>Telegram</dt><dd class="mono">{{ customer.tg_account|default:"—" }}</dd>
       <dt>Address</dt><dd>{{ customer.address|default:"—" }}</dd>
       <dt>Newsletter</dt><dd>{% if customer.newsletter_opt_in %}<span class="badge badge--yes">Opted in</span>{% else %}<span class="badge badge--no">No</span>{% endif %}</dd>
+      <dt>Source</dt><dd>{{ customer.source|default:"—" }}</dd>
+      <dt>Comment</dt><dd>{{ customer.comment|default:"—"|linebreaksbr }}</dd>
     </dl>
   </div>
   <div class="card">

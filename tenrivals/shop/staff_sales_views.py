@@ -400,6 +400,7 @@ def staff_customer_edit(request, pk=None):
             saved = form.save()
             messages.success(request, 'Customer saved.')
             return redirect('administration:staff_customer_detail', pk=saved.pk)
+        messages.error(request, 'Could not save customer. Please fix the errors below.')
     else:
         form = CustomerForm(instance=instance)
     return render(

@@ -72,6 +72,7 @@ MIDDLEWARE = [
     # Reject crawl/filter spam before session/auth work (keeps dyno alive under bot floods).
     'shop.middleware.AbuseShieldMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'shop.middleware.AcquisitionAttributionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',

@@ -1027,6 +1027,9 @@ def superuser_user_edit(request, user_id):
                                 "verified_at": None,
                             },
                         )
+                    from shop.customer_sync import sync_user_to_customer
+
+                    sync_user_to_customer(user)
             except Exception as e:
                 logger.exception("superuser_user_edit failed: %s", e)
                 messages.error(

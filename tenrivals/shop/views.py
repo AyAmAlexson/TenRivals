@@ -1167,6 +1167,11 @@ def order_for_me_create(request):
                         'updated_at',
                     ]
                 )
+                from .attribution import apply_acquisition_source_to_customer
+
+                apply_acquisition_source_to_customer(
+                    customer, request, only_if_empty=True
+                )
 
                 order = OrderForMe.objects.create(
                     order_number=allocate_order_for_me_number(timezone.localdate().year),
@@ -1989,12 +1994,33 @@ def checkout(request):
                                     'address': delivery_address,
                                 },
                             )
+                            customer.first_name = contact['first_name']
+                            customer.last_name = contact['last_name']
+                            customer.phone = contact['phone']
+                            customer.email = contact['email']
                             customer.tg_account = contact['tg_account']
                             customer.address = delivery_address
-                            customer.save(update_fields=['tg_account', 'address', 'updated_at'])
+                            customer.save(
+                                update_fields=[
+                                    'first_name',
+                                    'last_name',
+                                    'phone',
+                                    'email',
+                                    'tg_account',
+                                    'address',
+                                    'updated_at',
+                                ]
+                            )
+                            from .attribution import apply_acquisition_source_to_customer
+
+                            apply_acquisition_source_to_customer(
+                                customer, request, only_if_empty=True
+                            )
                         else:
                             customer = Customer.objects.filter(email__iexact=contact['email']).first()
                             if customer is None:
+                                from .attribution import resolve_acquisition_source
+
                                 customer = Customer.objects.create(
                                     first_name=contact['first_name'],
                                     last_name=contact['last_name'],
@@ -2002,6 +2028,7 @@ def checkout(request):
                                     email=contact['email'],
                                     tg_account=contact['tg_account'],
                                     address=delivery_address,
+                                    source=resolve_acquisition_source(request),
                                 )
                             else:
                                 customer.first_name = contact['first_name']
@@ -2020,6 +2047,11 @@ def checkout(request):
                                         'address',
                                         'updated_at',
                                     ]
+                                )
+                                from .attribution import apply_acquisition_source_to_customer
+
+                                apply_acquisition_source_to_customer(
+                                    customer, request, only_if_empty=True
                                 )
 
                         order = SalesOrder.objects.create(

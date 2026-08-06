@@ -541,3 +541,11 @@ class AccountUpdateForm(forms.ModelForm):
                 'This Telegram username is already linked to another account.'
             )
         return tg
+
+    def save(self, commit=True):
+        user = super().save(commit=commit)
+        if commit:
+            from shop.customer_sync import sync_user_to_customer
+
+            sync_user_to_customer(user)
+        return user

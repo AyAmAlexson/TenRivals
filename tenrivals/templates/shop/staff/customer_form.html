@@ -32,8 +32,9 @@
 {% block content %}
 <div class="staff-narrow">
   <div class="card">
-    <form method="post" class="customer-form">
+    <form method="post" action="{% if customer %}{% url 'administration:staff_customer_edit' customer.pk %}{% else %}{% url 'administration:staff_customer_new' %}{% endif %}" class="customer-form">
       {% csrf_token %}
+      {% if form.non_field_errors %}<div class="field-errors" style="margin-bottom:12px">{{ form.non_field_errors }}</div>{% endif %}
       <div class="form-row">
         <div class="form-group">
           <label for="{{ form.first_name.id_for_label }}">First name</label>
@@ -43,41 +44,60 @@
         <div class="form-group">
           <label for="{{ form.last_name.id_for_label }}">Last name</label>
           {{ form.last_name }}
+          {% if form.last_name.errors %}<div class="field-errors">{{ form.last_name.errors }}</div>{% endif %}
         </div>
       </div>
       <div class="form-row">
         <div class="form-group">
           <label for="{{ form.name_local.id_for_label }}">First name (Georgian / local)</label>
           {{ form.name_local }}
+          {% if form.name_local.errors %}<div class="field-errors">{{ form.name_local.errors }}</div>{% endif %}
         </div>
         <div class="form-group">
           <label for="{{ form.surname_local.id_for_label }}">Last name (Georgian / local)</label>
           {{ form.surname_local }}
+          {% if form.surname_local.errors %}<div class="field-errors">{{ form.surname_local.errors }}</div>{% endif %}
         </div>
       </div>
       <div class="form-row">
         <div class="form-group">
           <label for="{{ form.phone.id_for_label }}">Phone</label>
           {{ form.phone }}
+          {% if form.phone.errors %}<div class="field-errors">{{ form.phone.errors }}</div>{% endif %}
         </div>
         <div class="form-group">
           <label for="{{ form.email.id_for_label }}">Email</label>
           {{ form.email }}
+          {% if form.email.errors %}<div class="field-errors">{{ form.email.errors }}</div>{% endif %}
         </div>
       </div>
       <div class="form-group">
         <label for="{{ form.tg_account.id_for_label }}">Telegram</label>
         {{ form.tg_account }}
+        {% if form.tg_account.errors %}<div class="field-errors">{{ form.tg_account.errors }}</div>{% endif %}
       </div>
       <div class="form-group newsletter-field">
         {{ form.newsletter_opt_in }}
         <label for="{{ form.newsletter_opt_in.id_for_label }}">Newsletter opt-in</label>
+        {% if form.newsletter_opt_in.errors %}<div class="field-errors">{{ form.newsletter_opt_in.errors }}</div>{% endif %}
       </div>
       <div class="form-group">
         <label for="{{ form.address.id_for_label }}">Address</label>
         {{ form.address }}
+        {% if form.address.errors %}<div class="field-errors">{{ form.address.errors }}</div>{% endif %}
       </div>
-      {% if form.non_field_errors %}<div class="field-errors" style="margin-bottom:12px">{{ form.non_field_errors }}</div>{% endif %}
+      <div class="form-group">
+        <label for="{{ form.source.id_for_label }}">Source</label>
+        {{ form.source }}
+        {% if form.source.errors %}<div class="field-errors">{{ form.source.errors }}</div>{% endif %}
+        <div class="page-note" style="margin:6px 0 0">Staff only. Self-signups auto-fill from UTM or “Organic Website”.</div>
+      </div>
+      <div class="form-group">
+        <label for="{{ form.comment.id_for_label }}">Comment</label>
+        {{ form.comment }}
+        {% if form.comment.errors %}<div class="field-errors">{{ form.comment.errors }}</div>{% endif %}
+        <div class="page-note" style="margin:6px 0 0">Staff only. Never shown to the customer.</div>
+      </div>
       <div class="actions">
         <button type="submit" class="btn">Save</button>
         {% if customer %}

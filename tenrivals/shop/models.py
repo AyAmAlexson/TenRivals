@@ -1157,6 +1157,17 @@ class Customer(models.Model):
         help_text=_('Telegram username or handle (optional).'),
     )
     address = models.TextField(blank=True)
+    source = models.CharField(
+        max_length=255,
+        blank=True,
+        default='',
+        help_text=_('Staff-only: acquisition source (UTM, referral, Organic Website, …).'),
+    )
+    comment = models.TextField(
+        blank=True,
+        default='',
+        help_text=_('Staff-only internal comment about this customer.'),
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

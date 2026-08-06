@@ -100,6 +100,19 @@ class SiteLocaleMiddleware:
         return self.get_response(request)
 
 
+class AcquisitionAttributionMiddleware:
+    """Persist first-touch UTM / click ids in the session for customer.source."""
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        from .attribution import capture_attribution_from_request
+
+        capture_attribution_from_request(request)
+        return self.get_response(request)
+
+
 ALLOWED_PATHS = (
     '/accounts/login/',
     '/accounts/signup/',

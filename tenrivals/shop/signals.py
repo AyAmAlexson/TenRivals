@@ -1,7 +1,9 @@
+from allauth.account.signals import user_signed_up
 from django.conf import settings
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
+from .attribution import apply_acquisition_source_to_customer
 from .models import Customer, Product, ProductListing, ProductListingChannel
 
 
@@ -101,3 +103,12 @@ def create_retail_customer_for_new_user(sender, instance, created, **kwargs):
         newsletter_opt_in=bool(getattr(instance, 'newsletter_opt_in', False)),
         address='',
     )
+
+
+@receiver(user_signed_up)
+def set_customer_source_on_self_signup(request, user, **kwargs):
+    """Self-serve signup: fill staff-only Customer.source from UTM or Organic Website."""
+    customer = Customer.objects.filter(user_id=user.pk).first()
+    if customer is None:
+        return
+    apply_acquisition_source_to_customer(customer, request, only_if_empty=True)

@@ -4,6 +4,9 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.forms import BaseInlineFormSet, inlineformset_factory
 
+from persons.account_display import normalize_telegram_username
+
+from .customer_sync import sync_customer_to_user
 from .models import Customer, ProductType, SalesOrder, SalesOrderLine
 from .sales_order_currency import normalize_payment_currency
 from .sales_order_stock import (
@@ -32,6 +35,8 @@ class CustomerForm(forms.ModelForm):
             'tg_account',
             'newsletter_opt_in',
             'address',
+            'source',
+            'comment',
         ]
         widgets = {
             'address': forms.Textarea(
@@ -40,11 +45,33 @@ class CustomerForm(forms.ModelForm):
                     'style': 'width:100%;padding:9px 12px;border:1px solid #e5e7eb;font-size:14px;font-family:inherit',
                 }
             ),
+            'comment': forms.Textarea(
+                attrs={
+                    'rows': 3,
+                    'style': 'width:100%;padding:9px 12px;border:1px solid #e5e7eb;font-size:14px;font-family:inherit',
+                    'placeholder': 'Internal note (staff only)',
+                }
+            ),
+            'source': forms.TextInput(
+                attrs={
+                    'placeholder': 'e.g. Organic Website, Instagram / social / spring',
+                    'style': 'width:100%;padding:9px 12px;border:1px solid #e5e7eb;font-size:14px;font-family:inherit',
+                }
+            ),
             'newsletter_opt_in': forms.CheckboxInput(
                 attrs={'class': 'customer-form-checkbox'}
             ),
             'tg_account': forms.TextInput(attrs={'placeholder': '@username'}),
         }
+
+    def clean_tg_account(self):
+        return normalize_telegram_username(self.cleaned_data.get('tg_account'))
+
+    def save(self, commit=True):
+        customer = super().save(commit=commit)
+        if commit:
+            sync_customer_to_user(customer)
+        return customer
 
 
 class SalesOrderForm(forms.ModelForm):

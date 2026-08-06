@@ -3,9 +3,11 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.test import TestCase, override_settings
+from django.urls import reverse
 
 from persons.account_display import account_initials_for_user
+from persons.forms import AccountUpdateForm
 
 from shop.catalog_utils import (
     annotate_preorder_listing_quantity,
@@ -20,8 +22,16 @@ from shop.models import (
     ProductType,
     SalesOrder,
 )
+from shop.attribution import (
+    DEFAULT_ORGANIC_SOURCE,
+    SESSION_KEY,
+    apply_acquisition_source_to_customer,
+    format_attribution,
+    resolve_acquisition_source,
+)
 from shop.promo_codes import PromoEvaluation
 from shop.sales_order_currency import apply_payment_currency_fields
+from shop.staff_sales_forms import CustomerForm
 
 
 class RetailCustomerGuestLinkTests(TestCase):
@@ -58,6 +68,161 @@ class RetailCustomerGuestLinkTests(TestCase):
         c = Customer.objects.get(user__email='fresh-customer@example.com')
         self.assertEqual(c.first_name, 'Only')
         self.assertEqual(Customer.objects.filter(email__iexact='fresh-customer@example.com').count(), 1)
+
+
+@override_settings(SECURE_SSL_REDIRECT=False)
+class CustomerEditPersistTests(TestCase):
+    def setUp(self):
+        User = get_user_model()
+        self.staff = User.objects.create_superuser(
+            email='staff-cust@test.com',
+            password='secret-secret',
+        )
+        self.client.force_login(self.staff)
+
+    def test_staff_customer_edit_persists_fields(self):
+        customer = Customer.objects.create(
+            first_name='Old',
+            last_name='Name',
+            phone='111',
+            email='old-cust@test.com',
+            address='A',
+        )
+        url = reverse('administration:staff_customer_edit', kwargs={'pk': customer.pk})
+        response = self.client.post(
+            url,
+            {
+                'first_name': 'New',
+                'last_name': 'Person',
+                'name_local': 'ახალი',
+                'surname_local': '',
+                'phone': '222',
+                'email': 'new-cust@test.com',
+                'tg_account': '@handle',
+                'newsletter_opt_in': 'on',
+                'address': 'Tbilisi',
+                'source': 'Instagram / social',
+                'comment': 'VIP walk-in',
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        customer.refresh_from_db()
+        self.assertEqual(customer.first_name, 'New')
+        self.assertEqual(customer.last_name, 'Person')
+        self.assertEqual(customer.name_local, 'ახალი')
+        self.assertEqual(customer.phone, '222')
+        self.assertEqual(customer.email, 'new-cust@test.com')
+        self.assertEqual(customer.tg_account, 'handle')
+        self.assertEqual(customer.address, 'Tbilisi')
+        self.assertEqual(customer.source, 'Instagram / social')
+        self.assertEqual(customer.comment, 'VIP walk-in')
+        self.assertTrue(customer.newsletter_opt_in)
+
+    def test_customer_form_syncs_linked_user(self):
+        User = get_user_model()
+        user = User.objects.create_user(
+            email='linked-cust@test.com',
+            password='secret-secret',
+            first_name='UserFn',
+            last_name='UserLn',
+            mobile='111',
+        )
+        customer = Customer.objects.get(user=user)
+        form = CustomerForm(
+            {
+                'first_name': 'CustFn',
+                'last_name': 'CustLn',
+                'name_local': '',
+                'surname_local': '',
+                'phone': '555',
+                'email': 'linked-cust@test.com',
+                'tg_account': '@newtg',
+                'newsletter_opt_in': True,
+                'address': 'Addr',
+                'source': '',
+                'comment': '',
+            },
+            instance=customer,
+        )
+        self.assertTrue(form.is_valid(), form.errors)
+        form.save()
+        user.refresh_from_db()
+        self.assertEqual(user.first_name, 'CustFn')
+        self.assertEqual(user.last_name, 'CustLn')
+        self.assertEqual(user.mobile, '555')
+        self.assertEqual(user.telegram, 'newtg')
+
+    def test_account_update_syncs_linked_customer(self):
+        User = get_user_model()
+        user = User.objects.create_user(
+            email='acc-sync@test.com',
+            password='secret-secret',
+            first_name='Old',
+            last_name='Name',
+            mobile='111',
+        )
+        customer = Customer.objects.get(user=user)
+        form = AccountUpdateForm(
+            {
+                'first_name': 'AccFn',
+                'last_name': 'AccLn',
+                'mobile': '777',
+                'telegram': 'acctg',
+            },
+            instance=user,
+        )
+        self.assertTrue(form.is_valid(), form.errors)
+        form.save()
+        customer.refresh_from_db()
+        self.assertEqual(customer.first_name, 'AccFn')
+        self.assertEqual(customer.last_name, 'AccLn')
+        self.assertEqual(customer.phone, '777')
+        self.assertEqual(customer.tg_account, 'acctg')
+
+
+@override_settings(SECURE_SSL_REDIRECT=False)
+class CustomerAttributionTests(TestCase):
+    def test_format_utm_and_organic_default(self):
+        self.assertEqual(
+            format_attribution(
+                {
+                    'utm_source': 'instagram',
+                    'utm_medium': 'social',
+                    'utm_campaign': 'spring',
+                }
+            ),
+            'instagram / social / spring',
+        )
+        self.assertEqual(format_attribution({'gclid': 'abc'}), 'Google Ads (gclid)')
+        self.assertEqual(resolve_acquisition_source(None), DEFAULT_ORGANIC_SOURCE)
+
+    def test_middleware_stores_first_touch_utm(self):
+        response = self.client.get('/accounts/login/?utm_source=ig&utm_medium=bio')
+        self.assertIn(response.status_code, (200, 302))
+        session = self.client.session
+        self.assertEqual(
+            session.get(SESSION_KEY),
+            {'utm_source': 'ig', 'utm_medium': 'bio'},
+        )
+        # Second touch must not overwrite first-touch attribution.
+        self.client.get('/accounts/login/?utm_source=google&utm_medium=cpc')
+        self.assertEqual(
+            self.client.session.get(SESSION_KEY),
+            {'utm_source': 'ig', 'utm_medium': 'bio'},
+        )
+
+    def test_apply_source_only_if_empty(self):
+        customer = Customer.objects.create(first_name='A', email='src@test.com')
+        request = SimpleNamespace(session={SESSION_KEY: {'utm_source': 'tiktok'}})
+        self.assertTrue(apply_acquisition_source_to_customer(customer, request))
+        customer.refresh_from_db()
+        self.assertEqual(customer.source, 'tiktok')
+        request2 = SimpleNamespace(session={SESSION_KEY: {'utm_source': 'other'}})
+        self.assertFalse(
+            apply_acquisition_source_to_customer(customer, request2, only_if_empty=True)
+        )
+        customer.refresh_from_db()
+        self.assertEqual(customer.source, 'tiktok')
 
 
 class PromoEvaluationPropertyTests(TestCase):
