@@ -637,6 +637,20 @@ Set via Heroku Config Vars only. Staff → Connector status → **Test authentic
 
 `manage.py seed_suppliers` — register all 20 shops. `BUYING_SEARCH_SYNC_FALLBACK=True` runs search in-process when Celery worker is not scaled.
 
+### AI Config Vars (no code deploy to switch models)
+
+| Variable | Purpose | Production |
+|---|---|---|
+| `OPENAI_API_KEY` | Secret | set on Heroku |
+| `BUYING_AI_PROVIDER` | Provider registry key | `openai` |
+| `BUYING_NORMALIZATION_MODEL` | Structured-output model for normalize | e.g. `gpt-4o-mini` |
+| `BUYING_MATCH_MODEL` | Structured-output model for match | e.g. `gpt-4o-mini` |
+| `BUYING_AI_TEMPERATURE` | Sampling temperature | `0` |
+| `BUYING_AI_TIMEOUT` | HTTP timeout seconds | `45` |
+| `BUYING_AI_MAX_RETRIES` | Retries after failures | `2` |
+
+Staff page: `/administration/buying/ai/` — provider, models, API status, last error (never shows the key). If AI fails, staff continues with manual normalization.
+
 
 **Phase 4 — AI Matching**: генерация поисковых вариантов, semantic matching + strict rules, ProductMapping (mapping-first поиск), staff confirmation UI.
 

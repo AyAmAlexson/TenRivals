@@ -29,6 +29,7 @@ urlpatterns = [
     path('suppliers/new/', staff_views.buying_supplier_edit, name='buying_supplier_new'),
     path('suppliers/<int:pk>/', staff_views.buying_supplier_edit, name='buying_supplier_edit'),
     path('connectors/', staff_views.buying_connectors, name='buying_connectors'),
+    path('ai/', staff_views.buying_ai_diagnostics, name='buying_ai_diagnostics'),
     path('mappings/', staff_views.buying_mappings, name='buying_mappings'),
     path('routes/', staff_views.buying_routes, name='buying_routes'),
     path('routes/new/', staff_views.buying_route_edit, name='buying_route_new'),

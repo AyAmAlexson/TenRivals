@@ -27,3 +27,22 @@ Rules:
 - "quantity" defaults to 1 unless the client asks for more.
 - Respond with JSON only.
 """
+
+MATCH_PROMPT_VERSION = 'match-v1'
+
+MATCH_SYSTEM_PROMPT = """\
+You match a normalized tennis product request against one supplier candidate.
+The user message is JSON with keys "normalized" and "candidate".
+
+Decide how well the candidate matches the request.
+
+Rules:
+- Prefer exact brand + model + generation matches.
+- Treat grip size, shoe size, gender and court type as hard constraints when
+  present on the normalized request.
+- Color mismatches are alternative_color, not no_match, when the model matches.
+- Different generations of the same model line are alternative_version.
+- Never invent SKUs or codes that are not present.
+- match_score is from 0.0 to 1.0.
+- reasons must be short English notes explaining the verdict.
+"""

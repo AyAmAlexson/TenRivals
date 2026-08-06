@@ -28,6 +28,7 @@ class BuyingPermissionTests(TestCase):
             'buying_request_new',
             'buying_suppliers',
             'buying_connectors',
+            'buying_ai_diagnostics',
             'buying_mappings',
             'buying_routes',
             'buying_pricing_rules',

@@ -87,3 +87,55 @@ def validate_normalization(data: object) -> dict:
         clean[key] = [item.strip() for item in value if item.strip()]
 
     return clean
+
+
+MATCH_STATUSES = [
+    'exact',
+    'alternative_color',
+    'alternative_version',
+    'manual_review',
+    'no_match',
+]
+
+MATCH_JSON_SCHEMA = {
+    'name': 'buying_match',
+    'strict': True,
+    'schema': {
+        'type': 'object',
+        'additionalProperties': False,
+        'properties': {
+            'match_status': {'type': 'string', 'enum': MATCH_STATUSES},
+            'match_score': {'type': 'number', 'minimum': 0, 'maximum': 1},
+            'reasons': {'type': 'array', 'items': {'type': 'string'}},
+        },
+        'required': ['match_status', 'match_score', 'reasons'],
+    },
+}
+
+
+def validate_match(data: object) -> dict:
+    if not isinstance(data, dict):
+        raise SchemaValidationError('Match result must be a JSON object')
+    unknown = set(data) - {'match_status', 'match_score', 'reasons'}
+    if unknown:
+        raise SchemaValidationError(f'Unknown fields in match result: {sorted(unknown)}')
+
+    status = data.get('match_status')
+    if status not in MATCH_STATUSES:
+        raise SchemaValidationError(f'Invalid match_status "{status}"')
+
+    score = data.get('match_score')
+    if not isinstance(score, (int, float)) or isinstance(score, bool):
+        raise SchemaValidationError('match_score must be a number')
+    if score < 0 or score > 1:
+        raise SchemaValidationError('match_score must be between 0 and 1')
+
+    reasons = data.get('reasons', [])
+    if not isinstance(reasons, list) or not all(isinstance(item, str) for item in reasons):
+        raise SchemaValidationError('reasons must be a list of strings')
+
+    return {
+        'match_status': status,
+        'match_score': float(score),
+        'reasons': [r.strip() for r in reasons if r.strip()],
+    }

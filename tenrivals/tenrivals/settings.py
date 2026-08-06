@@ -461,10 +461,26 @@ LOGGING = {
 }
 
 # Buying module (staff sourcing tool). AI provider is pluggable; see buying/ai/.
+# All AI knobs are Config Vars — change models/provider without code deploys.
 BUYING_AI_PROVIDER = env.str('BUYING_AI_PROVIDER', default='openai')
-BUYING_OPENAI_MODEL = env.str('BUYING_OPENAI_MODEL', default='gpt-4o-mini')
+BUYING_NORMALIZATION_MODEL = env.str(
+    'BUYING_NORMALIZATION_MODEL',
+    default=env.str('BUYING_OPENAI_MODEL', default='gpt-4o-mini'),
+)
+BUYING_MATCH_MODEL = env.str(
+    'BUYING_MATCH_MODEL',
+    default=env.str('BUYING_OPENAI_MODEL', default='gpt-4o-mini'),
+)
+# Legacy alias kept for older env files; prefer BUYING_NORMALIZATION_MODEL.
+BUYING_OPENAI_MODEL = BUYING_NORMALIZATION_MODEL
 BUYING_OPENAI_API_KEY = env.str('OPENAI_API_KEY', default='')
-BUYING_AI_TIMEOUT_SECONDS = env.int('BUYING_AI_TIMEOUT_SECONDS', default=45)
+BUYING_AI_TEMPERATURE = env.float('BUYING_AI_TEMPERATURE', default=0)
+BUYING_AI_TIMEOUT = env.int(
+    'BUYING_AI_TIMEOUT',
+    default=env.int('BUYING_AI_TIMEOUT_SECONDS', default=45),
+)
+BUYING_AI_TIMEOUT_SECONDS = BUYING_AI_TIMEOUT  # backwards-compatible alias
+BUYING_AI_MAX_RETRIES = env.int('BUYING_AI_MAX_RETRIES', default=2)
 BUYING_NBG_CURRENCIES = env.list('BUYING_NBG_CURRENCIES', default=['USD', 'EUR', 'GBP', 'CNY'])
 BUYING_NBG_TIMEOUT_SECONDS = env.int('BUYING_NBG_TIMEOUT_SECONDS', default=15)
 BUYING_NBG_API_URL = env.str(

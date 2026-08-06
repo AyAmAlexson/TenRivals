@@ -1,0 +1,77 @@
+{% extends 'persons/staff_base.html' %}
+{% block title %}AI diagnostics | Buying | Staff{% endblock %}
+{% block page_heading %}AI diagnostics{% endblock %}
+{% block page_note %}
+<p class="page-note">
+  Configuration is read from Heroku Config Vars only.
+  Models and provider can be changed without a code deploy.
+  API keys are never shown on this page.
+</p>
+{% endblock %}
+{% block content %}
+
+<div class="card">
+  <h2 class="card-title">Configuration</h2>
+  <div class="table-wrap">
+    <table>
+      <tbody>
+        <tr><th style="width:240px">Provider</th><td><code>{{ diagnostics.provider }}</code></td></tr>
+        <tr><th>Normalization model</th><td><code>{{ diagnostics.normalization_model }}</code></td></tr>
+        <tr><th>Matching model</th><td><code>{{ diagnostics.matching_model }}</code></td></tr>
+        <tr><th>Temperature</th><td>{{ diagnostics.temperature }}</td></tr>
+        <tr><th>Timeout (s)</th><td>{{ diagnostics.timeout_seconds }}</td></tr>
+        <tr><th>Max retries</th><td>{{ diagnostics.max_retries }}</td></tr>
+        <tr>
+          <th>API key</th>
+          <td>
+            {% if diagnostics.api_key_configured %}
+            <span class="badge badge--yes">Configured</span>
+            {% else %}
+            <span class="badge badge--no">Missing</span> — set <code>OPENAI_API_KEY</code>
+            {% endif %}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card">
+  <h2 class="card-title">API status</h2>
+  <p>
+    <span class="badge {% if diagnostics.api_status == 'ok' %}badge--yes{% else %}badge--no{% endif %}">
+      {{ diagnostics.api_status }}
+    </span>
+    {% if diagnostics.api_detail %}
+    <span class="page-note" style="margin-left:8px">{{ diagnostics.api_detail }}</span>
+    {% endif %}
+  </p>
+  <p class="page-note">
+    Last success: {{ diagnostics.last_success_at|default:'—' }}
+  </p>
+  <p class="page-note">
+    Last error: {% if diagnostics.last_error %}{{ diagnostics.last_error }}{% if diagnostics.last_error_at %} ({{ diagnostics.last_error_at }}){% endif %}{% else %}—{% endif %}
+  </p>
+  {% if perms.buying.manage_suppliers %}
+  <form method="post" style="margin-top:12px">{% csrf_token %}
+    <button type="submit" name="action" value="probe" class="btn">Test API connection</button>
+  </form>
+  {% endif %}
+</div>
+
+<div class="card">
+  <h2 class="card-title">Config Vars</h2>
+  <p class="page-note">
+    <code>OPENAI_API_KEY</code>,
+    <code>BUYING_AI_PROVIDER</code>,
+    <code>BUYING_NORMALIZATION_MODEL</code>,
+    <code>BUYING_MATCH_MODEL</code>,
+    <code>BUYING_AI_TEMPERATURE</code>,
+    <code>BUYING_AI_TIMEOUT</code>,
+    <code>BUYING_AI_MAX_RETRIES</code>
+  </p>
+  <p class="page-note">
+    If AI is unavailable, use manual normalization on the buying request — search and pricing still work.
+  </p>
+</div>
+{% endblock %}

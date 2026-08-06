@@ -132,7 +132,11 @@ def buying_request_detail(request, pk: int):
                 normalize_buying_request(buying_request)
                 messages.success(request, 'Request normalized. Review the fields below before searching.')
             except AIProviderError as exc:
-                messages.error(request, f'Normalization failed: {exc}')
+                messages.warning(
+                    request,
+                    f'AI normalization unavailable ({exc}). '
+                    'Fill the normalized product fields manually and save — search still works.',
+                )
             return redirect('administration:buying_request_detail', pk=pk)
 
         if action == 'save_normalized':
@@ -513,6 +517,28 @@ def buying_connectors(request):
             'page_heading': 'Connector status',
             'suppliers': suppliers,
             'auth_codes': ('itf-tennis-point', 'central-tennis'),
+        },
+    )
+
+
+@buying_permission_required('buying.view')
+def buying_ai_diagnostics(request):
+    from buying.ai.diagnostics import build_diagnostics
+
+    probe = False
+    if request.method == 'POST':
+        _require(request, 'buying.manage_suppliers')
+        if request.POST.get('action') == 'probe':
+            probe = True
+            messages.info(request, 'API probe completed.')
+    diagnostics = build_diagnostics(probe=probe or request.GET.get('probe') == '1')
+    return render(
+        request,
+        'buying/staff/ai_diagnostics.html',
+        {
+            'staff_nav_active': 'buying_ai',
+            'page_heading': 'AI diagnostics',
+            'diagnostics': diagnostics,
         },
     )
 
