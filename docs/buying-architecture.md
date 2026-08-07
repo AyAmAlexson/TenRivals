@@ -646,7 +646,7 @@ sequenceDiagram
 
 Set via Heroku Config Vars only. Staff → Connector status → **Test authentication** reports status without exposing secrets.
 
-`manage.py seed_suppliers` — register all 20 shops. `BUYING_SEARCH_SYNC_FALLBACK=True` runs search in-process when Celery worker is not scaled.
+`manage.py seed_suppliers` — register all 20 shops. `BUYING_SEARCH_SYNC_FALLBACK=True` runs search in-process when Celery worker is not scaled (default: background thread so Force Refresh does not hit Heroku H12; set `BUYING_SEARCH_SYNC_BLOCKING=True` only for tests/local inline runs).
 
 ### AI Config Vars (no code deploy to switch models)
 

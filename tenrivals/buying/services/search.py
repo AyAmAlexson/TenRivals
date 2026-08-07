@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import logging
+import threading
 from datetime import timedelta
 
 from django.conf import settings
-from django.db import transaction
+from django.db import close_old_connections, transaction
 from django.utils import timezone
 
 from buying.connectors.base import PurchaseContext
@@ -107,24 +108,66 @@ def start_search(buying_request: BuyingRequest, *, force: bool = False) -> dict:
             runs.append(run)
 
     sync = getattr(settings, 'BUYING_SEARCH_SYNC_FALLBACK', True)
-    dispatched = 0
-    for run in runs:
-        if sync:
-            execute_supplier_search(run.pk, force=force)
-            dispatched += 1
-        else:
-            from buying.tasks import run_supplier_search
-            async_result = run_supplier_search.delay(run.pk, force=force)
-            SupplierSearchRun.objects.filter(pk=run.pk).update(celery_task_id=async_result.id or '')
-            dispatched += 1
-
+    run_ids = [run.pk for run in runs]
     if sync:
-        finalize_search(buying_request.pk)
+        _run_sync_supplier_searches(
+            run_ids,
+            buying_request_id=buying_request.pk,
+            force=force,
+        )
     else:
-        from buying.tasks import finalize_buying_search
+        from buying.tasks import finalize_buying_search, run_supplier_search
+
+        for run_id in run_ids:
+            async_result = run_supplier_search.delay(run_id, force=force)
+            SupplierSearchRun.objects.filter(pk=run_id).update(
+                celery_task_id=async_result.id or ''
+            )
         finalize_buying_search.delay(buying_request.pk)
 
-    return {'runs': len(runs), 'dispatched': dispatched, 'sync': sync}
+    return {'runs': len(runs), 'dispatched': len(run_ids), 'sync': sync}
+
+
+def _run_sync_supplier_searches(
+    run_ids: list[int],
+    *,
+    buying_request_id: int,
+    force: bool,
+) -> None:
+    """Run supplier searches without Celery.
+
+    Heroku router kills HTTP at 30s (H12). Unless BUYING_SEARCH_SYNC_BLOCKING
+    is True (tests/local), work runs in a daemon thread so the staff POST
+    returns immediately and progress polling finalizes status.
+    """
+
+    def _worker() -> None:
+        close_old_connections()
+        try:
+            for run_id in run_ids:
+                try:
+                    execute_supplier_search(run_id, force=force)
+                except Exception:
+                    logger.exception(
+                        'Sync supplier search crashed for run_id=%s request=#%s',
+                        run_id,
+                        buying_request_id,
+                    )
+            finalize_search(buying_request_id)
+        finally:
+            close_old_connections()
+
+    blocking = getattr(settings, 'BUYING_SEARCH_SYNC_BLOCKING', False)
+    if blocking:
+        _worker()
+        return
+
+    thread = threading.Thread(
+        target=_worker,
+        name=f'buying-search-{buying_request_id}',
+        daemon=True,
+    )
+    thread.start()
 
 
 def retry_failed(buying_request: BuyingRequest) -> dict:
@@ -134,6 +177,7 @@ def retry_failed(buying_request: BuyingRequest) -> dict:
     buying_request.status = BuyingRequest.Status.SEARCHING
     buying_request.save(update_fields=['status', 'updated_at'])
     sync = getattr(settings, 'BUYING_SEARCH_SYNC_FALLBACK', True)
+    run_ids = []
     for run in failed:
         SupplierSearchRun.objects.filter(pk=run.pk).update(
             status=SupplierSearchRun.Status.PENDING,
@@ -142,13 +186,14 @@ def retry_failed(buying_request: BuyingRequest) -> dict:
             error_message='',
             finished_at=None,
         )
-        if sync:
-            execute_supplier_search(run.pk, force=True)
-        else:
-            from buying.tasks import run_supplier_search
-            run_supplier_search.delay(run.pk, force=True)
+        run_ids.append(run.pk)
     if sync:
-        finalize_search(buying_request.pk)
+        _run_sync_supplier_searches(run_ids, buying_request_id=buying_request.pk, force=True)
+    else:
+        from buying.tasks import run_supplier_search
+
+        for run_id in run_ids:
+            run_supplier_search.delay(run_id, force=True)
     return {'retried': len(failed)}
 
 

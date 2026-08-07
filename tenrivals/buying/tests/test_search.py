@@ -37,7 +37,7 @@ class MatchingTests(TestCase):
         self.assertEqual(score_candidate(query, cand).match_status, 'no_match')
 
 
-@override_settings(BUYING_SEARCH_SYNC_FALLBACK=True)
+@override_settings(BUYING_SEARCH_SYNC_FALLBACK=True, BUYING_SEARCH_SYNC_BLOCKING=True)
 class SearchOrchestrationTests(TestCase):
     def setUp(self):
         self.user = make_superuser()
