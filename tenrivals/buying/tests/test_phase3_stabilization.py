@@ -176,6 +176,43 @@ class PureDriveMatchingTests(TestCase):
                 for m in verdict.details['hard_mismatches'])
         )
 
+    def test_page_related_junior_does_not_reject_adult_title(self):
+        """Related Junior SKUs in page HTML must not kill a standard Pure Drive title."""
+        cand = SearchCandidate(
+            title='Babolat Pure Drive Tennis Racquet 2025',
+            url='https://oletennis.com/products/pure-drive',
+            raw_data={
+                'page_text': (
+                    'Babolat Pure Drive Tennis Racquet 2025 Unstrung Weight: 300g '
+                    'Head Size: 100 sq in 16x19 Also see Pure Drive Junior and Mini Pure Drive'
+                ),
+            },
+        )
+        verdict = score_candidate(self.query, cand)
+        self.assertNotEqual(verdict.match_status, 'no_match')
+        self.assertEqual(verdict.details.get('hard_mismatches'), [])
+
+    def test_backpack_title_rejected_for_racquet_request(self):
+        cand = SearchCandidate(
+            title='Babolat Pure Drive Tennis BackPack 2025',
+            url='https://oletennis.com/products/backpack',
+        )
+        verdict = score_candidate(self.query, cand)
+        self.assertEqual(verdict.match_status, 'no_match')
+        self.assertTrue(any('product_type' in (m or '') for m in verdict.details['hard_mismatches']))
+
+    def test_unstrung_weight_preferred_over_strung(self):
+        cand = SearchCandidate(
+            title='Babolat Pure Drive 2025',
+            url='https://example.com/pd',
+            raw_data={
+                'page_text': 'Strung weight 318g Unstrung Weight: 300g Head Size: 100 16x19',
+            },
+        )
+        verdict = score_candidate(self.query, cand)
+        self.assertNotEqual(verdict.match_status, 'no_match', verdict.details)
+        self.assertEqual(verdict.details.get('hard_mismatches'), [])
+
     def test_color_preferred_is_alternative_color(self):
         cand = SearchCandidate(
             title='Babolat Pure Drive 100 2025 300g White',
@@ -255,7 +292,7 @@ class CacheLogicVersionTests(TestCase):
         self.assertFalse(
             cache_logic_compatible(stored, parser_version='phase3-4', prompt_version='v1')
         )
-        self.assertEqual(MATCHING_RULES_VERSION, 'match-rules-v3')
+        self.assertEqual(MATCHING_RULES_VERSION, 'match-rules-v4')
 
 
 class EligibilityAndRankingTests(TestCase):

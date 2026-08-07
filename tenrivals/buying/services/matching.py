@@ -25,7 +25,7 @@ from buying.services.enrichment import (
     normalize_grip_size,
 )
 
-MATCHING_RULES_VERSION = 'match-rules-v3'
+MATCHING_RULES_VERSION = 'match-rules-v4'
 
 GENERATION_ALIASES: dict[str, set[str]] = {
     '2025': {'2025', 'gen11', 'gen 11', 'g11'},
@@ -33,6 +33,14 @@ GENERATION_ALIASES: dict[str, set[str]] = {
     'v10': {'v10', '10'},
     'v9': {'v9', '9'},
 }
+
+# Product-type tokens incompatible with a racquet request (title-level only)
+ACCESSORY_TITLE_TOKENS = frozenset({
+    'backpack', 'back pack', 'bag', 'duffel', 'duffle', 'tote',
+    'dampener', 'dampner', 'vibration damp', 'overgrip', 'replacement grip',
+    'string reel', 'strings', 'wristband', 'visor', 'cap', 'hat',
+    'shoe', 'shoes', 'sock', 'socks', 'shirt', 'shorts', 'skirt',
+})
 
 
 @dataclass
@@ -56,6 +64,39 @@ def _candidate_blob(candidate: SearchCandidate) -> str:
     return ' '.join(parts)
 
 
+def _title_blob(candidate: SearchCandidate) -> str:
+    """Title (+ short product name) for family/variant exclusion — not full page HTML.
+
+    Full product pages often list related Junior / Mini SKUs; those must not
+    hard-reject an adult standard racquet candidate.
+    """
+    parts = [candidate.title or '']
+    raw = candidate.raw_data if isinstance(candidate.raw_data, dict) else {}
+    for key in ('product_name', 'name', 'handle'):
+        val = raw.get(key)
+        if isinstance(val, str) and val.strip():
+            parts.append(val)
+    return ' '.join(parts)
+
+
+def _parse_weight_for_match(text: str) -> int | None:
+    """Prefer unstrung weight via enrichment parser."""
+    from buying.services.enrichment import _parse_weight
+    return _parse_weight(text)
+
+
+def _parse_head_for_match(text: str) -> int | None:
+    from buying.services.enrichment import _parse_head_size
+    m = re.search(
+        r'head\s*size\s*[:\-]?\s*(90|93|95|97|98|100|104|107|110|115)\b',
+        text,
+        re.I,
+    )
+    if m:
+        return int(m.group(1))
+    return _parse_head_size(text)
+
+
 def _generation_matches(q_gen: str, text_n: str) -> bool:
     if not q_gen:
         return True
@@ -76,6 +117,8 @@ def score_candidate(query: NormalizedProductQuery, candidate: SearchCandidate) -
     blob_n = _norm(blob)
     title = candidate.title or ''
     title_n = _norm(title)
+    title_for_family = _title_blob(candidate)
+    title_family_n = _norm(title_for_family)
     attrs = query.raw_attributes if isinstance(query.raw_attributes, dict) else {}
 
     q_brand = _norm(query.brand)
@@ -88,25 +131,40 @@ def score_candidate(query: NormalizedProductQuery, candidate: SearchCandidate) -
     q_pattern = _norm(str(attrs.get('string_pattern') or '')).replace(' ', '')
 
     if query.category == 'racquet' or attrs.get('category') == 'racquet' or q_model:
-        cand_variant = _norm(_detect_variant(blob))
+        # Accessories in the title are never racquet matches
+        for tok in ACCESSORY_TITLE_TOKENS:
+            if tok in title_n or (tok in title_family_n and ' ' in tok):
+                details['hard_mismatches'].append(f'product_type:{tok.replace(" ", "_")}')
+                break
+            if ' ' not in tok and tok in title_family_n.split():
+                details['hard_mismatches'].append(f'product_type:{tok}')
+                break
+
+        # Variant / Mini / Junior / Team / Lite — TITLE only (not related-product page noise)
+        cand_variant = _norm(_detect_variant(title_for_family))
         exclusion_norms = {_norm(t) for t in EXCLUSION_VARIANTS} | {_norm(t) for t in ('mini', 'junior')}
 
-        # Adult standard request must never accept Mini / Junior / kids
         if not q_variant and cand_variant in exclusion_norms:
             details['hard_mismatches'].append(f'variant:{cand_variant or "excluded"}')
         if q_variant and cand_variant and q_variant != cand_variant:
             details['hard_mismatches'].append(f'variant:{cand_variant}')
         if not q_variant and cand_variant and cand_variant in {_norm(t) for t in VARIANT_TOKENS}:
             details['hard_mismatches'].append(f'variant:{cand_variant}')
-        # Belt-and-suspenders: bare "mini" / "junior" token even if detector missed
         if not q_variant:
             for tok in ('mini', 'junior', 'jr', 'kids', 'youth', 'children'):
-                if tok in blob_n.split():
+                if tok in title_family_n.split():
                     details['hard_mismatches'].append(f'variant:{tok}')
                     break
 
+        # Specs: prefer labeled page fields; fall back to title
+        spec_source = blob if len(blob) > len(title_for_family) + 20 else title_for_family
+
         if q_head:
-            cand_head = _parse_head_size(blob)
+            cand_head = _parse_head_for_match(spec_source)
+            # If page noise yields a head that conflicts, trust title when title has an explicit size
+            title_head = _parse_head_for_match(title_for_family)
+            if title_head:
+                cand_head = title_head
             try:
                 want_head = int(re.sub(r'\D', '', q_head) or '0')
             except ValueError:
@@ -115,7 +173,10 @@ def score_candidate(query: NormalizedProductQuery, candidate: SearchCandidate) -
                 details['hard_mismatches'].append(f'head_size:{cand_head}')
 
         if q_weight:
-            cand_weight = _parse_weight(blob)
+            cand_weight = _parse_weight_for_match(spec_source)
+            title_weight = _parse_weight_for_match(title_for_family)
+            if title_weight:
+                cand_weight = title_weight
             try:
                 want_w = int(q_weight)
             except (TypeError, ValueError):
@@ -124,25 +185,31 @@ def score_candidate(query: NormalizedProductQuery, candidate: SearchCandidate) -
                 details['hard_mismatches'].append(f'weight_g:{cand_weight}')
 
         if q_pattern:
-            cand_pattern = _norm(_parse_pattern(blob) or '').replace(' ', '')
+            cand_pattern = _norm(_parse_pattern(spec_source) or '').replace(' ', '')
+            title_pattern = _norm(_parse_pattern(title_for_family) or '').replace(' ', '')
+            if title_pattern:
+                cand_pattern = title_pattern
             if cand_pattern and cand_pattern != q_pattern:
                 details['hard_mismatches'].append(f'string_pattern:{cand_pattern}')
 
         if q_gen:
-            years_in_blob = {t for t in re.findall(r'\b(19|20)\d{2}\b', blob_n)}
-            if years_in_blob and not _generation_matches(q_gen, blob_n):
-                if q_gen.isdigit() and len(q_gen) == 4 and q_gen not in years_in_blob:
+            # Generation: title first, then page — avoid rejecting because a related SKU is 2026
+            gen_text = title_family_n if re.search(r'\b(19|20)\d{2}\b|gen\s*\d+', title_family_n) else blob_n
+            years_in = {t for t in re.findall(r'\b(19|20)\d{2}\b', gen_text)}
+            if years_in and not _generation_matches(q_gen, gen_text):
+                if q_gen.isdigit() and len(q_gen) == 4 and q_gen not in years_in:
                     details['hard_mismatches'].append('generation')
-            elif re.search(r'\bgen\s*\d+\b', blob_n) and not _generation_matches(q_gen, blob_n):
+            elif re.search(r'\bgen\s*\d+\b', gen_text) and not _generation_matches(q_gen, gen_text):
                 details['hard_mismatches'].append('generation')
 
         if query.grip_size:
             q_grip = normalize_grip_size(query.grip_size)
-            blob_grip = normalize_grip_size(blob)
-            if q_grip and blob_grip and q_grip != blob_grip and re.search(
-                r'(?:grip|l)\s*[0-5]\b|\bl[0-5]\b|4\s*[-\s]?\s*1\s*/\s*2', blob, re.I
+            # Grip hard-mismatch only from title/variant labels, not full page noise
+            title_grip = normalize_grip_size(title_for_family)
+            if q_grip and title_grip and q_grip != title_grip and re.search(
+                r'(?:grip|l)\s*[0-5]\b|\bl[0-5]\b|4\s*[-\s]?\s*1\s*/\s*2', title_for_family, re.I
             ):
-                details['hard_mismatches'].append(f'grip_size:{blob_grip}')
+                details['hard_mismatches'].append(f'grip_size:{title_grip}')
 
     # Deduplicate hard mismatches
     seen_mm = []

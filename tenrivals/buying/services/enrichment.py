@@ -142,6 +142,12 @@ def _parse_pattern(text: str) -> str | None:
 
 
 def _parse_weight(text: str) -> int | None:
+    m = re.search(r'unstrung(?:\s+weight)?\s*[:\-]?\s*(\d{2,3})\s*g', text, re.I)
+    if m:
+        return int(m.group(1))
+    m = re.search(r'weight\s*\(unstrung\)\s*[:\-]?\s*(\d{2,3})\s*g', text, re.I)
+    if m:
+        return int(m.group(1))
     m = re.search(r'\b(\d{2,3})\s*g\b', text, re.I)
     if m:
         return int(m.group(1))
