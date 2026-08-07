@@ -165,7 +165,8 @@ def rescore_with_product_page(
         'head_size': _parse_head_size(page_text),
         'weight_g': _parse_weight(page_text),
         'string_pattern': _parse_pattern(page_text),
-        'variant': _detect_variant(page_text),
+        # Variant family from title only — page HTML lists related Junior/Mini SKUs
+        'variant': _detect_variant(offer.title or candidate.title or ''),
     }
     raw = dict(candidate.raw_data or {})
     raw['page_text'] = page_text

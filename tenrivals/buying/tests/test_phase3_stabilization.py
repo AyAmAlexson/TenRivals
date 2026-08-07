@@ -201,6 +201,16 @@ class PureDriveMatchingTests(TestCase):
         self.assertEqual(verdict.match_status, 'no_match')
         self.assertTrue(any('product_type' in (m or '') for m in verdict.details['hard_mismatches']))
 
+    def test_bare_strung_grams_do_not_hard_reject(self):
+        cand = SearchCandidate(
+            title='Babolat Pure Drive Tennis Racquet 2025',
+            url='https://oletennis.com/products/pure-drive',
+            raw_data={'page_text': 'Babolat Pure Drive Tennis Racquet 2025 Weight 318g Head Size 100'},
+        )
+        verdict = score_candidate(self.query, cand)
+        self.assertNotEqual(verdict.match_status, 'no_match', verdict.details)
+        self.assertFalse(any(str(m).startswith('weight_g:') for m in verdict.details['hard_mismatches']))
+
     def test_unstrung_weight_preferred_over_strung(self):
         cand = SearchCandidate(
             title='Babolat Pure Drive 2025',
@@ -292,7 +302,7 @@ class CacheLogicVersionTests(TestCase):
         self.assertFalse(
             cache_logic_compatible(stored, parser_version='phase3-4', prompt_version='v1')
         )
-        self.assertEqual(MATCHING_RULES_VERSION, 'match-rules-v4')
+        self.assertEqual(MATCHING_RULES_VERSION, 'match-rules-v5')
 
 
 class EligibilityAndRankingTests(TestCase):

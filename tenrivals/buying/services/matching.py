@@ -25,7 +25,7 @@ from buying.services.enrichment import (
     normalize_grip_size,
 )
 
-MATCHING_RULES_VERSION = 'match-rules-v4'
+MATCHING_RULES_VERSION = 'match-rules-v5'
 
 GENERATION_ALIASES: dict[str, set[str]] = {
     '2025': {'2025', 'gen11', 'gen 11', 'g11'},
@@ -173,10 +173,18 @@ def score_candidate(query: NormalizedProductQuery, candidate: SearchCandidate) -
                 details['hard_mismatches'].append(f'head_size:{cand_head}')
 
         if q_weight:
-            cand_weight = _parse_weight_for_match(spec_source)
+            # Hard weight constraint: title grams, or explicitly labeled unstrung on page.
+            # Bare "318g" on a product page is often strung weight — never hard-reject on that alone.
             title_weight = _parse_weight_for_match(title_for_family)
-            if title_weight:
-                cand_weight = title_weight
+            page_unstrung = None
+            m = re.search(
+                r'unstrung(?:\s+weight)?\s*[:\-]?\s*(\d{2,3})\s*g|weight\s*\(unstrung\)\s*[:\-]?\s*(\d{2,3})\s*g',
+                blob,
+                re.I,
+            )
+            if m:
+                page_unstrung = int(m.group(1) or m.group(2))
+            cand_weight = title_weight or page_unstrung
             try:
                 want_w = int(q_weight)
             except (TypeError, ValueError):
