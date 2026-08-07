@@ -52,6 +52,41 @@ class DiagnosticsTests(TestCase):
         self.assertEqual(provider.temperature, 0)
         self.assertEqual(provider.max_retries, 1)
 
+    def test_gpt55_omits_temperature_from_payload(self):
+        from buying.ai.providers.openai_provider import _model_allows_custom_temperature
+        from unittest.mock import MagicMock, patch
+
+        self.assertFalse(_model_allows_custom_temperature('gpt-5.5'))
+        self.assertFalse(_model_allows_custom_temperature('gpt-5.5-pro'))
+        self.assertTrue(_model_allows_custom_temperature('gpt-4o-mini'))
+
+        provider = OpenAIProvider(api_key='sk-test', normalization_model='gpt-5.5', temperature=0)
+        fake_response = MagicMock()
+        fake_response.status_code = 200
+        fake_response.json.return_value = {
+            'model': 'gpt-5.5',
+            'choices': [{'message': {'content': '{"brand":"X"}'}}],
+        }
+        with patch('buying.ai.providers.openai_provider.httpx.post', return_value=fake_response) as post:
+            provider._chat(
+                model='gpt-5.5',
+                system_prompt='sys',
+                user_content='hi',
+                json_schema={'name': 'n', 'schema': {}},
+            )
+            payload = post.call_args.kwargs['json']
+            self.assertNotIn('temperature', payload)
+
+        provider_legacy = OpenAIProvider(api_key='sk-test', normalization_model='gpt-4o-mini', temperature=0)
+        with patch('buying.ai.providers.openai_provider.httpx.post', return_value=fake_response) as post:
+            provider_legacy._chat(
+                model='gpt-4o-mini',
+                system_prompt='sys',
+                user_content='hi',
+                json_schema={'name': 'n', 'schema': {}},
+            )
+            self.assertEqual(post.call_args.kwargs['json']['temperature'], 0)
+
     def test_diagnostics_page_loads(self):
         user = make_superuser()
         self.client.force_login(user)

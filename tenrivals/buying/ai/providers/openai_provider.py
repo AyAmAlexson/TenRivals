@@ -34,6 +34,19 @@ logger = logging.getLogger('buying')
 
 API_URL = 'https://api.openai.com/v1/chat/completions'
 
+# Models that reject non-default temperature (only default 1 is allowed — omit the field).
+_FIXED_TEMPERATURE_PREFIXES = (
+    'gpt-5',
+    'o1',
+    'o3',
+    'o4',
+)
+
+
+def _model_allows_custom_temperature(model: str) -> bool:
+    name = (model or '').strip().lower()
+    return not any(name.startswith(prefix) for prefix in _FIXED_TEMPERATURE_PREFIXES)
+
 
 class OpenAIProvider(AIProvider):
     name = 'openai'
@@ -157,13 +170,15 @@ class OpenAIProvider(AIProvider):
     def _chat(self, *, model: str, system_prompt: str, user_content: str, json_schema: dict) -> dict:
         payload = {
             'model': model,
-            'temperature': self.temperature,
             'messages': [
                 {'role': 'system', 'content': system_prompt},
                 {'role': 'user', 'content': user_content},
             ],
             'response_format': {'type': 'json_schema', 'json_schema': json_schema},
         }
+        # gpt-5.5 (and similar) only accept the default temperature — omit the field.
+        if _model_allows_custom_temperature(model):
+            payload['temperature'] = self.temperature
         try:
             response = httpx.post(
                 API_URL,
