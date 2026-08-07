@@ -53,6 +53,21 @@ class PurchaseContextStatus(models.TextChoices):
     UNCONFIRMED = 'purchase_context_unconfirmed', 'Purchase context unconfirmed'
 
 
+class ConfirmationState(models.TextChoices):
+    CONFIRMED = 'confirmed', 'Confirmed'
+    NOT_CONFIRMED = 'not_confirmed', 'Not confirmed'
+    UNAVAILABLE = 'unavailable', 'Unavailable'
+    UNKNOWN = 'unknown', 'Unknown'
+
+
+class OfferEligibility(models.TextChoices):
+    VERIFIED = 'verified', 'Verified'
+    PARTIAL = 'partial', 'Partial'
+    MANUAL_REVIEW = 'manual_review', 'Manual review'
+    UNAVAILABLE = 'unavailable', 'Unavailable'
+    REJECTED = 'rejected', 'Rejected'
+
+
 class Supplier(models.Model):
     class ReturnComplexity(models.TextChoices):
         EASY = 'easy', 'Easy'
@@ -345,6 +360,27 @@ class SupplierOffer(models.Model):
         max_length=40,
         choices=PurchaseContextStatus.choices,
         default=PurchaseContextStatus.CONFIRMED,
+    )
+    # Three independent confirmation axes (do not collapse into one "Confirmed" label)
+    purchase_context_confirmed = models.CharField(
+        max_length=20,
+        choices=ConfirmationState.choices,
+        default=ConfirmationState.UNKNOWN,
+    )
+    product_identity_confirmed = models.CharField(
+        max_length=20,
+        choices=ConfirmationState.choices,
+        default=ConfirmationState.UNKNOWN,
+    )
+    requested_variant_confirmed = models.CharField(
+        max_length=20,
+        choices=ConfirmationState.choices,
+        default=ConfirmationState.UNKNOWN,
+    )
+    eligibility_status = models.CharField(
+        max_length=20,
+        choices=OfferEligibility.choices,
+        default=OfferEligibility.MANUAL_REVIEW,
     )
 
     match_score = models.DecimalField(max_digits=4, decimal_places=2, null=True, blank=True)

@@ -2,6 +2,10 @@
 
 Uses enriched racquet specs (head size, weight, pattern, generation, variant)
 as hard constraints so Team/Lite/wrong weight offers are rejected.
+
+Specs present on the product page (page_text in raw_data) count the same as
+title tokens — do not reject an exact model merely because the search-card
+title omitted a confirmed specification.
 """
 
 from __future__ import annotations
@@ -20,6 +24,14 @@ from buying.services.enrichment import (
     normalize_grip_size,
 )
 
+# Marketing generation aliases (Babolat Pure Drive 2025 ≈ Gen11, etc.)
+GENERATION_ALIASES: dict[str, set[str]] = {
+    '2025': {'2025', 'gen11', 'gen 11', 'g11'},
+    '2024': {'2024', 'gen10', 'gen 10', 'g10'},
+    'v10': {'v10', '10'},
+    'v9': {'v9', '9'},
+}
+
 
 @dataclass
 class MatchVerdict:
@@ -32,8 +44,18 @@ def _tokens(text: str) -> set[str]:
     return {t for t in _norm(text).split() if len(t) > 1}
 
 
-def _title_variant(title: str) -> str:
-    n = _norm(title)
+def _candidate_blob(candidate: SearchCandidate) -> str:
+    parts = [candidate.title or '']
+    raw = candidate.raw_data if isinstance(candidate.raw_data, dict) else {}
+    for key in ('page_text', 'description', 'body'):
+        val = raw.get(key)
+        if isinstance(val, str) and val.strip():
+            parts.append(val)
+    return ' '.join(parts)
+
+
+def _title_variant(text: str) -> str:
+    n = _norm(text)
     for token in ('super lite', 'superlite', 'junior', 'team', 'lite', 'tour', 'plus'):
         if ' ' in token or token == 'superlite':
             if token in n or (token == 'superlite' and 'super lite' in n):
@@ -46,9 +68,20 @@ def _title_variant(title: str) -> str:
     return ''
 
 
+def _generation_matches(q_gen: str, text_n: str) -> bool:
+    if not q_gen:
+        return True
+    if q_gen in text_n:
+        return True
+    aliases = GENERATION_ALIASES.get(q_gen, set()) | {q_gen}
+    return any(_norm(a) in text_n for a in aliases if a)
+
+
 def score_candidate(query: NormalizedProductQuery, candidate: SearchCandidate) -> MatchVerdict:
     details: dict = {'signals': [], 'hard_mismatches': []}
     score = Decimal('0')
+    blob = _candidate_blob(candidate)
+    blob_n = _norm(blob)
     title = candidate.title or ''
     title_n = _norm(title)
     attrs = query.raw_attributes if isinstance(query.raw_attributes, dict) else {}
@@ -62,17 +95,15 @@ def score_candidate(query: NormalizedProductQuery, candidate: SearchCandidate) -
     q_weight = attrs.get('weight_g')
     q_pattern = _norm(str(attrs.get('string_pattern') or '')).replace(' ', '')
 
-    # --- Hard racquet mismatches ---
     if query.category == 'racquet' or attrs.get('category') == 'racquet' or q_model:
-        cand_variant = _norm(_title_variant(title))
+        cand_variant = _norm(_title_variant(blob))
         if q_variant and cand_variant and q_variant != cand_variant:
             details['hard_mismatches'].append(f'variant:{cand_variant}')
         if not q_variant and cand_variant in {_norm(t) for t in VARIANT_TOKENS}:
-            # Requested standard; candidate is Team/Lite/etc.
             details['hard_mismatches'].append(f'variant:{cand_variant}')
 
         if q_head:
-            cand_head = _parse_head_size(title)
+            cand_head = _parse_head_size(blob)
             try:
                 want_head = int(re.sub(r'\D', '', q_head) or '0')
             except ValueError:
@@ -81,7 +112,7 @@ def score_candidate(query: NormalizedProductQuery, candidate: SearchCandidate) -
                 details['hard_mismatches'].append(f'head_size:{cand_head}')
 
         if q_weight:
-            cand_weight = _parse_weight(title)
+            cand_weight = _parse_weight(blob)
             try:
                 want_w = int(q_weight)
             except (TypeError, ValueError):
@@ -90,27 +121,27 @@ def score_candidate(query: NormalizedProductQuery, candidate: SearchCandidate) -
                 details['hard_mismatches'].append(f'weight_g:{cand_weight}')
 
         if q_pattern:
-            cand_pattern = _norm(_parse_pattern(title) or '').replace(' ', '')
+            cand_pattern = _norm(_parse_pattern(blob) or '').replace(' ', '')
             if cand_pattern and cand_pattern != q_pattern:
                 details['hard_mismatches'].append(f'string_pattern:{cand_pattern}')
 
         if q_gen:
-            # Older/newer generation markers in title
-            gen_tokens = set(re.findall(r'\bv?\d{1,4}\b', title_n))
-            if gen_tokens and q_gen not in title_n and not any(q_gen in t or t in q_gen for t in gen_tokens):
-                # Only flag when title clearly states a different generation-like token
-                years = {t for t in gen_tokens if len(t) == 4}
-                if years and q_gen not in years and q_gen.isdigit() and len(q_gen) == 4:
+            years_in_blob = {t for t in re.findall(r'\b(19|20)\d{2}\b', blob_n)}
+            if years_in_blob and not _generation_matches(q_gen, blob_n):
+                if q_gen.isdigit() and len(q_gen) == 4 and q_gen not in years_in_blob:
+                    details['hard_mismatches'].append('generation')
+            elif not _generation_matches(q_gen, blob_n):
+                # Explicit competing gen label like Gen10 when we want Gen11/2025
+                if re.search(r'\bgen\s*\d+\b', blob_n) and not _generation_matches(q_gen, blob_n):
                     details['hard_mismatches'].append('generation')
 
         if query.grip_size:
             q_grip = normalize_grip_size(query.grip_size)
-            title_grip = normalize_grip_size(title)
-            # Only hard-reject when the listing explicitly states a different grip
-            if q_grip and title_grip and q_grip != title_grip and re.search(
-                r'(?:grip|l)\s*[0-5]\b|\bl[0-5]\b', title, re.I
+            blob_grip = normalize_grip_size(blob)
+            if q_grip and blob_grip and q_grip != blob_grip and re.search(
+                r'(?:grip|l)\s*[0-5]\b|\bl[0-5]\b', blob, re.I
             ):
-                details['hard_mismatches'].append(f'grip_size:{title_grip}')
+                details['hard_mismatches'].append(f'grip_size:{blob_grip}')
 
     if details['hard_mismatches']:
         details['score'] = '0.00'
@@ -126,7 +157,7 @@ def score_candidate(query: NormalizedProductQuery, candidate: SearchCandidate) -
     if query.upc and candidate.raw_data.get('upc') == query.upc:
         score += Decimal('0.45')
         details['signals'].append('upc')
-    if q_code and (q_code in title_n or q_code == _norm(candidate.manufacturer_code or '')):
+    if q_code and (q_code in blob_n or q_code == _norm(candidate.manufacturer_code or '')):
         score += Decimal('0.30')
         details['signals'].append('manufacturer_code')
     if candidate.supplier_sku and query.manufacturer_code:
@@ -134,8 +165,8 @@ def score_candidate(query: NormalizedProductQuery, candidate: SearchCandidate) -
             score += Decimal('0.15')
             details['signals'].append('sku')
 
-    brand_ok = (not q_brand) or (q_brand in title_n)
-    model_ok = (not q_model) or all(t in _tokens(title) for t in _tokens(q_model) if len(t) > 2)
+    brand_ok = (not q_brand) or (q_brand in blob_n)
+    model_ok = (not q_model) or all(t in _tokens(blob) for t in _tokens(q_model) if len(t) > 2)
     if brand_ok and q_brand:
         score += Decimal('0.15')
         details['signals'].append('brand')
@@ -143,25 +174,40 @@ def score_candidate(query: NormalizedProductQuery, candidate: SearchCandidate) -
         score += Decimal('0.25')
         details['signals'].append('model')
 
-    overlap = _tokens(title) & (_tokens(q_brand) | _tokens(q_model))
+    if q_gen and _generation_matches(q_gen, blob_n):
+        score += Decimal('0.10')
+        details['signals'].append('generation')
+    if q_head and _parse_head_size(blob) and str(_parse_head_size(blob)) in str(q_head):
+        score += Decimal('0.08')
+        details['signals'].append('head_size')
+    if q_weight and _parse_weight(blob) == int(q_weight or 0):
+        score += Decimal('0.08')
+        details['signals'].append('weight')
+
+    overlap = _tokens(blob) & (_tokens(q_brand) | _tokens(q_model))
     if overlap:
         score += min(Decimal('0.10'), Decimal('0.02') * len(overlap))
 
     if query.grip_size:
         grip_n = _norm(query.grip_size).replace(' ', '')
-        if grip_n and grip_n not in title_n.replace(' ', '') and not re.search(
-            rf'\b{re.escape(grip_n[-1])}\b', title_n
-        ):
-            # Soft: grip often not in search title
+        if grip_n and grip_n not in blob_n.replace(' ', ''):
             details['signals'].append('grip_unchecked')
 
+    color_mismatch = bool(query.color and query.color.lower() not in blob.lower())
+    gen_ok = (not q_gen) or _generation_matches(q_gen, blob_n) or (q_gen not in title_n and 'gen' not in blob_n)
+
     if score >= Decimal('0.70') and brand_ok and model_ok:
-        status = 'exact'
+        if color_mismatch:
+            status = 'alternative_color'
+        elif q_gen and not gen_ok:
+            status = 'alternative_version'
+        else:
+            status = 'exact'
     elif score >= Decimal('0.45'):
         status = 'manual_review'
-        if query.color and query.color.lower() not in title.lower():
+        if color_mismatch:
             status = 'alternative_color'
-        elif query.generation and _norm(query.generation) not in title_n:
+        elif q_gen and not gen_ok:
             status = 'alternative_version'
     elif score >= Decimal('0.25'):
         status = 'manual_review'

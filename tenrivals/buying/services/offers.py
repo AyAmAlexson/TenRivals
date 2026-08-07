@@ -16,7 +16,8 @@ from django.db import transaction
 
 from buying.engine.pricing import CALCULATION_VERSION, PricingError, build_cost_scenario
 from buying.engine.routes import applicable_routes
-from buying.models import CostScenario, SupplierOffer
+from buying.models import CostScenario, OfferEligibility, SupplierOffer
+from buying.services.eligibility import apply_offer_eligibility
 
 logger = logging.getLogger('buying')
 
@@ -37,6 +38,15 @@ def rebuild_scenarios_for_offer(offer: SupplierOffer) -> list[CostScenario]:
     Manual overrides recorded on superseded scenarios are re-applied to their
     successors by component code — a recalculation never destroys an override.
     """
+    apply_offer_eligibility(offer)
+    if offer.pk:
+        SupplierOffer.objects.filter(pk=offer.pk).update(
+            purchase_context_confirmed=offer.purchase_context_confirmed,
+            product_identity_confirmed=offer.product_identity_confirmed,
+            requested_variant_confirmed=offer.requested_variant_confirmed,
+            eligibility_status=offer.eligibility_status,
+        )
+
     previous = list(offer.cost_scenarios.filter(status__in=_ACTIVE_STATUSES))
     overrides_by_route: dict[int, dict[str, Decimal]] = {}
     previous_by_route: dict[int, CostScenario] = {}
@@ -152,25 +162,48 @@ def revise_offer(old_offer: SupplierOffer, new_offer: SupplierOffer) -> Supplier
 def rank_request_scenarios(buying_request_id: int) -> None:
     """Two-dimensional ranking.
 
-    rank: ordinal by customer_price among calculated, non-hidden scenarios —
-    "which is cheapest". recommendation: independent quality verdict
-    (availability, match status, confidence, warnings) — "which should we pick".
-    The cheapest option does not automatically get 'Recommended'.
+    rank: ordinal by customer_price among calculated, non-hidden scenarios from
+    VERIFIED offers only — "which is cheapest among fully verified options".
+    Partial / manual_review offers may still have scenarios for display but do
+    not enter normal price ranking.
+    recommendation: independent quality verdict.
     """
     scenarios = list(
         CostScenario.objects.filter(
             buying_request_id=buying_request_id,
             status=CostScenario.Status.CALCULATED,
             is_hidden=False,
+            supplier_offer__eligibility_status=OfferEligibility.VERIFIED,
+            supplier_offer__superseded_by__isnull=True,
         ).select_related('supplier_offer')
     )
     scenarios.sort(key=lambda s: s.customer_price)
+    ranked_ids = {s.pk for s in scenarios}
     for index, scenario in enumerate(scenarios, start=1):
         labels = _price_labels(scenario, is_cheapest=index == 1)
         recommendation, reasons = _recommendation(scenario)
         CostScenario.objects.filter(pk=scenario.pk).update(
             rank=index,
             rank_labels=labels,
+            recommendation=recommendation,
+            recommendation_reasons=reasons,
+        )
+
+    # Non-verified calculated scenarios: show without rank
+    others = CostScenario.objects.filter(
+        buying_request_id=buying_request_id,
+        status=CostScenario.Status.CALCULATED,
+        is_hidden=False,
+    ).exclude(pk__in=ranked_ids).select_related('supplier_offer')
+    for scenario in others:
+        elig = getattr(scenario.supplier_offer, 'eligibility_status', '') or ''
+        recommendation, reasons = _recommendation(scenario)
+        if elig == OfferEligibility.PARTIAL:
+            reasons = ['Partial offer — not ranked until variant/context verified'] + reasons
+            recommendation = CostScenario.Recommendation.REVIEW
+        CostScenario.objects.filter(pk=scenario.pk).update(
+            rank=None,
+            rank_labels=[],
             recommendation=recommendation,
             recommendation_reasons=reasons,
         )
@@ -219,8 +252,18 @@ def _recommendation(scenario: CostScenario) -> tuple[str, list[str]]:
     offer = scenario.supplier_offer
     reasons: list[str] = []
 
+    if getattr(offer, 'eligibility_status', '') == OfferEligibility.UNAVAILABLE:
+        return CostScenario.Recommendation.NOT_RECOMMENDED, ['Offer unavailable']
+    if getattr(offer, 'eligibility_status', '') == OfferEligibility.REJECTED:
+        return CostScenario.Recommendation.NOT_RECOMMENDED, ['Offer rejected by matching']
+    if getattr(offer, 'requested_variant_confirmed', '') == 'unavailable':
+        return CostScenario.Recommendation.NOT_RECOMMENDED, ['Requested variant is not available']
     if offer.requested_variant_available is False:
         return CostScenario.Recommendation.NOT_RECOMMENDED, ['Requested variant is not available']
+    if getattr(offer, 'requested_variant_confirmed', '') == 'unknown':
+        reasons.append('Requested variant (e.g. grip) not verified')
+    if getattr(offer, 'purchase_context_confirmed', '') == 'not_confirmed':
+        return CostScenario.Recommendation.NOT_RECOMMENDED, ['Destination not confirmed']
     if getattr(offer, 'purchase_context_status', '') == 'purchase_context_unconfirmed':
         return CostScenario.Recommendation.NOT_RECOMMENDED, ['Destination not confirmed']
     if any('Onex route unsupported' in (w or '') for w in (offer.warnings or [])):
@@ -241,6 +284,8 @@ def _recommendation(scenario: CostScenario) -> tuple[str, list[str]]:
         reasons.append('Authenticated session expired')
     if any('Promotion shown but not confirmed' in (w or '') for w in (offer.warnings or [])):
         reasons.append('Promotion shown but not confirmed')
+    if getattr(offer, 'eligibility_status', '') == OfferEligibility.PARTIAL:
+        reasons.append('Partial verification — not eligible for automatic recommendation')
 
     if reasons:
         return CostScenario.Recommendation.REVIEW, reasons

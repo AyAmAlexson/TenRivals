@@ -16,6 +16,7 @@ from buying.models import (
     TaxDisplayMode,
     ValueSource,
 )
+from buying.services.eligibility import apply_offer_eligibility
 
 
 _TAX_MAP = {
@@ -74,7 +75,7 @@ def offer_data_to_supplier_offer(
     if fs_status not in {c.value for c in FreeShippingStatus}:
         fs_status = FreeShippingStatus.THRESHOLD_UNKNOWN
 
-    return SupplierOffer(
+    offer = SupplierOffer(
         buying_request=buying_request,
         supplier=supplier,
         search_result=search_result,
@@ -136,3 +137,4 @@ def offer_data_to_supplier_offer(
         checked_at=timezone.now(),
         raw_data={},
     )
+    return apply_offer_eligibility(offer)

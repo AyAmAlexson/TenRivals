@@ -64,15 +64,16 @@
   </p>
   <div class="table-wrap">
     <table>
-      <thead><tr><th>Supplier</th><th>Status</th><th>Candidates</th><th>Offers</th><th>Error</th></tr></thead>
+      <thead><tr><th>Supplier</th><th>Status</th><th>Tier</th><th>Candidates</th><th>Offers</th><th>Error</th></tr></thead>
       <tbody id="search-progress-body">
         {% for run in search_progress.runs %}
         <tr>
           <td>{{ run.supplier_name }}</td>
           <td>{{ run.status }}</td>
+          <td>{% if run.readiness %}<code>{{ run.readiness.tier }}</code>{% else %}—{% endif %}</td>
           <td>{{ run.candidates_found }}</td>
           <td>{{ run.offers_created }}</td>
-          <td>{% if run.error_message %}{{ run.error_type }}: {{ run.error_message|truncatechars:80 }}{% else %}—{% endif %}</td>
+          <td>{% if run.error_message %}{{ run.error_type }}{% if run.error_type %}: {% endif %}{{ run.error_message|truncatechars:80 }}{% else %}—{% endif %}</td>
         </tr>
         {% endfor %}
       </tbody>
@@ -143,7 +144,9 @@
       <thead>
         <tr>
           <th>Supplier</th><th>Product</th><th>Price</th><th>Tax</th><th>Destination</th>
-          <th>Ship</th><th>Auth</th><th>Context</th><th>Onex</th><th>Variant</th><th>Match</th><th>Checked</th><th></th>
+          <th>Ship</th><th>Auth</th>
+          <th>Context</th><th>Identity</th><th>Variant</th><th>Eligibility</th>
+          <th>Onex</th><th>Match</th><th>Checked</th><th></th>
         </tr>
       </thead>
       <tbody>
@@ -174,9 +177,13 @@
             {% if offer.amount_missing_for_free_shipping %}<div class="page-note">Need {{ offer.amount_missing_for_free_shipping }} more</div>{% endif %}
           </td>
           <td>{{ offer.authentication_status|default:'—' }}</td>
-          <td>{{ offer.get_purchase_context_status_display }}</td>
+          <td><span class="badge {% if offer.purchase_context_confirmed == 'confirmed' %}badge--yes{% else %}badge--no{% endif %}">{{ offer.get_purchase_context_confirmed_display|default:offer.get_purchase_context_status_display }}</span></td>
+          <td><span class="badge {% if offer.product_identity_confirmed == 'confirmed' %}badge--yes{% else %}badge--no{% endif %}">{{ offer.get_product_identity_confirmed_display }}</span></td>
+          <td>
+            <span class="badge {% if offer.requested_variant_confirmed == 'confirmed' %}badge--yes{% elif offer.requested_variant_confirmed == 'unavailable' %}badge--no{% endif %}">{{ offer.get_requested_variant_confirmed_display }}</span>
+          </td>
+          <td><span class="badge {% if offer.eligibility_status == 'verified' %}badge--yes{% else %}badge--no{% endif %}">{{ offer.get_eligibility_status_display }}</span></td>
           <td>{{ offer.supplier.get_onex_applicability_display }}</td>
-          <td>{% if offer.requested_variant_available %}<span class="badge badge--yes">Yes</span>{% elif offer.requested_variant_available == False %}<span class="badge badge--no">No</span>{% else %}—{% endif %}</td>
           <td>{{ offer.get_match_status_display }}</td>
           <td>{{ offer.checked_at|date:'Y-m-d H:i' }}</td>
           <td>{% if perms.buying.create %}<a class="btn btn--sm" href="{% url 'administration:buying_offer_edit' buying_request.pk offer.pk %}">Edit</a>{% endif %}</td>

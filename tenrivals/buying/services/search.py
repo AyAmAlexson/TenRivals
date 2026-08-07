@@ -10,9 +10,10 @@ from django.db import transaction
 from django.utils import timezone
 
 from buying.connectors.base import PurchaseContext
-from buying.connectors.exceptions import ConnectorError
+from buying.connectors.exceptions import ConnectorError, CredentialsMissing
 from buying.connectors.http import ConnectorHttpClient
 from buying.connectors.registry import get_connector, get_connector_class
+from buying.connectors.readiness import readiness_for
 from buying.engine.routes import supplier_supports_onex
 from buying.models import (
     BuyingRequest,
@@ -231,13 +232,23 @@ def execute_supplier_search(run_id: int, *, force: bool = False) -> dict:
         best = pick_best_candidates(query, candidates, limit=3)
         offers_created = 0
         if not best:
+            readiness = readiness_for(supplier.code)
+            msg = 'no_matching_product'
+            if readiness.get('tier') in ('anti_bot_blocked', 'authenticated_blocked'):
+                msg = readiness.get('notes') or readiness.get('tier')
+            elif readiness.get('search_ok') == 'credentials_required':
+                msg = 'credentials_missing'
+            elif candidates and not best:
+                msg = 'candidates_rejected_by_matching'
+            elif not candidates:
+                msg = 'search_empty'
             SupplierSearchRun.objects.filter(pk=run.pk).update(
                 status=SupplierSearchRun.Status.COMPLETED,
                 finished_at=timezone.now(),
                 candidates_found=len(candidates),
                 offers_created=0,
                 error_type='',
-                error_message='no_matching_product',
+                error_message=msg,
             )
             return {'status': 'completed', 'candidates': len(candidates), 'offers': 0}
 
@@ -333,6 +344,16 @@ def execute_supplier_search(run_id: int, *, force: bool = False) -> dict:
             error_message='' if offers_created else 'no_verified_offer',
         )
         return {'status': 'completed', 'candidates': len(candidates), 'offers': offers_created}
+    except CredentialsMissing as exc:
+        SupplierSearchRun.objects.filter(pk=run.pk).update(
+            status=SupplierSearchRun.Status.COMPLETED,
+            finished_at=timezone.now(),
+            candidates_found=0,
+            offers_created=0,
+            error_type='credentials_missing',
+            error_message=str(exc)[:2000],
+        )
+        return {'status': 'completed', 'error_type': 'credentials_missing'}
     except ConnectorError as exc:
         _fail_run(run, exc.error_type, str(exc))
         return {'status': 'failed', 'error_type': exc.error_type}
@@ -398,6 +419,7 @@ def progress_payload(buying_request: BuyingRequest) -> dict:
                 'offers_created': r.offers_created,
                 'error_type': r.error_type,
                 'error_message': r.error_message,
+                'readiness': readiness_for(r.supplier.code),
             }
             for r in runs
         ],

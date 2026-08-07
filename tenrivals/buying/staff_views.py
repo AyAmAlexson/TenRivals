@@ -515,8 +515,10 @@ def buying_connectors(request):
             return redirect('administration:buying_connectors')
 
     suppliers = Supplier.objects.all()
+    from buying.connectors.readiness import readiness_for
     for supplier in suppliers:
         supplier.latest_status = supplier.connector_statuses.first()
+        supplier.readiness = readiness_for(supplier.code)
     return render(
         request,
         'buying/staff/connectors.html',

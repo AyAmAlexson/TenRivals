@@ -144,10 +144,17 @@ class _Breakdown:
         if blocking:
             self.block(f'missing_rule:{rule_type}')
             note = f'No "{rule_type}" rule configured — calculation blocked'
-        else:
-            self.warn(f'missing_rule:{rule_type}')
-            note = f'No "{rule_type}" rule configured — estimated as 0, review manually'
-        return self.add(code, label, Decimal('0'), source='configured_rule', exact=False, note=note)
+            return self.add(
+                code, label, Decimal('0'), source='configured_rule', exact=False, note=note
+            )
+        # Non-blocking: do not pretend configured_rule zero is exact — mark unknown
+        self.warn(f'missing_rule:{rule_type}')
+        self.warn(f'unknown:{rule_type}')
+        note = (
+            f'No usable "{rule_type}" value — treated as 0 for maths only; '
+            'confidence reduced, review manually'
+        )
+        return self.add(code, label, Decimal('0'), source='unknown', exact=False, note=note)
 
     def resolve(self, rule_type: str, scope: dict) -> CalculationRule | None:
         rule, conflict = resolve_rule_checked(rule_type, **scope)

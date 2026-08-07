@@ -1,8 +1,10 @@
 from .canonical import CanonicalProduct, RacquetSpecification
 from .requests import BuyingRequest, NormalizedProduct, ProductCategory
 from .suppliers import (
+    ConfirmationState,
     ConnectorResponse,
     FreeShippingStatus,
+    OfferEligibility,
     OnexApplicability,
     ProductMapping,
     PurchaseContextStatus,
@@ -26,6 +28,7 @@ __all__ = [
     'BuyingRequest',
     'CalculationRule',
     'CanonicalProduct',
+    'ConfirmationState',
     'ConnectorResponse',
     'CostScenario',
     'FreeShippingStatus',
@@ -35,6 +38,7 @@ __all__ = [
     'FxRate',
     'ManualOverride',
     'NormalizedProduct',
+    'OfferEligibility',
     'OnexApplicability',
     'OptimizationCandidate',
     'OptimizationScenario',

@@ -360,10 +360,14 @@ class OfferScenarioLifecycleTests(TestCase):
         cheap = scenarios[cheap_offer.pk]
         cheap.refresh_from_db()
         expensive = scenarios[pricier.pk]
-        self.assertEqual(cheap.rank, 1)
+        # Unavailable / non-verified offers are shown but excluded from price ranking
+        self.assertIsNone(cheap.rank)
         self.assertEqual(cheap.recommendation, 'not_recommended')
-        self.assertIn('Requested variant is not available', cheap.recommendation_reasons)
-        self.assertEqual(expensive.rank, 2)
+        self.assertTrue(
+            any('variant' in (r or '').lower() or 'unavailable' in (r or '').lower()
+                for r in cheap.recommendation_reasons)
+        )
+        self.assertEqual(expensive.rank, 1)
         self.assertEqual(expensive.recommendation, 'recommended')
 
 

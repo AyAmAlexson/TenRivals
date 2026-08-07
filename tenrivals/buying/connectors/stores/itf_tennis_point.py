@@ -24,6 +24,7 @@ from buying.connectors.base import (
     OfferData,
     SearchCandidate,
 )
+from buying.connectors.exceptions import CredentialsMissing
 from buying.connectors.generic import HtmlJsonLdConnector
 from buying.connectors.http import ConnectorHttpClient
 from buying.connectors.registry import register_connector
@@ -35,7 +36,7 @@ logger = logging.getLogger('buying')
 @register_connector
 class ItfTennisPointConnector(HtmlJsonLdConnector):
     code = 'itf-tennis-point'
-    parser_version = 'phase3-1'
+    parser_version = 'phase3-2'
     base_url = 'https://www.itf-tennis-point.com/itf/'
     search_path_template = '/search?q={query}'
     default_currency = 'EUR'
@@ -117,6 +118,14 @@ class ItfTennisPointConnector(HtmlJsonLdConnector):
     def refresh_session(self) -> AuthenticationResult:
         clear_session_cookies(self.code)
         return self.login()
+
+    def search(self, query: NormalizedProductQuery) -> list[SearchCandidate]:
+        user, password = self._credentials()
+        if not user or not password:
+            raise CredentialsMissing(
+                'ITF Tennis Point requires authentication — set BUYING_ITF_TENNIS_POINT_* env vars'
+            )
+        return super().search(query)
 
     def get_product_details(self, candidate: SearchCandidate, query: NormalizedProductQuery) -> OfferData:
         # Public parse first

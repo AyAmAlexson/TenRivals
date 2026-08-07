@@ -40,6 +40,21 @@ class TennisWarehouseEuropeConnector(HtmlJsonLdConnector):
         authenticated_pricing=False,
     )
 
+    def search(self, query: NormalizedProductQuery) -> list[SearchCandidate]:
+        client = self._client()
+        phrase = (query.search_phrases or ['tennis'])[0]
+        url = self.search_url(phrase)
+        # TW Europe rejects generic Accept with HTTP 406
+        response = client.get(
+            url,
+            headers={
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                'Accept-Language': 'en-GB,en;q=0.9',
+            },
+        )
+        response.raise_for_status()
+        return self.parse_search_html(response.text, page_url=str(response.url), query=query)
+
     def parse_search_html(self, html, *, page_url, query: NormalizedProductQuery):
         soup = BeautifulSoup(html, 'html.parser')
         candidates: list[SearchCandidate] = []

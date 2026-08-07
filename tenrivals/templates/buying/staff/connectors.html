@@ -3,9 +3,9 @@
 {% block page_heading %}Connector status{% endblock %}
 {% block page_note %}
 <p class="page-note">
-  Health of supplier connectors. Authenticated stores need Heroku config vars
-  <code>BUYING_ITF_TENNIS_POINT_USERNAME</code> / <code>PASSWORD</code> and
-  <code>BUYING_CENTRAL_TENNIS_USERNAME</code> / <code>PASSWORD</code> (never store credentials in the database).
+  HTTP health ≠ end-to-end readiness. A connector is operational only when it can
+  search → candidate → product page → price → variant. Auth stores need Heroku
+  config vars (never stored in the database).
 </p>
 {% endblock %}
 {% block content %}
@@ -20,27 +20,31 @@
   <table>
     <thead>
       <tr>
-        <th>Supplier</th><th>Code</th><th>Onex</th><th>Enabled</th><th>Latest status</th>
-        <th>Last success</th><th>Last failure</th><th>Response</th><th>Parser</th><th></th>
+        <th>Supplier</th><th>Code</th><th>Tier</th><th>Search</th><th>Product</th><th>Variant</th>
+        <th>Onex</th><th>Enabled</th><th>Latest health</th>
+        <th>Last success</th><th></th>
       </tr>
     </thead>
     <tbody>
       {% for s in suppliers %}
       <tr>
-        <td>{{ s.name }}</td>
+        <td>{{ s.name }}
+          {% if s.readiness.notes %}<div class="page-note" style="margin:4px 0 0">{{ s.readiness.notes }}</div>{% endif %}
+        </td>
         <td><code>{{ s.code }}</code></td>
+        <td><code>{{ s.readiness.tier }}</code></td>
+        <td>{{ s.readiness.search_ok }}</td>
+        <td>{{ s.readiness.product_parse_ok }}</td>
+        <td>{{ s.readiness.variant_parse_ok }}</td>
         <td>{{ s.get_onex_applicability_display }}</td>
         <td>{% if s.enabled %}<span class="badge badge--yes">Yes</span>{% else %}<span class="badge badge--no">No</span>{% endif %}</td>
         <td>
           {% if s.latest_status %}
             <span class="badge {% if s.latest_status.status == 'available' %}badge--yes{% else %}badge--no{% endif %}">{{ s.latest_status.get_status_display }}</span>
-            <div class="page-note" style="margin:4px 0 0">{{ s.latest_status.checked_at|date:'Y-m-d H:i' }}{% if s.latest_status.error_message %} · {{ s.latest_status.error_message|truncatechars:80 }}{% endif %}</div>
+            <div class="page-note" style="margin:4px 0 0">{{ s.latest_status.checked_at|date:'Y-m-d H:i' }}{% if s.latest_status.error_message %} · {{ s.latest_status.error_message|truncatechars:60 }}{% endif %}</div>
           {% else %}—{% endif %}
         </td>
         <td>{{ s.last_successful_check|date:'Y-m-d H:i'|default:'—' }}</td>
-        <td>{{ s.last_failed_check|date:'Y-m-d H:i'|default:'—' }}</td>
-        <td>{% if s.latest_status.response_time_ms %}{{ s.latest_status.response_time_ms }} ms{% else %}—{% endif %}</td>
-        <td>{{ s.latest_status.parser_version|default:'—' }}</td>
         <td>
           {% if perms.buying.manage_suppliers %}
           <form method="post" style="display:inline">{% csrf_token %}
@@ -57,7 +61,7 @@
         </td>
       </tr>
       {% empty %}
-      <tr><td colspan="10">No suppliers configured. Run <code>manage.py seed_suppliers</code>.</td></tr>
+      <tr><td colspan="11">No suppliers configured. Run <code>manage.py seed_suppliers</code>.</td></tr>
       {% endfor %}
     </tbody>
   </table>

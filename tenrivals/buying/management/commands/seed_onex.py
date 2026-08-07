@@ -90,6 +90,9 @@ class Command(BaseCommand):
              {'minimum': '0.03', 'standard': '0.10', 'premium': '0.25'}, {}),
             (RuleType.VOLUMETRIC_WEIGHT, 'Volumetric weight (standard formula)',
              {'divisor': '6000'}, {}),
+            # Packaging only — product weight comes from NormalizedProduct / mapping / parse
+            (RuleType.WEIGHT, 'Racquet packaging allowance',
+             {'packaging_g': '150'}, {'category': 'racquet'}),
         ]
         for rule_type, name, params, scope in global_rules:
             created_counts['rules'] += self._rule(rule_type, name, params, **scope)
@@ -106,7 +109,7 @@ class Command(BaseCommand):
                 '(or add a manual "FX rate" pricing rule) before pricing.'
             ))
 
-    def _rule(self, rule_type, name, params, provider=None, warehouse=None) -> bool:
+    def _rule(self, rule_type, name, params, provider=None, warehouse=None, category='') -> bool:
         errors = validate_rule_params(rule_type, params)
         if errors:  # guards against typos in this file, not user input
             raise ValueError(f'Invalid params for {name}: {errors}')
@@ -115,6 +118,7 @@ class Command(BaseCommand):
             name=name,
             provider=provider,
             warehouse=warehouse,
+            category=category or '',
             defaults={'params': params},
         )
         if created:

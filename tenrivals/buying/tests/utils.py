@@ -61,6 +61,8 @@ def make_request(user, query='Wilson Blade 100 V10, 300 g, grip 3'):
 
 
 def make_offer(buying_request, supplier, **kwargs):
+    from buying.models import ConfirmationState, OfferEligibility
+
     defaults = dict(
         title='Wilson Blade 100 V10',
         current_price=Decimal('100.00'),
@@ -71,6 +73,14 @@ def make_offer(buying_request, supplier, **kwargs):
         local_shipping_source='parsed',
         tax_display_mode='prices_include_vat',
         weight_g_actual=1000,
+        match_status='exact',
+        requested_variant_available=True,
+        destination_selection_confirmed=True,
+        purchase_context_status='confirmed',
+        purchase_context_confirmed=ConfirmationState.CONFIRMED,
+        product_identity_confirmed=ConfirmationState.CONFIRMED,
+        requested_variant_confirmed=ConfirmationState.CONFIRMED,
+        eligibility_status=OfferEligibility.VERIFIED,
     )
     defaults.update(kwargs)
     return SupplierOffer.objects.create(

@@ -1,16 +1,18 @@
 """Weight Engine.
 
-Chargeable weight is always max(actual weight, volumetric weight):
+Chargeable weight is always max(actual weight, volumetric weight).
 
-- actual weight: supplier value (SupplierOffer.weight_g_actual) has priority;
-  falls back to the category norm from CalculationRule(rule_type='weight');
-  packaging weight from the same rule is added on top;
-- volumetric weight: the standard formula L×W×H (cm) / divisor (kg) when the
-  offer has package dimensions, otherwise the category volumetric norm
-  (default_volumetric_g) — both configured on the 'volumetric_weight' rule.
+Actual-weight source priority (product body before packaging):
 
-There is deliberately no single hardcoded default for all products: no rule
-and no data means the weight is unknown and the scenario is blocked.
+1. exact weight parsed from supplier product/variant (SupplierOffer.weight_g_actual);
+2. confirmed weight from ProductMapping;
+3. weight from NormalizedProduct;
+4. weight from canonical enrichment / RacquetSpecification / CanonicalProduct link;
+5. configured category estimate (CalculationRule weight.default_g);
+6. manual override (offer.weight_g_actual when is_manual — already covered by #1).
+
+Packaging grams from the weight rule are added on top of whichever product
+weight was chosen. Missing all sources → None → pricing blocks with missing_weight.
 """
 
 from __future__ import annotations
@@ -19,7 +21,7 @@ from decimal import Decimal
 
 from buying.engine.rule_handlers import get_handler
 from buying.engine.rules import resolve_rule
-from buying.models import CalculationRule, SupplierOffer
+from buying.models import CalculationRule, ProductMapping, SupplierOffer
 
 
 def resolve_chargeable_weight(
@@ -32,24 +34,17 @@ def resolve_chargeable_weight(
         'category': category,
     }
 
-    # --- Actual weight per item (incl. packaging) -----------------------------
     packaging_g = 0
     weight_rule = resolve_rule(CalculationRule.RuleType.WEIGHT, **scope)
     if weight_rule:
         packaging_g = int(weight_rule.params.get('packaging_g', 0) or 0)
 
-    actual_item_g = None
-    actual_source = 'missing'
-    actual_exact = False
-    if offer.weight_g_actual:
-        actual_item_g = offer.weight_g_actual + packaging_g
-        actual_source = 'manual_entry' if offer.is_manual else 'parsed'
-        actual_exact = True
-    elif weight_rule and weight_rule.params.get('default_g'):
-        actual_item_g = int(weight_rule.params['default_g']) + packaging_g
-        actual_source = 'configured_rule'
+    product_g, actual_source, actual_exact = _resolve_product_weight_g(offer, weight_rule)
 
-    # --- Volumetric weight per item -------------------------------------------
+    actual_item_g = None
+    if product_g is not None:
+        actual_item_g = int(product_g) + packaging_g
+
     volumetric_rule = resolve_rule(CalculationRule.RuleType.VOLUMETRIC_WEIGHT, **scope)
     volumetric_item_g = None
     volumetric_source = None
@@ -67,7 +62,6 @@ def resolve_chargeable_weight(
             volumetric_item_g = int(volumetric_rule.params['default_volumetric_g'])
             volumetric_source = 'configured_rule'
 
-    # --- Chargeable = max(actual, volumetric) ----------------------------------
     actual_total_g = actual_item_g * quantity if actual_item_g is not None else None
     volumetric_total_g = volumetric_item_g * quantity if volumetric_item_g is not None else None
 
@@ -81,6 +75,7 @@ def resolve_chargeable_weight(
         chargeable_g, basis, exact = volumetric_total_g, 'volumetric', volumetric_exact
 
     meta = {
+        'product_g': product_g,
         'actual_item_g': actual_item_g,
         'actual_source': actual_source,
         'actual_exact': actual_exact,
@@ -107,3 +102,54 @@ def resolve_chargeable_weight(
         ),
     }
     return chargeable_g, meta
+
+
+def _resolve_product_weight_g(
+    offer: SupplierOffer, weight_rule: CalculationRule | None
+) -> tuple[int | None, str, bool]:
+    """Return (grams before packaging, source label, exact flag)."""
+    if offer.weight_g_actual:
+        source = 'manual_entry' if offer.is_manual else 'parsed'
+        return int(offer.weight_g_actual), source, True
+
+    mapping_weight = _mapping_confirmed_weight(offer)
+    if mapping_weight:
+        return mapping_weight, 'product_mapping', True
+
+    np = getattr(offer.buying_request, 'normalized_product', None)
+    if np is not None and np.weight_g:
+        sources = np.field_sources or {}
+        if sources.get('weight_g') == 'canonical' or (np.enrichment_snapshot or {}).get(
+            'weight_g_unstrung'
+        ):
+            return int(np.weight_g), 'canonical_product', True
+        return int(np.weight_g), 'normalized_product', True
+
+    snap = (getattr(np, 'enrichment_snapshot', None) or {}) if np is not None else {}
+    if snap.get('weight_g_unstrung'):
+        try:
+            return int(snap['weight_g_unstrung']), 'canonical_product', True
+        except (TypeError, ValueError):
+            pass
+
+    if weight_rule and weight_rule.params.get('default_g'):
+        return int(weight_rule.params['default_g']), 'configured_rule', False
+
+    return None, 'missing', False
+
+
+def _mapping_confirmed_weight(offer: SupplierOffer) -> int | None:
+    qs = ProductMapping.objects.filter(
+        supplier_id=offer.supplier_id,
+        confirmed_weight_g__isnull=False,
+        mapping_status=ProductMapping.MappingStatus.CONFIRMED,
+    )
+    if offer.product_url:
+        hit = qs.filter(supplier_product_url=offer.product_url).first()
+        if hit:
+            return int(hit.confirmed_weight_g)
+    if offer.supplier_sku:
+        hit = qs.filter(supplier_sku=offer.supplier_sku).first()
+        if hit:
+            return int(hit.confirmed_weight_g)
+    return None
