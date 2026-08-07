@@ -93,7 +93,7 @@ def _norm(text: str) -> str:
 def normalize_grip_size(raw: str) -> str:
     """Normalize supplier grip labels to L0–L5.
 
-    Accepts: L4, Grip 4, grip size 4, 4 1/2, 4-1/2, ручка 4.
+    Accepts: L4, Grip 4, grip size 4, 4 1/2, 4-1/2, ручка 4, 3я ручка.
     US circumference fractions map: 4\"→L0 … 4 1/2\"→L4 … 4 5/8\"→L5.
     """
     text = (raw or '').strip()
@@ -113,6 +113,15 @@ def normalize_grip_size(raw: str) -> str:
     for pattern, grip in fraction_map:
         if re.search(pattern, low):
             return grip
+
+    # Russian ordinal forms: "3я ручка", "4-я ручка", "2ой ручки"
+    m = re.search(
+        r'([0-5])\s*[-.]?\s*(?:я|й|ой|ая|ое|ье)?\s*ручк',
+        text,
+        re.I,
+    )
+    if m:
+        return f'L{m.group(1)}'
 
     m = re.search(r'(?:l|ручка|grip(?:\s*size)?)\s*[#:]?\s*([0-5])\b', text, re.I)
     if m:

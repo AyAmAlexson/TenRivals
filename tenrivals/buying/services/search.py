@@ -15,7 +15,7 @@ from buying.connectors.exceptions import ConnectorError, CredentialsMissing
 from buying.connectors.http import ConnectorHttpClient
 from buying.connectors.registry import get_connector, get_connector_class
 from buying.connectors.readiness import readiness_for
-from buying.engine.routes import supplier_supports_onex
+from buying.engine.routes import supplier_allows_onex_scenarios
 from buying.models import (
     BuyingRequest,
     OnexApplicability,
@@ -367,7 +367,12 @@ def execute_supplier_search(run_id: int, *, force: bool = False) -> dict:
             elif candidates and not best:
                 msg = 'candidates_rejected_by_matching'
             elif not candidates:
-                if readiness.get('search_ok') == 'credentials_required':
+                # readiness may say credentials_required even when env vars are set
+                # (ITF); only blame missing credentials when they are actually absent
+                if (
+                    readiness.get('search_ok') == 'credentials_required'
+                    and _auth_credentials_absent(supplier.code)
+                ):
                     msg = 'credentials_missing'
                 else:
                     msg = 'search_empty'
@@ -499,7 +504,10 @@ def execute_supplier_search(run_id: int, *, force: bool = False) -> dict:
                             rank=None,
                         )
 
-            if supplier_supports_onex(supplier) and offer.eligibility_status != OfferEligibility.REJECTED:
+            if (
+                supplier_allows_onex_scenarios(supplier)
+                and offer.eligibility_status != OfferEligibility.REJECTED
+            ):
                 rebuild_scenarios_for_offer(offer)
             offers_created += 1
             break  # one primary offer per supplier for MVP
@@ -576,8 +584,22 @@ def finalize_search(buying_request_id: int) -> dict:
     return {'status': request.status, 'completed': completed, 'failed': failed}
 
 
+def _auth_credentials_absent(supplier_code: str) -> bool:
+    """True when authenticated connector has empty username/password env vars."""
+    code = (supplier_code or '').strip()
+    if code == 'itf-tennis-point':
+        user = getattr(settings, 'BUYING_ITF_TENNIS_POINT_USERNAME', '') or ''
+        password = getattr(settings, 'BUYING_ITF_TENNIS_POINT_PASSWORD', '') or ''
+        return not (user.strip() and password)
+    if code == 'central-tennis':
+        user = getattr(settings, 'BUYING_CENTRAL_TENNIS_USERNAME', '') or ''
+        password = getattr(settings, 'BUYING_CENTRAL_TENNIS_PASSWORD', '') or ''
+        return not (user.strip() and password)
+    return False
+
+
 def progress_payload(buying_request: BuyingRequest) -> dict:
-    from buying.models import CostScenario, OfferEligibility
+    from buying.models import CostScenario, OfferEligibility, OnexApplicability
 
     runs = list(buying_request.search_runs.select_related('supplier'))
     completed = sum(1 for r in runs if r.status == SupplierSearchRun.Status.COMPLETED)
@@ -591,28 +613,32 @@ def progress_payload(buying_request: BuyingRequest) -> dict:
     )
     offers_found = offers_qs.count()
 
-    # Best landed cost among active calculated scenarios (lowest = best cost)
-    best_scenario = (
-        CostScenario.objects.filter(
-            buying_request=buying_request,
-            status=CostScenario.Status.CALCULATED,
-        )
-        .select_related('supplier_offer__supplier')
-        .order_by('landed_cost', 'rank', 'pk')
-        .first()
-    )
-    # Prefer ranked (verified) when present — otherwise cheapest provisional
+    # Prefer ranked (verified + supported Onex). Never surface Unavailable as "best".
     ranked_best = (
         CostScenario.objects.filter(
             buying_request=buying_request,
             status=CostScenario.Status.CALCULATED,
             rank__isnull=False,
+            supplier_offer__eligibility_status=OfferEligibility.VERIFIED,
+            supplier_offer__superseded_by__isnull=True,
         )
         .select_related('supplier_offer__supplier')
         .order_by('rank', 'landed_cost', 'pk')
         .first()
     )
-    chosen = ranked_best or best_scenario
+    verified_fallback = (
+        CostScenario.objects.filter(
+            buying_request=buying_request,
+            status=CostScenario.Status.CALCULATED,
+            supplier_offer__eligibility_status=OfferEligibility.VERIFIED,
+            supplier_offer__superseded_by__isnull=True,
+            supplier_offer__supplier__onex_applicability=OnexApplicability.SUPPORTED,
+        )
+        .select_related('supplier_offer__supplier')
+        .order_by('landed_cost', 'pk')
+        .first()
+    )
+    chosen = ranked_best or verified_fallback
     best_landed = None
     best_supplier = ''
     best_customer = None

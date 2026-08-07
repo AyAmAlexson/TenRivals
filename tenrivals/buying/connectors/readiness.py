@@ -63,7 +63,7 @@ CONNECTOR_READINESS: dict[str, dict] = {
         'product_parse_ok': 'credentials_required',
         'variant_parse_ok': 'missing',
         'checkout_context_ok': 'credentials_required',
-        'notes': 'Anonymous search not usable; report credentials_missing not no_matching_product',
+        'notes': 'Auth required; empty search is search_empty when BUYING_ITF_* vars are set',
         'tier': 'authenticated_blocked',
     },
     'tennis-point-de': {

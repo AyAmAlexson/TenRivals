@@ -20,7 +20,7 @@ from buying.models import (
 )
 from buying.services.matching import pick_best_candidates, score_candidate
 from buying.services.search import execute_supplier_search, start_search
-from buying.tests.utils import make_route, make_standard_rules, make_superuser, make_supplier
+from buying.tests.utils import make_offer, make_route, make_standard_rules, make_superuser, make_supplier
 
 
 class MatchingTests(TestCase):
@@ -138,3 +138,33 @@ class SearchOrchestrationTests(TestCase):
         self.assertIn('summary', payload)
         self.assertIn('Found', payload['summary'])
         self.assertTrue(payload['done'])
+
+    def test_progress_payload_ignores_unavailable_best_cost(self):
+        from buying.models import CostScenario, OfferEligibility
+        from buying.services.offers import rebuild_scenarios_for_offer
+        from buying.services.search import progress_payload
+
+        unavailable = make_offer(
+            self.request,
+            self.supplier,
+            current_price=Decimal('100.00'),
+            eligibility_status=OfferEligibility.UNAVAILABLE,
+            match_status='manual_review',
+        )
+        rebuild_scenarios_for_offer(unavailable)
+        payload = progress_payload(self.request)
+        self.assertIsNone(payload['best_landed_cost'])
+        self.assertIn('no priced offers', payload['summary'])
+
+    def test_russian_ordinal_grip_normalization(self):
+        from buying.services.enrichment import normalize_grip_size
+
+        self.assertEqual(normalize_grip_size('3я ручка'), 'L3')
+        self.assertEqual(normalize_grip_size('4-я ручка'), 'L4')
+        self.assertEqual(normalize_grip_size('ручка 2'), 'L2')
+
+
+def make_offer(buying_request, supplier, **kwargs):
+    from buying.tests.utils import make_offer as _make_offer
+
+    return _make_offer(buying_request, supplier, **kwargs)

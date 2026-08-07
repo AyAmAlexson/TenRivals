@@ -172,11 +172,13 @@ def rank_request_scenarios(buying_request_id: int) -> None:
     """Two-dimensional ranking.
 
     rank: ordinal by customer_price among calculated, non-hidden scenarios from
-    VERIFIED offers only — "which is cheapest among fully verified options".
-    Partial / manual_review offers may still have scenarios for display but do
-    not enter normal price ranking.
+    VERIFIED offers on Onex-SUPPORTED suppliers only — "which is cheapest among
+    fully verified options". MANUAL_REVIEW Onex suppliers may still have
+    scenarios for display but do not enter automatic price ranking.
     recommendation: independent quality verdict.
     """
+    from buying.models import OnexApplicability
+
     scenarios = list(
         CostScenario.objects.filter(
             buying_request_id=buying_request_id,
@@ -184,7 +186,8 @@ def rank_request_scenarios(buying_request_id: int) -> None:
             is_hidden=False,
             supplier_offer__eligibility_status=OfferEligibility.VERIFIED,
             supplier_offer__superseded_by__isnull=True,
-        ).select_related('supplier_offer')
+            supplier_offer__supplier__onex_applicability=OnexApplicability.SUPPORTED,
+        ).select_related('supplier_offer', 'supplier_offer__supplier')
     )
     scenarios.sort(key=lambda s: s.customer_price)
     ranked_ids = {s.pk for s in scenarios}
@@ -203,7 +206,7 @@ def rank_request_scenarios(buying_request_id: int) -> None:
         buying_request_id=buying_request_id,
         status=CostScenario.Status.CALCULATED,
         is_hidden=False,
-    ).exclude(pk__in=ranked_ids).select_related('supplier_offer')
+    ).exclude(pk__in=ranked_ids).select_related('supplier_offer', 'supplier_offer__supplier')
     for scenario in others:
         elig = getattr(scenario.supplier_offer, 'eligibility_status', '') or ''
         recommendation, reasons = _recommendation(scenario)
@@ -279,6 +282,12 @@ def _recommendation(scenario: CostScenario) -> tuple[str, list[str]]:
         return CostScenario.Recommendation.NOT_RECOMMENDED, ['Destination not confirmed']
     if any('Onex route unsupported' in (w or '') for w in (offer.warnings or [])):
         return CostScenario.Recommendation.NOT_RECOMMENDED, ['Onex route unsupported']
+    from buying.models import OnexApplicability
+    if (
+        any('Onex route requires manual review' in (w or '') for w in (offer.warnings or []))
+        or getattr(offer.supplier, 'onex_applicability', '') == OnexApplicability.MANUAL_REVIEW
+    ):
+        reasons.append('Onex route requires manual review')
     if offer.match_status == 'manual_review':
         reasons.append('Product match needs manual review')
     if offer.match_status in ('alternative_color', 'alternative_version'):

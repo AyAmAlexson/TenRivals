@@ -5,7 +5,8 @@ enabled and inside its validity window, and its optional supplier/category
 restrictions match. Supplier/category-specific routes are more specific and
 therefore ordered before generic ones.
 
-Suppliers with onex_applicability != supported never receive Onex CostScenarios.
+UNSUPPORTED suppliers never receive Onex CostScenarios. MANUAL_REVIEW suppliers
+get provisional scenarios for staff display but are excluded from auto-rank.
 """
 
 from __future__ import annotations
@@ -18,13 +19,20 @@ from buying.models import FulfillmentRoute, OnexApplicability, Supplier
 
 
 def supplier_supports_onex(supplier: Supplier) -> bool:
+    """True when Onex is confirmed for automatic ranking / recommendation."""
     return getattr(supplier, 'onex_applicability', OnexApplicability.SUPPORTED) == (
         OnexApplicability.SUPPORTED
     )
 
 
+def supplier_allows_onex_scenarios(supplier: Supplier) -> bool:
+    """True when CostScenarios may be built (supported or pending staff review)."""
+    value = getattr(supplier, 'onex_applicability', OnexApplicability.SUPPORTED)
+    return value in (OnexApplicability.SUPPORTED, OnexApplicability.MANUAL_REVIEW)
+
+
 def applicable_routes(supplier: Supplier, category: str = '') -> list[FulfillmentRoute]:
-    if not supplier_supports_onex(supplier):
+    if not supplier_allows_onex_scenarios(supplier):
         return []
 
     today = datetime.date.today()
