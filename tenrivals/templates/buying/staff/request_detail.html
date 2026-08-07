@@ -220,7 +220,18 @@
           <td>{{ s.fulfillment_route.name }}</td>
           <td>{{ s.supplier_offer.selected_destination_country|default:s.supplier_offer.supplier.country }}</td>
           <td>{{ s.item_cost }} ₾</td>
-          <td>{{ s.local_shipping }} ₾</td>
+          <td>
+            {% if s.calculation_details.local_shipping_status == 'unknown' %}
+              <span class="badge badge--no">Unknown</span>
+              <div class="page-note" style="margin:2px 0 0">Price may increase</div>
+            {% elif s.calculation_details.local_shipping_status == 'confirmed_zero' %}
+              0.00 ₾ <div class="page-note" style="margin:2px 0 0">Confirmed free</div>
+            {% elif s.calculation_details.local_shipping_status == 'estimated_amount' %}
+              {{ s.local_shipping }} ₾ <div class="page-note" style="margin:2px 0 0">Estimated</div>
+            {% else %}
+              {{ s.local_shipping }} ₾
+            {% endif %}
+          </td>
           <td>{{ s.international_shipping }} ₾</td>
           <td>{{ s.georgia_vat }} ₾</td>
           <td>{{ s.payment_fee }} ₾</td>

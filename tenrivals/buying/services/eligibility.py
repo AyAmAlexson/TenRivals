@@ -77,6 +77,14 @@ def _eligibility(offer: SupplierOffer) -> str:
     context_ok = offer.purchase_context_confirmed == ConfirmationStatus.CONFIRMED
     variant_ok = offer.requested_variant_confirmed == ConfirmationStatus.CONFIRMED
 
+    # Verified requires confirmed_available grip (when grip was requested)
+    req = offer.requested_variant or {}
+    grip_requested = bool(req.get('grip_size') or offer.grip_size)
+    if grip_requested and offer.requested_variant_available is not True:
+        if has_price and identity_ok:
+            return EligibilityStatus.PARTIAL
+        return EligibilityStatus.MANUAL_REVIEW
+
     if identity_ok and context_ok and variant_ok and has_price:
         return EligibilityStatus.VERIFIED
     if offer.match_status == SupplierOffer.MatchStatus.MANUAL_REVIEW:

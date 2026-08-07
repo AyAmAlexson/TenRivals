@@ -101,3 +101,51 @@ def search_shopify(client, *, base_url: str, phrase: str) -> list[SearchCandidat
         return filtered[:20] or []
     except Exception:
         return []
+
+
+def fetch_shopify_product(client, *, product_url: str) -> dict | None:
+    """Fetch /products/<handle>.js or .json for variant options."""
+    from urllib.parse import urlparse
+
+    path = urlparse(product_url).path.rstrip('/')
+    if '/products/' not in path:
+        return None
+    handle = path.split('/products/')[-1].split('/')[0]
+    if not handle:
+        return None
+    base = f"{urlparse(product_url).scheme}://{urlparse(product_url).netloc}"
+    for suffix in ('.js', '.json'):
+        try:
+            url = urljoin(base + '/', f'products/{handle}{suffix}')
+            response = client.get(url)
+            if response.status_code >= 400:
+                continue
+            data = response.json()
+            if isinstance(data, dict) and (data.get('variants') or data.get('title')):
+                return data
+            if isinstance(data, dict) and isinstance(data.get('product'), dict):
+                return data['product']
+        except Exception:
+            continue
+    return None
+
+
+def shopify_variant_labels(product: dict) -> list[dict]:
+    labels: list[dict] = []
+    for variant in product.get('variants') or []:
+        if not isinstance(variant, dict):
+            continue
+        title = str(variant.get('title') or '')
+        options = [
+            str(variant.get(k) or '')
+            for k in ('option1', 'option2', 'option3')
+            if variant.get(k)
+        ]
+        label = title or ' / '.join(options)
+        if label and label.lower() not in ('default title', 'default'):
+            labels.append({
+                'label': label,
+                'sku': str(variant.get('sku') or ''),
+                'available': bool(variant.get('available', True)),
+            })
+    return labels

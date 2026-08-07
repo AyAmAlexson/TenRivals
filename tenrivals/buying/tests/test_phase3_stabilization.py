@@ -5,7 +5,7 @@ from decimal import Decimal
 from django.core.management import call_command
 from django.test import TestCase
 
-from buying.connectors.base import SearchCandidate
+from buying.connectors.base import OfferData, SearchCandidate
 from buying.engine.pricing import build_cost_scenario
 from buying.engine.weight import resolve_chargeable_weight
 from buying.models import (
@@ -15,8 +15,17 @@ from buying.models import (
     ProductCategory,
 )
 from buying.services.eligibility import apply_offer_eligibility
-from buying.services.matching import query_from_normalized, score_candidate
+from buying.services.matching import MATCHING_RULES_VERSION, query_from_normalized, score_candidate
 from buying.services.offers import rebuild_scenarios_for_offer
+from buying.services.product_identity import (
+    GRIP_STATUS_AVAILABLE,
+    GRIP_STATUS_UNKNOWN,
+    apply_grip_to_offer,
+    cache_logic_compatible,
+    logic_versions,
+    rescore_with_product_page,
+    verify_grip,
+)
 
 from .utils import (
     make_offer,
@@ -93,11 +102,14 @@ class PureDriveWeightEngineTests(TestCase):
         )
         scenario = build_cost_scenario(offer, self.route)
         self.assertEqual(scenario.status, 'calculated')
-        self.assertTrue(
-            any(w.startswith('missing_rule:local_shipping') for w in scenario.warnings)
-            or any(c['code'] == 'local_shipping' and c['source'] == 'unknown' for c in scenario.breakdown)
-        )
+        self.assertEqual(scenario.calculation_details.get('local_shipping_status'), 'unknown')
+        self.assertTrue(any('unknown:local_shipping' in (w or '') for w in scenario.warnings))
+        self.assertTrue(any('provisional:local_shipping_unknown' in (w or '') for w in scenario.warnings))
         self.assertNotIn('blocking:missing_rule:local_shipping', scenario.warnings)
+        # Component must not look like confirmed free shipping
+        ship = next(c for c in scenario.breakdown if c['code'] == 'local_shipping')
+        self.assertEqual(ship['source'], 'unknown')
+        self.assertFalse(ship['exact'])
 
 
 class PureDriveMatchingTests(TestCase):
@@ -145,10 +157,24 @@ class PureDriveMatchingTests(TestCase):
             'Babolat Pure Drive Lite 2025',
             'Babolat Pure Drive Junior 2025',
             'Babolat Pure Drive 107 2025',
+            'Babolat Mini Pure Drive Racquet 2025',
         ):
             cand = SearchCandidate(title=title, url='https://example.com/x')
             verdict = score_candidate(self.query, cand)
             self.assertEqual(verdict.match_status, 'no_match', title)
+
+    def test_mini_pure_drive_never_alternative_color(self):
+        """Regression: Mini Pure Drive must be rejected, never Confirmed/alt color."""
+        cand = SearchCandidate(
+            title='Babolat Mini Pure Drive Racquet 2025',
+            url='https://oletennis.com/products/mini-pure-drive',
+        )
+        verdict = score_candidate(self.query, cand)
+        self.assertEqual(verdict.match_status, 'no_match')
+        self.assertTrue(
+            any('mini' in (m or '').lower() or 'variant' in (m or '').lower()
+                for m in verdict.details['hard_mismatches'])
+        )
 
     def test_color_preferred_is_alternative_color(self):
         cand = SearchCandidate(
@@ -157,6 +183,79 @@ class PureDriveMatchingTests(TestCase):
         )
         verdict = score_candidate(self.query, cand)
         self.assertEqual(verdict.match_status, 'alternative_color')
+
+    def test_page_specs_confirm_incomplete_title(self):
+        cand = SearchCandidate(
+            title='Babolat Pure Drive 2025',
+            url='https://example.com/pd',
+        )
+        offer = OfferData(
+            title='Babolat Pure Drive 2025',
+            product_url=cand.url,
+            original_price=None,
+            displayed_price=Decimal('200'),
+            effective_price=Decimal('200'),
+            currency='USD',
+            raw_payload={
+                'page_text': (
+                    'Babolat Pure Drive 2025 Head Size: 100 sq in '
+                    'Unstrung Weight: 300g String Pattern: 16x19 Length: 27 in'
+                ),
+            },
+        )
+        identity = rescore_with_product_page(self.query, cand, offer)
+        self.assertNotEqual(identity.match_status, 'no_match')
+        self.assertEqual(identity.specs_confirmed.get('head_size'), 100)
+        self.assertEqual(identity.specs_confirmed.get('weight_g'), 300)
+
+    def test_grip_l4_normalization_and_verification(self):
+        offer = OfferData(
+            title='Pure Drive',
+            product_url='https://example.com/x',
+            original_price=None,
+            displayed_price=Decimal('1'),
+            effective_price=Decimal('1'),
+            currency='USD',
+            available_variants=[
+                {'label': 'Grip Size 3'},
+                {'label': '4 1/2'},
+                {'label': 'L5'},
+            ],
+        )
+        result = verify_grip(offer, 'L4')
+        self.assertEqual(result.status, GRIP_STATUS_AVAILABLE)
+        apply_grip_to_offer(offer, self.query)
+        self.assertTrue(offer.requested_variant_available)
+
+        empty = OfferData(
+            title='Pure Drive',
+            product_url='https://example.com/y',
+            original_price=None,
+            displayed_price=Decimal('1'),
+            effective_price=Decimal('1'),
+            currency='USD',
+            available_variants=[],
+        )
+        self.assertEqual(verify_grip(empty, 'L4').status, GRIP_STATUS_UNKNOWN)
+
+
+class CacheLogicVersionTests(TestCase):
+    def test_cache_invalid_when_matching_rules_change(self):
+        stored = logic_versions(parser_version='phase3-3', prompt_version='v1')
+        self.assertTrue(
+            cache_logic_compatible(stored, parser_version='phase3-3', prompt_version='v1')
+        )
+        self.assertFalse(
+            cache_logic_compatible(
+                {**stored, 'matching_rules': 'match-rules-v1'},
+                parser_version='phase3-3',
+                prompt_version='v1',
+            )
+        )
+        self.assertFalse(
+            cache_logic_compatible(stored, parser_version='phase3-4', prompt_version='v1')
+        )
+        self.assertEqual(MATCHING_RULES_VERSION, 'match-rules-v3')
 
 
 class EligibilityAndRankingTests(TestCase):
@@ -202,3 +301,17 @@ class EligibilityAndRankingTests(TestCase):
         self.assertEqual(scenarios[0].status, 'calculated')
         self.assertIsNone(scenarios[0].rank)
         self.assertEqual(scenarios[0].recommendation, 'review')
+
+    def test_rejected_mini_creates_no_cost_scenario(self):
+        offer = make_offer(
+            self.request_obj,
+            self.supplier,
+            title='Babolat Mini Pure Drive Racquet 2025',
+            match_status='no_match',
+            eligibility_status=OfferEligibility.REJECTED,
+            product_identity_confirmed=ConfirmationState.UNAVAILABLE,
+        )
+        scenarios = rebuild_scenarios_for_offer(offer)
+        self.assertEqual(scenarios, [])
+        offer.refresh_from_db()
+        self.assertEqual(offer.eligibility_status, OfferEligibility.REJECTED)

@@ -153,12 +153,15 @@ class TennisWarehouseEuropeConnector(HtmlJsonLdConnector):
                 variants.append({'label': label})
         offer.available_variants = variants
         if query.grip_size or query.size:
-            wanted = (query.grip_size or query.size or '').lower()
+            from buying.services.enrichment import normalize_grip_size
+            wanted = normalize_grip_size(query.grip_size or query.size or '')
             if variants and wanted:
-                offer.requested_variant_available = any(
-                    wanted in (v.get('label') or '').lower() for v in variants
-                )
+                available = {
+                    normalize_grip_size(v.get('label') or '')
+                    for v in variants
+                }
+                offer.requested_variant_available = wanted in available
             else:
                 offer.requested_variant_available = None
-                offer.warnings.append('Variant availability not fully verified')
+                offer.warnings.append('Variant availability not verified on product page')
         return self.apply_configured_destination(offer)

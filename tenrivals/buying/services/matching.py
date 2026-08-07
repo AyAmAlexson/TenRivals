@@ -1,11 +1,10 @@
 """Deterministic product matching (Phase 3 — no LLM).
 
 Uses enriched racquet specs (head size, weight, pattern, generation, variant)
-as hard constraints so Team/Lite/wrong weight offers are rejected.
+as hard constraints. Mini / Junior / kids and Team/Lite/etc. never soft-match
+an adult standard request.
 
-Specs present on the product page (page_text in raw_data) count the same as
-title tokens — do not reject an exact model merely because the search-card
-title omitted a confirmed specification.
+Specs on the product page (page_text) count the same as title tokens.
 """
 
 from __future__ import annotations
@@ -16,7 +15,9 @@ from decimal import Decimal
 
 from buying.connectors.base import NormalizedProductQuery, SearchCandidate
 from buying.services.enrichment import (
+    EXCLUSION_VARIANTS,
     VARIANT_TOKENS,
+    _detect_variant,
     _norm,
     _parse_head_size,
     _parse_pattern,
@@ -24,7 +25,8 @@ from buying.services.enrichment import (
     normalize_grip_size,
 )
 
-# Marketing generation aliases (Babolat Pure Drive 2025 ≈ Gen11, etc.)
+MATCHING_RULES_VERSION = 'match-rules-v3'
+
 GENERATION_ALIASES: dict[str, set[str]] = {
     '2025': {'2025', 'gen11', 'gen 11', 'g11'},
     '2024': {'2024', 'gen10', 'gen 10', 'g10'},
@@ -47,25 +49,11 @@ def _tokens(text: str) -> set[str]:
 def _candidate_blob(candidate: SearchCandidate) -> str:
     parts = [candidate.title or '']
     raw = candidate.raw_data if isinstance(candidate.raw_data, dict) else {}
-    for key in ('page_text', 'description', 'body'):
+    for key in ('page_text', 'description', 'body', 'specs_text'):
         val = raw.get(key)
         if isinstance(val, str) and val.strip():
             parts.append(val)
     return ' '.join(parts)
-
-
-def _title_variant(text: str) -> str:
-    n = _norm(text)
-    for token in ('super lite', 'superlite', 'junior', 'team', 'lite', 'tour', 'plus'):
-        if ' ' in token or token == 'superlite':
-            if token in n or (token == 'superlite' and 'super lite' in n):
-                return 'Super Lite'
-            continue
-        if token in n.split():
-            return 'Junior' if token == 'junior' else token.title()
-    if 'jr' in n.split():
-        return 'Junior'
-    return ''
 
 
 def _generation_matches(q_gen: str, text_n: str) -> bool:
@@ -78,7 +66,11 @@ def _generation_matches(q_gen: str, text_n: str) -> bool:
 
 
 def score_candidate(query: NormalizedProductQuery, candidate: SearchCandidate) -> MatchVerdict:
-    details: dict = {'signals': [], 'hard_mismatches': []}
+    details: dict = {
+        'signals': [],
+        'hard_mismatches': [],
+        'matching_rules_version': MATCHING_RULES_VERSION,
+    }
     score = Decimal('0')
     blob = _candidate_blob(candidate)
     blob_n = _norm(blob)
@@ -96,11 +88,22 @@ def score_candidate(query: NormalizedProductQuery, candidate: SearchCandidate) -
     q_pattern = _norm(str(attrs.get('string_pattern') or '')).replace(' ', '')
 
     if query.category == 'racquet' or attrs.get('category') == 'racquet' or q_model:
-        cand_variant = _norm(_title_variant(blob))
+        cand_variant = _norm(_detect_variant(blob))
+        exclusion_norms = {_norm(t) for t in EXCLUSION_VARIANTS} | {_norm(t) for t in ('mini', 'junior')}
+
+        # Adult standard request must never accept Mini / Junior / kids
+        if not q_variant and cand_variant in exclusion_norms:
+            details['hard_mismatches'].append(f'variant:{cand_variant or "excluded"}')
         if q_variant and cand_variant and q_variant != cand_variant:
             details['hard_mismatches'].append(f'variant:{cand_variant}')
-        if not q_variant and cand_variant in {_norm(t) for t in VARIANT_TOKENS}:
+        if not q_variant and cand_variant and cand_variant in {_norm(t) for t in VARIANT_TOKENS}:
             details['hard_mismatches'].append(f'variant:{cand_variant}')
+        # Belt-and-suspenders: bare "mini" / "junior" token even if detector missed
+        if not q_variant:
+            for tok in ('mini', 'junior', 'jr', 'kids', 'youth', 'children'):
+                if tok in blob_n.split():
+                    details['hard_mismatches'].append(f'variant:{tok}')
+                    break
 
         if q_head:
             cand_head = _parse_head_size(blob)
@@ -130,18 +133,23 @@ def score_candidate(query: NormalizedProductQuery, candidate: SearchCandidate) -
             if years_in_blob and not _generation_matches(q_gen, blob_n):
                 if q_gen.isdigit() and len(q_gen) == 4 and q_gen not in years_in_blob:
                     details['hard_mismatches'].append('generation')
-            elif not _generation_matches(q_gen, blob_n):
-                # Explicit competing gen label like Gen10 when we want Gen11/2025
-                if re.search(r'\bgen\s*\d+\b', blob_n) and not _generation_matches(q_gen, blob_n):
-                    details['hard_mismatches'].append('generation')
+            elif re.search(r'\bgen\s*\d+\b', blob_n) and not _generation_matches(q_gen, blob_n):
+                details['hard_mismatches'].append('generation')
 
         if query.grip_size:
             q_grip = normalize_grip_size(query.grip_size)
             blob_grip = normalize_grip_size(blob)
             if q_grip and blob_grip and q_grip != blob_grip and re.search(
-                r'(?:grip|l)\s*[0-5]\b|\bl[0-5]\b', blob, re.I
+                r'(?:grip|l)\s*[0-5]\b|\bl[0-5]\b|4\s*[-\s]?\s*1\s*/\s*2', blob, re.I
             ):
                 details['hard_mismatches'].append(f'grip_size:{blob_grip}')
+
+    # Deduplicate hard mismatches
+    seen_mm = []
+    for mm in details['hard_mismatches']:
+        if mm not in seen_mm:
+            seen_mm.append(mm)
+    details['hard_mismatches'] = seen_mm
 
     if details['hard_mismatches']:
         details['score'] = '0.00'
@@ -194,7 +202,9 @@ def score_candidate(query: NormalizedProductQuery, candidate: SearchCandidate) -
             details['signals'].append('grip_unchecked')
 
     color_mismatch = bool(query.color and query.color.lower() not in blob.lower())
-    gen_ok = (not q_gen) or _generation_matches(q_gen, blob_n) or (q_gen not in title_n and 'gen' not in blob_n)
+    gen_ok = (not q_gen) or _generation_matches(q_gen, blob_n) or (
+        q_gen not in title_n and 'gen' not in blob_n
+    )
 
     if score >= Decimal('0.70') and brand_ok and model_ok:
         if color_mismatch:

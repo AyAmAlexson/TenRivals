@@ -218,18 +218,48 @@ def build_cost_scenario(
 
     # --- Local shipping to the forwarder warehouse ---------------------------
     threshold = offer.free_shipping_threshold
+    local_shipping_status = 'unknown'
+    free_ship_meta = {
+        'threshold': str(threshold) if threshold is not None else None,
+        'threshold_currency': offer.free_shipping_currency or offer.currency,
+        'threshold_basis': getattr(offer, 'threshold_basis', None) or 'unknown',
+        'free_shipping_status': getattr(offer, 'free_shipping_status', None) or 'threshold_unknown',
+        'cart_subtotal': str(item_original),
+        'amount_missing': None,
+        'source': offer.local_shipping_source or '',
+        'reached': False,
+    }
+    if threshold is not None:
+        missing = _dec(threshold) - item_original
+        free_ship_meta['amount_missing'] = str(_q2(missing)) if missing > 0 else '0.00'
+        free_ship_meta['reached'] = missing <= 0
     if threshold is not None and item_original >= _dec(threshold):
         local_shipping = bd.add(
             'local_shipping', 'Local shipping', Decimal('0'),
-            source=offer.local_shipping_source, exact=True,
-            note=f'Free shipping over {threshold} {offer.currency}',
+            source=offer.local_shipping_source or 'parsed',
+            exact=True,
+            note=f'Free shipping over {threshold} {offer.currency} (confirmed_zero)',
         )
+        local_shipping_status = 'confirmed_zero'
+        free_ship_meta['source'] = offer.local_shipping_source or 'parsed_policy'
+        free_ship_meta['reached'] = True
+        bd.warn('local_shipping:confirmed_zero')
     elif offer.local_shipping_cost is not None:
-        exact = offer.local_shipping_source in ('parsed', 'checkout_simulation', 'manual_entry', 'manual_override')
+        exact = offer.local_shipping_source in (
+            'parsed', 'checkout_simulation', 'manual_entry', 'manual_override'
+        )
+        amount = _dec(offer.local_shipping_cost)
+        if amount == 0 and exact:
+            local_shipping_status = 'confirmed_zero'
+        elif exact:
+            local_shipping_status = 'confirmed_amount'
+        else:
+            local_shipping_status = 'estimated_amount'
         local_shipping = bd.add(
-            'local_shipping', 'Local shipping', to_gel(_dec(offer.local_shipping_cost)),
+            'local_shipping', 'Local shipping', to_gel(amount),
             source=offer.local_shipping_source, exact=exact,
-            amount_original=_dec(offer.local_shipping_cost), currency=offer.currency,
+            amount_original=amount, currency=offer.currency,
+            note=f'status={local_shipping_status}',
         )
     else:
         rule = bd.resolve(RuleType.LOCAL_SHIPPING, scope)
@@ -245,10 +275,26 @@ def build_cost_scenario(
                 'local_shipping', 'Local shipping', to_gel(amount, rate),
                 source='configured_rule', exact=False, rule=rule,
                 amount_original=amount, currency=currency,
+                note='estimated_amount — configured supplier rule',
             )
+            local_shipping_status = 'estimated_amount'
+            free_ship_meta['source'] = 'configured_supplier_rule'
             bd.warn('estimated:local_shipping')
         else:
-            local_shipping = bd.missing_rule(RuleType.LOCAL_SHIPPING, 'local_shipping', 'Local shipping')
+            # Unknown: do NOT pretend confirmed free shipping. Keep 0 for maths
+            # of optional components only, with explicit unknown provenance.
+            local_shipping = bd.add(
+                'local_shipping', 'Local shipping', Decimal('0'),
+                source='unknown', exact=False,
+                note=(
+                    'unknown — not confirmed; customer price may increase when '
+                    'local shipping is determined'
+                ),
+            )
+            local_shipping_status = 'unknown'
+            bd.warn('missing_rule:local_shipping')
+            bd.warn('unknown:local_shipping')
+            bd.warn('provisional:local_shipping_unknown')
 
     # --- Local (supplier-country) tax — separate from Georgian VAT -----------
     if offer.supplier_tax_amount is not None:
@@ -573,11 +619,14 @@ def build_cost_scenario(
             'components': bd.components,
             'fx': {**fx_meta, 'rate_gel': str(fx_rate), 'buffer_rate': fx_buffer_rate},
             'weight': weight_meta,
+            'local_shipping_status': local_shipping_status,
+            'free_shipping': free_ship_meta,
             'import': {
                 'local_cost_gel': str(local_cost),
                 'threshold_gel': str(threshold_gel) if threshold_gel is not None else None,
                 'declaration_required': declaration_required,
                 'rule': _rule_snapshot(vat_rule),
+                'local_shipping_status': local_shipping_status,
             },
             'pricing': {
                 'sales_vat': _rule_snapshot(sales_vat_rule),

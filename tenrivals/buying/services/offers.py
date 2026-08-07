@@ -47,6 +47,15 @@ def rebuild_scenarios_for_offer(offer: SupplierOffer) -> list[CostScenario]:
             eligibility_status=offer.eligibility_status,
         )
 
+    # Rejected / no_match offers must never produce CostScenarios
+    if (
+        offer.eligibility_status == OfferEligibility.REJECTED
+        or offer.match_status == SupplierOffer.MatchStatus.NO_MATCH
+    ):
+        for old in offer.cost_scenarios.filter(status__in=_ACTIVE_STATUSES):
+            _supersede(old, None)
+        return []
+
     previous = list(offer.cost_scenarios.filter(status__in=_ACTIVE_STATUSES))
     overrides_by_route: dict[int, dict[str, Decimal]] = {}
     previous_by_route: dict[int, CostScenario] = {}
@@ -241,6 +250,8 @@ def _price_labels(scenario: CostScenario, *, is_cheapest: bool) -> list[str]:
         labels.append('Estimated tax')
     if 'estimated:local_shipping' in scenario.warnings or 'missing_rule:local_shipping' in scenario.warnings:
         labels.append('Estimated shipping')
+    if 'unknown:local_shipping' in scenario.warnings or 'provisional:local_shipping_unknown' in scenario.warnings:
+        labels.append('Shipping unknown')
     if scenario.supplier_offer.requested_variant_available is False:
         labels.append('Unavailable')
     return labels
@@ -286,6 +297,8 @@ def _recommendation(scenario: CostScenario) -> tuple[str, list[str]]:
         reasons.append('Promotion shown but not confirmed')
     if getattr(offer, 'eligibility_status', '') == OfferEligibility.PARTIAL:
         reasons.append('Partial verification — not eligible for automatic recommendation')
+    if 'provisional:local_shipping_unknown' in scenario.warnings:
+        reasons.append('Local shipping unknown — customer price may increase')
 
     if reasons:
         return CostScenario.Recommendation.REVIEW, reasons

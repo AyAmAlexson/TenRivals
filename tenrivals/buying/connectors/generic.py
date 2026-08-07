@@ -183,13 +183,24 @@ class HtmlJsonLdConnector(SupplierConnector):
             ean=parsed.get('ean') or '',
             upc=parsed.get('upc') or '',
             parser_version=self.parser_version,
-            raw_payload={'json_ld': parsed.get('raw')},
+            raw_payload={'json_ld': parsed.get('raw'), 'page_text': ''},
             content_type='text/html',
             purchase_context_status='confirmed' if dest_confirmed else 'purchase_context_unconfirmed',
         )
+        # Capture page text + grip/size options for identity / variant verification
+        soup = BeautifulSoup(html, 'html.parser')
+        page_text = ' '.join(soup.stripped_strings)[:20_000]
+        offer.raw_payload['page_text'] = page_text
+        variants = []
+        for opt in soup.select('select option, [data-value], .swatch, .variant-option'):
+            label = opt.get_text(strip=True) or opt.get('data-value') or opt.get('value') or ''
+            if label and label.lower() not in ('select', 'choose', '-', ''):
+                variants.append({'label': label})
+        offer.available_variants = variants
         if query.size or query.grip_size or query.color:
-            offer.requested_variant_available = None
-            offer.warnings.append('Variant availability not verified on product page')
+            if not variants:
+                offer.requested_variant_available = None
+                offer.warnings.append('Variant availability not verified on product page')
         return self.build_default_context_warnings(offer)
 
     def apply_configured_destination(self, offer: OfferData) -> OfferData:

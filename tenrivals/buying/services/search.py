@@ -18,15 +18,23 @@ from buying.engine.routes import supplier_supports_onex
 from buying.models import (
     BuyingRequest,
     OnexApplicability,
+    OfferEligibility,
     Supplier,
     SupplierConnectorStatus,
     SupplierOffer,
     SupplierSearchResult,
     SupplierSearchRun,
 )
-from buying.services.matching import pick_best_candidates, query_from_normalized
+from buying.services.matching import MATCHING_RULES_VERSION, pick_best_candidates, query_from_normalized, score_candidate
 from buying.services.offer_persist import offer_data_to_supplier_offer
 from buying.services.offers import rebuild_scenarios_for_offer
+from buying.services.product_identity import (
+    GRIP_STATUS_UNAVAILABLE,
+    apply_grip_to_offer,
+    cache_logic_compatible,
+    logic_versions,
+    rescore_with_product_page,
+)
 
 logger = logging.getLogger('buying')
 
@@ -144,6 +152,41 @@ def retry_failed(buying_request: BuyingRequest) -> dict:
     return {'retried': len(failed)}
 
 
+def _reject_current_auto_offers(request, supplier, *, reason: str) -> int:
+    """Mark live auto offers as rejected / no_match and supersede their scenarios.
+
+    Used when Force Refresh or re-matching finds that prior Mini/wrong-family
+    offers must disappear from valid Supplier Offers.
+    """
+    from buying.models import CostScenario
+
+    offers = list(
+        SupplierOffer.objects.filter(
+            buying_request=request,
+            supplier=supplier,
+            superseded_by__isnull=True,
+            is_manual=False,
+        )
+    )
+    for offer in offers:
+        warnings = list(offer.warnings or [])
+        if reason not in warnings:
+            warnings.append(reason)
+        offer.match_status = 'no_match'
+        offer.eligibility_status = OfferEligibility.REJECTED
+        offer.product_identity_confirmed = 'unavailable'
+        offer.warnings = warnings
+        offer.save(update_fields=[
+            'match_status', 'eligibility_status', 'product_identity_confirmed',
+            'warnings', 'updated_at',
+        ])
+        CostScenario.objects.filter(
+            supplier_offer=offer,
+            status__in=('calculated', 'calculation_blocked'),
+        ).update(status=CostScenario.Status.SUPERSEDED, rank=None)
+    return len(offers)
+
+
 def execute_supplier_search(run_id: int, *, force: bool = False) -> dict:
     run = SupplierSearchRun.objects.select_related(
         'supplier', 'buying_request', 'buying_request__normalized_product'
@@ -162,7 +205,8 @@ def execute_supplier_search(run_id: int, *, force: bool = False) -> dict:
         _fail_run(run, 'connector_not_ready', f'No connector registered for {code}')
         return {'status': 'failed', 'error_type': 'connector_not_ready'}
 
-    # Search cache: reuse fresh current offer
+    # Search cache: reuse only when TTL-fresh AND logic versions still match,
+    # and the cached offer still passes current matching + eligibility rules.
     if not force:
         existing = (
             SupplierOffer.objects.filter(
@@ -175,14 +219,53 @@ def execute_supplier_search(run_id: int, *, force: bool = False) -> dict:
             .first()
         )
         if existing and cache_age_state(existing.checked_at) == 'fresh':
-            SupplierSearchRun.objects.filter(pk=run.pk).update(
-                status=SupplierSearchRun.Status.COMPLETED,
-                finished_at=timezone.now(),
-                candidates_found=0,
-                offers_created=0,
-                error_message='cache_hit_fresh',
+            code_probe = supplier.connector_class or supplier.code
+            cls = get_connector_class(code_probe)
+            parser_v = getattr(cls, 'parser_version', '') if cls else ''
+            prompt_v = getattr(np, 'prompt_version', '') or ''
+            stored_versions = (existing.match_details or {}).get('logic_versions') or {}
+            query_probe = query_from_normalized(np)
+            from buying.connectors.base import SearchCandidate
+            cached_cand = SearchCandidate(
+                title=existing.title,
+                url=existing.product_url or 'https://cache.local/',
+                raw_data={
+                    'page_text': (existing.match_details or {}).get('page_text') or existing.title,
+                },
             )
-            return {'status': 'completed', 'cache': 'fresh'}
+            recheck = score_candidate(query_probe, cached_cand)
+            still_ok = (
+                cache_logic_compatible(
+                    stored_versions, parser_version=parser_v, prompt_version=prompt_v
+                )
+                and recheck.match_status != 'no_match'
+                and existing.eligibility_status != OfferEligibility.REJECTED
+                and existing.match_status != 'no_match'
+            )
+            if still_ok:
+                SupplierSearchRun.objects.filter(pk=run.pk).update(
+                    status=SupplierSearchRun.Status.COMPLETED,
+                    finished_at=timezone.now(),
+                    candidates_found=0,
+                    offers_created=0,
+                    error_message='cache_hit_fresh',
+                )
+                return {'status': 'completed', 'cache': 'fresh'}
+            # Stale logic / now-rejected product: invalidate cached offer and re-search
+            logger.info(
+                'Cache invalidated for %s on request #%s (match=%s versions_ok=%s)',
+                supplier.code, request.pk, recheck.match_status,
+                cache_logic_compatible(stored_versions, parser_version=parser_v, prompt_version=prompt_v),
+            )
+            if recheck.match_status == 'no_match' or existing.match_status == 'no_match':
+                _reject_current_auto_offers(
+                    request,
+                    supplier,
+                    reason=(
+                        f'Rejected by matching {MATCHING_RULES_VERSION}: '
+                        + ', '.join(recheck.details.get('hard_mismatches') or ['identity'])
+                    ),
+                )
 
     query = query_from_normalized(np)
     ctx = build_purchase_context(supplier, quantity=request.quantity or 1)
@@ -242,6 +325,12 @@ def execute_supplier_search(run_id: int, *, force: bool = False) -> dict:
                 msg = 'candidates_rejected_by_matching'
             elif not candidates:
                 msg = 'search_empty'
+            # Drop prior Mini / wrong-family offers from the live list
+            _reject_current_auto_offers(
+                request,
+                supplier,
+                reason=f'No valid match after {MATCHING_RULES_VERSION} ({msg})',
+            )
             SupplierSearchRun.objects.filter(pk=run.pk).update(
                 status=SupplierSearchRun.Status.COMPLETED,
                 finished_at=timezone.now(),
@@ -261,6 +350,31 @@ def execute_supplier_search(run_id: int, *, force: bool = False) -> dict:
             except Exception as exc:
                 logger.exception('Unexpected details error for %s', supplier.code)
                 continue
+
+            # Re-score using product-page text — title-only Mini Pure Drive etc. die here
+            identity = rescore_with_product_page(query, cand, data)
+            if identity.match_status == 'no_match':
+                logger.info(
+                    'Rejected %s candidate after page identity: %s (%s)',
+                    supplier.code, data.title, identity.details.get('hard_mismatches'),
+                )
+                continue
+
+            grip = apply_grip_to_offer(data, query)
+            verdict_status = identity.match_status
+            verdict_score = identity.match_score
+            match_details = dict(identity.details)
+            match_details['grip_verification'] = {
+                'status': grip.status,
+                'available_grips': grip.available_grips,
+                'note': grip.note,
+            }
+            match_details['page_text'] = (identity.page_text or '')[:4000]
+            match_details['logic_versions'] = logic_versions(
+                parser_version=getattr(connector, 'parser_version', '') or data.parser_version,
+                prompt_version=getattr(np, 'prompt_version', '') or '',
+            )
+            match_details['matching_rules_version'] = MATCHING_RULES_VERSION
 
             # Stale cache reuse note
             if not force:
@@ -290,9 +404,9 @@ def execute_supplier_search(run_id: int, *, force: bool = False) -> dict:
                 supplier=supplier,
                 data=data,
                 search_result=search_result,
-                match_status=verdict.match_status,
-                match_score=verdict.match_score,
-                match_details=verdict.details,
+                match_status=verdict_status,
+                match_score=verdict_score,
+                match_details=match_details,
                 requested_variant={
                     'size': query.size,
                     'grip_size': query.grip_size,
@@ -301,6 +415,8 @@ def execute_supplier_search(run_id: int, *, force: bool = False) -> dict:
                     'gender': query.gender,
                 },
             )
+            if grip.status == GRIP_STATUS_UNAVAILABLE:
+                offer.eligibility_status = OfferEligibility.UNAVAILABLE
             # Onex unsupported / manual_review warnings
             if supplier.onex_applicability == OnexApplicability.UNSUPPORTED:
                 offer.warnings = list(offer.warnings) + ['Onex route unsupported']
@@ -316,6 +432,13 @@ def execute_supplier_search(run_id: int, *, force: bool = False) -> dict:
                     is_manual=False,
                 )
             )
+            # Never persist rejected identity as a live offer
+            from buying.services.eligibility import apply_offer_eligibility
+            apply_offer_eligibility(offer)
+            if offer.eligibility_status == OfferEligibility.REJECTED or offer.match_status == 'no_match':
+                logger.info('Skipping rejected offer for %s: %s', supplier.code, offer.title)
+                continue
+
             offer.save()
             for old in old_offers:
                 if old.pk != offer.pk:
@@ -330,10 +453,17 @@ def execute_supplier_search(run_id: int, *, force: bool = False) -> dict:
                             rank=None,
                         )
 
-            if supplier_supports_onex(supplier):
+            if supplier_supports_onex(supplier) and offer.eligibility_status != OfferEligibility.REJECTED:
                 rebuild_scenarios_for_offer(offer)
             offers_created += 1
             break  # one primary offer per supplier for MVP
+
+        if offers_created == 0:
+            _reject_current_auto_offers(
+                request,
+                supplier,
+                reason=f'No offer survived page identity / grip checks ({MATCHING_RULES_VERSION})',
+            )
 
         SupplierSearchRun.objects.filter(pk=run.pk).update(
             status=SupplierSearchRun.Status.COMPLETED,

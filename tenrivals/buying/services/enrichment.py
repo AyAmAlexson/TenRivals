@@ -18,8 +18,15 @@ SOURCE_CANONICAL = 'canonical'
 SOURCE_STAFF = 'staff'
 
 VARIANT_TOKENS = (
-    'team', 'lite', 'tour', 'plus', 'junior', 'jr', 'super lite', 'superlite',
+    'mini', 'junior', 'jr', 'kids', 'kid', 'children', 'child', 'youth',
+    'team', 'lite', 'tour', 'plus', 'super lite', 'superlite',
 )
+
+# Always exclude from adult standard requests (never a soft alternative)
+EXCLUSION_VARIANTS = frozenset({
+    'mini', 'junior', 'jr', 'kids', 'kid', 'children', 'child', 'youth',
+})
+
 
 COLOR_MAP = {
     'синий': 'blue', 'синяя': 'blue', 'синее': 'blue',
@@ -84,14 +91,38 @@ def _norm(text: str) -> str:
 
 
 def normalize_grip_size(raw: str) -> str:
+    """Normalize supplier grip labels to L0–L5.
+
+    Accepts: L4, Grip 4, grip size 4, 4 1/2, 4-1/2, ручка 4.
+    US circumference fractions map: 4\"→L0 … 4 1/2\"→L4 … 4 5/8\"→L5.
+    """
     text = (raw or '').strip()
     if not text:
         return ''
-    m = re.search(r'(?:l|ручка|grip)?\s*([0-5])\b', text, re.I)
-    if m:
-        return f'L{m.group(1)}'
     if re.fullmatch(r'L[0-5]', text, re.I):
         return text.upper()
+
+    fraction_map = (
+        (r'4\s*[-\s]?\s*5\s*/\s*8', 'L5'),
+        (r'4\s*[-\s]?\s*1\s*/\s*2', 'L4'),
+        (r'4\s*[-\s]?\s*3\s*/\s*8', 'L3'),
+        (r'4\s*[-\s]?\s*1\s*/\s*4', 'L2'),
+        (r'4\s*[-\s]?\s*1\s*/\s*8', 'L1'),
+    )
+    low = text.lower().replace('″', '"').replace('′', "'")
+    for pattern, grip in fraction_map:
+        if re.search(pattern, low):
+            return grip
+
+    m = re.search(r'(?:l|ручка|grip(?:\s*size)?)\s*[#:]?\s*([0-5])\b', text, re.I)
+    if m:
+        return f'L{m.group(1)}'
+    # Whole-field bare digit from AI / forms (e.g. grip_size="4")
+    if re.fullmatch(r'[0-5]', text.strip()):
+        return f'L{text.strip()}'
+    m = re.search(r'\b([0-5])\b', text)
+    if m and re.search(r'grip|ручка|size|l\b', text, re.I):
+        return f'L{m.group(1)}'
     return text
 
 
@@ -130,15 +161,20 @@ def _parse_head_size(text: str) -> int | None:
 
 def _detect_variant(text: str) -> str:
     n = _norm(text)
-    for token in ('super lite', 'superlite', 'junior', 'team', 'lite', 'tour', 'plus'):
+    words = n.split()
+    # Mini / kids first — never confuse with adult Pure Drive etc.
+    for token in ('mini', 'junior', 'kids', 'kid', 'children', 'child', 'youth'):
+        if token in words:
+            return 'Mini' if token == 'mini' else 'Junior'
+    if 'jr' in words:
+        return 'Junior'
+    for token in ('super lite', 'superlite', 'team', 'lite', 'tour', 'plus'):
         if ' ' in token or token == 'superlite':
             if token in n or (token == 'superlite' and 'super lite' in n):
-                return 'Super Lite' if token in ('super lite', 'superlite') else token.title()
+                return 'Super Lite'
             continue
-        if token in n.split():
-            return 'Junior' if token == 'junior' else token.title()
-    if 'jr' in n.split():
-        return 'Junior'
+        if token in words:
+            return token.title()
     return ''
 
 
