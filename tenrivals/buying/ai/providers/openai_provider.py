@@ -49,7 +49,7 @@ class OpenAIProvider(AIProvider):
     ):
         self.api_key = api_key if api_key is not None else getattr(settings, 'BUYING_OPENAI_API_KEY', '')
         self.normalization_model = normalization_model or getattr(
-            settings, 'BUYING_NORMALIZATION_MODEL', 'gpt-4o-mini'
+            settings, 'BUYING_NORMALIZATION_MODEL', 'gpt-5.5'
         )
         self.match_model = match_model or getattr(settings, 'BUYING_MATCH_MODEL', self.normalization_model)
         self.temperature = (

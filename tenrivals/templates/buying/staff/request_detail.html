@@ -6,8 +6,10 @@
   {{ buying_request.created_at|date:'Y-m-d H:i' }} · {{ buying_request.staff_user.get_full_name|default:buying_request.staff_user.email }}
   {% if buying_request.client %} · Client: {{ buying_request.client }}{% endif %}
   · Status: <strong>{{ buying_request.get_status_display }}</strong>
-  {% if search_progress.total %}
-  · Connectors: Completed {{ search_progress.completed }}/{{ search_progress.total }}
+{% if search_progress.total %}
+  · Connectors: {{ search_progress.checked }}/{{ search_progress.total }} checked
+  {% if search_progress.offers_found %} · Offers {{ search_progress.offers_found }}{% endif %}
+  {% if search_progress.best_landed_cost %} · Best cost {{ search_progress.best_landed_cost }} ₾ ({{ search_progress.best_supplier }}){% endif %}
   {% if search_progress.running %} · In progress {{ search_progress.running }}{% endif %}
   {% if search_progress.failed %} · Failed {{ search_progress.failed }}{% endif %}
   {% endif %}
@@ -56,12 +58,22 @@
 </div>
 
 {% if search_progress.total %}
-<div class="card" id="search-progress-card">
-  <h2 class="card-title">Connector progress</h2>
-  <p class="page-note" id="search-progress-summary">
+<div class="card" id="search-summary-card" style="{% if search_progress.done %}border-color:var(--ok, #2a7a4b){% endif %}">
+  <h2 class="card-title" style="text-transform:uppercase;letter-spacing:.04em">Search summary</h2>
+  <p id="search-result-summary" style="font-size:16px;margin:0;font-weight:400;text-transform:none">
+    Found <strong id="sum-offers">{{ search_progress.offers_found }}</strong> offer{% if search_progress.offers_found != 1 %}s{% endif %},
+    checked <strong id="sum-checked">{{ search_progress.checked }}</strong> of <strong id="sum-total">{{ search_progress.total }}</strong> suppliers{% if search_progress.best_landed_cost %},
+    best cost <strong id="sum-cost">{{ search_progress.best_landed_cost }} ₾</strong>
+    — <strong id="sum-supplier">{{ search_progress.best_supplier }}</strong>{% else %}<span id="sum-best-tail">{% if search_progress.done %}, no priced offers yet{% endif %}</span>{% endif %}.
+  </p>
+  <p class="page-note" id="search-progress-summary" style="margin:10px 0 0">
     Completed {{ search_progress.completed }}/{{ search_progress.total }}
     · Pending {{ search_progress.pending }} · Running {{ search_progress.running }} · Failed {{ search_progress.failed }}
   </p>
+</div>
+
+<div class="card" id="search-progress-card">
+  <h2 class="card-title">Connector progress</h2>
   <div class="table-wrap">
     <table>
       <thead><tr><th>Supplier</th><th>Status</th><th>Tier</th><th>Candidates</th><th>Offers</th><th>Error</th></tr></thead>
@@ -273,13 +285,34 @@
 <script>
 (function(){
   var url = "{% url 'administration:buying_request_progress' buying_request.pk %}";
+  function renderSummary(data){
+    var offers = document.getElementById('sum-offers');
+    var checked = document.getElementById('sum-checked');
+    var total = document.getElementById('sum-total');
+    var result = document.getElementById('search-result-summary');
+    var prog = document.getElementById('search-progress-summary');
+    if(offers) offers.textContent = data.offers_found;
+    if(checked) checked.textContent = data.checked;
+    if(total) total.textContent = data.total;
+    if(result){
+      var text = 'Found ' + data.offers_found + ' offer' + (data.offers_found === 1 ? '' : 's')
+        + ', checked ' + data.checked + ' of ' + data.total + ' suppliers';
+      if(data.best_landed_cost){
+        text += ', best cost ' + data.best_landed_cost + ' ₾ — ' + data.best_supplier;
+      } else if(data.done){
+        text += ', no priced offers yet';
+      }
+      text += '.';
+      result.textContent = text;
+    }
+    if(prog){
+      prog.textContent = 'Completed '+data.completed+'/'+data.total
+        +' · Pending '+data.pending+' · Running '+data.running+' · Failed '+data.failed;
+    }
+  }
   function tick(){
     fetch(url, {credentials:'same-origin'}).then(function(r){ return r.json(); }).then(function(data){
-      var sum = document.getElementById('search-progress-summary');
-      if(sum){
-        sum.textContent = 'Completed '+data.completed+'/'+data.total
-          +' · Pending '+data.pending+' · Running '+data.running+' · Failed '+data.failed;
-      }
+      renderSummary(data);
       if(data.pending===0 && data.running===0){ location.reload(); }
     }).catch(function(){});
   }

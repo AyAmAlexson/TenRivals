@@ -647,8 +647,8 @@ Set via Heroku Config Vars only. Staff → Connector status → **Test authentic
 |---|---|---|
 | `OPENAI_API_KEY` | Secret | set on Heroku |
 | `BUYING_AI_PROVIDER` | Provider registry key | `openai` |
-| `BUYING_NORMALIZATION_MODEL` | Structured-output model for normalize | e.g. `gpt-4o-mini` |
-| `BUYING_MATCH_MODEL` | Structured-output model for match | e.g. `gpt-4o-mini` |
+| `BUYING_NORMALIZATION_MODEL` | Structured-output model for normalize | e.g. `gpt-5.5` |
+| `BUYING_MATCH_MODEL` | Structured-output model for match | e.g. `gpt-5.5` |
 | `BUYING_AI_TEMPERATURE` | Sampling temperature | `0` |
 | `BUYING_AI_TIMEOUT` | HTTP timeout seconds | `45` |
 | `BUYING_AI_MAX_RETRIES` | Retries after failures | `2` |

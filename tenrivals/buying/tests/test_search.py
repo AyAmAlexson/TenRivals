@@ -119,3 +119,22 @@ class SearchOrchestrationTests(TestCase):
             buying_request=self.request, supplier=unsupported
         )
         self.assertTrue(tp_runs.exists())
+
+    def test_progress_payload_includes_search_summary(self):
+        from buying.services.search import progress_payload
+        from buying.models import SupplierSearchRun
+
+        SupplierSearchRun.objects.create(
+            buying_request=self.request,
+            supplier=self.supplier,
+            status=SupplierSearchRun.Status.COMPLETED,
+            candidates_found=3,
+            offers_created=1,
+        )
+        payload = progress_payload(self.request)
+        self.assertEqual(payload['total'], 1)
+        self.assertEqual(payload['checked'], 1)
+        self.assertIn('offers_found', payload)
+        self.assertIn('summary', payload)
+        self.assertIn('Found', payload['summary'])
+        self.assertTrue(payload['done'])

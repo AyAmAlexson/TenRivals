@@ -531,15 +531,77 @@ def finalize_search(buying_request_id: int) -> dict:
 
 
 def progress_payload(buying_request: BuyingRequest) -> dict:
+    from buying.models import CostScenario, OfferEligibility
+
     runs = list(buying_request.search_runs.select_related('supplier'))
+    completed = sum(1 for r in runs if r.status == SupplierSearchRun.Status.COMPLETED)
+    failed = sum(1 for r in runs if r.status == SupplierSearchRun.Status.FAILED)
+    running = sum(1 for r in runs if r.status == SupplierSearchRun.Status.RUNNING)
+    pending = sum(1 for r in runs if r.status == SupplierSearchRun.Status.PENDING)
+    checked = completed + failed
+
+    offers_qs = buying_request.offers.filter(superseded_by__isnull=True).exclude(
+        eligibility_status=OfferEligibility.REJECTED
+    )
+    offers_found = offers_qs.count()
+
+    # Best landed cost among active calculated scenarios (lowest = best cost)
+    best_scenario = (
+        CostScenario.objects.filter(
+            buying_request=buying_request,
+            status=CostScenario.Status.CALCULATED,
+        )
+        .select_related('supplier_offer__supplier')
+        .order_by('landed_cost', 'rank', 'pk')
+        .first()
+    )
+    # Prefer ranked (verified) when present — otherwise cheapest provisional
+    ranked_best = (
+        CostScenario.objects.filter(
+            buying_request=buying_request,
+            status=CostScenario.Status.CALCULATED,
+            rank__isnull=False,
+        )
+        .select_related('supplier_offer__supplier')
+        .order_by('rank', 'landed_cost', 'pk')
+        .first()
+    )
+    chosen = ranked_best or best_scenario
+    best_landed = None
+    best_supplier = ''
+    best_customer = None
+    if chosen is not None:
+        best_landed = str(chosen.landed_cost)
+        best_supplier = chosen.supplier_offer.supplier.name
+        best_customer = str(chosen.customer_price)
+
+    done = bool(runs) and pending == 0 and running == 0
+    summary_parts = [
+        f'Found {offers_found} offer{"s" if offers_found != 1 else ""}',
+        f'checked {checked} of {len(runs)} suppliers',
+    ]
+    if best_landed is not None:
+        summary_parts.append(
+            f'best cost {best_landed} GEL ({best_supplier})'
+        )
+    elif done:
+        summary_parts.append('no priced offers yet')
+
     return {
         'request_id': buying_request.pk,
         'status': buying_request.status,
         'total': len(runs),
-        'completed': sum(1 for r in runs if r.status == SupplierSearchRun.Status.COMPLETED),
-        'failed': sum(1 for r in runs if r.status == SupplierSearchRun.Status.FAILED),
-        'running': sum(1 for r in runs if r.status == SupplierSearchRun.Status.RUNNING),
-        'pending': sum(1 for r in runs if r.status == SupplierSearchRun.Status.PENDING),
+        'completed': completed,
+        'failed': failed,
+        'running': running,
+        'pending': pending,
+        'checked': checked,
+        'offers_found': offers_found,
+        'best_landed_cost': best_landed,
+        'best_customer_price': best_customer,
+        'best_supplier': best_supplier,
+        'done': done,
+        'summary': ' · '.join(summary_parts),
         'runs': [
             {
                 'supplier': r.supplier.code,

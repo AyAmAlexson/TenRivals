@@ -465,11 +465,11 @@ LOGGING = {
 BUYING_AI_PROVIDER = env.str('BUYING_AI_PROVIDER', default='openai')
 BUYING_NORMALIZATION_MODEL = env.str(
     'BUYING_NORMALIZATION_MODEL',
-    default=env.str('BUYING_OPENAI_MODEL', default='gpt-4o-mini'),
+    default=env.str('BUYING_OPENAI_MODEL', default='gpt-5.5'),
 )
 BUYING_MATCH_MODEL = env.str(
     'BUYING_MATCH_MODEL',
-    default=env.str('BUYING_OPENAI_MODEL', default='gpt-4o-mini'),
+    default=env.str('BUYING_OPENAI_MODEL', default='gpt-5.5'),
 )
 # Legacy alias kept for older env files; prefer BUYING_NORMALIZATION_MODEL.
 BUYING_OPENAI_MODEL = BUYING_NORMALIZATION_MODEL
