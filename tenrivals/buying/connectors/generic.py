@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 import time
 from decimal import Decimal
 from urllib.parse import quote_plus, urljoin
@@ -105,10 +106,18 @@ class HtmlJsonLdConnector(SupplierConnector):
             full = urljoin(page_url, href)
             if full in seen or full.rstrip('/') == self.base_url.rstrip('/'):
                 continue
-            # Prefer product-like paths
+            # Prefer product-like paths (storefronts vary widely)
             path = full.lower()
-            if not any(tok in path for tok in ('/product', '/p/', 'descpage', '/item', '/racquet', '/shoe')):
-                continue
+            product_tokens = (
+                '/product', '/products/', '/p/', '/p?', '/item', '/racquet', '/shoe',
+                'descpage', '/search/',  # Direct Tennis PDP lives under /Search/slug
+            )
+            if not any(tok in path for tok in product_tokens):
+                # Smashinn / TradeInn: .../123456/p  (no trailing slash)
+                if not re.search(r'/\d+/p(?:$|[?#])', path):
+                    # Extreme / PrestaShop: /{cat}/{id}-{slug}.html
+                    if not re.search(r'/\d{3,}-[a-z0-9-]+\.html', path):
+                        continue
             seen.add(full)
             candidates.append(SearchCandidate(title=title[:300], url=full))
             if len(candidates) >= 15:

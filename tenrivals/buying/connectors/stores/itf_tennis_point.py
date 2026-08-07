@@ -125,7 +125,14 @@ class ItfTennisPointConnector(HtmlJsonLdConnector):
             raise CredentialsMissing(
                 'ITF Tennis Point requires authentication — set BUYING_ITF_TENNIS_POINT_* env vars'
             )
-        return super().search(query)
+        # Ensure session before search
+        auth = self.authentication_status()
+        if auth.status != 'authenticated':
+            self.login()
+        phrase = (query.search_phrases or ['tennis'])[0]
+        from buying.connectors.shopify import search_shopify
+        found = search_shopify(self._client(), base_url=self.base_url, phrase=phrase)
+        return found or super().search(query)
 
     def get_product_details(self, candidate: SearchCandidate, query: NormalizedProductQuery) -> OfferData:
         # Public parse first

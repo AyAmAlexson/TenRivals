@@ -317,14 +317,15 @@ def execute_supplier_search(run_id: int, *, force: bool = False) -> dict:
         if not best:
             readiness = readiness_for(supplier.code)
             msg = 'no_matching_product'
-            if readiness.get('tier') in ('anti_bot_blocked', 'authenticated_blocked'):
+            if readiness.get('tier') == 'anti_bot_blocked':
                 msg = readiness.get('notes') or readiness.get('tier')
-            elif readiness.get('search_ok') == 'credentials_required':
-                msg = 'credentials_missing'
             elif candidates and not best:
                 msg = 'candidates_rejected_by_matching'
             elif not candidates:
-                msg = 'search_empty'
+                if readiness.get('search_ok') == 'credentials_required':
+                    msg = 'credentials_missing'
+                else:
+                    msg = 'search_empty'
             # Drop prior Mini / wrong-family offers from the live list
             _reject_current_auto_offers(
                 request,

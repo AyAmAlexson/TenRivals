@@ -179,8 +179,20 @@ def _detect_variant(text: str) -> str:
             if token in n or (token == 'superlite' and 'super lite' in n):
                 return 'Super Lite'
             continue
-        if token in words:
-            return token.title()
+        if token not in words:
+            continue
+        # Marketing "Tour racket" / "Tour Racket" / tournament naming ≠ model variant
+        # (e.g. Tennis-Point "Blade 100 V10 Tour racket"). Real variants look like
+        # "Blade Tour", "Pure Drive Tour".
+        if token == 'tour':
+            if re.search(r'\btour\s+(racket|racquet|schlaeger|schlager)\b', n):
+                if not re.search(
+                    r'\b(blade|pure\s*drive|pure\s*aero|ezone|vcore|clash|pro\s*staff)\s+tour\b',
+                    n,
+                ):
+                    continue
+            # German "Turnierschläger" normalizes without matching bare "tour"
+        return token.title()
     return ''
 
 

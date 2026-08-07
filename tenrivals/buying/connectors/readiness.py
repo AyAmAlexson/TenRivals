@@ -27,7 +27,7 @@ CONNECTOR_READINESS: dict[str, dict] = {
         'product_parse_ok': 'blocked',
         'variant_parse_ok': 'blocked',
         'checkout_context_ok': 'blocked',
-        'notes': 'Anti-bot / 403 — manual fallback until reliable access',
+        'notes': 'Attempts browser-like search; often HTTP 403 from datacenter IPs — manual fallback',
         'tier': 'anti_bot_blocked',
     },
     'tennis-nuts': {
@@ -72,7 +72,7 @@ CONNECTOR_READINESS: dict[str, dict] = {
         'product_parse_ok': 'partial',
         'variant_parse_ok': 'missing',
         'checkout_context_ok': 'missing',
-        'notes': 'Candidates often fail product-path heuristics',
+        'notes': 'Shopify suggest/products.json + HTML fallback',
         'tier': 'search_only',
     },
     'tennis-point-com': {
@@ -81,7 +81,7 @@ CONNECTOR_READINESS: dict[str, dict] = {
         'product_parse_ok': 'partial',
         'variant_parse_ok': 'missing',
         'checkout_context_ok': 'missing',
-        'notes': 'Onex unsupported; search partial',
+        'notes': 'Shopify search; marketing Tour racket handled in matching',
         'tier': 'search_only',
     },
     'midwest-racquet-sports': {

@@ -276,6 +276,29 @@ class PureDriveMatchingTests(TestCase):
         self.assertNotEqual(verdict.match_status, 'no_match', verdict.details)
         self.assertEqual(verdict.details.get('hard_mismatches'), [])
 
+    def test_marketing_tour_racket_is_not_variant(self):
+        """Tennis-Point 'Tour racket' is marketing copy, not Blade Tour."""
+        from buying.services.enrichment import _detect_variant
+        self.assertEqual(_detect_variant('Blade 100 V10 Tour racket unstrung'), '')
+        self.assertEqual(_detect_variant('Wilson Blade Tour 100'), 'Tour')
+        cand = SearchCandidate(
+            title='Blade 100 V10 Tour racket unstrung',
+            url='https://www.tennis-point.com/products/wilson-blade-100-v10',
+        )
+        # Query without required variant should accept marketing Tour racket
+        np = NormalizedProduct(
+            brand='Wilson',
+            model_name='Blade',
+            generation='V10',
+            category='racquet',
+            head_size='100',
+            weight_g=300,
+            string_pattern='16x19',
+            grip_size='L3',
+        )
+        verdict = score_candidate(query_from_normalized(np), cand)
+        self.assertNotEqual(verdict.match_status, 'no_match', verdict.details)
+
     def test_color_preferred_is_alternative_color(self):
         cand = SearchCandidate(
             title='Babolat Pure Drive 100 2025 300g White',
@@ -355,7 +378,7 @@ class CacheLogicVersionTests(TestCase):
         self.assertFalse(
             cache_logic_compatible(stored, parser_version='phase3-4', prompt_version='v1')
         )
-        self.assertEqual(MATCHING_RULES_VERSION, 'match-rules-v5')
+        self.assertEqual(MATCHING_RULES_VERSION, 'match-rules-v6')
 
 
 class EligibilityAndRankingTests(TestCase):

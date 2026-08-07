@@ -193,13 +193,38 @@ class NormalizedProductQuery:
 
     @property
     def search_phrases(self) -> list[str]:
+        """Build storefront search strings — include head size + generation when known.
+
+        Without generation/head, stores return broad "Wilson Blade" noise and miss
+        the specific Blade 100 V10 SKU.
+        """
         parts = []
-        for piece in (self.brand, self.model_name, self.manufacturer_code):
+        for piece in (self.brand, self.model_name):
             piece = (piece or '').strip()
             if piece and piece not in parts:
                 parts.append(piece)
+        attrs = self.raw_attributes if isinstance(self.raw_attributes, dict) else {}
+        head = str(attrs.get('head_size') or self.size or '').strip()
+        if head and head not in parts:
+            # Keep digits only for head size in the phrase (e.g. "100")
+            head_digits = ''.join(ch for ch in head if ch.isdigit())
+            if head_digits:
+                parts.append(head_digits)
+        gen = (self.generation or '').strip()
+        if gen and gen.lower() not in {p.lower() for p in parts}:
+            parts.append(gen)
+        code = (self.manufacturer_code or '').strip()
+        if code and code not in parts:
+            parts.append(code)
+
         primary = ' '.join(parts).strip()
         phrases = [primary] if primary else []
+        # Also try brand + model only (broader) as secondary
+        short = ' '.join(
+            p for p in ((self.brand or '').strip(), (self.model_name or '').strip()) if p
+        ).strip()
+        if short and short not in phrases:
+            phrases.append(short)
         for alias in self.aliases:
             alias = (alias or '').strip()
             if alias and alias not in phrases:

@@ -25,7 +25,7 @@ from buying.services.enrichment import (
     normalize_grip_size,
 )
 
-MATCHING_RULES_VERSION = 'match-rules-v5'
+MATCHING_RULES_VERSION = 'match-rules-v6'
 
 GENERATION_ALIASES: dict[str, set[str]] = {
     '2025': {'2025', 'gen11', 'gen 11', 'g11'},
