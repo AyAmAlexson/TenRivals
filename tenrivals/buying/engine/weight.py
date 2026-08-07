@@ -1,18 +1,22 @@
-"""Weight Engine.
+"""Shipping Weight Engine.
 
-Chargeable weight is always max(actual weight, volumetric weight).
+Product specification weight (e.g. racquet 300 g unstrung) is NEVER used as
+the Onex / international shipping weight. Those are separate concepts:
 
-Actual-weight source priority (product body before packaging):
+- product_spec_g — identity / matching only (NormalizedProduct, canonical)
+- chargeable shipping weight — logistics only
 
-1. exact weight parsed from supplier product/variant (SupplierOffer.weight_g_actual);
-2. confirmed weight from ProductMapping;
-3. weight from NormalizedProduct;
-4. weight from canonical enrichment / RacquetSpecification / CanonicalProduct link;
-5. configured category estimate (CalculationRule weight.default_g);
-6. manual override (offer.weight_g_actual when is_manual — already covered by #1).
+Chargeable shipping weight priority:
 
-Packaging grams from the weight rule are added on top of whichever product
-weight was chosen. Missing all sources → None → pricing blocks with missing_weight.
+1. actual parcel/shipping weight on the offer (parsed or manual override);
+2. historical confirmed shipment weight (ProductMapping.confirmed_weight_g);
+3. canonical shipping weight (enrichment_snapshot.shipping_weight_g);
+4. category shipping-weight rule (CalculationRule weight.default_g);
+5. (manual is covered by #1 when offer.is_manual / weight_g_actual set).
+
+Then chargeable = max(shipping_actual, volumetric) when dimensions exist.
+
+Missing all shipping sources → None → pricing blocks with missing_weight.
 """
 
 from __future__ import annotations
@@ -23,27 +27,44 @@ from buying.engine.rule_handlers import get_handler
 from buying.engine.rules import resolve_rule
 from buying.models import CalculationRule, ProductMapping, SupplierOffer
 
+# Provenance labels stored in calculation_details.weight
+SOURCE_PARSED = 'parsed'
+SOURCE_HISTORICAL = 'historical'
+SOURCE_CANONICAL_SHIPPING = 'canonical_shipping'
+SOURCE_CONFIGURED_RULE = 'configured_rule'
+SOURCE_MANUAL = 'manual_override'
+
 
 def resolve_chargeable_weight(
     offer: SupplierOffer, category: str, quantity: int = 1
 ) -> tuple[int | None, dict]:
-    """Return (total chargeable weight in grams or None, provenance dict)."""
+    """Return (total chargeable shipping weight in grams or None, provenance)."""
     scope = {
         'country': offer.supplier.country,
         'supplier': offer.supplier,
         'category': category,
     }
 
-    packaging_g = 0
     weight_rule = resolve_rule(CalculationRule.RuleType.WEIGHT, **scope)
+    packaging_g = 0
     if weight_rule:
         packaging_g = int(weight_rule.params.get('packaging_g', 0) or 0)
 
-    product_g, actual_source, actual_exact = _resolve_product_weight_g(offer, weight_rule)
+    product_spec_g = _product_specification_weight_g(offer)
+    shipping_item_g, shipping_source, shipping_exact = _resolve_shipping_weight_g(
+        offer, weight_rule
+    )
 
-    actual_item_g = None
-    if product_g is not None:
-        actual_item_g = int(product_g) + packaging_g
+    # Optional packaging add-on only when shipping weight came from a non-rule
+    # source that may exclude packaging (parsed / historical / canonical).
+    if (
+        shipping_item_g is not None
+        and packaging_g
+        and shipping_source in (
+            SOURCE_PARSED, SOURCE_HISTORICAL, SOURCE_CANONICAL_SHIPPING, SOURCE_MANUAL
+        )
+    ):
+        shipping_item_g = int(shipping_item_g) + packaging_g
 
     volumetric_rule = resolve_rule(CalculationRule.RuleType.VOLUMETRIC_WEIGHT, **scope)
     volumetric_item_g = None
@@ -62,29 +83,37 @@ def resolve_chargeable_weight(
             volumetric_item_g = int(volumetric_rule.params['default_volumetric_g'])
             volumetric_source = 'configured_rule'
 
-    actual_total_g = actual_item_g * quantity if actual_item_g is not None else None
+    shipping_total_g = shipping_item_g * quantity if shipping_item_g is not None else None
     volumetric_total_g = volumetric_item_g * quantity if volumetric_item_g is not None else None
 
-    if actual_total_g is None and volumetric_total_g is None:
+    if shipping_total_g is None and volumetric_total_g is None:
         chargeable_g, basis, exact = None, None, False
     elif volumetric_total_g is None or (
-        actual_total_g is not None and actual_total_g >= volumetric_total_g
+        shipping_total_g is not None and shipping_total_g >= volumetric_total_g
     ):
-        chargeable_g, basis, exact = actual_total_g, 'actual', actual_exact
+        chargeable_g, basis, exact = shipping_total_g, 'shipping', shipping_exact
     else:
         chargeable_g, basis, exact = volumetric_total_g, 'volumetric', volumetric_exact
 
     meta = {
-        'product_g': product_g,
-        'actual_item_g': actual_item_g,
-        'actual_source': actual_source,
-        'actual_exact': actual_exact,
+        # Product identity weight — never used for Onex tariff
+        'product_spec_g': product_spec_g,
+        'product_g': product_spec_g,  # backward-compatible alias for older UI
+        # Shipping / chargeable
+        'shipping_item_g': shipping_item_g,
+        'shipping_source': shipping_source,
+        'shipping_exact': shipping_exact,
+        'actual_item_g': shipping_item_g,  # alias used by older breakdown consumers
+        'actual_source': shipping_source,
+        'actual_exact': shipping_exact,
         'packaging_g': packaging_g,
         'volumetric_item_g': volumetric_item_g,
         'volumetric_source': volumetric_source,
-        'actual_total_g': actual_total_g,
+        'actual_total_g': shipping_total_g,
+        'shipping_total_g': shipping_total_g,
         'volumetric_total_g': volumetric_total_g,
         'chargeable_g': chargeable_g,
+        'chargeable_shipping_weight_g': chargeable_g,
         'basis': basis,
         'quantity': quantity,
         'exact': exact,
@@ -104,41 +133,63 @@ def resolve_chargeable_weight(
     return chargeable_g, meta
 
 
-def _resolve_product_weight_g(
-    offer: SupplierOffer, weight_rule: CalculationRule | None
-) -> tuple[int | None, str, bool]:
-    """Return (grams before packaging, source label, exact flag)."""
-    if offer.weight_g_actual:
-        source = 'manual_entry' if offer.is_manual else 'parsed'
-        return int(offer.weight_g_actual), source, True
-
-    mapping_weight = _mapping_confirmed_weight(offer)
-    if mapping_weight:
-        return mapping_weight, 'product_mapping', True
-
+def _product_specification_weight_g(offer: SupplierOffer) -> int | None:
+    """Racquet unstrung weight etc. — identity only, never for shipping."""
     np = getattr(offer.buying_request, 'normalized_product', None)
     if np is not None and np.weight_g:
-        sources = np.field_sources or {}
-        if sources.get('weight_g') == 'canonical' or (np.enrichment_snapshot or {}).get(
-            'weight_g_unstrung'
-        ):
-            return int(np.weight_g), 'canonical_product', True
-        return int(np.weight_g), 'normalized_product', True
-
+        return int(np.weight_g)
     snap = (getattr(np, 'enrichment_snapshot', None) or {}) if np is not None else {}
     if snap.get('weight_g_unstrung'):
         try:
-            return int(snap['weight_g_unstrung']), 'canonical_product', True
+            return int(snap['weight_g_unstrung'])
         except (TypeError, ValueError):
             pass
+    return None
 
+
+def _resolve_shipping_weight_g(
+    offer: SupplierOffer, weight_rule: CalculationRule | None
+) -> tuple[int | None, str, bool]:
+    """Return (parcel grams before optional packaging, source, exact)."""
+    # 1 / 5. Offer parcel weight (parsed connector or staff manual override)
+    if offer.weight_g_actual:
+        if offer.is_manual:
+            return int(offer.weight_g_actual), SOURCE_MANUAL, True
+        return int(offer.weight_g_actual), SOURCE_PARSED, True
+
+    # 2. Historical confirmed shipment weight for this supplier product
+    historical = _mapping_confirmed_shipping_weight(offer)
+    if historical:
+        return historical, SOURCE_HISTORICAL, True
+
+    # 3. Canonical shipping weight (not product unstrung grams)
+    canonical_ship = _canonical_shipping_weight_g(offer)
+    if canonical_ship:
+        return canonical_ship, SOURCE_CANONICAL_SHIPPING, True
+
+    # 4. Category shipping-weight rule (full parcel estimate in default_g)
     if weight_rule and weight_rule.params.get('default_g'):
-        return int(weight_rule.params['default_g']), 'configured_rule', False
+        return int(weight_rule.params['default_g']), SOURCE_CONFIGURED_RULE, False
 
     return None, 'missing', False
 
 
-def _mapping_confirmed_weight(offer: SupplierOffer) -> int | None:
+def _canonical_shipping_weight_g(offer: SupplierOffer) -> int | None:
+    np = getattr(offer.buying_request, 'normalized_product', None)
+    if np is None:
+        return None
+    snap = np.enrichment_snapshot or {}
+    for key in ('shipping_weight_g', 'parcel_weight_g', 'chargeable_shipping_weight_g'):
+        val = snap.get(key)
+        if val:
+            try:
+                return int(val)
+            except (TypeError, ValueError):
+                continue
+    return None
+
+
+def _mapping_confirmed_shipping_weight(offer: SupplierOffer) -> int | None:
     qs = ProductMapping.objects.filter(
         supplier_id=offer.supplier_id,
         confirmed_weight_g__isnull=False,

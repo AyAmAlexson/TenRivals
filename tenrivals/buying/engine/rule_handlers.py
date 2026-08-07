@@ -366,7 +366,10 @@ class WeightHandler(BaseHandler):
         default = _check_decimal(params, 'default_g', errors, minimum=Decimal('1'))
         _check_decimal(params, 'packaging_g', errors, minimum=Decimal('0'))
         if default is None and params.get('packaging_g') in (None, ''):
-            errors.append('Provide "default_g" (category norm) and/or "packaging_g"')
+            errors.append(
+                'Provide "default_g" (category parcel/shipping weight in grams) '
+                'and/or "packaging_g"'
+            )
         return errors
 
 

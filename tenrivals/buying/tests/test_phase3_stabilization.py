@@ -9,6 +9,7 @@ from buying.connectors.base import OfferData, SearchCandidate
 from buying.engine.pricing import build_cost_scenario
 from buying.engine.weight import resolve_chargeable_weight
 from buying.models import (
+    CalculationRule,
     ConfirmationState,
     NormalizedProduct,
     OfferEligibility,
@@ -38,13 +39,19 @@ from .utils import (
 
 
 class PureDriveWeightEngineTests(TestCase):
-    """Regression: missing_weight must not fire when NormalizedProduct has 300 g."""
+    """Pure Drive: product 300 g must not drive Onex; shipping ≈ 1.0 kg → ~27 GEL."""
 
     def setUp(self):
         self.user = make_superuser()
         self.supplier = make_supplier()
         self.route = make_route()
         make_standard_rules(self.route)
+        CalculationRule.objects.create(
+            rule_type=CalculationRule.RuleType.WEIGHT,
+            name='Racquet shipping weight (parcel)',
+            category='racquet',
+            params={'default_g': '1000'},
+        )
         self.request_obj = make_request(
             self.user, query='Babolat Pure Drive 100, blue, 2025, grip 4'
         )
@@ -71,7 +78,7 @@ class PureDriveWeightEngineTests(TestCase):
         self.request_obj.normalized_product = self.np
         self.request_obj.save()
 
-    def test_canonical_weight_reaches_pricing_without_offer_weight(self):
+    def test_product_spec_weight_not_used_for_shipping(self):
         offer = make_offer(
             self.request_obj,
             self.supplier,
@@ -80,17 +87,21 @@ class PureDriveWeightEngineTests(TestCase):
             match_status='exact',
         )
         chargeable, meta = resolve_chargeable_weight(offer, 'racquet', quantity=1)
-        self.assertEqual(meta['actual_source'], 'canonical_product')
-        self.assertEqual(meta['product_g'], 300)
-        self.assertIsNotNone(chargeable)
-        self.assertGreaterEqual(chargeable, 300)
+        self.assertEqual(meta['product_spec_g'], 300)
+        self.assertEqual(meta['shipping_source'], 'configured_rule')
+        self.assertEqual(meta['shipping_item_g'], 1000)
+        self.assertEqual(chargeable, 1000)
+        self.assertFalse(meta['exact'])
 
         scenario = build_cost_scenario(offer, self.route)
         self.assertEqual(scenario.status, 'calculated')
         self.assertNotIn('missing_weight', scenario.calculation_details.get('blocking_issues') or [])
-        self.assertFalse(any('blocking:missing_weight' in (w or '') for w in scenario.warnings))
-        self.assertEqual(scenario.calculation_details['weight']['actual_source'], 'canonical_product')
-        self.assertEqual(scenario.chargeable_weight_g, chargeable)
+        self.assertEqual(scenario.chargeable_weight_g, 1000)
+        # 1.0 kg × 27 GEL
+        self.assertEqual(scenario.international_shipping, Decimal('27.00'))
+        self.assertEqual(
+            scenario.calculation_details['weight']['shipping_source'], 'configured_rule'
+        )
 
     def test_local_shipping_missing_does_not_block(self):
         offer = make_offer(
@@ -106,10 +117,52 @@ class PureDriveWeightEngineTests(TestCase):
         self.assertTrue(any('unknown:local_shipping' in (w or '') for w in scenario.warnings))
         self.assertTrue(any('provisional:local_shipping_unknown' in (w or '') for w in scenario.warnings))
         self.assertNotIn('blocking:missing_rule:local_shipping', scenario.warnings)
-        # Component must not look like confirmed free shipping
         ship = next(c for c in scenario.breakdown if c['code'] == 'local_shipping')
         self.assertEqual(ship['source'], 'unknown')
         self.assertFalse(ship['exact'])
+
+
+class ShoesShippingWeightTests(TestCase):
+    def setUp(self):
+        self.user = make_superuser()
+        self.supplier = make_supplier()
+        self.route = make_route()
+        make_standard_rules(self.route)
+        CalculationRule.objects.create(
+            rule_type=CalculationRule.RuleType.WEIGHT,
+            name='Shoes shipping weight (parcel)',
+            category='shoes',
+            params={'default_g': '1500'},
+        )
+        self.request_obj = make_request(self.user, query='New Balance CT Rally 2')
+        self.np = NormalizedProduct.objects.create(
+            brand='New Balance',
+            model_name='CT Rally 2',
+            category=ProductCategory.SHOES,
+            weight_g=None,
+        )
+        self.request_obj.normalized_product = self.np
+        self.request_obj.save()
+
+    def test_shoes_use_category_shipping_rule_without_product_weight(self):
+        offer = make_offer(
+            self.request_obj,
+            self.supplier,
+            title='New Balance CT Rally 2',
+            weight_g_actual=None,
+            match_status='exact',
+        )
+        chargeable, meta = resolve_chargeable_weight(offer, 'shoes', quantity=1)
+        self.assertIsNone(meta['product_spec_g'])
+        self.assertEqual(meta['shipping_source'], 'configured_rule')
+        self.assertEqual(chargeable, 1500)
+
+        scenario = build_cost_scenario(offer, self.route)
+        self.assertEqual(scenario.status, 'calculated')
+        self.assertEqual(scenario.chargeable_weight_g, 1500)
+        # 1.5 kg × 27 GEL
+        self.assertEqual(scenario.international_shipping, Decimal('40.50'))
+        self.assertFalse(any('blocking:missing_weight' in (w or '') for w in scenario.warnings))
 
 
 class PureDriveMatchingTests(TestCase):
@@ -311,6 +364,12 @@ class EligibilityAndRankingTests(TestCase):
         self.supplier = make_supplier()
         self.route = make_route()
         make_standard_rules(self.route)
+        CalculationRule.objects.create(
+            rule_type=CalculationRule.RuleType.WEIGHT,
+            name='Racquet shipping weight (parcel)',
+            category='racquet',
+            params={'default_g': '1000'},
+        )
         self.request_obj = make_request(self.user)
         self.np = NormalizedProduct.objects.create(
             brand='Babolat',

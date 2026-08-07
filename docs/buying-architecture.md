@@ -463,10 +463,17 @@ Production Onex data is seeded by `manage.py seed_onex` (provider, 5 warehouses 
 
 ### Weight Engine (`engine/weight.py`)
 
-Chargeable weight is always **`max(actual, volumetric)`**:
-- actual: `SupplierOffer.weight_g_actual` (+ packaging from `weight` rule) → else category norm `default_g`;
-- volumetric: L×W×H (cm) / `divisor` when dimensions are set → else `default_volumetric_g` from the `volumetric_weight` rule.
-No rule and no data ⇒ weight unknown ⇒ scenario blocked.
+**Product specification weight** (e.g. racquet 300 g unstrung) is identity-only and is **never** used for Onex delivery.
+
+**Chargeable shipping weight** priority:
+
+1. parcel/shipping weight on `SupplierOffer.weight_g_actual` (`parsed` or `manual_override`);
+2. historical `ProductMapping.confirmed_weight_g` (`historical`);
+3. canonical shipping weight from enrichment snapshot (`canonical_shipping`);
+4. category `weight` CalculationRule `default_g` (`configured_rule`) — e.g. racquet 1000 g, shoes 1500 g;
+5. then `max(shipping, volumetric)` when package dimensions exist.
+
+No shipping source and no volumetric ⇒ `missing_weight` ⇒ scenario blocked. Historical CostScenarios stay immutable; only new calculations use this engine.
 
 ### Fulfillment Engine (`engine/routes.py`)
 

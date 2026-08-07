@@ -320,7 +320,8 @@ class SupplierOffer(models.Model):
     court = models.CharField(max_length=30, blank=True)
     gender = models.CharField(max_length=20, blank=True)
     weight_g_actual = models.PositiveIntegerField(
-        null=True, blank=True, help_text='Actual item weight from the supplier, grams'
+        null=True, blank=True,
+        help_text='Parcel / shipping weight in grams (not product unstrung weight)',
     )
     # Package dimensions for the volumetric weight formula (L×W×H / divisor).
     length_cm = models.DecimalField(max_digits=6, decimal_places=1, null=True, blank=True)
@@ -451,7 +452,8 @@ class ProductMapping(models.Model):
     confirmed_at = models.DateTimeField(null=True, blank=True)
     last_checked_at = models.DateTimeField(null=True, blank=True)
     confirmed_weight_g = models.PositiveIntegerField(
-        null=True, blank=True, help_text='Historically confirmed weight for the Weight Engine'
+        null=True, blank=True,
+        help_text='Historically confirmed parcel/shipping weight for the Shipping Weight Engine',
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

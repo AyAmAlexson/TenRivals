@@ -43,7 +43,7 @@ from buying.models import CalculationRule, CostScenario, FulfillmentRoute, Suppl
 
 RuleType = CalculationRule.RuleType
 
-CALCULATION_VERSION = 'phase2-2026.08'
+CALCULATION_VERSION = 'phase2-shipping-weight-2026.08'
 
 TWO_PLACES = Decimal('0.01')
 COEFFICIENT_PLACES = Decimal('0.000000001')
@@ -353,7 +353,11 @@ def build_cost_scenario(
             to_gel(amount, rate),
             source='configured_rule', exact=weight_exact, rule=intl_rule,
             amount_original=amount, currency=currency,
-            note=f'{kg} kg chargeable ({weight_meta.get("basis") or "unknown"} weight basis)',
+            note=(
+                f'{kg} kg chargeable shipping weight '
+                f'(source={weight_meta.get("shipping_source") or weight_meta.get("actual_source") or "unknown"}; '
+                f'basis={weight_meta.get("basis") or "unknown"})'
+            ),
         )
         if not weight_exact:
             bd.warn('estimated:weight')

@@ -187,13 +187,24 @@ class PricingEngineTests(TestCase):
         self.offer.weight_g_actual = None
         self.offer.save()
         CalculationRule.objects.create(
-            rule_type='weight', name='Racquet norm',
-            params={'default_g': '600', 'packaging_g': '150'},
+            rule_type='weight', name='Racquet shipping parcel',
+            category='racquet',
+            params={'default_g': '1000'},
         )
+        # Offer category comes from normalized product — set request category
+        from buying.models import NormalizedProduct, ProductCategory
+        np = NormalizedProduct.objects.create(
+            brand='Wilson', model_name='Blade', category=ProductCategory.RACQUET,
+        )
+        self.request_obj.normalized_product = np
+        self.request_obj.save()
         scenario = build_cost_scenario(self.offer, self.route)
-        self.assertEqual(scenario.chargeable_weight_g, 750)
-        # 0.75 kg × 27 GEL
-        self.assertEqual(scenario.international_shipping, Decimal('20.25'))
+        self.assertEqual(scenario.chargeable_weight_g, 1000)
+        # 1.0 kg × 27 GEL
+        self.assertEqual(scenario.international_shipping, Decimal('27.00'))
+        self.assertEqual(
+            scenario.calculation_details['weight']['shipping_source'], 'configured_rule'
+        )
 
     def test_chargeable_weight_is_max_of_actual_and_volumetric(self):
         self.offer.length_cm = Decimal('40')

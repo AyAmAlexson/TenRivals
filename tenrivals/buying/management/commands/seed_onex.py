@@ -90,12 +90,27 @@ class Command(BaseCommand):
              {'minimum': '0.03', 'standard': '0.10', 'premium': '0.25'}, {}),
             (RuleType.VOLUMETRIC_WEIGHT, 'Volumetric weight (standard formula)',
              {'divisor': '6000'}, {}),
-            # Packaging only — product weight comes from NormalizedProduct / mapping / parse
-            (RuleType.WEIGHT, 'Racquet packaging allowance',
-             {'packaging_g': '150'}, {'category': 'racquet'}),
+            # Shipping Weight Engine: full parcel estimate (never product unstrung grams)
+            (RuleType.WEIGHT, 'Racquet shipping weight (parcel)',
+             {'default_g': '1000'}, {'category': 'racquet'}),
+            (RuleType.WEIGHT, 'Shoes shipping weight (parcel)',
+             {'default_g': '1500'}, {'category': 'shoes'}),
         ]
         for rule_type, name, params, scope in global_rules:
             created_counts['rules'] += self._rule(rule_type, name, params, **scope)
+
+        # Disable obsolete packaging-only racquet rule if a parcel default exists
+        if CalculationRule.objects.filter(
+            rule_type=RuleType.WEIGHT, category='racquet', enabled=True,
+            name='Racquet shipping weight (parcel)',
+        ).exists():
+            disabled = CalculationRule.objects.filter(
+                rule_type=RuleType.WEIGHT,
+                name='Racquet packaging allowance',
+                enabled=True,
+            ).update(enabled=False)
+            if disabled:
+                self.stdout.write('Disabled obsolete rule: Racquet packaging allowance')
 
         self.stdout.write(self.style.SUCCESS(
             'Onex seed done: +{warehouses} warehouse(s), +{routes} route(s), '

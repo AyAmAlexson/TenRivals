@@ -64,10 +64,12 @@
   </p>
   {% with w=scenario.calculation_details.weight %}
   {% if w %}
-  <p class="page-note" style="margin:6px 0 0">
-    Actual weight: {% if w.actual_total_g %}{{ w.actual_total_g }} g ({{ w.actual_source }}{% if w.packaging_g %}, incl. {{ w.packaging_g }} g packaging{% endif %}){% else %}unknown{% endif %}
-    · Volumetric weight: {% if w.volumetric_total_g %}{{ w.volumetric_total_g }} g ({{ w.volumetric_source }}){% else %}—{% endif %}
-    · <strong>Chargeable: {% if w.chargeable_g %}{{ w.chargeable_g }} g (max → {{ w.basis }}){% else %}unknown{% endif %}</strong>
+  <p class="page-note" style="margin:6px 0 0;font-weight:400;text-transform:none">
+    Product spec weight: {% if w.product_spec_g %}{{ w.product_spec_g }} g (identity only){% else %}—{% endif %}
+    · Shipping weight: {% if w.shipping_item_g or w.actual_item_g %}{{ w.shipping_item_g|default:w.actual_item_g }} g
+      ({{ w.shipping_source|default:w.actual_source }}{% if w.exact %} · exact{% else %} · estimated{% endif %}{% if w.packaging_g %}, +{{ w.packaging_g }} g packaging{% endif %}){% else %}unknown{% endif %}
+    · Volumetric: {% if w.volumetric_total_g %}{{ w.volumetric_total_g }} g ({{ w.volumetric_source }}){% else %}—{% endif %}
+    · <strong>Chargeable shipping: {% if w.chargeable_g %}{{ w.chargeable_g }} g ({{ w.basis }}){% else %}unknown{% endif %}</strong>
   </p>
   {% endif %}
   {% endwith %}
