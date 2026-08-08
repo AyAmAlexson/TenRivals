@@ -21,6 +21,11 @@
 
     {% if form.non_field_errors %}<div class="field-errors" style="margin-bottom:12px">{{ form.non_field_errors }}</div>{% endif %}
     {% if formset.non_form_errors %}<div class="field-errors" style="margin-bottom:12px">{{ formset.non_form_errors }}</div>{% endif %}
+    {% if form.is_bound and form.errors or formset.is_bound and formset.total_error_count %}
+    <div class="alert-error" style="margin-bottom:14px;padding:10px 12px">
+      Order was not saved. Check Customer / Currency / Rate and each line (product, size/grip, qty).
+    </div>
+    {% endif %}
 
     <div class="form-row sales-order-top-row">
       <div class="form-group">
@@ -31,10 +36,12 @@
       <div class="form-group">
         <label for="{{ form.order_date.id_for_label }}">Date</label>
         {{ form.order_date }}
+        {% if form.order_date.errors %}<div class="field-errors">{{ form.order_date.errors }}</div>{% endif %}
       </div>
       <div class="form-group">
         <label for="{{ form.status.id_for_label }}">Status</label>
         {{ form.status }}
+        {% if form.status.errors %}<div class="field-errors">{{ form.status.errors }}</div>{% endif %}
       </div>
     </div>
     <div class="form-row">
@@ -110,14 +117,18 @@
           {% for f in formset %}
           <tr class="line-row" data-form-index="{{ forloop.counter0 }}">
             {% for hidden in f.hidden_fields %}{{ hidden }}{% endfor %}
+            {% if f.non_field_errors %}
+            <td colspan="13" class="field-errors" style="background:#fef2f2">{{ f.non_field_errors }}</td>
+            </tr><tr class="line-row" data-form-index="{{ forloop.counter0 }}">
+            {% endif %}
             <td style="text-align:center">{{ f.from_stock }}</td>
             <td>{{ f.sale_channel.errors }}{{ f.sale_channel }}</td>
             <td>{{ f.product.errors }}{{ f.custom_label.errors }}{{ f.product }}{{ f.custom_label }}</td>
             <td>{{ f.product_type.errors }}{{ f.product_type }}</td>
             <td>{{ f.variant_label.errors }}{{ f.variant_label }}</td>
-            <td class="num">{{ f.quantity }}</td>
-            <td class="num">{{ f.unit_price_gross }}</td>
-            <td class="num">{{ f.discount_percent }}</td>
+            <td class="num">{{ f.quantity.errors }}{{ f.quantity }}</td>
+            <td class="num">{{ f.unit_price_gross.errors }}{{ f.unit_price_gross }}</td>
+            <td class="num">{{ f.discount_percent.errors }}{{ f.discount_percent }}</td>
             <td class="num">{{ f.landed_cost_gel.errors }}{{ f.landed_cost_gel }}</td>
             <td class="num line-gross mono">—</td>
             <td class="num line-vat mono">—</td>

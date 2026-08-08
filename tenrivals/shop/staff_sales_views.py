@@ -656,6 +656,25 @@ def staff_sales_order_edit(request, pk=None):
                     return redirect('administration:staff_sales_orders')
                 except Exception as e:
                     messages.error(request, f'Could not save order: {e}')
+        else:
+            # Surface why Save silently stayed on the page (field/formset errors
+            # used to be easy to miss in the dense line table).
+            bits = []
+            if form.errors:
+                bits.append(f'Order: {form.errors.as_text().strip()}')
+            if formset.non_form_errors():
+                bits.append(formset.non_form_errors().as_text().strip())
+            for i, lf in enumerate(formset.forms, start=1):
+                if lf.errors:
+                    bits.append(f'Line {i}: {lf.errors.as_text().strip()}')
+            if bits:
+                messages.error(
+                    request,
+                    'Could not save order — fix the highlighted fields. '
+                    + ' | '.join(bits)[:900],
+                )
+            else:
+                messages.error(request, 'Could not save order — check the form.')
     else:
         initial = {}
         if instance is None:

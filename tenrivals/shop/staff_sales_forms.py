@@ -267,9 +267,16 @@ class SalesOrderLineForm(forms.ModelForm):
         vf = self.fields['variant_label']
         vf.label = 'Size / grip'
         vf.widget.choices = [('', '—')]
-        if self.instance and getattr(self.instance, 'pk', None) and self.instance.product_id:
-            self._set_variant_choices_for_product(self.instance.product)
-
+        product_for_variants = None
+        if self.is_bound:
+            raw_pid = self.data.get(self.add_prefix('product')) or ''
+            if str(raw_pid).isdigit():
+                from .models import Product
+                product_for_variants = Product.objects.filter(pk=int(raw_pid)).first()
+        elif self.instance and getattr(self.instance, 'pk', None) and self.instance.product_id:
+            product_for_variants = self.instance.product
+        if product_for_variants is not None:
+            self._set_variant_choices_for_product(product_for_variants)
     def _set_variant_choices_for_product(self, product):
         from .sales_order_stock import get_variant_qty_map, product_requires_variant
 
@@ -319,7 +326,8 @@ class SalesOrderLineForm(forms.ModelForm):
         # Snapshot category from catalog; ignore any posted value in stock mode.
         cd['product_type'] = product.type or ''
         if product_requires_variant(product) and not variant:
-            raise ValidationError('Select size / grip for this product.')
+            self.add_error('variant_label', 'Select size / grip for this product.')
+            return cd
         if not product_requires_variant(product) and variant:
             cd['variant_label'] = ''
         return cd
