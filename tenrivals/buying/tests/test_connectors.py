@@ -47,6 +47,58 @@ class JsonLdAndSanitizeTests(SimpleTestCase):
         self.assertEqual(cleaned['password'], '[redacted]')
         self.assertEqual(cleaned['title'], 'ok')
 
+    def test_shopify_offer_from_js_payload(self):
+        from buying.connectors.shopify import offer_from_shopify_product
+
+        product = {
+            'title': 'Blade 100 V10 Tour racket unstrung',
+            'handle': 'wilson-blade-100-v10-tour-racket-unstrung-00707604278000',
+            'description': '<p>Wilson Blade 100 V10</p>',
+            'variants': [
+                {
+                    'id': 1,
+                    'title': 'unstrung / 3',
+                    'option1': 'unstrung',
+                    'option2': '3',
+                    'price': '22495',
+                    'available': True,
+                    'sku': '0070760427800003',
+                    'barcode': '',
+                },
+                {
+                    'id': 2,
+                    'title': 'unstrung / 4',
+                    'option1': 'unstrung',
+                    'option2': '4',
+                    'price': '22495',
+                    'available': False,
+                    'sku': '0070760427800004',
+                },
+            ],
+            'options': [
+                {'name': 'Variant', 'values': ['unstrung']},
+                {'name': 'Grip size', 'values': ['1', '2', '3', '4']},
+            ],
+        }
+        offer = offer_from_shopify_product(
+            product,
+            page_url='https://www.tennis-point.com/products/x',
+            default_currency='EUR',
+            default_tax_mode='vat_included',
+            default_destination_country='DE',
+            parser_version='test',
+            wanted_grip='L3',
+        )
+        self.assertEqual(offer.effective_price, Decimal('224.95'))
+        self.assertEqual(offer.requested_variant_available, True)
+        self.assertEqual(offer.supplier_sku, '0070760427800003')
+
+    def test_twe_title_from_url(self):
+        title = TennisWarehouseEuropeConnector._title_from_twe_url(
+            'https://www.tenniswarehouse-europe.com/Wilson_Blade_100_v10_Racket/descpageRCWILSON-WB1001-EN.html'
+        )
+        self.assertIn('Blade 100', title)
+
 
 class TennisWarehouseEuFixtureTests(SimpleTestCase):
     def test_search_and_product_parse(self):

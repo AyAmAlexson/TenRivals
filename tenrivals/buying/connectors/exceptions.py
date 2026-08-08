@@ -31,6 +31,10 @@ class CredentialsMissing(ConnectorError):
     error_type = 'credentials_missing'
 
 
+class OAuthLoginRequired(ConnectorError):
+    error_type = 'oauth_login_required'
+
+
 class ParsingError(ConnectorError):
     error_type = 'parsing_error'
 
