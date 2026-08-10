@@ -520,3 +520,47 @@ class CatalogSeoTextsTests(TestCase):
             seo['seo_page_h1'],
             'Tennis Equipment • Preorder • Tbilisi, Georgia',
         )
+
+
+class LegacySalesImportHelpersTests(TestCase):
+    def test_guess_product_type_samples(self):
+        from shop.management.commands.import_legacy_sales_orders import (
+            guess_product_type,
+            parse_discount_percent,
+        )
+
+        self.assertEqual(guess_product_type('Yonex Super Grap Overgrip White'), ProductType.GRIPS)
+        self.assertEqual(guess_product_type('Wilson Championship Tennis 4 Ball Can'), ProductType.BALLS)
+        self.assertEqual(
+            guess_product_type("Asics Gel Dedicate 8 AC White/Indigo Women's Shoes US 10.0"),
+            ProductType.WOMENS_SHOES,
+        )
+        self.assertEqual(
+            guess_product_type('Wilson Pro Staff 97 v14 Racquet 4 3/8" (#3)'),
+            ProductType.RACKET,
+        )
+        self.assertEqual(
+            guess_product_type('Wilson Blade V8/Clash V2 Butt Cap (2)'),
+            ProductType.ACCESSORIES,
+        )
+        self.assertEqual(parse_discount_percent(0.1), Decimal('10.00'))
+        self.assertEqual(parse_discount_percent(1), Decimal('100.00'))
+        self.assertEqual(parse_discount_percent(0.1429), Decimal('14.29'))
+
+    def test_max_issued_ignores_special_series(self):
+        from shop.sales_order_utils import max_issued_invoice_seq_for_year
+
+        cust = Customer.objects.create(first_name='A', last_name='B')
+        SalesOrder.objects.create(
+            invoice_number='2026-000050',
+            customer=cust,
+            order_date='2026-03-01',
+            status=SalesOrder.Status.COMPLETED,
+        )
+        SalesOrder.objects.create(
+            invoice_number='2026-100007',
+            customer=cust,
+            order_date='2026-02-10',
+            status=SalesOrder.Status.COMPLETED,
+        )
+        self.assertEqual(max_issued_invoice_seq_for_year(2026), 50)

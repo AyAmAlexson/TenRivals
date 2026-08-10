@@ -79,14 +79,18 @@ def parse_invoice_number(full: str) -> tuple[int, int] | None:
 
 
 def max_issued_invoice_seq_for_year(year: int) -> int:
-    """Highest numeric suffix among existing orders for that calendar year."""
+    """Highest *standard* numeric suffix among existing orders for that year.
+
+    Suffixes >= 100000 are treated as special/legacy series (e.g. 2026-100007)
+    and must not block the normal YYYY-000xxx counter.
+    """
     prefix = f'{year}-'
     max_seq = 0
     for inv in SalesOrder.objects.filter(invoice_number__startswith=prefix).values_list(
         'invoice_number', flat=True
     ):
         parsed = parse_invoice_number(inv)
-        if parsed and parsed[0] == year:
+        if parsed and parsed[0] == year and parsed[1] < 100000:
             max_seq = max(max_seq, parsed[1])
     return max_seq
 
