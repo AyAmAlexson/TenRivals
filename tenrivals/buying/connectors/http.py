@@ -31,7 +31,10 @@ SECRET_KEYS = frozenset({
 
 
 def sanitize_for_storage(value: Any, *, depth: int = 0) -> Any:
-    """Strip credentials / secrets from payloads before DB / logs / Sentry."""
+    """Strip credentials / secrets and JSON-unsafe types before DB / logs / Sentry."""
+    from decimal import Decimal
+    from datetime import date, datetime
+
     if depth > 12:
         return '[truncated]'
     if isinstance(value, dict):
@@ -45,6 +48,15 @@ def sanitize_for_storage(value: Any, *, depth: int = 0) -> Any:
         return out
     if isinstance(value, list):
         return [sanitize_for_storage(v, depth=depth + 1) for v in value[:500]]
+    if isinstance(value, tuple):
+        return [sanitize_for_storage(v, depth=depth + 1) for v in value[:500]]
+    if isinstance(value, Decimal):
+        # Keep exact decimal text for money/JSONField (avoids float drift + TypeError).
+        return format(value, 'f')
+    if isinstance(value, (datetime, date)):
+        return value.isoformat()
+    if isinstance(value, bytes):
+        return value.decode('utf-8', errors='replace')[:50_000]
     if isinstance(value, str) and len(value) > 200_000:
         return value[:200_000] + '…[truncated]'
     return value

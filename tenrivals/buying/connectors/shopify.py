@@ -282,12 +282,14 @@ def shopify_variant_labels(product: dict) -> list[dict]:
         ]
         label = title or ' / '.join(options)
         if label and label.lower() not in ('default title', 'default'):
-            labels.append({
-                'label': label,
-                'sku': str(variant.get('sku') or ''),
-                'available': bool(variant.get('available', True)),
-                'price': _money_from_shopify(variant.get('price')),
-            })
+                money = _money_from_shopify(variant.get('price'))
+                labels.append({
+                    'label': label,
+                    'sku': str(variant.get('sku') or ''),
+                    'available': bool(variant.get('available', True)),
+                    # String — SupplierOffer.available_variants is JSONField
+                    'price': format(money, 'f') if money is not None else None,
+                })
     return labels
 
 

@@ -12,7 +12,7 @@ from django.utils import timezone
 
 from buying.connectors.base import PurchaseContext
 from buying.connectors.exceptions import ConnectorError, CredentialsMissing
-from buying.connectors.http import ConnectorHttpClient
+from buying.connectors.http import ConnectorHttpClient, sanitize_for_storage
 from buying.connectors.registry import get_connector, get_connector_class
 from buying.connectors.readiness import readiness_for
 from buying.engine.routes import supplier_allows_onex_scenarios
@@ -354,7 +354,7 @@ def execute_supplier_search(run_id: int, *, force: bool = False) -> dict:
                 currency=cand.currency or '',
                 supplier_sku=cand.supplier_sku or '',
                 manufacturer_code=cand.manufacturer_code or '',
-                raw_data=cand.raw_data or {},
+                raw_data=sanitize_for_storage(cand.raw_data or {}),
             )
 
         best = pick_best_candidates(query, candidates, limit=3)

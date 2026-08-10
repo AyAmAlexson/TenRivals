@@ -97,13 +97,18 @@ def offer_data_to_supplier_offer(
         discount_amount=data.product_discount_amount,
         discount_percent=data.product_discount_percent,
         currency=data.currency,
-        promotions=[p.to_dict() if hasattr(p, 'to_dict') else p for p in data.promotions],
+        promotions=sanitize_for_storage(
+            [p.to_dict() if hasattr(p, 'to_dict') else p for p in data.promotions]
+        ),
         applied_promotion_ids=list(data.applied_promotion_ids),
-        unapplied_eligible_promotions=[
-            p.to_dict() if hasattr(p, 'to_dict') else p for p in data.unapplied_eligible_promotions
-        ],
-        requested_variant=requested_variant or {},
-        available_variants=list(data.available_variants),
+        unapplied_eligible_promotions=sanitize_for_storage(
+            [
+                p.to_dict() if hasattr(p, 'to_dict') else p
+                for p in data.unapplied_eligible_promotions
+            ]
+        ),
+        requested_variant=sanitize_for_storage(requested_variant or {}),
+        available_variants=sanitize_for_storage(list(data.available_variants)),
         requested_variant_available=data.requested_variant_available,
         stock_status=data.stock_status or SupplierOffer.StockStatus.UNKNOWN,
         color=data.color or '',
@@ -132,7 +137,7 @@ def offer_data_to_supplier_offer(
         purchase_context_status=ctx_status,
         match_score=match_score,
         match_status=match_status,
-        match_details=match_details or {},
+        match_details=sanitize_for_storage(match_details or {}),
         warnings=list(data.warnings),
         checked_at=timezone.now(),
         raw_data={},

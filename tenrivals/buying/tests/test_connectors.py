@@ -47,6 +47,15 @@ class JsonLdAndSanitizeTests(SimpleTestCase):
         self.assertEqual(cleaned['password'], '[redacted]')
         self.assertEqual(cleaned['title'], 'ok')
 
+    def test_sanitize_decimal_for_json(self):
+        cleaned = sanitize_for_storage({
+            'variants': [{'label': 'L3', 'price': Decimal('224.95'), 'available': True}],
+        })
+        self.assertEqual(cleaned['variants'][0]['price'], '224.95')
+        # Must be JSON-serializable (Django JSONField path)
+        import json
+        json.dumps(cleaned)
+
     def test_shopify_offer_from_js_payload(self):
         from buying.connectors.shopify import offer_from_shopify_product
 
