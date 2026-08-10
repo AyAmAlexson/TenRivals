@@ -85,13 +85,13 @@ CONNECTOR_READINESS: dict[str, dict] = {
         'tier': 'partial_e2e',
     },
     'midwest-racquet-sports': {
-        'health_ok': 'ok',
-        'search_ok': 'partial',
-        'product_parse_ok': 'partial',
+        'health_ok': 'partial',
+        'search_ok': 'missing',
+        'product_parse_ok': 'missing',
         'variant_parse_ok': 'missing',
         'checkout_context_ok': 'missing',
-        'notes': 'Shopify products.json',
-        'tier': 'search_only',
+        'notes': 'AWS WAF / CloudFront challenge (HTTP 202); manual offer until Playwright/proxy',
+        'tier': 'anti_bot_blocked',
     },
     'holabird-sports': {
         'health_ok': 'ok',

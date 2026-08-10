@@ -16,7 +16,7 @@ from buying.connectors.base import (
     SearchCandidate,
     SupplierConnector,
 )
-from buying.connectors.exceptions import ParsingError, ProductNotFound
+from buying.connectors.exceptions import CaptchaDetected, ParsingError, ProductNotFound, RateLimited
 from buying.connectors.http import ConnectorHttpClient
 from buying.connectors.jsonld import parse_product_json_ld
 from bs4 import BeautifulSoup
@@ -63,6 +63,22 @@ class HtmlJsonLdConnector(SupplierConnector):
                 error_type=None if status == 'available' else 'http_error',
                 error_message='' if status == 'available' else f'HTTP {response.status_code}',
                 metadata={'parser_version': self.parser_version},
+            )
+        except CaptchaDetected as exc:
+            return HealthCheckResult(
+                status='captcha_detected',
+                response_time_ms=int((time.monotonic() - started) * 1000),
+                checked_url=url,
+                error_type='captcha_detected',
+                error_message=str(exc)[:500],
+            )
+        except RateLimited as exc:
+            return HealthCheckResult(
+                status='rate_limited',
+                response_time_ms=int((time.monotonic() - started) * 1000),
+                checked_url=url,
+                error_type='rate_limited',
+                error_message=str(exc)[:500],
             )
         except Exception as exc:
             return HealthCheckResult(

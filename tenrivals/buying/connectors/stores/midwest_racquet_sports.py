@@ -1,4 +1,10 @@
-"""Connector for midwest-racquet-sports (Shopify)."""
+"""Connector for midwest-racquet-sports (Shopify).
+
+Storefront sits behind AWS WAF / CloudFront (`x-amzn-waf-action: challenge`).
+Automated HTTP gets HTTP 202 empty bodies for suggest.json / products.json /
+HTML. ConnectorHttpClient raises CaptchaDetected so runs are not mislabeled
+as search_empty; manual offer entry remains the fallback until browser/proxy.
+"""
 
 from buying.connectors.base import NormalizedProductQuery
 from buying.connectors.generic import HtmlJsonLdConnector
@@ -9,7 +15,7 @@ from buying.connectors.shopify import search_shopify
 @register_connector
 class Connector(HtmlJsonLdConnector):
     code = 'midwest-racquet-sports'
-    parser_version = 'phase3-2'
+    parser_version = 'phase3-3'
     base_url = 'https://www.midwestracquetsports.com/'
     search_path_template = '/search?q={query}'
     default_currency = 'USD'

@@ -22,6 +22,10 @@ DEFAULT_UA = (
 CAPTCHA_PATTERNS = (
     re.compile(r'cf-challenge|cloudflare|attention required|captcha|challenge-platform', re.I),
     re.compile(r'g-recaptcha|hcaptcha|px-captcha', re.I),
+    re.compile(
+        r'awsWafCookieDomainList|gokuProps|AwsWafIntegration|awswaf|x-amzn-waf',
+        re.I,
+    ),
 )
 
 SECRET_KEYS = frozenset({
@@ -62,12 +66,39 @@ def sanitize_for_storage(value: Any, *, depth: int = 0) -> Any:
     return value
 
 
-def detect_block_page(body: str, status_code: int) -> None:
+def detect_block_page(
+    body: str,
+    status_code: int,
+    headers: dict | None = None,
+) -> None:
     if status_code == 429:
         raise RateLimited('HTTP 429 rate limited')
-    if status_code in (403, 503) and body:
-        sample = body[:8000]
+
+    header_map: dict[str, str] = {}
+    if headers:
+        try:
+            header_map = {str(k).lower(): str(v) for k, v in headers.items()}
+        except Exception:
+            header_map = {}
+
+    waf_action = (header_map.get('x-amzn-waf-action') or '').lower()
+    if waf_action == 'challenge':
+        raise CaptchaDetected(
+            f'AWS WAF challenge detected (HTTP {status_code}, x-amzn-waf-action=challenge)'
+        )
+    # CloudFront often returns empty 202 bodies for JSON endpoints behind WAF.
+    server = (header_map.get('server') or '').lower()
+    if status_code == 202 and 'cloudfront' in server:
+        raise CaptchaDetected(f'AWS WAF / CloudFront challenge detected (HTTP {status_code})')
+
+    sample = (body or '')[:8000]
+    if status_code in (202, 403, 503) and sample:
         for pattern in CAPTCHA_PATTERNS:
+            if pattern.search(sample):
+                raise CaptchaDetected(f'Captcha/challenge page detected (HTTP {status_code})')
+    elif sample:
+        # Some WAFs return 200 HTML challenge shells.
+        for pattern in CAPTCHA_PATTERNS[2:]:  # AWS markers only on 200
             if pattern.search(sample):
                 raise CaptchaDetected(f'Captcha/challenge page detected (HTTP {status_code})')
 
@@ -139,7 +170,7 @@ class ConnectorHttpClient:
                 response = self._client.request(method, url, **kwargs)
                 elapsed_ms = int((time.monotonic() - started) * 1000)
                 body = response.text
-                detect_block_page(body, response.status_code)
+                detect_block_page(body, response.status_code, headers=response.headers)
                 response.extensions = getattr(response, 'extensions', {}) or {}
                 # stash timing for health checks
                 response._buying_elapsed_ms = elapsed_ms  # noqa: SLF001

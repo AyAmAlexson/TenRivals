@@ -49,6 +49,8 @@ def parse_products_json(payload: dict | list, *, base_url: str) -> list[SearchCa
 
 def search_shopify(client, *, base_url: str, phrase: str) -> list[SearchCandidate]:
     """Try suggest.json then filter products.json; empty list if both fail."""
+    from buying.connectors.exceptions import CaptchaDetected, ConnectorError, RateLimited
+
     suggest_url = urljoin(base_url.rstrip('/') + '/', 'search/suggest.json')
     try:
         response = client.get(
@@ -60,7 +62,7 @@ def search_shopify(client, *, base_url: str, phrase: str) -> list[SearchCandidat
             },
             headers={'Accept': 'application/json', 'User-Agent': BROWSER_UA},
         )
-        if response.status_code < 400:
+        if response.status_code < 400 and response.content:
             data = response.json()
             resources = (data.get('resources') or {}).get('results') or {}
             products = resources.get('products') or []
@@ -91,6 +93,8 @@ def search_shopify(client, *, base_url: str, phrase: str) -> list[SearchCandidat
                 )
             if out:
                 return out
+    except (CaptchaDetected, RateLimited, ConnectorError):
+        raise
     except Exception:
         pass
 
@@ -101,7 +105,7 @@ def search_shopify(client, *, base_url: str, phrase: str) -> list[SearchCandidat
             params={'limit': 250},
             headers={'Accept': 'application/json', 'User-Agent': BROWSER_UA},
         )
-        if response.status_code >= 400:
+        if response.status_code >= 400 or not response.content:
             return []
         all_products = parse_products_json(response.json(), base_url=base_url)
         tokens = [t for t in phrase.lower().split() if len(t) > 2]
@@ -110,6 +114,8 @@ def search_shopify(client, *, base_url: str, phrase: str) -> list[SearchCandidat
             if all(t in (c.title or '').lower() for t in tokens)
         ]
         return filtered[:20] or []
+    except (CaptchaDetected, RateLimited, ConnectorError):
+        raise
     except Exception:
         return []
 

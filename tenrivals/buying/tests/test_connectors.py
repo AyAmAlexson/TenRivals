@@ -56,6 +56,28 @@ class JsonLdAndSanitizeTests(SimpleTestCase):
         import json
         json.dumps(cleaned)
 
+    def test_detect_aws_waf_challenge_header(self):
+        from buying.connectors.exceptions import CaptchaDetected
+        from buying.connectors.http import detect_block_page
+
+        with self.assertRaises(CaptchaDetected):
+            detect_block_page(
+                '',
+                202,
+                headers={
+                    'server': 'CloudFront',
+                    'x-amzn-waf-action': 'challenge',
+                },
+            )
+
+    def test_detect_aws_waf_challenge_body(self):
+        from buying.connectors.exceptions import CaptchaDetected
+        from buying.connectors.http import detect_block_page
+
+        html = '<script>window.awsWafCookieDomainList = ["midwestracquetsports.com"];</script>'
+        with self.assertRaises(CaptchaDetected):
+            detect_block_page(html, 202, headers={'server': 'CloudFront'})
+
     def test_localize_shopify_handle_compounds(self):
         from buying.connectors.shopify import localize_shopify_handle
 
