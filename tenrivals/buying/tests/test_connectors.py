@@ -56,6 +56,23 @@ class JsonLdAndSanitizeTests(SimpleTestCase):
         import json
         json.dumps(cleaned)
 
+    def test_localize_shopify_handle_compounds(self):
+        from buying.connectors.shopify import localize_shopify_handle
+
+        handles = localize_shopify_handle(
+            'wilson-blade-100-v10-turnierschlaeger-unbesaitet-00707604278000'
+        )
+        self.assertIn(
+            'wilson-blade-100-v10-tour-racket-unstrung-00707604278000',
+            handles,
+        )
+        # Must not mangle testschlaeger → testracket via bare "schlaeger"
+        pro = localize_shopify_handle(
+            'wilson-blade-100-pro-v10-turnierschlaeger-testschlaeger-00707604286800'
+        )
+        self.assertTrue(any('test-racket' in h for h in pro))
+        self.assertFalse(any('testracket' in h for h in pro))
+
     def test_shopify_offer_from_js_payload(self):
         from buying.connectors.shopify import offer_from_shopify_product
 

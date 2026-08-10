@@ -77,11 +77,11 @@ CONNECTOR_READINESS: dict[str, dict] = {
     },
     'tennis-point-com': {
         'health_ok': 'ok',
-        'search_ok': 'partial',
+        'search_ok': 'ok',
         'product_parse_ok': 'ok',
         'variant_parse_ok': 'partial',
         'checkout_context_ok': 'missing',
-        'notes': 'COM suggest often empty — remap DE search hits via handle 301',
+        'notes': 'Primary search via DE twin + handle remap; COM suggest often empty',
         'tier': 'partial_e2e',
     },
     'midwest-racquet-sports': {

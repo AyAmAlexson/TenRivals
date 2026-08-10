@@ -134,11 +134,13 @@ def search_shopify_multi(client, *, base_url: str, phrases: list[str]) -> list[S
 
 
 _DE_HANDLE_REPLACEMENTS = (
+    # Longest / most specific first — bare "schlaeger" must not rewrite
+    # "testschlaeger" into "testracket".
     ('turnierschlaeger', 'tour-racket'),
     ('testschlaeger', 'test-racket'),
-    ('unbesaitet', 'unstrung'),
     ('schlaegertasche', 'racket-bag'),
-    ('schlaeger', 'racket'),
+    ('unbesaitet', 'unstrung'),
+    ('besaitet', 'strung'),
 )
 
 
@@ -200,11 +202,20 @@ def remap_candidates_to_store(
                 )
                 if response.status_code >= 400:
                     continue
-                final_url = str(response.url).split('?')[0]
-                if urlparse(final_url).netloc != target_host:
+                # Soft-404 HTML pages on Shopify still return 200 sometimes —
+                # require a successful product JSON after following redirects.
+                candidate_url = str(response.url).split('?')[0]
+                if urlparse(candidate_url).netloc != target_host:
                     continue
-                if '/products/' not in final_url:
+                if '/products/' not in candidate_url:
                     continue
+                verify = client.get(
+                    candidate_url.rstrip('/') + '.js',
+                    headers={'Accept': 'application/json', 'User-Agent': BROWSER_UA},
+                )
+                if verify.status_code >= 400 or not verify.content:
+                    continue
+                final_url = candidate_url
                 break
             except Exception:
                 continue
