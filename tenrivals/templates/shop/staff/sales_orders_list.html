@@ -226,14 +226,24 @@
 <script>
 (function () {
   var menus = document.querySelectorAll('.order-actions-menu');
+  // Opening <details> near the bottom can cause the table wrap to scroll
+  // (or the browser to scrollIntoView). A capture-phase scroll listener then
+  // closed the menu instantly — looked like "menu never opens" on last rows.
+  var ignoreScrollCloseUntil = 0;
+
   function closeAll(except) {
     menus.forEach(function (d) {
       if (d !== except) {
         d.open = false;
-        var p = d.querySelector('.order-actions-menu__panel');
-        if (p) p.classList.remove('is-floating');
+        resetPanel(d.querySelector('.order-actions-menu__panel'));
       }
     });
+  }
+  function resetPanel(panel) {
+    if (!panel) return;
+    panel.classList.remove('is-floating');
+    panel.style.left = '';
+    panel.style.top = '';
   }
   function placePanel(details) {
     var panel = details.querySelector('.order-actions-menu__panel');
@@ -242,38 +252,30 @@
     panel.classList.add('is-floating');
     var sr = summary.getBoundingClientRect();
     var pw = panel.offsetWidth || 208;
+    var ph = panel.offsetHeight || 160;
     var pad = 8;
     var left = sr.right - pw;
     left = Math.max(pad, Math.min(left, window.innerWidth - pw - pad));
+    // Prefer below the trigger; flip above when there is not enough space.
+    var top = sr.bottom + 4;
+    if (top + ph > window.innerHeight - pad) {
+      top = sr.top - ph - 4;
+    }
+    if (top < pad) top = pad;
     panel.style.left = left + 'px';
-    panel.style.top = (sr.bottom + 4) + 'px';
+    panel.style.top = top + 'px';
   }
   menus.forEach(function (details) {
     details.addEventListener('toggle', function () {
       if (details.open) {
+        ignoreScrollCloseUntil = Date.now() + 400;
         closeAll(details);
-        var panel = details.querySelector('.order-actions-menu__panel');
-        var summary = details.querySelector('summary');
-        if (panel && summary) {
-          panel.classList.add('is-floating');
-          var sr0 = summary.getBoundingClientRect();
-          var pw0 = 208;
-          var pad0 = 8;
-          var left0 = sr0.right - pw0;
-          left0 = Math.max(pad0, Math.min(left0, window.innerWidth - pw0 - pad0));
-          panel.style.left = left0 + 'px';
-          panel.style.top = (sr0.bottom + 4) + 'px';
-        }
+        placePanel(details);
         requestAnimationFrame(function () {
           placePanel(details);
         });
       } else {
-        var p = details.querySelector('.order-actions-menu__panel');
-        if (p) {
-          p.classList.remove('is-floating');
-          p.style.left = '';
-          p.style.top = '';
-        }
+        resetPanel(details.querySelector('.order-actions-menu__panel'));
       }
     });
   });
@@ -349,6 +351,7 @@
     }
   });
   window.addEventListener('scroll', function () {
+    if (Date.now() < ignoreScrollCloseUntil) return;
     closeAll();
   }, true);
   window.addEventListener('resize', function () {
