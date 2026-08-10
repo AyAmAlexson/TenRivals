@@ -226,37 +226,46 @@
 <script>
 (function () {
   var menus = document.querySelectorAll('.order-actions-menu');
-  // Opening <details> near the bottom can cause the table wrap to scroll
-  // (or the browser to scrollIntoView). A capture-phase scroll listener then
-  // closed the menu instantly — looked like "menu never opens" on last rows.
-  var ignoreScrollCloseUntil = 0;
+
+  function panelFor(details) {
+    return details._actionsPanel || details.querySelector('.order-actions-menu__panel');
+  }
 
   function closeAll(except) {
     menus.forEach(function (d) {
-      if (d !== except) {
-        d.open = false;
-        resetPanel(d.querySelector('.order-actions-menu__panel'));
-      }
+      if (d !== except && d.open) d.open = false;
+      if (d !== except) restorePanel(d);
     });
   }
-  function resetPanel(panel) {
+
+  function restorePanel(details) {
+    var panel = panelFor(details);
     if (!panel) return;
     panel.classList.remove('is-floating');
     panel.style.left = '';
     panel.style.top = '';
+    // Move back under <details> so markup stays consistent when closed.
+    if (panel.parentNode !== details) {
+      details.appendChild(panel);
+    }
   }
+
   function placePanel(details) {
-    var panel = details.querySelector('.order-actions-menu__panel');
+    var panel = panelFor(details);
     var summary = details.querySelector('summary');
     if (!panel || !summary) return;
+    details._actionsPanel = panel;
+    // Portal out of .table-wrap — overflow:auto clips fixed descendants in Chromium.
+    if (panel.parentNode !== document.body) {
+      document.body.appendChild(panel);
+    }
     panel.classList.add('is-floating');
     var sr = summary.getBoundingClientRect();
-    var pw = panel.offsetWidth || 208;
-    var ph = panel.offsetHeight || 160;
+    var pw = Math.max(panel.offsetWidth || 0, 208);
+    var ph = Math.max(panel.offsetHeight || 0, 160);
     var pad = 8;
     var left = sr.right - pw;
     left = Math.max(pad, Math.min(left, window.innerWidth - pw - pad));
-    // Prefer below the trigger; flip above when there is not enough space.
     var top = sr.bottom + 4;
     if (top + ph > window.innerHeight - pad) {
       top = sr.top - ph - 4;
@@ -265,35 +274,42 @@
     panel.style.left = left + 'px';
     panel.style.top = top + 'px';
   }
+
   menus.forEach(function (details) {
+    var panel = details.querySelector('.order-actions-menu__panel');
+    if (panel) details._actionsPanel = panel;
+
     details.addEventListener('toggle', function () {
       if (details.open) {
-        ignoreScrollCloseUntil = Date.now() + 400;
         closeAll(details);
         placePanel(details);
         requestAnimationFrame(function () {
-          placePanel(details);
+          if (details.open) placePanel(details);
         });
       } else {
-        resetPanel(details.querySelector('.order-actions-menu__panel'));
+        restorePanel(details);
       }
     });
-  });
-  menus.forEach(function (d) {
-    var panel = d.querySelector('.order-actions-menu__panel');
-    if (panel) {
-      panel.addEventListener('click', function (e) {
+
+    // Prevent summary click from racing with document click-close.
+    var summary = details.querySelector('summary');
+    if (summary) {
+      summary.addEventListener('click', function (e) {
         e.stopPropagation();
       });
     }
   });
+
   document.addEventListener('click', function (e) {
     menus.forEach(function (d) {
       if (!d.open) return;
       if (d.contains(e.target)) return;
+      var panel = panelFor(d);
+      if (panel && panel.contains(e.target)) return;
       d.open = false;
     });
   });
+
   var deleteOverlay = document.getElementById('order-delete-confirm');
   var deleteText = document.getElementById('order-delete-confirm-text');
   var deleteCancel = document.getElementById('order-delete-cancel');
@@ -316,18 +332,20 @@
     deleteOverlay.setAttribute('aria-hidden', 'false');
   }
 
-  document.querySelectorAll('.js-delete-sales-order').forEach(function (btn) {
-    btn.addEventListener('click', function (e) {
-      e.preventDefault();
-      e.stopPropagation();
-      var inv = btn.getAttribute('data-delete-invoice') || 'this order';
-      var fid = btn.getAttribute('data-delete-form');
-      var f = fid ? document.getElementById(fid) : null;
-      if (f && f.tagName === 'FORM') {
-        openDeleteConfirm(f, inv);
-      }
-    });
+  // Bind delete on document — panels may live under body after portal.
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest && e.target.closest('.js-delete-sales-order');
+    if (!btn) return;
+    e.preventDefault();
+    e.stopPropagation();
+    var inv = btn.getAttribute('data-delete-invoice') || 'this order';
+    var fid = btn.getAttribute('data-delete-form');
+    var f = fid ? document.getElementById(fid) : null;
+    if (f && f.tagName === 'FORM') {
+      openDeleteConfirm(f, inv);
+    }
   });
+
   if (deleteCancel) {
     deleteCancel.addEventListener('click', closeDeleteConfirm);
   }
@@ -350,10 +368,10 @@
       closeDeleteConfirm();
     }
   });
+  // Window scroll only (no capture) — table-wrap scroll must not kill the menu.
   window.addEventListener('scroll', function () {
-    if (Date.now() < ignoreScrollCloseUntil) return;
     closeAll();
-  }, true);
+  });
   window.addEventListener('resize', function () {
     menus.forEach(function (d) {
       if (d.open) placePanel(d);
