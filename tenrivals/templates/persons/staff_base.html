@@ -79,6 +79,7 @@
       border-left:1px solid rgba(255,255,255,.1);
       transform:translateX(100%);
       visibility:hidden;
+      pointer-events:none;
       transition:transform .25s ease,visibility .25s;
       flex-direction:column;
     }
@@ -105,7 +106,7 @@
       html.staff-mobile-nav-open .staff-nav-scrim{opacity:1;visibility:visible;pointer-events:auto}
       html.staff-mobile-nav-open{overflow:hidden}
       .staff-nav-drawer{display:flex}
-      html.staff-mobile-nav-open .staff-nav-drawer{transform:translateX(0);visibility:visible}
+      html.staff-mobile-nav-open .staff-nav-drawer{transform:translateX(0);visibility:visible;pointer-events:auto}
       .header-row{flex-wrap:nowrap;align-items:center;gap:12px}
       .header-right{flex:1;min-width:0;justify-content:flex-end;gap:10px;width:auto}
       .staff-site-header .user-menu:hover .user-dropdown{display:none!important}

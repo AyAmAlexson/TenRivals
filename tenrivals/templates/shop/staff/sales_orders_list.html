@@ -16,23 +16,24 @@
     line-height:1.45;
     padding:2px 0;
   }
-  .orders-table .col-actions{white-space:nowrap;width:1%;vertical-align:middle}
+  .orders-table .col-actions{white-space:nowrap;width:1%;vertical-align:middle;position:relative;z-index:1}
   .cogs-light{font-size:10px;margin-right:6px;cursor:help;vertical-align:1px}
+  /* Horizontal scroll without creating a clip box for menus (portal to body anyway). */
+  .orders-page .table-wrap{overflow-x:auto;overflow-y:visible;border:1px solid var(--line)}
   .order-actions-menu{position:relative;display:inline-block;text-align:left}
-  .order-actions-menu > summary{list-style:none;cursor:pointer}
-  .order-actions-menu > summary::-webkit-details-marker{display:none}
-  .order-actions-menu[open] > summary{background:#f9fafb}
+  .order-actions-menu.is-open > .order-actions-menu__trigger{background:#f9fafb}
   .order-actions-menu__panel{
-    position:absolute;right:0;top:calc(100% + 4px);min-width:208px;
-    background:#fff;border:1px solid var(--line);padding:6px 0;z-index:80;
+    display:none;
+    position:fixed;
+    z-index:40000;
+    min-width:208px;
+    background:#fff;
+    border:1px solid var(--line);
+    padding:6px 0;
+    margin:0;
     box-shadow:0 8px 24px rgba(15,23,42,.12);
   }
-  .order-actions-menu__panel.is-floating{
-    position:fixed;
-    z-index:10050;
-    right:auto;
-    margin:0;
-  }
+  .order-actions-menu__panel.is-open{display:block !important}
   .order-actions-menu__link{
     display:block;width:100%;text-align:left;padding:10px 16px;font-size:14px;
     color:var(--ink);text-decoration:none;border:none;background:none;cursor:pointer;font-family:inherit;
@@ -40,6 +41,9 @@
   .order-actions-menu__link:hover{background:#f3f4f6}
   .order-actions-menu__link--accent{font-weight:600;color:var(--accent)}
   .order-actions-menu__link--danger{color:#b91c1c}
+  .orders-table tbody tr:last-child td,
+  .orders-table tbody tr:nth-last-child(2) td,
+  .orders-table tbody tr:nth-last-child(3) td{padding-bottom:14px}
   .orders-table .order-status-form{margin:0}
   .orders-table .order-status-form select{
     max-width:160px;
@@ -74,7 +78,7 @@
   .visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
   .confirm-overlay{
     position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;
-    align-items:center;justify-content:center;z-index:12060;padding:16px;
+    align-items:center;justify-content:center;z-index:50000;padding:16px;
   }
   .confirm-overlay.is-open{display:flex}
   .confirm-modal{
@@ -86,6 +90,7 @@
 </style>
 {% endblock %}
 {% block content %}
+<div class="orders-page">
 <div class="staff-toolbar staff-toolbar--orders">
   <a href="{% url 'administration:staff_sales_order_new' %}" class="btn btn--sm">NEW</a>
   <form method="get" action="{% url 'administration:staff_sales_orders' %}" class="staff-toolbar__search">
@@ -191,15 +196,15 @@
             {% empty %}—{% endfor %}
           </td>
           <td class="col-actions">
-            <details class="order-actions-menu">
-              <summary class="icon-btn order-actions-menu__trigger" title="Actions" aria-label="Order actions">⋮</summary>
-              <div class="order-actions-menu__panel">
-                <a href="{% url 'administration:staff_sales_order_invoice' o.pk %}" class="order-actions-menu__link">View invoice</a>
-                <a href="{% url 'administration:staff_sales_order_invoice' o.pk %}?print=1" class="order-actions-menu__link order-actions-menu__link--accent" target="_blank" rel="noopener">Print / Save as PDF</a>
-                <a href="{% url 'administration:staff_sales_order_edit' o.pk %}" class="order-actions-menu__link">Edit</a>
-                <button type="button" class="order-actions-menu__link order-actions-menu__link--danger js-delete-sales-order" data-delete-form="delete-order-{{ o.pk }}" data-delete-invoice="{{ o.invoice_number|escape }}">Delete</button>
+            <div class="order-actions-menu">
+              <button type="button" class="icon-btn order-actions-menu__trigger" title="Actions" aria-label="Order actions" aria-haspopup="menu" aria-expanded="false">⋮</button>
+              <div class="order-actions-menu__panel" role="menu" hidden>
+                <a href="{% url 'administration:staff_sales_order_invoice' o.pk %}" class="order-actions-menu__link" role="menuitem">View invoice</a>
+                <a href="{% url 'administration:staff_sales_order_invoice' o.pk %}?print=1" class="order-actions-menu__link order-actions-menu__link--accent" role="menuitem" target="_blank" rel="noopener">Print / Save as PDF</a>
+                <a href="{% url 'administration:staff_sales_order_edit' o.pk %}" class="order-actions-menu__link" role="menuitem">Edit</a>
+                <button type="button" class="order-actions-menu__link order-actions-menu__link--danger js-delete-sales-order" role="menuitem" data-delete-form="delete-order-{{ o.pk }}" data-delete-invoice="{{ o.invoice_number|escape }}">Delete</button>
               </div>
-            </details>
+            </div>
           </td>
         </tr>
         {% empty %}
@@ -211,6 +216,7 @@
   {% for o in orders %}
   <form id="delete-order-{{ o.pk }}" method="post" action="{% url 'administration:staff_sales_order_delete' o.pk %}" class="visually-hidden" aria-hidden="true">{% csrf_token %}</form>
   {% endfor %}
+</div>
 </div>
 <div class="confirm-overlay" id="order-delete-confirm" aria-hidden="true">
   <div class="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="order-delete-confirm-title">
@@ -225,89 +231,87 @@
 <style>.num{text-align:right}</style>
 <script>
 (function () {
-  var menus = document.querySelectorAll('.order-actions-menu');
+  var openMenu = null;
+  var openPanel = null;
+  var openTrigger = null;
 
-  function panelFor(details) {
-    return details._actionsPanel || details.querySelector('.order-actions-menu__panel');
-  }
-
-  function closeAll(except) {
-    menus.forEach(function (d) {
-      if (d !== except && d.open) d.open = false;
-      if (d !== except) restorePanel(d);
-    });
-  }
-
-  function restorePanel(details) {
-    var panel = panelFor(details);
-    if (!panel) return;
-    panel.classList.remove('is-floating');
-    panel.style.left = '';
-    panel.style.top = '';
-    // Move back under <details> so markup stays consistent when closed.
-    if (panel.parentNode !== details) {
-      details.appendChild(panel);
+  function closeMenu() {
+    if (openPanel) {
+      openPanel.classList.remove('is-open');
+      openPanel.setAttribute('hidden', '');
+      openPanel.style.left = '';
+      openPanel.style.top = '';
+      if (openMenu && openPanel.parentNode !== openMenu) {
+        openMenu.appendChild(openPanel);
+      }
     }
+    if (openMenu) openMenu.classList.remove('is-open');
+    if (openTrigger) openTrigger.setAttribute('aria-expanded', 'false');
+    openMenu = null;
+    openPanel = null;
+    openTrigger = null;
   }
 
-  function placePanel(details) {
-    var panel = panelFor(details);
-    var summary = details.querySelector('summary');
-    if (!panel || !summary) return;
-    details._actionsPanel = panel;
-    // Portal out of .table-wrap — overflow:auto clips fixed descendants in Chromium.
-    if (panel.parentNode !== document.body) {
-      document.body.appendChild(panel);
-    }
-    panel.classList.add('is-floating');
-    var sr = summary.getBoundingClientRect();
+  function positionPanel(trigger, panel) {
+    var sr = trigger.getBoundingClientRect();
     var pw = Math.max(panel.offsetWidth || 0, 208);
-    var ph = Math.max(panel.offsetHeight || 0, 160);
+    var ph = Math.max(panel.offsetHeight || 0, 168);
     var pad = 8;
     var left = sr.right - pw;
     left = Math.max(pad, Math.min(left, window.innerWidth - pw - pad));
     var top = sr.bottom + 4;
     if (top + ph > window.innerHeight - pad) {
-      top = sr.top - ph - 4;
+      top = Math.max(pad, sr.top - ph - 4);
     }
-    if (top < pad) top = pad;
     panel.style.left = left + 'px';
     panel.style.top = top + 'px';
   }
 
-  menus.forEach(function (details) {
-    var panel = details.querySelector('.order-actions-menu__panel');
-    if (panel) details._actionsPanel = panel;
-
-    details.addEventListener('toggle', function () {
-      if (details.open) {
-        closeAll(details);
-        placePanel(details);
-        requestAnimationFrame(function () {
-          if (details.open) placePanel(details);
-        });
-      } else {
-        restorePanel(details);
-      }
-    });
-
-    // Prevent summary click from racing with document click-close.
-    var summary = details.querySelector('summary');
-    if (summary) {
-      summary.addEventListener('click', function (e) {
-        e.stopPropagation();
-      });
+  function openFromTrigger(trigger) {
+    var menu = trigger.closest('.order-actions-menu');
+    var panel = menu && menu.querySelector('.order-actions-menu__panel');
+    if (!menu || !panel) return;
+    if (openTrigger === trigger) {
+      closeMenu();
+      return;
     }
-  });
+    closeMenu();
+    openMenu = menu;
+    openPanel = panel;
+    openTrigger = trigger;
+    document.body.appendChild(panel);
+    panel.removeAttribute('hidden');
+    panel.classList.add('is-open');
+    menu.classList.add('is-open');
+    trigger.setAttribute('aria-expanded', 'true');
+    positionPanel(trigger, panel);
+    requestAnimationFrame(function () {
+      if (openPanel === panel) positionPanel(trigger, panel);
+    });
+  }
 
   document.addEventListener('click', function (e) {
-    menus.forEach(function (d) {
-      if (!d.open) return;
-      if (d.contains(e.target)) return;
-      var panel = panelFor(d);
-      if (panel && panel.contains(e.target)) return;
-      d.open = false;
-    });
+    var trigger = e.target.closest && e.target.closest('.order-actions-menu__trigger');
+    if (trigger) {
+      e.preventDefault();
+      e.stopPropagation();
+      openFromTrigger(trigger);
+      return;
+    }
+    var del = e.target.closest && e.target.closest('.js-delete-sales-order');
+    if (del) {
+      e.preventDefault();
+      e.stopPropagation();
+      var inv = del.getAttribute('data-delete-invoice') || 'this order';
+      var fid = del.getAttribute('data-delete-form');
+      var f = fid ? document.getElementById(fid) : null;
+      if (f && f.tagName === 'FORM') openDeleteConfirm(f, inv);
+      closeMenu();
+      return;
+    }
+    if (openPanel && openPanel.contains(e.target)) return;
+    if (openTrigger && (openTrigger === e.target || openTrigger.contains(e.target))) return;
+    closeMenu();
   });
 
   var deleteOverlay = document.getElementById('order-delete-confirm');
@@ -332,23 +336,7 @@
     deleteOverlay.setAttribute('aria-hidden', 'false');
   }
 
-  // Bind delete on document — panels may live under body after portal.
-  document.addEventListener('click', function (e) {
-    var btn = e.target.closest && e.target.closest('.js-delete-sales-order');
-    if (!btn) return;
-    e.preventDefault();
-    e.stopPropagation();
-    var inv = btn.getAttribute('data-delete-invoice') || 'this order';
-    var fid = btn.getAttribute('data-delete-form');
-    var f = fid ? document.getElementById(fid) : null;
-    if (f && f.tagName === 'FORM') {
-      openDeleteConfirm(f, inv);
-    }
-  });
-
-  if (deleteCancel) {
-    deleteCancel.addEventListener('click', closeDeleteConfirm);
-  }
+  if (deleteCancel) deleteCancel.addEventListener('click', closeDeleteConfirm);
   if (deleteOverlay) {
     deleteOverlay.addEventListener('click', function (e) {
       if (e.target === deleteOverlay) closeDeleteConfirm();
@@ -364,19 +352,11 @@
   }
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape') {
-      closeAll();
+      closeMenu();
       closeDeleteConfirm();
     }
   });
-  // Window scroll only (no capture) — table-wrap scroll must not kill the menu.
-  window.addEventListener('scroll', function () {
-    closeAll();
-  });
-  window.addEventListener('resize', function () {
-    menus.forEach(function (d) {
-      if (d.open) placePanel(d);
-    });
-  });
+  window.addEventListener('resize', closeMenu);
 })();
 </script>
 {% endblock %}
