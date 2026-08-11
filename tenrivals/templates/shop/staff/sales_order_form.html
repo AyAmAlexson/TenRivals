@@ -146,9 +146,9 @@
             {{ f.landed_cost_gel.errors }}{{ f.landed_cost_gel }}
           </label>
           <div class="sales-line-totals" aria-label="Line totals">
-            <div><span class="sales-line-field__label">Gross</span><span class="mono line-gross">—</span></div>
-            <div><span class="sales-line-field__label">VAT</span><span class="mono line-vat">—</span></div>
-            <div><span class="sales-line-field__label">Net</span><span class="mono line-net">—</span></div>
+            <span><span class="sales-line-field__label">Gross</span> <span class="mono line-gross">—</span></span>
+            <span><span class="sales-line-field__label">VAT</span> <span class="mono line-vat">—</span></span>
+            <span><span class="sales-line-field__label">Net</span> <span class="mono line-net">—</span></span>
           </div>
         </div>
       </div>
@@ -254,9 +254,9 @@
       {{ f.landed_cost_gel }}
     </label>
     <div class="sales-line-totals" aria-label="Line totals">
-      <div><span class="sales-line-field__label">Gross</span><span class="mono line-gross">—</span></div>
-      <div><span class="sales-line-field__label">VAT</span><span class="mono line-vat">—</span></div>
-      <div><span class="sales-line-field__label">Net</span><span class="mono line-net">—</span></div>
+      <span><span class="sales-line-field__label">Gross</span> <span class="mono line-gross">—</span></span>
+      <span><span class="sales-line-field__label">VAT</span> <span class="mono line-vat">—</span></span>
+      <span><span class="sales-line-field__label">Net</span> <span class="mono line-net">—</span></span>
     </div>
   </div>
   {% endwith %}
@@ -265,78 +265,81 @@
 
 <style>
   .num{text-align:right}
-  .sales-lines{display:flex;flex-direction:column;gap:14px;margin-bottom:16px}
+  .sales-lines{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
   .sales-line-card{
     border:1px solid var(--line);
     background:#fff;
-    padding:14px 16px 16px;
+    padding:8px 10px;
     display:flex;
     flex-direction:column;
-    gap:12px;
+    gap:6px;
   }
-  .sales-line-card__errors{background:#fef2f2;padding:8px 10px;margin:0}
+  .sales-line-card__errors{background:#fef2f2;padding:6px 8px;margin:0;font-size:12px}
   .sales-line-card__head{
-    display:flex;flex-wrap:wrap;align-items:center;gap:12px 18px;
-    padding-bottom:10px;border-bottom:1px solid var(--line);
+    display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;
+    min-height:28px;
   }
   .sales-line-card__index{
-    font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
-    margin-right:auto;
+    font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);
+    margin-right:4px;
   }
   .sales-line-check{
-    display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;cursor:pointer;user-select:none;
+    display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;cursor:pointer;user-select:none;
   }
   .sales-line-check--remove{color:#b91c1c;margin-left:auto}
   .sales-line-card__product{
     display:grid;
-    grid-template-columns:minmax(0,1fr) minmax(140px,180px) minmax(120px,160px);
-    gap:12px;
+    grid-template-columns:minmax(0,1fr) minmax(120px,150px) minmax(100px,130px);
+    gap:6px 8px;
     align-items:end;
   }
   .sales-line-card__money{
     display:grid;
-    grid-template-columns:88px minmax(110px,1fr) 88px minmax(100px,1fr) minmax(200px,auto);
-    gap:12px;
+    grid-template-columns:72px minmax(96px,1fr) 72px minmax(90px,1fr) minmax(220px,auto);
+    gap:6px 8px;
     align-items:end;
   }
-  .sales-line-field{display:flex;flex-direction:column;gap:5px;min-width:0;margin:0}
+  .sales-line-field{display:flex;flex-direction:column;gap:2px;min-width:0;margin:0}
   .sales-line-field__label{
-    font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.02em;text-transform:none;
+    font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.02em;text-transform:none;line-height:1.2;
   }
-  .sales-line-field--channel{min-width:140px}
+  .sales-line-field--channel{min-width:120px;flex-direction:row;align-items:center;gap:6px}
+  .sales-line-field--channel .sales-line-field__label{white-space:nowrap}
   .sales-line-totals{
-    display:grid;grid-template-columns:repeat(3,minmax(64px,1fr));gap:8px;
-    padding:8px 10px;background:#f9fafb;border:1px solid var(--line);align-self:stretch;
+    display:flex;flex-wrap:wrap;align-items:baseline;justify-content:flex-end;gap:10px 14px;
+    padding:4px 8px;background:#f9fafb;border:1px solid var(--line);align-self:stretch;
+    font-size:12px;
   }
-  .sales-line-totals > div{display:flex;flex-direction:column;gap:2px;min-width:0}
-  .sales-line-totals .mono{font-size:13px;font-weight:700}
+  .sales-line-totals > span{display:inline-flex;align-items:baseline;gap:4px;white-space:nowrap}
+  .sales-line-totals .mono{font-size:12px;font-weight:700}
   .sales-line-card input,
   .sales-line-card select{
-    width:100%;min-width:0;font-size:13px;padding:8px 10px;border:1px solid var(--line);font-family:inherit;background:#fff;
+    width:100%;min-width:0;font-size:12px;padding:5px 7px;border:1px solid var(--line);font-family:inherit;background:#fff;line-height:1.25;
   }
   .sales-line-card select[name$="-product"]{
     width:100%;
     max-width:100%;
     text-overflow:ellipsis;
   }
-  .sales-line-card input[type="checkbox"]{width:16px;height:16px;min-width:16px;padding:0;accent-color:var(--accent)}
+  .sales-line-card input[type="checkbox"]{width:14px;height:14px;min-width:14px;padding:0;accent-color:var(--accent)}
   .sales-line-card input.sales-line-custom{display:none}
   .sales-line-card select.sales-line-type{display:none}
   .sales-line-card select.sales-line-variant:disabled{opacity:.45;background:#f3f4f6}
   .sales-line-field--qty input,
-  .sales-line-field--disc input{text-align:right}
+  .sales-line-field--disc input,
   .sales-line-field--unit input,
   .sales-line-field--cost input{text-align:right}
   @media(max-width:1100px){
     .sales-line-card__product{grid-template-columns:1fr 1fr}
     .sales-line-field--product{grid-column:1 / -1}
     .sales-line-card__money{grid-template-columns:1fr 1fr 1fr 1fr}
-    .sales-line-totals{grid-column:1 / -1}
+    .sales-line-totals{grid-column:1 / -1;justify-content:flex-start}
   }
   @media(max-width:640px){
     .sales-line-card__product,
     .sales-line-card__money{grid-template-columns:1fr}
     .sales-line-check--remove{margin-left:0}
+    .sales-line-field--channel{flex-direction:column;align-items:stretch}
   }
   .sales-line-card.is-marked-remove{opacity:.45;background:#fafafa}
   .order-services-wrap table input{width:100%;box-sizing:border-box;font-size:13px;padding:6px 8px;border:1px solid var(--line);font-family:inherit}
