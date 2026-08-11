@@ -228,6 +228,7 @@ class SalesOrderLineForm(forms.ModelForm):
             'sale_channel',
         ]
         widgets = {
+            'product': forms.Select(attrs={'class': 'sales-line-product'}),
             'custom_label': forms.TextInput(
                 attrs={
                     'class': 'sales-line-custom',
@@ -249,6 +250,25 @@ class SalesOrderLineForm(forms.ModelForm):
                 }
             ),
             'sale_channel': forms.Select(attrs={'class': 'sales-line-channel'}),
+            'quantity': forms.NumberInput(
+                attrs={'class': 'sales-line-qty', 'min': '1', 'step': '1'}
+            ),
+            'unit_price_gross': forms.NumberInput(
+                attrs={
+                    'class': 'sales-line-unit',
+                    'step': '0.01',
+                    'min': '0',
+                    'inputmode': 'decimal',
+                }
+            ),
+            'discount_percent': forms.NumberInput(
+                attrs={
+                    'class': 'sales-line-disc',
+                    'step': '0.01',
+                    'min': '0',
+                    'inputmode': 'decimal',
+                }
+            ),
         }
 
     def __init__(self, *args, **kwargs):

@@ -94,50 +94,65 @@
       <input type="search" id="id_product_filter_lines" placeholder="Type to filter dropdown options…" autocomplete="off" style="width:100%;padding:9px 12px;border:1px solid var(--line);font-family:inherit;font-size:14px">
     </div>
     {{ formset.management_form }}
-    <div class="table-wrap" style="margin-bottom:16px">
-      <table id="lines-table" style="min-width:900px">
-        <thead>
-          <tr>
-            <th title="Ticked: pick a product from stock (checked and reserved). Unticked: free-text item, no stock effect.">In stock</th>
-            <th title="Analytics tag: sold from shelf or as preorder (independent of warehouse checkbox)">Channel</th>
-            <th>Product</th>
-            <th title="Required on free-text lines. For stock lines, taken from the catalog product.">Category</th>
-            <th>Size / grip</th>
-            <th class="num">Qty</th>
-            <th class="num">Unit (₾ gross)</th>
-            <th class="num">Disc %</th>
-            <th class="num" title="Per-unit landed cost (staff-only, frozen on save; never shown to the customer)">Cost ₾</th>
-            <th class="num">Line gross</th>
-            <th class="num">VAT</th>
-            <th class="num">Net</th>
-            <th title="Remove this line when you save the order">Remove</th>
-          </tr>
-        </thead>
-        <tbody id="lines-tbody">
-          {% for f in formset %}
-          <tr class="line-row" data-form-index="{{ forloop.counter0 }}">
-            {% for hidden in f.hidden_fields %}{{ hidden }}{% endfor %}
-            {% if f.non_field_errors %}
-            <td colspan="13" class="field-errors" style="background:#fef2f2">{{ f.non_field_errors }}</td>
-            </tr><tr class="line-row" data-form-index="{{ forloop.counter0 }}">
-            {% endif %}
-            <td style="text-align:center">{{ f.from_stock }}</td>
-            <td>{{ f.sale_channel.errors }}{{ f.sale_channel }}</td>
-            <td>{{ f.product.errors }}{{ f.custom_label.errors }}{{ f.product }}{{ f.custom_label }}</td>
-            <td>{{ f.product_type.errors }}{{ f.product_type }}</td>
-            <td>{{ f.variant_label.errors }}{{ f.variant_label }}</td>
-            <td class="num">{{ f.quantity.errors }}{{ f.quantity }}</td>
-            <td class="num">{{ f.unit_price_gross.errors }}{{ f.unit_price_gross }}</td>
-            <td class="num">{{ f.discount_percent.errors }}{{ f.discount_percent }}</td>
-            <td class="num">{{ f.landed_cost_gel.errors }}{{ f.landed_cost_gel }}</td>
-            <td class="num line-gross mono">—</td>
-            <td class="num line-vat mono">—</td>
-            <td class="num line-net mono">—</td>
-            <td style="text-align:center">{% if f.DELETE %}{{ f.DELETE }}{% endif %}</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+    <div id="lines-tbody" class="sales-lines">
+      {% for f in formset %}
+      <div class="line-row sales-line-card" data-form-index="{{ forloop.counter0 }}">
+        {% for hidden in f.hidden_fields %}{{ hidden }}{% endfor %}
+        {% if f.non_field_errors %}
+        <div class="field-errors sales-line-card__errors">{{ f.non_field_errors }}</div>
+        {% endif %}
+        <div class="sales-line-card__head">
+          <span class="sales-line-card__index">Line {{ forloop.counter }}</span>
+          <label class="sales-line-check" title="Ticked: pick a product from stock. Unticked: free-text item, no stock effect.">
+            {{ f.from_stock }} <span>In stock</span>
+          </label>
+          <label class="sales-line-field sales-line-field--channel">
+            <span class="sales-line-field__label" title="Analytics tag only">Channel</span>
+            {{ f.sale_channel.errors }}{{ f.sale_channel }}
+          </label>
+          <label class="sales-line-check sales-line-check--remove" title="Remove this line when you save the order">
+            {% if f.DELETE %}{{ f.DELETE }} <span>Remove</span>{% endif %}
+          </label>
+        </div>
+        <div class="sales-line-card__product">
+          <label class="sales-line-field sales-line-field--product">
+            <span class="sales-line-field__label">Product / item</span>
+            {{ f.product.errors }}{{ f.custom_label.errors }}{{ f.product }}{{ f.custom_label }}
+          </label>
+          <label class="sales-line-field sales-line-field--type">
+            <span class="sales-line-field__label" title="Required on free-text lines">Category</span>
+            {{ f.product_type.errors }}{{ f.product_type }}
+          </label>
+          <label class="sales-line-field sales-line-field--variant">
+            <span class="sales-line-field__label">Size / grip</span>
+            {{ f.variant_label.errors }}{{ f.variant_label }}
+          </label>
+        </div>
+        <div class="sales-line-card__money">
+          <label class="sales-line-field sales-line-field--qty">
+            <span class="sales-line-field__label">Qty</span>
+            {{ f.quantity.errors }}{{ f.quantity }}
+          </label>
+          <label class="sales-line-field sales-line-field--unit">
+            <span class="sales-line-field__label">Unit (₾ gross)</span>
+            {{ f.unit_price_gross.errors }}{{ f.unit_price_gross }}
+          </label>
+          <label class="sales-line-field sales-line-field--disc">
+            <span class="sales-line-field__label">Disc %</span>
+            {{ f.discount_percent.errors }}{{ f.discount_percent }}
+          </label>
+          <label class="sales-line-field sales-line-field--cost">
+            <span class="sales-line-field__label" title="Per-unit landed cost (staff-only)">Cost ₾</span>
+            {{ f.landed_cost_gel.errors }}{{ f.landed_cost_gel }}
+          </label>
+          <div class="sales-line-totals" aria-label="Line totals">
+            <div><span class="sales-line-field__label">Gross</span><span class="mono line-gross">—</span></div>
+            <div><span class="sales-line-field__label">VAT</span><span class="mono line-vat">—</span></div>
+            <div><span class="sales-line-field__label">Net</span><span class="mono line-net">—</span></div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
     </div>
     <button type="button" class="btn btn--sm btn--outline" id="btn-add-line" style="margin-bottom:20px">+ Add line</button>
 
@@ -190,35 +205,140 @@
   </form>
 </div>
 
-<table style="display:none"><tbody id="empty-line-template">
-<tr class="line-row">
+<div id="empty-line-template" hidden>
+<div class="line-row sales-line-card">
   {% with f=formset.empty_form %}
   {% for hidden in f.hidden_fields %}{{ hidden }}{% endfor %}
-  <td style="text-align:center">{{ f.from_stock }}</td>
-  <td>{{ f.sale_channel }}</td>
-  <td>{{ f.product }}{{ f.custom_label }}</td>
-  <td>{{ f.product_type }}</td>
-  <td>{{ f.variant_label }}</td>
-  <td class="num">{{ f.quantity }}</td>
-  <td class="num">{{ f.unit_price_gross }}</td>
-  <td class="num">{{ f.discount_percent }}</td>
-  <td class="num">{{ f.landed_cost_gel }}</td>
-  <td class="num line-gross mono">—</td>
-  <td class="num line-vat mono">—</td>
-  <td class="num line-net mono">—</td>
-  <td style="text-align:center">{{ f.DELETE }}</td>
+  <div class="sales-line-card__head">
+    <span class="sales-line-card__index">Line</span>
+    <label class="sales-line-check" title="Ticked: pick a product from stock. Unticked: free-text item, no stock effect.">
+      {{ f.from_stock }} <span>In stock</span>
+    </label>
+    <label class="sales-line-field sales-line-field--channel">
+      <span class="sales-line-field__label" title="Analytics tag only">Channel</span>
+      {{ f.sale_channel }}
+    </label>
+    <label class="sales-line-check sales-line-check--remove" title="Remove this line when you save the order">
+      {{ f.DELETE }} <span>Remove</span>
+    </label>
+  </div>
+  <div class="sales-line-card__product">
+    <label class="sales-line-field sales-line-field--product">
+      <span class="sales-line-field__label">Product / item</span>
+      {{ f.product }}{{ f.custom_label }}
+    </label>
+    <label class="sales-line-field sales-line-field--type">
+      <span class="sales-line-field__label" title="Required on free-text lines">Category</span>
+      {{ f.product_type }}
+    </label>
+    <label class="sales-line-field sales-line-field--variant">
+      <span class="sales-line-field__label">Size / grip</span>
+      {{ f.variant_label }}
+    </label>
+  </div>
+  <div class="sales-line-card__money">
+    <label class="sales-line-field sales-line-field--qty">
+      <span class="sales-line-field__label">Qty</span>
+      {{ f.quantity }}
+    </label>
+    <label class="sales-line-field sales-line-field--unit">
+      <span class="sales-line-field__label">Unit (₾ gross)</span>
+      {{ f.unit_price_gross }}
+    </label>
+    <label class="sales-line-field sales-line-field--disc">
+      <span class="sales-line-field__label">Disc %</span>
+      {{ f.discount_percent }}
+    </label>
+    <label class="sales-line-field sales-line-field--cost">
+      <span class="sales-line-field__label" title="Per-unit landed cost (staff-only)">Cost ₾</span>
+      {{ f.landed_cost_gel }}
+    </label>
+    <div class="sales-line-totals" aria-label="Line totals">
+      <div><span class="sales-line-field__label">Gross</span><span class="mono line-gross">—</span></div>
+      <div><span class="sales-line-field__label">VAT</span><span class="mono line-vat">—</span></div>
+      <div><span class="sales-line-field__label">Net</span><span class="mono line-net">—</span></div>
+    </div>
+  </div>
   {% endwith %}
-</tr>
-</tbody></table>
+</div>
+</div>
 
 <style>
   .num{text-align:right}
-  #lines-table input,#lines-table select{width:100%;min-width:0;font-size:13px;padding:6px 8px;border:1px solid var(--line);font-family:inherit}
-  #lines-table select[name$="-product"]{min-width:280px}
-  #lines-table input[type="checkbox"]{width:auto!important;min-width:auto}
-  #lines-table input.sales-line-custom{display:none;min-width:280px}
-  #lines-table select.sales-line-type{display:none;min-width:140px}
-  #lines-table select.sales-line-variant:disabled{opacity:.45;background:#f3f4f6}
+  .sales-lines{display:flex;flex-direction:column;gap:14px;margin-bottom:16px}
+  .sales-line-card{
+    border:1px solid var(--line);
+    background:#fff;
+    padding:14px 16px 16px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  .sales-line-card__errors{background:#fef2f2;padding:8px 10px;margin:0}
+  .sales-line-card__head{
+    display:flex;flex-wrap:wrap;align-items:center;gap:12px 18px;
+    padding-bottom:10px;border-bottom:1px solid var(--line);
+  }
+  .sales-line-card__index{
+    font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
+    margin-right:auto;
+  }
+  .sales-line-check{
+    display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;cursor:pointer;user-select:none;
+  }
+  .sales-line-check--remove{color:#b91c1c;margin-left:auto}
+  .sales-line-card__product{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) minmax(140px,180px) minmax(120px,160px);
+    gap:12px;
+    align-items:end;
+  }
+  .sales-line-card__money{
+    display:grid;
+    grid-template-columns:88px minmax(110px,1fr) 88px minmax(100px,1fr) minmax(200px,auto);
+    gap:12px;
+    align-items:end;
+  }
+  .sales-line-field{display:flex;flex-direction:column;gap:5px;min-width:0;margin:0}
+  .sales-line-field__label{
+    font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.02em;text-transform:none;
+  }
+  .sales-line-field--channel{min-width:140px}
+  .sales-line-totals{
+    display:grid;grid-template-columns:repeat(3,minmax(64px,1fr));gap:8px;
+    padding:8px 10px;background:#f9fafb;border:1px solid var(--line);align-self:stretch;
+  }
+  .sales-line-totals > div{display:flex;flex-direction:column;gap:2px;min-width:0}
+  .sales-line-totals .mono{font-size:13px;font-weight:700}
+  .sales-line-card input,
+  .sales-line-card select{
+    width:100%;min-width:0;font-size:13px;padding:8px 10px;border:1px solid var(--line);font-family:inherit;background:#fff;
+  }
+  .sales-line-card select[name$="-product"]{
+    width:100%;
+    max-width:100%;
+    text-overflow:ellipsis;
+  }
+  .sales-line-card input[type="checkbox"]{width:16px;height:16px;min-width:16px;padding:0;accent-color:var(--accent)}
+  .sales-line-card input.sales-line-custom{display:none}
+  .sales-line-card select.sales-line-type{display:none}
+  .sales-line-card select.sales-line-variant:disabled{opacity:.45;background:#f3f4f6}
+  .sales-line-field--qty input,
+  .sales-line-field--disc input{text-align:right}
+  .sales-line-field--unit input,
+  .sales-line-field--cost input{text-align:right}
+  @media(max-width:1100px){
+    .sales-line-card__product{grid-template-columns:1fr 1fr}
+    .sales-line-field--product{grid-column:1 / -1}
+    .sales-line-card__money{grid-template-columns:1fr 1fr 1fr 1fr}
+    .sales-line-totals{grid-column:1 / -1}
+  }
+  @media(max-width:640px){
+    .sales-line-card__product,
+    .sales-line-card__money{grid-template-columns:1fr}
+    .sales-line-check--remove{margin-left:0}
+  }
+  .sales-line-card.is-marked-remove{opacity:.45;background:#fafafa}
   .order-services-wrap table input{width:100%;box-sizing:border-box;font-size:13px;padding:6px 8px;border:1px solid var(--line);font-family:inherit}
 </style>
 <script>
@@ -256,6 +376,12 @@
   function isFromStock(row){
     const cb = row.querySelector('input[name$="-from_stock"]');
     return !cb || cb.checked;
+  }
+  function renumberLines(){
+    tbody.querySelectorAll('.line-row').forEach(function(row, i){
+      const idx = row.querySelector('.sales-line-card__index');
+      if(idx) idx.textContent = 'Line ' + (i + 1);
+    });
   }
   function syncStockMode(row){
     const stock = isFromStock(row);
@@ -343,7 +469,11 @@
       const r = lineCalc(row);
       if(r) sumG += r.gross;
       const del = row.querySelector('input[name$="-DELETE"]');
-      if(del && del.checked) return;
+      if(del && del.checked){
+        row.classList.add('is-marked-remove');
+        return;
+      }
+      row.classList.remove('is-marked-remove');
       const cRaw = row.querySelector('input[name$="-landed_cost_gel"]');
       const q = parseNum(row.querySelector('input[name$="-quantity"]') && row.querySelector('input[name$="-quantity"]').value);
       if(cRaw && cRaw.value !== '' && q > 0) sumLanded += q * parseNum(cRaw.value);
@@ -454,12 +584,13 @@
     recalcRow(row);
   }
   tbody.querySelectorAll('.line-row').forEach(bindRow);
+  renumberLines();
   const filterInp = document.getElementById('id_product_filter_lines');
   if(filterInp) filterInp.addEventListener('input', applyProductFilter);
 
   document.getElementById('btn-add-line').addEventListener('click', function(){
     const idx = parseInt(totalInput.value, 10);
-    const tmpl = document.getElementById('empty-line-template').querySelector('tr');
+    const tmpl = document.getElementById('empty-line-template').querySelector('.line-row');
     const clone = tmpl.cloneNode(true);
     clone.querySelectorAll('[name]').forEach(function(el){
       el.name = (el.name||'').replace('__prefix__', String(idx));
@@ -472,6 +603,7 @@
     tbody.appendChild(clone);
     totalInput.value = String(idx+1);
     bindRow(clone);
+    renumberLines();
     recalcTotals();
   });
 
