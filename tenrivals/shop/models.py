@@ -1521,12 +1521,14 @@ class SalesOrderLine(models.Model):
         return f'{self.display_title()} ×{self.quantity}'
 
     def staff_order_item_summary(self) -> str:
-        """One line for orders list: qty× brand model + color (+ variant)."""
+        """One line for orders list: channel emoji + qty× brand model (+ variant)."""
         base = self.display_title()
         v = (self.variant_label or '').strip()
         if v:
             base = f'{base} ({v})'
-        return f'{self.quantity}× {base}'
+        # Channel analytics tag: shop = shelf stock, package = preorder.
+        icon = '📦' if self.sale_channel == self.SaleChannel.PREORDER else '🏪'
+        return f'{icon} {self.quantity}× {base}'
 
     def invoice_display_label(self) -> str:
         """Line text for PDF / invoice table."""
