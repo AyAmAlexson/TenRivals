@@ -50,7 +50,7 @@
       minmax(148px, 0.95fr)
       40px;
     gap:10px 14px;
-    align-items:center;
+    align-items:start;
     padding:10px 14px;
   }
   .orders-list__head{
@@ -94,7 +94,19 @@
     font-size:12px;line-height:1.35;color:var(--ink);
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   }
-  .order-items__more{font-size:11px;color:var(--muted)}
+  .order-items__line--with-more{
+    display:flex;align-items:baseline;gap:6px;overflow:visible;white-space:normal;
+  }
+  .order-items__text{
+    min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  .order-items__more{
+    flex-shrink:0;border:0;background:none;padding:0;margin:0;
+    font:inherit;font-size:11px;font-weight:600;color:var(--accent);
+    cursor:pointer;white-space:nowrap;line-height:1.35;
+  }
+  .order-items__more:hover{text-decoration:underline}
+  .order-items:not(.is-expanded) .order-items__extra{display:none}
 
   .order-totals{display:flex;flex-direction:column;gap:2px;align-items:flex-end;text-align:right}
   .order-totals__row{
@@ -214,13 +226,13 @@
     {% for o in orders %}
     <div class="orders-list__row" role="row">
       <div class="order-cell" role="cell">
-        <div class="order-cell__meta">{{ o.order_date|date:"Y-m-d" }}</div>
         <div class="order-cell__main order-cell__main--invoice">
           {% with cs=o.cogs_fill_status %}
           <span class="cogs-light" title="{% if cs == 'green' %}Landed cost filled for all lines{% elif cs == 'yellow' %}Landed cost missing in some lines{% else %}Landed cost not filled for any line{% endif %}">{% if cs == 'green' %}&#128994;{% elif cs == 'yellow' %}&#128993;{% else %}&#128308;{% endif %}</span>
           {% endwith %}
           <span class="mono">{{ o.invoice_number }}</span>
         </div>
+        <div class="order-cell__meta">{{ o.order_date|date:"Y-m-d" }}</div>
       </div>
       <div class="order-cell" role="cell">
         <div class="order-cell__main mono">{% if o.fiscal_receipt %}{{ o.fiscal_receipt }}{% else %}—{% endif %}</div>
@@ -243,12 +255,18 @@
       <div class="order-items" role="cell">
         {% with lines=o.lines.all %}
         {% if lines %}
-          {% for line in lines|slice:":2" %}
-          <div class="order-items__line" title="{{ line.staff_order_item_summary }}">{{ line.staff_order_item_summary }}</div>
+          {% for line in lines %}
+            {% if forloop.counter == 2 and lines|length > 2 %}
+            <div class="order-items__line order-items__line--with-more" title="{{ line.staff_order_item_summary }}">
+              <span class="order-items__text">{{ line.staff_order_item_summary }}</span>
+              <button type="button" class="order-items__more js-order-items-more" data-more-label="+{{ lines|length|add:"-2" }} more" aria-expanded="false">+{{ lines|length|add:"-2" }} more</button>
+            </div>
+            {% elif forloop.counter > 2 %}
+            <div class="order-items__line order-items__extra" title="{{ line.staff_order_item_summary }}">{{ line.staff_order_item_summary }}</div>
+            {% else %}
+            <div class="order-items__line" title="{{ line.staff_order_item_summary }}">{{ line.staff_order_item_summary }}</div>
+            {% endif %}
           {% endfor %}
-          {% if lines|length > 2 %}
-          <div class="order-items__more">+{{ lines|length|add:"-2" }} more</div>
-          {% endif %}
         {% else %}
           <div class="order-items__line" style="color:var(--muted)">—</div>
         {% endif %}
@@ -359,6 +377,17 @@
       e.preventDefault();
       e.stopPropagation();
       openFromTrigger(trigger);
+      return;
+    }
+    var more = e.target.closest && e.target.closest('.js-order-items-more');
+    if (more) {
+      e.preventDefault();
+      e.stopPropagation();
+      var box = more.closest('.order-items');
+      if (!box) return;
+      var open = box.classList.toggle('is-expanded');
+      more.setAttribute('aria-expanded', open ? 'true' : 'false');
+      more.textContent = open ? 'less' : (more.getAttribute('data-more-label') || '+ more');
       return;
     }
     var del = e.target.closest && e.target.closest('.js-delete-sales-order');
