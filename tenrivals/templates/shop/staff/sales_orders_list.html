@@ -22,6 +22,11 @@
   .staff-toolbar--orders select{padding:8px 10px;border:1px solid var(--line);font-family:inherit;font-size:13px;background:#fff}
   .staff-toolbar--orders select[name="sort"],
   .staff-toolbar--orders select[name="payment"]{max-width:180px}
+  .staff-toolbar--orders .staff-toolbar__check{
+    display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;
+    color:var(--ink);cursor:pointer;user-select:none;white-space:nowrap;
+  }
+  .staff-toolbar--orders .staff-toolbar__check input{margin:0;accent-color:var(--accent)}
   .staff-toolbar--orders input[name="next_invoice_full"]{width:9.2em;max-width:9.2em;min-width:0}
   .staff-toolbar--orders .staff-toolbar-apply{
     min-width:32px;padding:6px 8px;display:inline-flex;align-items:center;justify-content:center;
@@ -182,6 +187,10 @@
       <option value="number" {% if sort == 'number' %}selected{% endif %}>Sort: invoice #</option>
       <option value="total" {% if sort == 'total' %}selected{% endif %}>Sort: total</option>
     </select>
+    <label class="staff-toolbar__check" title="Show only orders with missing or incomplete landed cost on one or more lines">
+      <input type="checkbox" name="missing_cost" value="1" {% if missing_cost %}checked{% endif %} onchange="this.form.submit()">
+      Incomplete landed cost
+    </label>
     <button type="submit" class="btn btn--sm">Search</button>
   </form>
   <span class="staff-toolbar__sep" aria-hidden="true"></span>
@@ -192,6 +201,7 @@
       {% if search_q %}<input type="hidden" name="q" value="{{ search_q }}">{% endif %}
       {% if sort %}<input type="hidden" name="sort" value="{{ sort }}">{% endif %}
       {% if payment_filter %}<input type="hidden" name="payment" value="{{ payment_filter }}">{% endif %}
+      {% if missing_cost %}<input type="hidden" name="missing_cost" value="1">{% endif %}
       <input type="hidden" name="report_year" value="{{ report_year }}">
       <input type="hidden" name="report_month" value="{{ report_month }}">
       <label class="visually-hidden" for="id_seq_year">Year for next invoice preview</label>

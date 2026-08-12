@@ -16,7 +16,7 @@ from django.templatetags.static import static
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.db import transaction
-from django.db.models import Prefetch, Q
+from django.db.models import Exists, OuterRef, Prefetch, Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
@@ -454,6 +454,7 @@ def staff_sales_orders(request):
     if sort not in ('date', 'number', 'total'):
         sort = 'date'
     payment = (request.GET.get('payment') or '').strip()
+    missing_cost = request.GET.get('missing_cost') in ('1', 'on', 'true', 'yes')
     today_y = date.today().year
     try:
         seq_year = int(request.GET.get('seq_year', today_y))
@@ -480,6 +481,12 @@ def staff_sales_orders(request):
         qs = qs.filter(Q(payment_method='') | Q(payment_method__isnull=True))
     elif payment:
         qs = qs.filter(payment_method=payment)
+    if missing_cost:
+        incomplete_line = SalesOrderLine.objects.filter(order_id=OuterRef('pk')).filter(
+            Q(landed_cost_gel__isnull=True) | Q(landed_cost_gel=0)
+        )
+        has_line = SalesOrderLine.objects.filter(order_id=OuterRef('pk'))
+        qs = qs.filter(Exists(incomplete_line) | ~Exists(has_line))
     if sort == 'number':
         qs = qs.order_by('-invoice_number')
     elif sort == 'total':
@@ -507,6 +514,7 @@ def staff_sales_orders(request):
             'search_q': q,
             'sort': sort,
             'payment_filter': payment,
+            'missing_cost': missing_cost,
             'payment_methods': payment_methods,
             'has_empty_payment': has_empty_payment,
             'order_status_choices': SalesOrder.Status.choices,
