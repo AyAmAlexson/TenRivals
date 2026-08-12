@@ -451,7 +451,7 @@ def staff_customer_delete(request, pk):
 def staff_sales_orders(request):
     q = (request.GET.get('q') or '').strip()
     sort = (request.GET.get('sort') or 'date').strip().lower()
-    if sort not in ('date', 'number'):
+    if sort not in ('date', 'number', 'total'):
         sort = 'date'
     payment = (request.GET.get('payment') or '').strip()
     today_y = date.today().year
@@ -482,6 +482,8 @@ def staff_sales_orders(request):
         qs = qs.filter(payment_method=payment)
     if sort == 'number':
         qs = qs.order_by('-invoice_number')
+    elif sort == 'total':
+        qs = qs.order_by('-gross_total', '-order_date', '-invoice_number')
     else:
         qs = qs.order_by('-order_date', '-invoice_number')
 

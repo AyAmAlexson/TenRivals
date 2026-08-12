@@ -178,8 +178,9 @@
     </select>
     <label class="visually-hidden" for="id_sort">Sort orders</label>
     <select id="id_sort" name="sort" aria-label="Sort orders" onchange="this.form.submit()">
-      <option value="date" {% if sort != 'number' %}selected{% endif %}>Sort: date</option>
+      <option value="date" {% if sort == 'date' %}selected{% endif %}>Sort: date</option>
       <option value="number" {% if sort == 'number' %}selected{% endif %}>Sort: invoice #</option>
+      <option value="total" {% if sort == 'total' %}selected{% endif %}>Sort: total</option>
     </select>
     <button type="submit" class="btn btn--sm">Search</button>
   </form>
