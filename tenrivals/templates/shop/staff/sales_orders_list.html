@@ -4,67 +4,17 @@
 {% block page_note %}<p class="page-note">Retail invoices (VAT-inclusive ₾). Invoice numbers are never reused after deletion.</p>{% endblock %}
 {% block extra_head %}
 <style>
-  .orders-table{min-width:1080px}
-  .orders-table .col-items{max-width:280px;min-width:200px;vertical-align:top}
-  .orders-table .item-line{
-    display:block;
-    white-space:nowrap;
-    overflow:hidden;
-    text-overflow:ellipsis;
-    max-width:280px;
-    font-size:12px;
-    line-height:1.45;
-    padding:2px 0;
-  }
-  .orders-table .col-actions{white-space:nowrap;width:1%;vertical-align:middle;position:relative;z-index:1}
-  .cogs-light{font-size:10px;margin-right:6px;cursor:help;vertical-align:1px}
-  /* Horizontal scroll without creating a clip box for menus (portal to body anyway). */
-  .orders-page .table-wrap{overflow-x:auto;overflow-y:visible;border:1px solid var(--line)}
-  .order-actions-menu{position:relative;display:inline-block;text-align:left}
-  .order-actions-menu.is-open > .order-actions-menu__trigger{background:#f9fafb}
-  .order-actions-menu__panel{
-    display:none;
-    position:fixed;
-    z-index:40000;
-    min-width:208px;
-    background:#fff;
-    border:1px solid var(--line);
-    padding:6px 0;
-    margin:0;
-    box-shadow:0 8px 24px rgba(15,23,42,.12);
-  }
-  .order-actions-menu__panel.is-open{display:block !important}
-  .order-actions-menu__link{
-    display:block;width:100%;text-align:left;padding:10px 16px;font-size:14px;
-    color:var(--ink);text-decoration:none;border:none;background:none;cursor:pointer;font-family:inherit;
-  }
-  .order-actions-menu__link:hover{background:#f3f4f6}
-  .order-actions-menu__link--accent{font-weight:600;color:var(--accent)}
-  .order-actions-menu__link--danger{color:#b91c1c}
-  .orders-table tbody tr:last-child td,
-  .orders-table tbody tr:nth-last-child(2) td,
-  .orders-table tbody tr:nth-last-child(3) td{padding-bottom:14px}
-  .orders-table .order-status-form{margin:0}
-  .orders-table .order-status-form select{
-    max-width:160px;
-    padding:6px 8px;
-    font-size:12px;
-    font-family:inherit;
-    border:1px solid var(--line);
-  }
   .staff-toolbar--orders{align-items:center;gap:10px 14px}
   .staff-toolbar--orders .staff-toolbar__search{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
   .staff-toolbar--orders .staff-toolbar__group{display:inline-flex;flex-wrap:wrap;align-items:center;gap:8px}
   .staff-toolbar--orders .staff-toolbar__sep{
-    width:1px;min-height:28px;align-self:stretch;background:var(--line);flex-shrink:0;
-    margin:0 2px;
+    width:1px;min-height:28px;align-self:stretch;background:var(--line);flex-shrink:0;margin:0 2px;
   }
   button.staff-toolbar-help{
     display:inline-flex;align-items:center;justify-content:center;
     width:22px;height:22px;border-radius:999px;border:1px solid var(--line);
     color:var(--muted);font-size:12px;font-weight:800;line-height:1;
-    cursor:help;flex-shrink:0;font-family:inherit;background:#fff;
-    padding:0;margin:0;
+    cursor:help;flex-shrink:0;font-family:inherit;background:#fff;padding:0;margin:0;
   }
   button.staff-toolbar-help:focus{outline:2px solid var(--accent);outline-offset:2px}
   .staff-toolbar--orders input[type="text"],
@@ -81,12 +31,116 @@
     align-items:center;justify-content:center;z-index:50000;padding:16px;
   }
   .confirm-overlay.is-open{display:flex}
-  .confirm-modal{
-    width:min(420px,100%);background:#fff;border:1px solid var(--line);padding:18px;
-  }
+  .confirm-modal{width:min(420px,100%);background:#fff;border:1px solid var(--line);padding:18px}
   .confirm-modal__title{margin:0 0 10px;font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
   .confirm-modal__text{margin:0 0 14px;font-size:14px;color:var(--muted);line-height:1.5}
   .confirm-modal__actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+
+  /* Orders list — compact two-line rows */
+  .orders-list{border:1px solid var(--line);background:#fff}
+  .orders-list__head,
+  .orders-list__row{
+    display:grid;
+    grid-template-columns:
+      minmax(118px, 0.9fr)
+      minmax(128px, 0.85fr)
+      minmax(118px, 0.75fr)
+      minmax(120px, 1fr)
+      minmax(0, 1.6fr)
+      minmax(148px, 0.95fr)
+      40px;
+    gap:10px 14px;
+    align-items:center;
+    padding:10px 14px;
+  }
+  .orders-list__head{
+    background:#f9fafb;
+    border-bottom:1px solid var(--line);
+    font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);
+    padding-top:9px;padding-bottom:9px;
+  }
+  .orders-list__row{
+    border-bottom:1px solid var(--line);
+    transition:background .12s ease;
+  }
+  .orders-list__row:last-child{border-bottom:none}
+  .orders-list__row:hover{background:#fcfcfd}
+  .orders-list__empty{padding:28px 16px;color:var(--muted);font-size:14px}
+
+  .order-cell{display:flex;flex-direction:column;gap:2px;min-width:0}
+  .order-cell__meta{
+    font-size:11px;line-height:1.25;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .order-cell__main{
+    font-size:13px;line-height:1.3;font-weight:600;color:var(--ink);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .order-cell__main.mono{font-family:ui-monospace,monospace;font-size:12px;font-weight:700;letter-spacing:.01em}
+  .order-cell__main--invoice{display:inline-flex;align-items:center;gap:5px;min-width:0}
+  .order-cell__main--invoice .mono{overflow:hidden;text-overflow:ellipsis}
+
+  .cogs-light{
+    flex-shrink:0;font-size:9px;line-height:1;cursor:help;
+  }
+
+  .order-status-form{margin:0}
+  .order-status-form select{
+    width:100%;max-width:100%;padding:5px 7px;font-size:12px;font-family:inherit;
+    border:1px solid var(--line);background:#fff;
+  }
+
+  .order-items{display:flex;flex-direction:column;gap:2px;min-width:0}
+  .order-items__line{
+    font-size:12px;line-height:1.35;color:var(--ink);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .order-items__more{font-size:11px;color:var(--muted)}
+
+  .order-totals{display:flex;flex-direction:column;gap:2px;align-items:flex-end;text-align:right}
+  .order-totals__row{
+    display:flex;align-items:baseline;justify-content:flex-end;gap:8px;
+    font-size:11px;line-height:1.25;color:var(--muted);white-space:nowrap;
+  }
+  .order-totals__row .mono{font-size:12px;font-weight:700;color:var(--ink)}
+  .order-totals__row--primary .mono{font-size:13px;font-weight:800}
+
+  .order-actions-menu{position:relative;display:inline-block;text-align:left;justify-self:end}
+  .order-actions-menu.is-open > .order-actions-menu__trigger{background:#f9fafb}
+  .order-actions-menu__panel{
+    display:none;position:fixed;z-index:40000;min-width:208px;
+    background:#fff;border:1px solid var(--line);padding:6px 0;margin:0;
+    box-shadow:0 8px 24px rgba(15,23,42,.12);
+  }
+  .order-actions-menu__panel.is-open{display:block !important}
+  .order-actions-menu__link{
+    display:block;width:100%;text-align:left;padding:10px 16px;font-size:14px;
+    color:var(--ink);text-decoration:none;border:none;background:none;cursor:pointer;font-family:inherit;
+  }
+  .order-actions-menu__link:hover{background:#f3f4f6}
+  .order-actions-menu__link--accent{font-weight:600;color:var(--accent)}
+  .order-actions-menu__link--danger{color:#b91c1c}
+
+  @media(max-width:1100px){
+    .orders-list__head{display:none}
+    .orders-list__row{
+      grid-template-columns:1fr 1fr auto;
+      grid-template-areas:
+        "invoice fiscal actions"
+        "customer customer customer"
+        "items items items"
+        "status totals totals";
+      gap:8px 12px;padding:12px 14px;
+    }
+    .orders-list__row > :nth-child(1){grid-area:invoice}
+    .orders-list__row > :nth-child(2){grid-area:fiscal}
+    .orders-list__row > :nth-child(3){grid-area:status}
+    .orders-list__row > :nth-child(4){grid-area:customer}
+    .orders-list__row > :nth-child(5){grid-area:items}
+    .orders-list__row > :nth-child(6){grid-area:totals}
+    .orders-list__row > :nth-child(7){grid-area:actions}
+    .order-totals{align-items:flex-start;text-align:left}
+    .order-totals__row{justify-content:flex-start}
+  }
 </style>
 {% endblock %}
 {% block content %}
@@ -147,71 +201,81 @@
 </div>
 <div class="card">
   <h2 class="card-title">Orders (up to 500)</h2>
-  <div class="table-wrap">
-    <table class="orders-table">
-      <thead>
-        <tr>
-          <th>Invoice #</th>
-          <th>Fiscal receipt #</th>
-          <th>Date</th>
-          <th>Status</th>
-          <th class="num">Gross</th>
-          <th class="num">VAT</th>
-          <th class="num">Net</th>
-          <th>Payment</th>
-          <th>Customer</th>
-          <th class="col-items">Items</th>
-          <th class="col-actions">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for o in orders %}
-        <tr>
-          <td class="mono">
-            {% with cs=o.cogs_fill_status %}
-            <span class="cogs-light" title="{% if cs == 'green' %}Landed cost filled for all lines{% elif cs == 'yellow' %}Landed cost missing in some lines{% else %}Landed cost not filled for any line{% endif %}">{% if cs == 'green' %}&#128994;{% elif cs == 'yellow' %}&#128993;{% else %}&#128308;{% endif %}</span>
-            {% endwith %}
-            {{ o.invoice_number }}
-          </td>
-          <td class="mono">{{ o.fiscal_receipt|default:"—" }}</td>
-          <td class="mono">{{ o.order_date|date:"Y-m-d" }}</td>
-          <td>
-            <form method="post" action="{% url 'administration:staff_sales_order_set_status' o.pk %}" class="order-status-form">
-              {% csrf_token %}
-              <select name="status" aria-label="Order status" onchange="this.form.submit()">
-                {% for val, label in order_status_choices %}
-                <option value="{{ val }}" {% if o.status == val %}selected{% endif %}>{{ label }}</option>
-                {% endfor %}
-              </select>
-            </form>
-          </td>
-          <td class="mono num">{{ o.gross_total }}</td>
-          <td class="mono num">{{ o.vat_total }}</td>
-          <td class="mono num">{{ o.net_total }}</td>
-          <td>{{ o.payment_method|default:"—"|truncatechars:24 }}</td>
-          <td>{{ o.customer.display_name }}</td>
-          <td class="col-items">
-            {% for line in o.lines.all %}
-              <span class="item-line" title="{{ line.staff_order_item_summary }}">{{ line.staff_order_item_summary }}</span>
-            {% empty %}—{% endfor %}
-          </td>
-          <td class="col-actions">
-            <div class="order-actions-menu">
-              <button type="button" class="icon-btn order-actions-menu__trigger" title="Actions" aria-label="Order actions" aria-haspopup="menu" aria-expanded="false">⋮</button>
-              <div class="order-actions-menu__panel" role="menu" hidden>
-                <a href="{% url 'administration:staff_sales_order_invoice' o.pk %}" class="order-actions-menu__link" role="menuitem">View invoice</a>
-                <a href="{% url 'administration:staff_sales_order_invoice' o.pk %}?print=1" class="order-actions-menu__link order-actions-menu__link--accent" role="menuitem" target="_blank" rel="noopener">Print / Save as PDF</a>
-                <a href="{% url 'administration:staff_sales_order_edit' o.pk %}" class="order-actions-menu__link" role="menuitem">Edit</a>
-                <button type="button" class="order-actions-menu__link order-actions-menu__link--danger js-delete-sales-order" role="menuitem" data-delete-form="delete-order-{{ o.pk }}" data-delete-invoice="{{ o.invoice_number|escape }}">Delete</button>
-              </div>
-            </div>
-          </td>
-        </tr>
-        {% empty %}
-        <tr><td colspan="11" style="color:var(--muted)">No orders yet.</td></tr>
-        {% endfor %}
-      </tbody>
-    </table>
+  <div class="orders-list" role="table" aria-label="Sales orders">
+    <div class="orders-list__head" role="row">
+      <span role="columnheader">Invoice</span>
+      <span role="columnheader">Fiscal / payment</span>
+      <span role="columnheader">Status</span>
+      <span role="columnheader">Customer</span>
+      <span role="columnheader">Items</span>
+      <span role="columnheader" style="text-align:right">Totals (₾)</span>
+      <span class="visually-hidden" role="columnheader">Actions</span>
+    </div>
+    {% for o in orders %}
+    <div class="orders-list__row" role="row">
+      <div class="order-cell" role="cell">
+        <div class="order-cell__meta">{{ o.order_date|date:"Y-m-d" }}</div>
+        <div class="order-cell__main order-cell__main--invoice">
+          {% with cs=o.cogs_fill_status %}
+          <span class="cogs-light" title="{% if cs == 'green' %}Landed cost filled for all lines{% elif cs == 'yellow' %}Landed cost missing in some lines{% else %}Landed cost not filled for any line{% endif %}">{% if cs == 'green' %}&#128994;{% elif cs == 'yellow' %}&#128993;{% else %}&#128308;{% endif %}</span>
+          {% endwith %}
+          <span class="mono">{{ o.invoice_number }}</span>
+        </div>
+      </div>
+      <div class="order-cell" role="cell">
+        <div class="order-cell__main mono">{% if o.fiscal_receipt %}{{ o.fiscal_receipt }}{% else %}—{% endif %}</div>
+        <div class="order-cell__meta">{% if o.payment_method %}{{ o.payment_method }}{% else %}No payment method{% endif %}</div>
+      </div>
+      <div role="cell">
+        <form method="post" action="{% url 'administration:staff_sales_order_set_status' o.pk %}" class="order-status-form">
+          {% csrf_token %}
+          <select name="status" aria-label="Order status for {{ o.invoice_number }}" onchange="this.form.submit()">
+            {% for val, label in order_status_choices %}
+            <option value="{{ val }}" {% if o.status == val %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </form>
+      </div>
+      <div class="order-cell" role="cell">
+        <div class="order-cell__main" title="{{ o.customer.display_name }}">{{ o.customer.display_name }}</div>
+        <div class="order-cell__meta">{{ o.lines.all|length }} line{{ o.lines.all|length|pluralize }}</div>
+      </div>
+      <div class="order-items" role="cell">
+        {% with lines=o.lines.all %}
+        {% if lines %}
+          {% for line in lines|slice:":2" %}
+          <div class="order-items__line" title="{{ line.staff_order_item_summary }}">{{ line.staff_order_item_summary }}</div>
+          {% endfor %}
+          {% if lines|length > 2 %}
+          <div class="order-items__more">+{{ lines|length|add:"-2" }} more</div>
+          {% endif %}
+        {% else %}
+          <div class="order-items__line" style="color:var(--muted)">—</div>
+        {% endif %}
+        {% endwith %}
+      </div>
+      <div class="order-totals" role="cell">
+        <div class="order-totals__row order-totals__row--primary">
+          <span class="mono">{{ o.gross_total }}</span>
+        </div>
+        <div class="order-totals__row">
+          <span>VAT</span><span class="mono">{{ o.vat_total }}</span>
+          <span style="margin-left:6px">Net</span><span class="mono">{{ o.net_total }}</span>
+        </div>
+      </div>
+      <div class="order-actions-menu" role="cell">
+        <button type="button" class="icon-btn order-actions-menu__trigger" title="Actions" aria-label="Order actions for {{ o.invoice_number }}" aria-haspopup="menu" aria-expanded="false">⋮</button>
+        <div class="order-actions-menu__panel" role="menu" hidden>
+          <a href="{% url 'administration:staff_sales_order_invoice' o.pk %}" class="order-actions-menu__link" role="menuitem">View invoice</a>
+          <a href="{% url 'administration:staff_sales_order_invoice' o.pk %}?print=1" class="order-actions-menu__link order-actions-menu__link--accent" role="menuitem" target="_blank" rel="noopener">Print / Save as PDF</a>
+          <a href="{% url 'administration:staff_sales_order_edit' o.pk %}" class="order-actions-menu__link" role="menuitem">Edit</a>
+          <button type="button" class="order-actions-menu__link order-actions-menu__link--danger js-delete-sales-order" role="menuitem" data-delete-form="delete-order-{{ o.pk }}" data-delete-invoice="{{ o.invoice_number|escape }}">Delete</button>
+        </div>
+      </div>
+    </div>
+    {% empty %}
+    <div class="orders-list__empty">No orders yet.</div>
+    {% endfor %}
   </div>
   {% for o in orders %}
   <form id="delete-order-{{ o.pk }}" method="post" action="{% url 'administration:staff_sales_order_delete' o.pk %}" class="visually-hidden" aria-hidden="true">{% csrf_token %}</form>
@@ -228,7 +292,6 @@
     </div>
   </div>
 </div>
-<style>.num{text-align:right}</style>
 <script>
 (function () {
   var openMenu = null;
