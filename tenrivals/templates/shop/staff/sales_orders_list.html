@@ -20,6 +20,8 @@
   .staff-toolbar--orders input[type="text"],
   .staff-toolbar--orders input[type="search"],
   .staff-toolbar--orders select{padding:8px 10px;border:1px solid var(--line);font-family:inherit;font-size:13px;background:#fff}
+  .staff-toolbar--orders select[name="sort"],
+  .staff-toolbar--orders select[name="payment"]{max-width:180px}
   .staff-toolbar--orders input[name="next_invoice_full"]{width:9.2em;max-width:9.2em;min-width:0}
   .staff-toolbar--orders .staff-toolbar-apply{
     min-width:32px;padding:6px 8px;display:inline-flex;align-items:center;justify-content:center;
@@ -163,7 +165,22 @@
     <input type="hidden" name="seq_year" value="{{ seq_year }}">
     <input type="hidden" name="report_year" value="{{ report_year }}">
     <input type="hidden" name="report_month" value="{{ report_month }}">
-    <input type="search" name="q" value="{{ search_q }}" placeholder="Invoice, fiscal, customer…" aria-label="Search orders" style="min-width:180px;max-width:260px">
+    <input type="search" name="q" value="{{ search_q }}" placeholder="Invoice, fiscal, customer, item…" aria-label="Search orders" style="min-width:180px;max-width:260px">
+    <label class="visually-hidden" for="id_payment_filter">Payment method</label>
+    <select id="id_payment_filter" name="payment" aria-label="Filter by payment method" onchange="this.form.submit()">
+      <option value="" {% if not payment_filter %}selected{% endif %}>All payments</option>
+      {% if has_empty_payment %}
+      <option value="__empty__" {% if payment_filter == '__empty__' %}selected{% endif %}>No payment method</option>
+      {% endif %}
+      {% for pm in payment_methods %}
+      <option value="{{ pm }}" {% if payment_filter == pm %}selected{% endif %}>{{ pm }}</option>
+      {% endfor %}
+    </select>
+    <label class="visually-hidden" for="id_sort">Sort orders</label>
+    <select id="id_sort" name="sort" aria-label="Sort orders" onchange="this.form.submit()">
+      <option value="date" {% if sort != 'number' %}selected{% endif %}>Sort: date</option>
+      <option value="number" {% if sort == 'number' %}selected{% endif %}>Sort: invoice #</option>
+    </select>
     <button type="submit" class="btn btn--sm">Search</button>
   </form>
   <span class="staff-toolbar__sep" aria-hidden="true"></span>
@@ -172,6 +189,8 @@
       title='Next invoice # is the number that will be assigned when you save a new order whose order date falls in the calendar year chosen in the year dropdown. Change the year to preview another year. The value must be unique and greater than the highest number already issued for that year. Apply updates the sequence counter only; it does not create an order.{% if max_issued_seq %} Current highest for {{ seq_year }}: {{ seq_year }}-{{ max_issued_seq|stringformat:"06d" }}.{% else %} No invoices yet for {{ seq_year }}.{% endif %}'>?</button>
     <form method="get" action="{% url 'administration:staff_sales_orders' %}" style="display:inline-flex;gap:8px;align-items:center;margin:0">
       {% if search_q %}<input type="hidden" name="q" value="{{ search_q }}">{% endif %}
+      {% if sort %}<input type="hidden" name="sort" value="{{ sort }}">{% endif %}
+      {% if payment_filter %}<input type="hidden" name="payment" value="{{ payment_filter }}">{% endif %}
       <input type="hidden" name="report_year" value="{{ report_year }}">
       <input type="hidden" name="report_month" value="{{ report_month }}">
       <label class="visually-hidden" for="id_seq_year">Year for next invoice preview</label>

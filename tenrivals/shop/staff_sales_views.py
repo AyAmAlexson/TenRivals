@@ -450,6 +450,10 @@ def staff_customer_delete(request, pk):
 @user_passes_test(_staff_ok)
 def staff_sales_orders(request):
     q = (request.GET.get('q') or '').strip()
+    sort = (request.GET.get('sort') or 'date').strip().lower()
+    if sort not in ('date', 'number'):
+        sort = 'date'
+    payment = (request.GET.get('payment') or '').strip()
     today_y = date.today().year
     try:
         seq_year = int(request.GET.get('seq_year', today_y))
@@ -457,10 +461,8 @@ def staff_sales_orders(request):
         seq_year = today_y
     if seq_year < 1990 or seq_year > 2100:
         seq_year = today_y
-    qs = (
-        SalesOrder.objects.select_related('customer')
-        .prefetch_related(_sales_order_lines_prefetch())
-        .order_by('-invoice_number')
+    qs = SalesOrder.objects.select_related('customer').prefetch_related(
+        _sales_order_lines_prefetch()
     )
     if q:
         qs = qs.filter(
@@ -470,7 +472,28 @@ def staff_sales_orders(request):
             | Q(customer__last_name__icontains=q)
             | Q(customer__phone__icontains=q)
             | Q(customer__email__icontains=q)
-        )
+            | Q(lines__custom_label__icontains=q)
+            | Q(lines__product__name__icontains=q)
+            | Q(lines__product__brand__icontains=q)
+        ).distinct()
+    if payment == '__empty__':
+        qs = qs.filter(Q(payment_method='') | Q(payment_method__isnull=True))
+    elif payment:
+        qs = qs.filter(payment_method=payment)
+    if sort == 'number':
+        qs = qs.order_by('-invoice_number')
+    else:
+        qs = qs.order_by('-order_date', '-invoice_number')
+
+    payment_methods = list(
+        SalesOrder.objects.exclude(payment_method='')
+        .order_by('payment_method')
+        .values_list('payment_method', flat=True)
+        .distinct()
+    )
+    has_empty_payment = SalesOrder.objects.filter(
+        Q(payment_method='') | Q(payment_method__isnull=True)
+    ).exists()
     seq_year_options = list(range(today_y - 4, today_y + 7))
     max_seq = max_issued_invoice_seq_for_year(seq_year)
     month_choices = [(m, calendar.month_name[m]) for m in range(1, 13)]
@@ -480,6 +503,10 @@ def staff_sales_orders(request):
         {
             'orders': qs[:500],
             'search_q': q,
+            'sort': sort,
+            'payment_filter': payment,
+            'payment_methods': payment_methods,
+            'has_empty_payment': has_empty_payment,
             'order_status_choices': SalesOrder.Status.choices,
             'staff_nav_active': 'sales_orders',
             'page_heading': 'Orders',
