@@ -2,7 +2,7 @@ from django.urls import include, path
 
 from . import views
 from . import staff_promo_views
-from shop import staff_analytics, staff_sales_views
+from shop import staff_ai_insights, staff_analytics, staff_sales_views
 
 app_name = "administration"
 
@@ -21,6 +21,12 @@ urlpatterns = [
     ),
     path("stock/", views.staff_stock_list, name="staff_stock"),
     path("stock/stats/", views.staff_stock_stats, name="staff_stock_stats"),
+    path(
+        "stock/stats/insights/",
+        staff_ai_insights.staff_ai_insights,
+        {'kind': 'stock'},
+        name="staff_stock_stats_insights",
+    ),
     path("stock/receive/", views.staff_stock_receive, name="staff_stock_receive"),
     path(
         "stock/receive/<int:receipt_id>/undo/",
@@ -79,6 +85,12 @@ urlpatterns = [
         "analytics/",
         staff_analytics.staff_sales_analytics,
         name="staff_sales_analytics",
+    ),
+    path(
+        "analytics/insights/",
+        staff_ai_insights.staff_ai_insights,
+        {'kind': 'analytics'},
+        name="staff_sales_analytics_insights",
     ),
     path(
         "analytics/orders/",

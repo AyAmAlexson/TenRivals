@@ -982,6 +982,34 @@ class StockValueSnapshot(models.Model):
         return f'{self.snapshot_date} shelf={self.shelf_value_gel} landed={self.landed_value_gel}'
 
 
+class StaffAiInsight(models.Model):
+    """Latest AI board brief per staff dashboard (analytics / stock)."""
+
+    class Kind(models.TextChoices):
+        ANALYTICS = 'analytics', 'Sales analytics'
+        STOCK = 'stock', 'Stock stats'
+
+    kind = models.CharField(max_length=32, choices=Kind.choices, unique=True, db_index=True)
+    report = models.JSONField(default=dict, blank=True)
+    prompt_version = models.CharField(max_length=64, blank=True, default='')
+    model_version = models.CharField(max_length=64, blank=True, default='')
+    generated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='staff_ai_insights',
+    )
+    generated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Staff AI insight'
+        verbose_name_plural = 'Staff AI insights'
+
+    def __str__(self):
+        return f'{self.kind} @ {self.generated_at}'
+
+
 class UserCart(models.Model):
     """Persistent cart for authenticated users (cross-browser/session)."""
 

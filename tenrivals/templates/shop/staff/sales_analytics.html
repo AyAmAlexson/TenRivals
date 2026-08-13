@@ -426,8 +426,10 @@
   </div>
 </div>
 
+{% include 'shop/staff/includes/ai_insights_card.html' %}
+
 <div class="card">
-  <h2 class="card-title">Insights</h2>
+  <h2 class="card-title">Quick facts</h2>
   <dl class="kv">
     <dt>Best period</dt>
     <dd>{% if best_bucket %}{{ best_bucket.label }} — profit {{ best_bucket.profit }} ₾ on {{ best_bucket.revenue }} ₾ revenue ({{ best_bucket.orders }} order{{ best_bucket.orders|pluralize }}){% else %}—{% endif %}</dd>

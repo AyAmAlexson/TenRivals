@@ -26,6 +26,13 @@
     opacity:0;transform:translateY(10px);pointer-events:none;transition:opacity .18s ease, transform .18s ease;
   }
   .staff-toast.is-visible{opacity:1;transform:translateY(0)}
+  .type-switch{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 18px}
+  .type-switch a{
+    padding:8px 12px;border:1px solid var(--line);font-size:12px;font-weight:600;
+    text-transform:uppercase;letter-spacing:.04em;background:#fff;color:var(--ink);
+  }
+  .type-switch a.is-active{background:var(--accent);border-color:var(--accent);color:#fff}
+  .type-switch .count{font-weight:400;text-transform:none;letter-spacing:0;opacity:.8;margin-left:4px}
 </style>
 {% endblock %}
 {% block content %}
@@ -51,6 +58,7 @@
       {% csrf_token %}
       <input type="hidden" name="action" value="backfill_listings">
       <input type="hidden" name="return_q" value="{{ search_q }}">
+      {% if type_filter %}<input type="hidden" name="return_type" value="{{ type_filter }}">{% endif %}
       <button type="submit" class="btn btn--sm btn--outline">Add all active products</button>
     </form>
     <div class="bulk-toolbar">
@@ -58,13 +66,23 @@
       <span id="bulk-selected-count" class="page-meta" style="margin:0"></span>
     </div>
     <form method="get" action="" style="display:inline-flex;gap:8px;align-items:center;margin-left:auto">
+      {% if type_filter %}<input type="hidden" name="type" value="{{ type_filter }}">{% endif %}
       <input type="search" name="q" value="{{ search_q }}" placeholder="Brand, name, SKU, type, color…" aria-label="Filter listings" style="min-width:200px;max-width:320px;padding:8px 10px;border:1px solid var(--line);font-family:inherit;font-size:14px">
       <button type="submit" class="btn btn--sm">Search</button>
       {% if search_q %}
-      <a href="{{ request.path }}" class="btn btn--sm btn--outline">Clear</a>
+      <a href="{% if type_filter %}?type={{ type_filter|urlencode }}{% else %}{{ request.path }}{% endif %}" class="btn btn--sm btn--outline">Clear</a>
       {% endif %}
     </form>
   </div>
+
+  {% if product_type_filters %}
+  <div class="type-switch" role="group" aria-label="Product category">
+    <a href="{% if search_q %}?q={{ search_q|urlencode }}{% else %}{{ request.path }}{% endif %}" class="{% if not type_filter %}is-active{% endif %}">All</a>
+    {% for t in product_type_filters %}
+    <a href="?type={{ t.value|urlencode }}{% if search_q %}&amp;q={{ search_q|urlencode }}{% endif %}" class="{% if type_filter == t.value %}is-active{% endif %}">{{ t.label }} <span class="count">{{ t.count }}</span></a>
+    {% endfor %}
+  </div>
+  {% endif %}
 
   <div class="card staff-listings">
     <h2 class="card-title">Listings ({{ listings|length }})</h2>
@@ -80,7 +98,7 @@
             <th class="col-sizes">Sizes</th>
             <th>SKU</th>
             <th>Type</th>
-            <th>Qty</th>
+            <th title="Sorted by quantity, high to low">Qty</th>
             {% if listing_channel == 'STOCK' %}<th class="num" title="Weighted-average landed cost per unit (staff-only)">Cost ₾</th>{% endif %}
             <th>Actions</th>
           </tr>
@@ -99,7 +117,7 @@
             <td>{{ row.product.color|default:"—" }}</td>
             <td class="col-sizes mono">{{ row.product.staff_listing_size_summary|default:"—" }}</td>
             <td class="mono">{{ row.product.sku|default:"—" }}</td>
-            <td class="mono">{{ row.product.type }}</td>
+            <td>{{ row.product.get_type_display }}</td>
             <td>{{ row.quantity }}</td>
             {% if listing_channel == 'STOCK' %}<td class="mono num">{{ row.product.landed_cost_gel|default:"—" }}</td>{% endif %}
             <td>
@@ -126,6 +144,7 @@
                   {% csrf_token %}
                   <input type="hidden" name="action" value="remove_listing">
                   <input type="hidden" name="return_q" value="{{ search_q }}">
+                  {% if type_filter %}<input type="hidden" name="return_type" value="{{ type_filter }}">{% endif %}
                   <input type="hidden" name="listing_id" value="{{ row.pk }}">
                   <button type="button" class="icon-btn icon-btn--danger js-remove-listing" data-form-id="remove-listing-{{ row.pk }}" title="Remove listing" aria-label="Remove listing">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -135,7 +154,7 @@
             </td>
           </tr>
           {% empty %}
-          <tr><td colspan="{% if listing_channel == 'STOCK' %}11{% else %}10{% endif %}">{% if search_q %}No rows match your search. <a href="{{ request.path }}">Clear filter</a>{% else %}No listings yet. Add a product with this channel, or import from shop admin.{% endif %}</td></tr>
+          <tr><td colspan="{% if listing_channel == 'STOCK' %}11{% else %}10{% endif %}">{% if search_q or type_filter %}No rows match this filter. <a href="{{ request.path }}">Show all</a>{% else %}No listings yet. Add a product with this channel, or import from shop admin.{% endif %}</td></tr>
           {% endfor %}
         </tbody>
       </table>
@@ -145,6 +164,7 @@
     {% csrf_token %}
     <input type="hidden" name="action" value="bulk_remove_listings">
     <input type="hidden" name="return_q" value="{{ search_q }}">
+    {% if type_filter %}<input type="hidden" name="return_type" value="{{ type_filter }}">{% endif %}
     <div id="bulk-delete-inputs"></div>
   </form>
   <div class="confirm-overlay" id="listing-delete-confirm" aria-hidden="true">

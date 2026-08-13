@@ -41,6 +41,7 @@ from shop.models import (
     ProductCollectionGroup,
     ProductListing,
     ProductListingChannel,
+    ProductType,
     SalesOrder,
     StockReceipt,
 )
@@ -64,7 +65,7 @@ from urllib.parse import urlencode
 from django.shortcuts import get_object_or_404
 import time
 from .services import generate_verification_code_service
-from django.db.models import Max, Q
+from django.db.models import Count, Max, Q
 import qrcode
 import base64
 from io import BytesIO
@@ -1054,16 +1055,25 @@ def superuser_user_edit(request, user_id):
 
 
 def _staff_listings_redirect(request, redirect_name: str):
+    params = {}
     rq = (request.POST.get("return_q") or "").strip()
-    base = reverse(redirect_name)
+    rt = (request.POST.get("return_type") or "").strip()
     if rq:
-        return redirect(f"{base}?{urlencode({'q': rq})}")
+        params["q"] = rq
+    if rt in dict(ProductType.choices):
+        params["type"] = rt
+    base = reverse(redirect_name)
+    if params:
+        return redirect(f"{base}?{urlencode(params)}")
     return redirect(base)
 
 
 def _staff_listings_page(request, channel: str, nav_key: str):
     redirect_name = "administration:staff_stock" if nav_key == "stock" else "administration:staff_preorder"
     search_q = (request.GET.get("q") or "").strip()
+    type_filter = (request.GET.get("type") or "").strip()
+    if type_filter not in dict(ProductType.choices):
+        type_filter = ""
     if request.method == "POST":
         action = request.POST.get("action")
         if action == "remove_listing":
@@ -1115,16 +1125,14 @@ def _staff_listings_page(request, channel: str, nav_key: str):
             return _staff_listings_redirect(request, redirect_name)
         return _staff_listings_redirect(request, redirect_name)
 
-    listings = (
-        ProductListing.objects.filter(channel=channel)
-        .select_related(
-            "product",
-            "product__shoe",
-            "product__racket",
-            "product__apparel",
-        )
-        .order_by("product__name", "product__id")
+    listings = ProductListing.objects.filter(channel=channel).select_related(
+        "product",
+        "product__shoe",
+        "product__racket",
+        "product__apparel",
     )
+    if type_filter:
+        listings = listings.filter(product__type=type_filter)
     if search_q:
         listings = listings.filter(
             Q(product__name__icontains=search_q)
@@ -1133,6 +1141,31 @@ def _staff_listings_page(request, channel: str, nav_key: str):
             | Q(product__short_description__icontains=search_q)
             | Q(product__color__icontains=search_q)
             | Q(product__type__icontains=search_q)
+        )
+    listings = listings.order_by("-quantity", "product__name", "product__id")
+
+    type_counts = {
+        row["product__type"]: row["n"]
+        for row in (
+            ProductListing.objects.filter(channel=channel)
+            .values("product__type")
+            .annotate(n=Count("id"))
+        )
+        if row["product__type"]
+    }
+    type_labels = dict(ProductType.choices)
+    product_type_filters = [
+        {"value": value, "label": label, "count": type_counts.get(value, 0)}
+        for value, label in ProductType.choices
+        if type_counts.get(value)
+    ]
+    if type_filter and type_filter not in {row["value"] for row in product_type_filters}:
+        product_type_filters.append(
+            {
+                "value": type_filter,
+                "label": type_labels.get(type_filter, type_filter),
+                "count": 0,
+            }
         )
     heading = (
         "In stock"
@@ -1161,6 +1194,8 @@ def _staff_listings_page(request, channel: str, nav_key: str):
             "page_note": note,
             "catalog_is_implicit": catalog_is_implicit,
             "search_q": search_q,
+            "type_filter": type_filter,
+            "product_type_filters": product_type_filters,
         },
     )
 
@@ -1405,6 +1440,9 @@ def staff_stock_receipt_undo(request, receipt_id: int):
 @login_required
 @user_passes_test(_superuser_required)
 def staff_stock_stats(request):
+    from shop.models import StaffAiInsight
+    from shop.staff_ai_insights import insight_context
+
     ctx = build_stock_stats()
     ctx.update(
         {
@@ -1416,6 +1454,8 @@ def staff_stock_stats(request):
                 "Shoe matrix includes men's and women's shoes; unisex models count in both men's and women's columns. "
                 "Junior shoe catalog type is excluded from the shoe matrix."
             ),
+            "ai_insights_url": reverse("administration:staff_stock_stats_insights"),
+            **insight_context(StaffAiInsight.Kind.STOCK),
         }
     )
     return render(request, "persons/staff_stock_stats.html", ctx)
