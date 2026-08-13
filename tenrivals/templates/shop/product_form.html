@@ -108,6 +108,20 @@
     .errorlist li{margin-bottom:4px}
     .form-errors-banner{border:1px solid #fca5a5;background:#fef2f2;padding:14px 16px;margin-bottom:20px}
     .form-errors-banner strong{display:block;margin-bottom:8px;color:#991b1b;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.06em}
+    .ai-fill-row{display:flex;gap:10px;align-items:stretch;flex-wrap:wrap}
+    .ai-fill-row input[type="url"]{flex:1;min-width:220px}
+    .ai-fill-btn{
+      display:inline-flex;align-items:center;justify-content:center;height:44px;padding:0 18px;
+      border:1px solid var(--accent);background:var(--accent);color:#fff;cursor:pointer;
+      font-family:inherit;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;
+      white-space:nowrap;
+    }
+    .ai-fill-btn:hover{background:var(--accent-dark);border-color:var(--accent-dark)}
+    .ai-fill-btn:disabled{opacity:.55;cursor:wait}
+    .ai-fill-status{margin-top:10px;font-size:13px;line-height:1.45;font-weight:400;text-transform:none;letter-spacing:0}
+    .ai-fill-status.is-ok{color:#166534}
+    .ai-fill-status.is-err{color:#b91c1c}
+    .ai-fill-status.is-busy{color:var(--muted)}
     .img-slot{overflow:hidden;min-width:0}
     .img-slot .field{overflow:hidden;max-width:100%}
     .img-slot input[type=file]{max-width:100%;font-size:12px;word-break:break-all}
@@ -141,6 +155,18 @@
       {% endif %}
 
       {% include 'shop/includes/product_form_toolbar.html' with toolbar_title=is_edit|yesno:"Edit product,Add product" %}
+
+      {% if ai_fill_url %}
+      <div class="form-card" id="js-ai-fill-card" data-ai-fill-url="{{ ai_fill_url }}">
+        <h2>AI listing fill</h2>
+        <p class="hint" style="margin-top:0;margin-bottom:12px">Paste a product URL from a tennis retailer. We draft copy and specs into this form. Price and photos stay empty — set GEL pricing yourself. Review and edit everything before saving.</p>
+        <div class="ai-fill-row">
+          <input type="url" id="js-ai-fill-url" placeholder="https://…" autocomplete="off" inputmode="url">
+          <button type="button" class="ai-fill-btn" id="js-ai-fill">Fill listing</button>
+        </div>
+        <p class="ai-fill-status" id="js-ai-fill-status" hidden></p>
+      </div>
+      {% endif %}
 
       <div class="form-card">
         <h2>Images</h2>
@@ -480,28 +506,195 @@
         return row;
       }
 
+      function reloadAttributesFromHidden(){
+        var hid = document.getElementById('id_attributes');
+        var bulk = document.getElementById('js-attr-bulk');
+        if(!hid) return;
+        var obj = {};
+        try{ obj = hid.value.trim() ? JSON.parse(hid.value) : {}; }catch(e){ obj = {}; }
+        if(typeof obj !== 'object' || !obj) obj = {};
+        setBulkText(objectToBulkLines(obj));
+        rebuildAttrRows(obj);
+      }
+
       function initAttrs(){
         var root = document.getElementById('js-attr-rows');
         var hid = document.getElementById('id_attributes');
         var bulk = document.getElementById('js-attr-bulk');
         if(!root || !hid) return;
-        var raw = hid.value.trim();
-        var obj = {};
-        try{ obj = raw ? JSON.parse(raw) : {}; }catch(e){ obj = {}; }
-        if(bulk) bulk.value = objectToBulkLines(obj);
-        rebuildAttrRows(obj);
-        if(bulk){
+        reloadAttributesFromHidden();
+        if(bulk && !bulk.dataset.bound){
+          bulk.dataset.bound = '1';
           bulk.addEventListener('input', syncFromBulk);
           bulk.addEventListener('paste', function(){ setTimeout(syncFromBulk, 0); });
         }
         var addBtn = document.getElementById('js-attr-add');
-        if(addBtn){
+        if(addBtn && !addBtn.dataset.bound){
+          addBtn.dataset.bound = '1';
           addBtn.addEventListener('click', function(){
             root.appendChild(makeAttrRow('', ''));
             syncAttrs();
           });
         }
         syncFromBulk();
+      }
+
+      function setFieldValue(id, value){
+        var el = document.getElementById(id);
+        if(!el || value == null || value === '') return;
+        if(el.type === 'checkbox'){
+          el.checked = !!value;
+          el.dispatchEvent(new Event('change', {bubbles:true}));
+          return;
+        }
+        el.value = value;
+        el.dispatchEvent(new Event('input', {bubbles:true}));
+        el.dispatchEvent(new Event('change', {bubbles:true}));
+      }
+
+      function applyListingFields(fields){
+        if(!fields) return;
+        setFieldValue('id_brand', fields.brand);
+        setFieldValue('id_name', fields.name);
+        setFieldValue('id_color', fields.color);
+        setFieldValue('id_sku', fields.sku);
+        setFieldValue('id_short_description', fields.short_description);
+        setFieldValue('id_description', fields.description);
+        setFieldValue('id_gender', fields.gender);
+        setFieldValue('id_surface', fields.surface);
+        setFieldValue('id_width', fields.width);
+        setFieldValue('id_weight_grams', fields.weight_grams);
+        setFieldValue('id_head_size_sq_in', fields.head_size_sq_in);
+        setFieldValue('id_length_in', fields.length_in);
+        setFieldValue('id_balance_mm', fields.balance_mm);
+        setFieldValue('id_swingweight', fields.swingweight);
+        setFieldValue('id_string_pattern', fields.string_pattern);
+        if(fields.is_strung === true || fields.is_strung === false){
+          setFieldValue('id_is_strung', fields.is_strung);
+        }
+        setFieldValue('id_material', fields.material);
+        setFieldValue('id_length_m', fields.length_m);
+        setFieldValue('id_capacity_rackets', fields.capacity_rackets);
+        setFieldValue('id_balls_per_can', fields.balls_per_can);
+        if(fields.attributes && typeof fields.attributes === 'object'){
+          var hid = document.getElementById('id_attributes');
+          if(hid){
+            hid.value = JSON.stringify(fields.attributes);
+            reloadAttributesFromHidden();
+          }
+        }
+      }
+
+      function csrfToken(){
+        var el = document.querySelector('#shop-product-form [name=csrfmiddlewaretoken]');
+        if(el && el.value) return el.value;
+        var m = document.cookie.match(/(?:^|; )csrftoken=([^;]+)/);
+        return m ? decodeURIComponent(m[1]) : '';
+      }
+
+      function currentProductType(){
+        var el = document.getElementById('id_type');
+        return el ? (el.value || '') : '';
+      }
+
+      function formHasListingCopy(){
+        var name = document.getElementById('id_name');
+        var desc = document.getElementById('id_description');
+        return !!(
+          (name && name.value.trim()) ||
+          (desc && desc.value.trim())
+        );
+      }
+
+      function initAiFill(){
+        var card = document.getElementById('js-ai-fill-card');
+        var btn = document.getElementById('js-ai-fill');
+        var urlInput = document.getElementById('js-ai-fill-url');
+        var statusEl = document.getElementById('js-ai-fill-status');
+        if(!card || !btn || !urlInput || !statusEl) return;
+        var endpoint = card.getAttribute('data-ai-fill-url') || '';
+        if(!endpoint) return;
+
+        function setStatus(kind, text){
+          statusEl.hidden = !text;
+          statusEl.className = 'ai-fill-status' + (kind ? ' is-' + kind : '');
+          statusEl.textContent = text || '';
+        }
+
+        function pollJob(jobId, attempt){
+          if(attempt > 90){
+            btn.disabled = false;
+            setStatus('err', 'Timed out waiting for the AI draft. Try again.');
+            return;
+          }
+          var pollUrl = endpoint + (endpoint.indexOf('?') >= 0 ? '&' : '?') + 'job_id=' + encodeURIComponent(jobId);
+          fetch(pollUrl, {headers: {'Accept': 'application/json'}})
+            .then(function(res){ return res.json().then(function(data){ return {ok: res.ok, data: data}; }); })
+            .then(function(pack){
+              var data = pack.data || {};
+              if(data.status === 'pending'){
+                window.setTimeout(function(){ pollJob(jobId, attempt + 1); }, 1500);
+                return;
+              }
+              btn.disabled = false;
+              if(data.status === 'ok' && data.fields){
+                applyListingFields(data.fields);
+                var extra = data.fields.notes_for_staff || '';
+                setStatus(
+                  'ok',
+                  extra
+                    ? ('Draft applied. Review every field before saving. ' + extra)
+                    : 'Draft applied. Review every field before saving.'
+                );
+                return;
+              }
+              setStatus('err', data.error || 'AI draft failed.');
+            })
+            .catch(function(){
+              btn.disabled = false;
+              setStatus('err', 'Could not reach the AI fill endpoint.');
+            });
+        }
+
+        btn.addEventListener('click', function(){
+          var url = (urlInput.value || '').trim();
+          if(!url){
+            setStatus('err', 'Paste a product URL first.');
+            urlInput.focus();
+            return;
+          }
+          if(formHasListingCopy() && !window.confirm('Replace the current listing fields with an AI draft? You can still edit before saving.')){
+            return;
+          }
+          btn.disabled = true;
+          setStatus('busy', 'Fetching the page and drafting the listing…');
+          var body = new URLSearchParams();
+          body.set('url', url);
+          body.set('product_type', currentProductType());
+          fetch(endpoint, {
+            method: 'POST',
+            headers: {
+              'Accept': 'application/json',
+              'X-CSRFToken': csrfToken(),
+              'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+            },
+            body: body.toString()
+          })
+            .then(function(res){ return res.json().then(function(data){ return {ok: res.ok, data: data}; }); })
+            .then(function(pack){
+              var data = pack.data || {};
+              if(data.status === 'pending' && data.job_id){
+                pollJob(data.job_id, 0);
+                return;
+              }
+              btn.disabled = false;
+              setStatus('err', data.error || 'Could not start AI fill.');
+            })
+            .catch(function(){
+              btn.disabled = false;
+              setStatus('err', 'Could not start AI fill.');
+            });
+        });
       }
 
       var prodForm = document.getElementById('shop-product-form');
@@ -513,6 +706,7 @@
       }
       initSizeGrids();
       initAttrs();
+      initAiFill();
     })();
   </script>
 </body>

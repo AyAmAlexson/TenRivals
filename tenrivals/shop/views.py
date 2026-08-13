@@ -1502,6 +1502,10 @@ def product_create(request):
             'pick_type_qs': pick_type_qs,
             'product_type_label': type_labels.get(display_type, display_type or ''),
             'form_back_url': form_back_url,
+            'ai_fill_url': shop_reverse(
+                'shop:product_ai_fill',
+                site_locale=getattr(request, 'site_locale', None),
+            ),
         },
     )
 
@@ -1552,8 +1556,46 @@ def product_edit(request, pk):
                 'shop:stock',
                 site_locale=getattr(request, 'site_locale', None),
             ),
+            'ai_fill_url': shop_reverse(
+                'shop:product_ai_fill',
+                site_locale=getattr(request, 'site_locale', None),
+            ),
         },
     )
+
+
+@staff_member_required
+def product_ai_fill(request):
+    """Staff AJAX: draft listing fields from a retailer URL (no save)."""
+    from .ai_listing import ListingFillError, get_listing_fill_job, start_listing_fill_job
+
+    if request.method == 'GET':
+        job = get_listing_fill_job(request.GET.get('job_id') or '')
+        if job is None:
+            return JsonResponse(
+                {'ok': False, 'status': 'error', 'error': 'Job not found or expired.'},
+                status=404,
+            )
+        return JsonResponse(job)
+
+    if request.method != 'POST':
+        return JsonResponse({'ok': False, 'error': 'Method not allowed.'}, status=405)
+
+    url = (request.POST.get('url') or '').strip()
+    product_type = (request.POST.get('product_type') or '').strip()
+    if not url and request.content_type and 'application/json' in request.content_type:
+        try:
+            body = json.loads(request.body or b'{}')
+        except json.JSONDecodeError:
+            body = {}
+        if isinstance(body, dict):
+            url = (body.get('url') or '').strip()
+            product_type = product_type or (body.get('product_type') or '').strip()
+    try:
+        job_id = start_listing_fill_job(url=url, product_type=product_type)
+    except ListingFillError as exc:
+        return JsonResponse({'ok': False, 'status': 'error', 'error': str(exc)}, status=400)
+    return JsonResponse({'ok': True, 'status': 'pending', 'job_id': job_id})
 
 
 def _promo_eval_for_request(request, rows):

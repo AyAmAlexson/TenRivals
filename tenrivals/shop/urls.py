@@ -94,5 +94,6 @@ urlpatterns = [
         ),
     ),
     path('add', _v(views.product_create), name='product_create'),
+    path('add/ai-fill', _v(views.product_ai_fill), name='product_ai_fill'),
     path('edit/<int:pk>', _v(views.product_edit), name='product_edit'),
 ]
