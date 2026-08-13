@@ -1,247 +1,26 @@
-{# Requires: ai_insights_url, ai_insight_kind. Optional: ai_insight {report, generated_at, model_version}. #}
+{# Requires: ai_insights_url, ai_insight_kind. #}
 <style>
   .ai-brief{background:#fff;border:1px solid var(--line);padding:20px 22px;margin-bottom:24px}
-  .ai-brief__head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:12px}
+  .ai-brief__head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap}
   .ai-brief__title{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;margin:0}
-  .ai-brief__meta{font-size:12px;color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0;margin:6px 0 0;line-height:1.45}
-  .ai-brief__btn{display:inline-flex;align-items:center;justify-content:center;height:40px;padding:0 16px;border:1px solid var(--accent);background:var(--accent);color:#fff;cursor:pointer;font-family:inherit;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;white-space:nowrap}
-  .ai-brief__btn:hover{background:var(--accent-dark);border-color:var(--accent-dark)}
-  .ai-brief__btn:disabled{opacity:.55;cursor:wait}
-  .ai-brief__status{font-size:13px;line-height:1.45;font-weight:400;text-transform:none;letter-spacing:0;margin:0 0 14px}
-  .ai-brief__status.is-ok{color:#166534}
-  .ai-brief__status.is-err{color:#b91c1c}
-  .ai-brief__status.is-busy{color:var(--muted)}
-  .ai-brief__h{font-size:18px;font-weight:400;text-transform:none;letter-spacing:0;line-height:1.35;margin:0 0 12px}
-  .ai-brief__p{font-size:14px;font-weight:400;text-transform:none;letter-spacing:0;line-height:1.55;margin:0 0 12px;white-space:pre-wrap}
-  .ai-brief__sec{margin:18px 0 0}
-  .ai-brief__sec h3{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin:0 0 10px}
-  .ai-brief__list{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px}
-  .ai-brief__item{border:1px solid var(--line);padding:12px 14px;background:#fafafa}
-  .ai-brief__item strong{display:block;font-size:14px;font-weight:600;text-transform:none;letter-spacing:0;margin-bottom:4px}
-  .ai-brief__item p{margin:0;font-size:13px;font-weight:400;text-transform:none;letter-spacing:0;line-height:1.5;color:#334155}
-  .ai-brief__item .sub{margin-top:6px;font-size:12px;color:var(--muted)}
-  .ai-badge{display:inline-block;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;padding:2px 7px;margin-right:8px;border:1px solid var(--line);background:#fff}
-  .ai-badge--high,.ai-badge--P0{color:#991b1b;border-color:#fecaca;background:#fef2f2}
-  .ai-badge--medium,.ai-badge--P1{color:#92400e;border-color:#fde68a;background:#fffbeb}
-  .ai-badge--low,.ai-badge--P2{color:#334155;border-color:#e2e8f0;background:#f8fafc}
-  .ai-badge--this_week{color:#9f1239;border-color:#fecdd3}
-  .ai-badge--this_month{color:#1e40af;border-color:#bfdbfe}
-  .ai-badge--90_days{color:#0f766e;border-color:#99f6e4}
-  .ai-brief__table{width:100%;border-collapse:collapse;font-size:13px}
-  .ai-brief__table th{text-align:left;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);padding:8px 10px;border-bottom:1px solid var(--line)}
-  .ai-brief__table td{padding:8px 10px;border-bottom:1px solid var(--line);font-weight:400;text-transform:none;letter-spacing:0;vertical-align:top}
-  .ai-brief__empty{font-size:14px;color:var(--muted);font-weight:400;text-transform:none}
+  .ai-brief__meta{font-size:13px;color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0;margin:8px 0 0;line-height:1.5;max-width:52rem}
+  .ai-brief__btn{display:inline-flex;align-items:center;justify-content:center;height:40px;padding:0 16px;border:1px solid var(--accent);background:var(--accent);color:#fff;font-family:inherit;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;white-space:nowrap}
+  .ai-brief__btn:hover{background:var(--accent-dark);border-color:var(--accent-dark);color:#fff}
 </style>
 
-<div class="ai-brief" id="js-ai-brief" data-endpoint="{{ ai_insights_url }}" data-kind="{{ ai_insight_kind }}">
-  {% csrf_token %}
+<div class="ai-brief">
   <div class="ai-brief__head">
     <div>
-      <h2 class="ai-brief__title">{% if ai_insight_kind == 'stock' %}Stock board brief{% else %}Executive board brief{% endif %}</h2>
-      <p class="ai-brief__meta" id="js-ai-brief-meta">
-        {% if ai_insight %}
-          Last generated {{ ai_insight.generated_at|date:'Y-m-d H:i' }}{% if ai_insight.model_version %} · {{ ai_insight.model_version }}{% endif %}
+      <h2 class="ai-brief__title">{% if ai_insight_kind == 'stock' %}Stock AI brief pack{% else %}Analytics AI brief pack{% endif %}</h2>
+      <p class="ai-brief__meta">
+        {% if ai_insight_kind == 'stock' %}
+          Download the COO prompt plus live stock, size/grip matrices, and sales velocity.
         {% else %}
-          No AI brief yet. Generate from live {{ ai_insight_kind }} data.
+          Download the COO prompt plus this month, YTD, all-time, and last-year comps.
         {% endif %}
+        Run the file in ChatGPT or Claude — analysis is not generated on this site.
       </p>
     </div>
-    <button type="button" class="ai-brief__btn" id="js-ai-brief-btn">Generate insights</button>
-  </div>
-  <p class="ai-brief__status" id="js-ai-brief-status" hidden></p>
-  <div id="js-ai-brief-body">
-    {% if not ai_insight %}
-    <p class="ai-brief__empty">Press Generate insights for a COO-style brief: what the numbers mean, what to watch, and what to do next with Buying, stock receive, pricing, and outreach.</p>
-    {% endif %}
+    <a class="ai-brief__btn" href="{{ ai_insights_url }}">Export for AI</a>
   </div>
 </div>
-{% if ai_insight %}{{ ai_insight.report|json_script:"ai-brief-seed" }}{% else %}<script id="ai-brief-seed" type="application/json">null</script>{% endif %}
-
-<script>
-(function(){
-  var root = document.getElementById('js-ai-brief');
-  if(!root) return;
-  var endpoint = root.getAttribute('data-endpoint') || '';
-  var kind = root.getAttribute('data-kind') || '';
-  var btn = document.getElementById('js-ai-brief-btn');
-  var statusEl = document.getElementById('js-ai-brief-status');
-  var bodyEl = document.getElementById('js-ai-brief-body');
-  var metaEl = document.getElementById('js-ai-brief-meta');
-  var seedEl = document.getElementById('ai-brief-seed');
-
-  function csrfToken(){
-    var el = root.querySelector('[name=csrfmiddlewaretoken]');
-    if(el && el.value) return el.value;
-    var m = document.cookie.match(/(?:^|; )csrftoken=([^;]+)/);
-    return m ? decodeURIComponent(m[1]) : '';
-  }
-
-  function esc(s){
-    return String(s == null ? '' : s)
-      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  }
-
-  function badge(val, clsPrefix){
-    if(!val) return '';
-    var cls = 'ai-badge ai-badge--' + String(val).replace(/\s+/g,'_');
-    return '<span class="' + cls + '">' + esc(val).replace(/_/g,' ') + '</span>';
-  }
-
-  function para(text){
-    if(!text) return '';
-    return '<p class="ai-brief__p">' + esc(text) + '</p>';
-  }
-
-  function items(list, renderOne){
-    if(!list || !list.length) return '';
-    return '<ul class="ai-brief__list">' + list.map(renderOne).join('') + '</ul>';
-  }
-
-  function section(title, inner){
-    if(!inner) return '';
-    return '<div class="ai-brief__sec"><h3>' + esc(title) + '</h3>' + inner + '</div>';
-  }
-
-  function renderReport(report, meta){
-    if(!report || typeof report !== 'object'){
-      bodyEl.innerHTML = '<p class="ai-brief__empty">Press Generate insights for a COO-style brief: what the numbers mean, what to watch, and what to do next with Buying, stock receive, pricing, and outreach.</p>';
-      return;
-    }
-    var html = '';
-    if(report.headline) html += '<p class="ai-brief__h">' + esc(report.headline) + '</p>';
-    html += para(report.executive_summary);
-    html += section('Scorecard', para(report.scorecard_narrative));
-    html += section('Inventory health', para(report.inventory_health));
-    html += section('Period takeaways', items(report.period_takeaways, function(x){
-      return '<li class="ai-brief__item"><strong>' + esc(x.period) + '</strong><p>' + esc(x.takeaway) + '</p></li>';
-    }));
-    html += section('What is working', items(report.what_is_working, function(x){
-      return '<li class="ai-brief__item"><strong>' + esc(x.title) + '</strong><p>' + esc(x.detail) + '</p></li>';
-    }));
-    html += section('What sells', items(report.what_sells, function(x){
-      return '<li class="ai-brief__item"><strong>' + esc(x.title) + '</strong><p>' + esc(x.detail) + '</p></li>';
-    }));
-    html += section('What lags', items(report.what_lags, function(x){
-      return '<li class="ai-brief__item"><strong>' + esc(x.title) + '</strong><p>' + esc(x.detail) + '</p></li>';
-    }));
-    html += section('Attention', items(report.attention, function(x){
-      return '<li class="ai-brief__item">' + badge(x.severity) + '<strong>' + esc(x.title) + '</strong><p>' + esc(x.detail) + '</p><p class="sub">' + esc(x.why_it_matters) + '</p></li>';
-    }));
-    html += section('Assortment gaps', items(report.gaps, function(x){
-      return '<li class="ai-brief__item">' + badge(x.priority) + '<strong>' + esc(x.area) + '</strong><p>' + esc(x.detail) + '</p></li>';
-    }));
-    html += section('Excess / slow stock', items(report.excess, function(x){
-      return '<li class="ai-brief__item"><strong>' + esc(x.area) + '</strong><p>' + esc(x.detail) + '</p><p class="sub">' + esc(x.action) + '</p></li>';
-    }));
-    html += section('Size &amp; spec alerts', items(report.size_and_spec_alerts, function(x){
-      return '<li class="ai-brief__item"><strong>' + esc(x.alert) + '</strong><p>' + esc(x.action) + '</p></li>';
-    }));
-    html += section('Buy plan thesis', para(report.buy_plan_thesis));
-    if(report.buy_plan && report.buy_plan.length){
-      html += section('Buy plan — next 30 days',
-        '<div class="table-wrap"><table class="ai-brief__table"><thead><tr><th>Prio</th><th>Category</th><th>What</th><th>Qty</th><th>Why</th></tr></thead><tbody>' +
-        report.buy_plan.map(function(x){
-          return '<tr><td>' + badge(x.priority) + '</td><td>' + esc(x.category) + '</td><td>' + esc(x.what) + '</td><td>' + esc(x.qty_hint) + '</td><td>' + esc(x.why) + '</td></tr>';
-        }).join('') +
-        '</tbody></table></div>'
-      );
-    }
-    html += section('Do not buy', items(report.do_not_buy, function(x){
-      return '<li class="ai-brief__item"><strong>' + esc(x.item) + '</strong><p>' + esc(x.why) + '</p></li>';
-    }));
-    html += section('Recommendations', items(report.recommendations, function(x){
-      return '<li class="ai-brief__item">' + badge(x.horizon) + '<strong>' + esc(x.action) + '</strong><p>' + esc(x.how) + '</p><p class="sub">Tools: ' + esc(x.tools) + ' · Impact: ' + esc(x.expected_impact) + '</p></li>';
-    }));
-    html += section('Operations', items(report.operations, function(x){
-      return '<li class="ai-brief__item"><strong>' + esc(x.action) + '</strong><p>' + esc(x.how) + '</p></li>';
-    }));
-    html += section('Risks', items(report.risks, function(x){
-      return '<li class="ai-brief__item"><strong>' + esc(x.risk) + '</strong><p>' + esc(x.mitigation) + '</p></li>';
-    }));
-    html += section('Data quality', items(report.data_quality, function(x){
-      return '<li class="ai-brief__item"><strong>' + esc(x.issue) + '</strong><p>' + esc(x.fix) + '</p></li>';
-    }));
-    html += section('KPIs to watch', items(report.kpis_to_watch, function(x){
-      return '<li class="ai-brief__item"><strong>' + esc(x.kpi) + '</strong><p>' + esc(x.reading) + '</p><p class="sub">' + esc(x.watch_for) + '</p></li>';
-    }));
-    bodyEl.innerHTML = html || '<p class="ai-brief__empty">Empty brief.</p>';
-    if(metaEl && meta){
-      metaEl.textContent = meta;
-    }
-  }
-
-  function setStatus(kindName, text){
-    statusEl.hidden = !text;
-    statusEl.className = 'ai-brief__status' + (kindName ? ' is-' + kindName : '');
-    statusEl.textContent = text || '';
-  }
-
-  try{
-    if(seedEl && seedEl.textContent && seedEl.textContent.trim() && seedEl.textContent.trim() !== 'null'){
-      renderReport(JSON.parse(seedEl.textContent));
-    }
-  }catch(e){}
-
-  function pollJob(jobId, attempt){
-    if(attempt > 150){
-      btn.disabled = false;
-      setStatus('err', 'Timed out waiting for the brief. Try again.');
-      return;
-    }
-    var pollUrl = endpoint + (endpoint.indexOf('?') >= 0 ? '&' : '?') + 'job_id=' + encodeURIComponent(jobId);
-    fetch(pollUrl, {headers: {'Accept': 'application/json'}})
-      .then(function(res){ return res.json().then(function(data){ return {ok: res.ok, data: data}; }); })
-      .then(function(pack){
-        var data = pack.data || {};
-        if(data.status === 'pending'){
-          window.setTimeout(function(){ pollJob(jobId, attempt + 1); }, 1500);
-          return;
-        }
-        btn.disabled = false;
-        if(data.status === 'ok' && data.report){
-          var when = data.generated_at ? String(data.generated_at).replace('T', ' ').slice(0, 16) : '';
-          renderReport(data.report, (when ? ('Last generated ' + when) : 'Updated') + (data.model_version ? (' · ' + data.model_version) : ''));
-          setStatus('ok', 'Brief updated. Review before acting on buy or price changes.');
-          return;
-        }
-        setStatus('err', data.error || 'AI brief failed.');
-      })
-      .catch(function(){
-        btn.disabled = false;
-        setStatus('err', 'Could not reach the insights endpoint.');
-      });
-  }
-
-  if(btn && endpoint){
-    btn.addEventListener('click', function(){
-      btn.disabled = true;
-      setStatus('busy', kind === 'stock'
-        ? 'Reading stock, size matrices, and sales velocity… this can take up to 3 minutes.'
-        : 'Reading this month, YTD, all-time, and last-year comps… this can take up to 3 minutes.');
-      fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-          'X-CSRFToken': csrfToken(),
-          'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
-        },
-        body: ''
-      })
-        .then(function(res){ return res.json().then(function(data){ return {ok: res.ok, data: data}; }); })
-        .then(function(pack){
-          var data = pack.data || {};
-          if(data.status === 'pending' && data.job_id){
-            pollJob(data.job_id, 0);
-            return;
-          }
-          btn.disabled = false;
-          setStatus('err', data.error || 'Could not start generation.');
-        })
-        .catch(function(){
-          btn.disabled = false;
-          setStatus('err', 'Could not start generation.');
-        });
-    });
-  }
-})();
-</script>

@@ -1,44 +1,34 @@
-"""Staff AI board briefs for sales analytics and stock stats.
+"""Staff AI brief packs: snapshot + prompt download for off-site analysis.
 
-Generates on demand (button), runs in a background thread to avoid Heroku H12,
-persists the latest report per kind, and reuses the buying OpenAI key.
+On-site LLM generation is disabled. Staff export a Markdown file (prompt + live
+data + expected JSON schema) and run it in an external model.
 """
 
 from __future__ import annotations
 
 import calendar
 import json
-import logging
 import re
-import threading
-import uuid
 from datetime import date, timedelta
 from decimal import Decimal
 from collections import defaultdict
 
-from django.conf import settings
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.core.cache import cache
-from django.db import close_old_connections
-from django.http import JsonResponse
+from django.http import HttpResponse
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 
-from .models import SalesOrder, SalesOrderLine, StaffAiInsight
+from .models import SalesOrder, SalesOrderLine
 from .staff_analytics import (
     _EXCLUDED_STATUSES,
     build_sales_analytics,
 )
 from .staff_stock_stats import build_stock_stats, stock_products_queryset, _stock_qty, _unit_price_stock
 
-logger = logging.getLogger('shop')
-
 ANALYTICS_PROMPT_VERSION = 'exec-analytics-v1'
 STOCK_PROMPT_VERSION = 'exec-stock-v2'
-_JOB_TTL = 600
-# gpt-5.5 + structured board JSON often exceeds 90s; job is background so H12 is N/A.
-_LLM_TIMEOUT = 180.0
-_MAX_USER_CHARS = 18000
+KIND_ANALYTICS = 'analytics'
+KIND_STOCK = 'stock'
 
 _SEVERITY = ('high', 'medium', 'low')
 _HORIZON = ('this_week', 'this_month', '90_days')
@@ -61,29 +51,6 @@ def _n(v):
     if isinstance(v, date):
         return v.isoformat()
     return v
-
-
-def _job_key(job_id: str) -> str:
-    return f'staff_ai_insight:{job_id}'
-
-
-def latest_insight(kind: str) -> StaffAiInsight | None:
-    return StaffAiInsight.objects.filter(kind=kind).first()
-
-
-def insight_context(kind: str) -> dict:
-    row = latest_insight(kind)
-    if not row:
-        return {'ai_insight': None, 'ai_insight_kind': kind}
-    return {
-        'ai_insight_kind': kind,
-        'ai_insight': {
-            'report': row.report or {},
-            'generated_at': row.generated_at,
-            'prompt_version': row.prompt_version,
-            'model_version': row.model_version,
-        },
-    }
 
 
 def earliest_order_date() -> date | None:
@@ -852,13 +819,6 @@ Tools you may recommend: Buying module, Stock receive, Product create/edit, Preo
 """
 
 
-def _trim_payload(payload: dict) -> str:
-    raw = json.dumps(payload, ensure_ascii=False, default=str)
-    if len(raw) <= _MAX_USER_CHARS:
-        return raw
-    return raw[: _MAX_USER_CHARS - 20] + '\n…[truncated]'
-
-
 def _clean_str(v) -> str:
     if v is None:
         return ''
@@ -953,154 +913,87 @@ def validate_stock_report(data: object) -> dict:
     return report
 
 
-def generate_insight(kind: str, *, user_id: int | None = None) -> dict:
-    if kind not in (StaffAiInsight.Kind.ANALYTICS, StaffAiInsight.Kind.STOCK):
-        raise InsightError('Unknown insight type.')
-    if not (getattr(settings, 'BUYING_OPENAI_API_KEY', '') or '').strip():
-        raise InsightError('OpenAI API key is not configured (OPENAI_API_KEY).')
+def insight_kind_spec(kind: str, *, today: date | None = None) -> dict:
+    """Prompt + live snapshot + output schema for one brief kind."""
+    today = today or date.today()
+    if kind == KIND_ANALYTICS:
+        return {
+            'kind': KIND_ANALYTICS,
+            'title': 'Sales analytics board brief',
+            'slug': 'analytics',
+            'prompt_version': ANALYTICS_PROMPT_VERSION,
+            'system_prompt': ANALYTICS_SYSTEM_PROMPT.strip(),
+            'task': (
+                'Generate the sales analytics board brief from this Tenrivals snapshot. '
+                'Compare this month, YTD, all-time, and last-year same month when present.'
+            ),
+            'output_schema': ANALYTICS_JSON_SCHEMA,
+            'data': build_analytics_insight_payload(today=today),
+        }
+    if kind == KIND_STOCK:
+        return {
+            'kind': KIND_STOCK,
+            'title': 'Stock & replenishment board brief',
+            'slug': 'stock',
+            'prompt_version': STOCK_PROMPT_VERSION,
+            'system_prompt': STOCK_SYSTEM_PROMPT.strip(),
+            'task': (
+                'Generate the stock & 30-day buy-plan board brief from this Tenrivals snapshot. '
+                'Use on-hand stock, size/grip matrices, and sales velocity together.'
+            ),
+            'output_schema': STOCK_JSON_SCHEMA,
+            'data': build_stock_insight_payload(today=today),
+        }
+    raise InsightError('Unknown insight type.')
 
-    if kind == StaffAiInsight.Kind.ANALYTICS:
-        payload = build_analytics_insight_payload()
-        system = ANALYTICS_SYSTEM_PROMPT
-        schema = ANALYTICS_JSON_SCHEMA
-        prompt_version = ANALYTICS_PROMPT_VERSION
-        validate = validate_analytics_report
-        user_preamble = (
-            'Generate the sales analytics board brief from this Tenrivals snapshot. '
-            'Compare this month, YTD, all-time, and last-year same month when present.'
-        )
-    else:
-        payload = build_stock_insight_payload()
-        system = STOCK_SYSTEM_PROMPT
-        schema = STOCK_JSON_SCHEMA
-        prompt_version = STOCK_PROMPT_VERSION
-        validate = validate_stock_report
-        user_preamble = (
-            'Generate the stock & 30-day buy-plan board brief from this Tenrivals snapshot. '
-            'Use on-hand stock, size/grip matrices, and sales velocity together.'
-        )
 
-    from buying.ai.base import AIProviderError, AIProviderNotConfigured
-    from buying.ai.providers.openai_provider import OpenAIProvider
-
-    provider = OpenAIProvider(
-        api_key=getattr(settings, 'BUYING_OPENAI_API_KEY', '') or '',
-        timeout=_LLM_TIMEOUT,
+def build_insight_export_markdown(kind: str, *, today: date | None = None) -> tuple[str, str]:
+    """Return (filename, markdown body) for off-site AI analysis."""
+    spec = insight_kind_spec(kind, today=today)
+    as_of = timezone.localtime().strftime('%Y-%m-%d %H:%M %Z')
+    data_json = json.dumps(spec['data'], ensure_ascii=False, indent=2, default=str)
+    schema_json = json.dumps(spec['output_schema'], ensure_ascii=False, indent=2)
+    body = (
+        f"# Tenrivals — {spec['title']}\n\n"
+        f"- Exported: {as_of}\n"
+        f"- Kind: `{spec['kind']}`\n"
+        f"- Prompt version: `{spec['prompt_version']}`\n"
+        f"- Site: tenrivals.com (staff analytics / stock stats)\n\n"
+        'Paste this entire file into an AI chat. Analysis is **not** run inside the Tenrivals admin.\n\n'
+        '---\n\n'
+        '## System prompt\n\n'
+        f"{spec['system_prompt']}\n\n"
+        '---\n\n'
+        '## Task\n\n'
+        f"{spec['task']}\n\n"
+        'Return a single JSON object that matches the schema below. '
+        'Do not invent SKUs, quantities, prices, or suppliers that are absent from the data snapshot.\n\n'
+        '---\n\n'
+        '## Expected output JSON schema\n\n'
+        '```json\n'
+        f'{schema_json}\n'
+        '```\n\n'
+        '---\n\n'
+        '## Data snapshot\n\n'
+        '```json\n'
+        f'{data_json}\n'
+        '```\n'
     )
-    user_content = user_preamble + '\n\nDATA JSON:\n' + _trim_payload(payload)
-    logger.info(
-        'Staff AI insight %s payload %s chars (timeout=%ss)',
-        kind,
-        len(user_content),
-        _LLM_TIMEOUT,
-    )
-    try:
-        provider._require_key()
-        raw = provider._chat(
-            model=provider.normalization_model,
-            system_prompt=system,
-            user_content=user_content,
-            json_schema=schema,
-        )
-        parsed = provider._extract_json(raw)
-    except AIProviderNotConfigured as exc:
-        raise InsightError(str(exc)) from exc
-    except AIProviderError as exc:
-        raise InsightError(f'AI brief failed: {exc}') from exc
-
-    report = validate(parsed)
-    row, _created = StaffAiInsight.objects.update_or_create(
-        kind=kind,
-        defaults={
-            'report': report,
-            'prompt_version': prompt_version,
-            'model_version': getattr(provider, 'normalization_model', '') or '',
-            'generated_by_id': user_id,
-        },
-    )
-    return {
-        'kind': kind,
-        'report': report,
-        'generated_at': timezone.localtime(row.generated_at).isoformat(),
-        'prompt_version': row.prompt_version,
-        'model_version': row.model_version,
-    }
-
-
-def start_insight_job(*, kind: str, user_id: int | None = None) -> str:
-    if kind not in (StaffAiInsight.Kind.ANALYTICS, StaffAiInsight.Kind.STOCK):
-        raise InsightError('Unknown insight type.')
-    if not (getattr(settings, 'BUYING_OPENAI_API_KEY', '') or '').strip():
-        raise InsightError('OpenAI API key is not configured (OPENAI_API_KEY).')
-    job_id = uuid.uuid4().hex
-    cache.set(_job_key(job_id), {'ok': True, 'status': 'pending'}, _JOB_TTL)
-    thread = threading.Thread(
-        target=_run_job,
-        args=(job_id, kind, user_id),
-        daemon=True,
-        name=f'staff-ai-insight-{kind}-{job_id[:8]}',
-    )
-    thread.start()
-    return job_id
-
-
-def get_insight_job(job_id: str) -> dict | None:
-    cleaned = re.sub(r'[^a-fA-F0-9]', '', job_id or '')
-    if len(cleaned) != 32:
-        return None
-    payload = cache.get(_job_key(cleaned.lower()))
-    return payload if isinstance(payload, dict) else None
-
-
-def _run_job(job_id: str, kind: str, user_id: int | None) -> None:
-    close_old_connections()
-    try:
-        result = generate_insight(kind, user_id=user_id)
-        cache.set(
-            _job_key(job_id),
-            {'ok': True, 'status': 'ok', **result},
-            _JOB_TTL,
-        )
-    except InsightError as exc:
-        logger.info('Staff AI insight failed (%s): %s', kind, exc)
-        cache.set(
-            _job_key(job_id),
-            {'ok': False, 'status': 'error', 'error': str(exc)},
-            _JOB_TTL,
-        )
-    except Exception:
-        logger.exception('Staff AI insight crashed (%s)', kind)
-        cache.set(
-            _job_key(job_id),
-            {'ok': False, 'status': 'error', 'error': 'AI brief failed unexpectedly.'},
-            _JOB_TTL,
-        )
-    finally:
-        close_old_connections()
+    day = (today or date.today()).isoformat()
+    filename = f"tenrivals-{spec['slug']}-ai-brief-{day}.md"
+    return filename, body
 
 
 @login_required
 @user_passes_test(_staff_ok)
-@require_http_methods(['GET', 'POST'])
+@require_http_methods(['GET'])
 def staff_ai_insights(request, kind: str):
-    """AJAX: start / poll AI board brief generation."""
-    if kind not in (StaffAiInsight.Kind.ANALYTICS, StaffAiInsight.Kind.STOCK):
-        return JsonResponse({'ok': False, 'error': 'Unknown insight type.'}, status=404)
-
-    if request.method == 'GET':
-        job = get_insight_job(request.GET.get('job_id') or '')
-        if job is None:
-            return JsonResponse(
-                {'ok': False, 'status': 'error', 'error': 'Job not found or expired.'},
-                status=404,
-            )
-        return JsonResponse(job)
-
+    """Download prompt + live snapshot as a Markdown file (no on-site LLM)."""
     try:
-        job_id = start_insight_job(
-            kind=kind,
-            user_id=getattr(request.user, 'pk', None),
-        )
-    except InsightError as exc:
-        return JsonResponse({'ok': False, 'status': 'error', 'error': str(exc)}, status=400)
-    return JsonResponse({'ok': True, 'status': 'pending', 'job_id': job_id})
+        filename, body = build_insight_export_markdown(kind)
+    except InsightError:
+        return HttpResponse('Unknown insight type.', status=404, content_type='text/plain; charset=utf-8')
+    response = HttpResponse(body.encode('utf-8'), content_type='text/markdown; charset=utf-8')
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response
+

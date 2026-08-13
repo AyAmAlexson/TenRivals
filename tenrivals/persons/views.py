@@ -1440,9 +1440,6 @@ def staff_stock_receipt_undo(request, receipt_id: int):
 @login_required
 @user_passes_test(_superuser_required)
 def staff_stock_stats(request):
-    from shop.models import StaffAiInsight
-    from shop.staff_ai_insights import insight_context
-
     ctx = build_stock_stats()
     ctx.update(
         {
@@ -1455,7 +1452,7 @@ def staff_stock_stats(request):
                 "Junior shoe catalog type is excluded from the shoe matrix."
             ),
             "ai_insights_url": reverse("administration:staff_stock_stats_insights"),
-            **insight_context(StaffAiInsight.Kind.STOCK),
+            "ai_insight_kind": "stock",
         }
     )
     return render(request, "persons/staff_stock_stats.html", ctx)

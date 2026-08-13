@@ -29,7 +29,7 @@ from django.db.models import Prefetch
 from django.shortcuts import render
 from django.urls import reverse
 
-from .models import SalesOrder, SalesOrderLine, StaffAiInsight
+from .models import SalesOrder, SalesOrderLine
 from .sales_order_utils import order_services_and_delivery_cogs
 from .stock_value_history import build_stock_value_series
 
@@ -595,7 +595,6 @@ def staff_sales_analytics(request):
 
     ctx = build_sales_analytics(start, end, granularity)
     month_metrics = build_current_month_metrics(today)
-    from .staff_ai_insights import insight_context
 
     ctx.update(
         {
@@ -608,7 +607,7 @@ def staff_sales_analytics(request):
             'page_heading': 'Sales analytics',
             'month_metrics': month_metrics,
             'ai_insights_url': reverse('administration:staff_sales_analytics_insights'),
-            **insight_context(StaffAiInsight.Kind.ANALYTICS),
+            'ai_insight_kind': 'analytics',
         }
     )
     return render(request, 'shop/staff/sales_analytics.html', ctx)

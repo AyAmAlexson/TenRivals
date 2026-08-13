@@ -1,7 +1,5 @@
-import json
 from datetime import date
 from decimal import Decimal
-from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
@@ -17,11 +15,11 @@ from shop.staff_ai_insights import (
     ANALYTICS_SYSTEM_PROMPT,
     STOCK_PROMPT_VERSION,
     STOCK_SYSTEM_PROMPT,
-    _MAX_USER_CHARS,
     _group_racket_holes,
     _group_shoe_gaps,
     _sku_brief,
     build_analytics_insight_payload,
+    build_insight_export_markdown,
     build_stock_insight_payload,
     validate_analytics_report,
     validate_stock_report,
@@ -181,8 +179,23 @@ class InsightPayloadTests(TestCase):
         self.assertIn('stock_kpis', payload)
         self.assertEqual(payload['cover_rules']['dead_if_no_sales_days'], 90)
         self.assertIn('category_mix', payload)
-        dumped = json.dumps(payload, ensure_ascii=False, default=str)
-        self.assertLessEqual(len(dumped), _MAX_USER_CHARS)
+
+    def test_export_markdown_includes_prompt_and_snapshot(self):
+        today = date(2026, 8, 13)
+        self._order(today)
+        filename, body = build_insight_export_markdown('analytics', today=today)
+        self.assertTrue(filename.startswith('tenrivals-analytics-ai-brief-'))
+        self.assertTrue(filename.endswith('.md'))
+        self.assertIn('## System prompt', body)
+        self.assertIn('## Task', body)
+        self.assertIn('## Data snapshot', body)
+        self.assertIn('this_month', body)
+        self.assertIn(ANALYTICS_SYSTEM_PROMPT.strip()[:40], body)
+        stock_name, stock_body = build_insight_export_markdown('stock', today=today)
+        self.assertTrue(stock_name.startswith('tenrivals-stock-ai-brief-'))
+        self.assertIn('## System prompt', stock_body)
+        self.assertIn('stock_kpis', stock_body)
+        self.assertIn(STOCK_SYSTEM_PROMPT.strip()[:40], stock_body)
 
     def test_stock_helpers_compact_gaps_and_skus(self):
         gaps = _group_shoe_gaps(
@@ -218,7 +231,7 @@ class InsightPayloadTests(TestCase):
         self.assertEqual(brief['woc'], 14.0)
 
 
-@override_settings(SECURE_SSL_REDIRECT=False, BUYING_OPENAI_API_KEY='')
+@override_settings(SECURE_SSL_REDIRECT=False)
 class InsightViewTests(TestCase):
     def setUp(self):
         User = get_user_model()
@@ -227,23 +240,28 @@ class InsightViewTests(TestCase):
             password='secret-secret',
         )
         self.url = reverse('administration:staff_sales_analytics_insights')
+        self.stock_url = reverse('administration:staff_stock_stats_insights')
 
     def test_anonymous_redirected(self):
-        response = self.client.post(self.url)
+        response = self.client.get(self.url)
         self.assertEqual(response.status_code, 302)
 
-    def test_missing_key_returns_400(self):
+    def test_post_not_allowed(self):
         self.client.force_login(self.staff)
         response = self.client.post(self.url)
-        self.assertEqual(response.status_code, 400)
-        self.assertIn('OpenAI', response.json()['error'])
+        self.assertEqual(response.status_code, 405)
 
-    @override_settings(BUYING_OPENAI_API_KEY='sk-test')
-    def test_start_job_returns_pending(self):
+    def test_staff_downloads_markdown_pack(self):
         self.client.force_login(self.staff)
-        with patch('shop.staff_ai_insights.threading.Thread') as thread_cls:
-            response = self.client.post(self.url)
+        response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json()['status'], 'pending')
-        thread_cls.assert_called_once()
-        thread_cls.return_value.start.assert_called_once()
+        self.assertIn('text/markdown', response['Content-Type'])
+        self.assertIn('attachment', response['Content-Disposition'])
+        self.assertIn('tenrivals-analytics-ai-brief-', response['Content-Disposition'])
+        body = response.content.decode('utf-8')
+        self.assertIn('## System prompt', body)
+        self.assertIn('## Data snapshot', body)
+        stock = self.client.get(self.stock_url)
+        self.assertEqual(stock.status_code, 200)
+        self.assertIn('tenrivals-stock-ai-brief-', stock['Content-Disposition'])
+        self.assertIn('## System prompt', stock.content.decode('utf-8'))
