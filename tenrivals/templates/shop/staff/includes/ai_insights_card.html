@@ -183,7 +183,7 @@
   }catch(e){}
 
   function pollJob(jobId, attempt){
-    if(attempt > 90){
+    if(attempt > 150){
       btn.disabled = false;
       setStatus('err', 'Timed out waiting for the brief. Try again.');
       return;
@@ -216,8 +216,8 @@
     btn.addEventListener('click', function(){
       btn.disabled = true;
       setStatus('busy', kind === 'stock'
-        ? 'Reading stock, size matrices, and sales velocity…'
-        : 'Reading this month, YTD, all-time, and last-year comps…');
+        ? 'Reading stock, size matrices, and sales velocity… this can take up to 3 minutes.'
+        : 'Reading this month, YTD, all-time, and last-year comps… this can take up to 3 minutes.');
       fetch(endpoint, {
         method: 'POST',
         headers: {

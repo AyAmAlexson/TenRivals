@@ -34,10 +34,11 @@ from .staff_stock_stats import build_stock_stats, stock_products_queryset, _stoc
 logger = logging.getLogger('shop')
 
 ANALYTICS_PROMPT_VERSION = 'exec-analytics-v1'
-STOCK_PROMPT_VERSION = 'exec-stock-v1'
+STOCK_PROMPT_VERSION = 'exec-stock-v2'
 _JOB_TTL = 600
-_LLM_TIMEOUT = 90.0
-_MAX_USER_CHARS = 28000
+# gpt-5.5 + structured board JSON often exceeds 90s; job is background so H12 is N/A.
+_LLM_TIMEOUT = 180.0
+_MAX_USER_CHARS = 18000
 
 _SEVERITY = ('high', 'medium', 'low')
 _HORIZON = ('this_week', 'this_month', '90_days')
@@ -377,6 +378,65 @@ def _weeks_cover(on_hand: int, sold_30: int) -> float | None:
     return round(on_hand * 7 / sold_30, 1)
 
 
+def _short(text, n: int = 72) -> str:
+    s = re.sub(r'\s+', ' ', (text or '').strip())
+    return s if len(s) <= n else s[: n - 1].rstrip() + '…'
+
+
+def _sku_brief(row: dict) -> dict:
+    brand = _short(row.get('brand') or '', 28)
+    name = _short(row.get('name') or '', 64)
+    label = f'{brand} {name}'.strip()
+    return {
+        'sku': label,
+        'type': row['type'],
+        'qty': row['qty'],
+        'shelf': row['shelf_value'],
+        'landed': row['landed_unit'],
+        's30': row['sold_30d'],
+        's90': row['sold_90d'],
+        'woc': row['weeks_cover'],
+    }
+
+
+def _group_shoe_gaps(gaps: list[dict], *, limit_groups: int = 10) -> list[dict]:
+    by_col: dict[str, list[str]] = defaultdict(list)
+    for gap in gaps:
+        col = str(gap.get('column') or '').strip() or 'Unknown'
+        size = str(gap.get('size') or '').strip()
+        if size and size not in by_col[col]:
+            by_col[col].append(size)
+    out = []
+    for col, sizes in sorted(by_col.items(), key=lambda x: (-len(x[1]), x[0])):
+        out.append({'column': col, 'hot_zero_sizes': sizes[:18], 'count': len(sizes)})
+        if len(out) >= limit_groups:
+            break
+    return out
+
+
+def _group_racket_holes(holes: list[dict], *, limit_groups: int = 10) -> list[dict]:
+    by_key: dict[tuple[str, str], list[str]] = defaultdict(list)
+    for hole in holes:
+        tier = str(hole.get('tier') or '').strip()
+        weight = str(hole.get('weight') or '').strip()
+        grip = str(hole.get('grip') or '').strip()
+        if grip and grip not in by_key[(tier, weight)]:
+            by_key[(tier, weight)].append(grip)
+    out = []
+    for (tier, weight), grips in sorted(by_key.items(), key=lambda x: (-len(x[1]), x[0][0], x[0][1])):
+        out.append(
+            {
+                'tier': tier,
+                'weight': weight,
+                'empty_grips': sorted(grips),
+                'count': len(grips),
+            }
+        )
+        if len(out) >= limit_groups:
+            break
+    return out
+
+
 def build_stock_insight_payload(*, today: date | None = None) -> dict:
     today = today or date.today()
     stats = build_stock_stats()
@@ -506,8 +566,8 @@ def build_stock_insight_payload(*, today: date | None = None) -> dict:
                 for r in (ytd.get('type_breakdown') or [])[:12]
             ],
             'top_products': [
-                {'label': r['label'], 'qty': r['qty'], 'revenue': _n(r['revenue']), 'profit': _n(r['profit'])}
-                for r in (ytd.get('top_products') or [])[:12]
+                {'label': _short(r['label'], 56), 'qty': r['qty'], 'revenue': _n(r['revenue']), 'profit': _n(r['profit'])}
+                for r in (ytd.get('top_products') or [])[:8]
             ],
         }
         mtd = build_sales_analytics(date(today.year, today.month, 1), today, 'month')
@@ -517,7 +577,7 @@ def build_stock_insight_payload(*, today: date | None = None) -> dict:
             'profit': _n(mtd['totals']['profit']),
             'categories': [
                 {'label': r['label'], 'qty': r['qty'], 'revenue': _n(r['revenue'])}
-                for r in (mtd.get('type_breakdown') or [])[:10]
+                for r in (mtd.get('type_breakdown') or [])[:8]
             ],
         }
     else:
@@ -548,12 +608,12 @@ def build_stock_insight_payload(*, today: date | None = None) -> dict:
                 (stats.get('charts') or {}).get('priceBuckets', {}).get('values') or [],
             )
         ],
-        'shoe_hot_size_gaps': shoe_gaps[:40],
-        'racket_empty_cells': racket_holes[:40],
-        'skus_by_shelf_value': by_value,
-        'fast_movers_low_cover': fast[:25],
-        'dead_stock_no_sales_90d': dead[:25],
-        'excess_high_cover': excess[:25],
+        'shoe_hot_size_gaps': _group_shoe_gaps(shoe_gaps),
+        'racket_empty_cells': _group_racket_holes(racket_holes),
+        'skus_by_shelf_value': [_sku_brief(r) for r in by_value[:18]],
+        'fast_movers_low_cover': [_sku_brief(r) for r in fast[:12]],
+        'dead_stock_no_sales_90d': [_sku_brief(r) for r in dead[:12]],
+        'excess_high_cover': [_sku_brief(r) for r in excess[:12]],
         'sales_30d_channels': [
             {'channel': k, 'qty': v['qty'], 'revenue': _n(v['revenue'])}
             for k, v in vel['channel_30'].items()
@@ -772,6 +832,7 @@ VOICE
 • Never invent SKUs or qtys. If a matrix cell is empty or 🔴, that is a real gap only if sales also suggest demand — say when it is a gap vs when it is an unused size.
 • Clay is the default Tbilisi outdoor surface; men’s/women’s hot US size bands matter more than fringe sizes.
 • Working capital is scarce. A buy plan must include a do-not-buy list.
+• Keep the brief tight so it can finish quickly: summary ≤3 short paragraphs; lists 3–6 items; buy_plan ≤8 rows; do_not_buy ≤5.
 
 WHAT A GOOD BRIEF DOES
 1. Headline — inventory health in one line (lean / bloated / gappy / balanced) plus cash implication.
@@ -782,8 +843,8 @@ WHAT A GOOD BRIEF DOES
 6. Excess — high weeks-of-cover or 90d dead stock. Action: hold, discount, stop reorder, or transfer to preorder-only.
 7. Size & spec alerts — shoes (US × surface) and rackets (grip × weight × price tier).
 8. Buy plan thesis — one paragraph on next 30 days: seasonal timing, budget discipline, clay vs AC, juniors.
-9. Buy plan — 6–14 lines, P0 first. Each line: category, what (model family / spec, not fake SKUs unless listed), qty hint (pairs/units/range), why (cover, gap, sales). Prefer completing size runs on winners over adding random new models.
-10. Do not buy — 3–8 items/buckets to avoid this month.
+9. Buy plan — 4–8 lines, P0 first. Each line: category, what (model family / spec, not fake SKUs unless listed), qty hint (pairs/units/range), why (cover, gap, sales). Prefer completing size runs on winners over adding random new models.
+10. Do not buy — 3–5 items/buckets to avoid this month.
 11. Operations — receive stock, backfill landed costs, retag preorder vs stock, price markdowns, chase open preorders.
 12. Data quality — SKUs without landed cost, unusable size JSON, free-text sales that hide true sell-through.
 
@@ -927,6 +988,12 @@ def generate_insight(kind: str, *, user_id: int | None = None) -> dict:
         timeout=_LLM_TIMEOUT,
     )
     user_content = user_preamble + '\n\nDATA JSON:\n' + _trim_payload(payload)
+    logger.info(
+        'Staff AI insight %s payload %s chars (timeout=%ss)',
+        kind,
+        len(user_content),
+        _LLM_TIMEOUT,
+    )
     try:
         provider._require_key()
         raw = provider._chat(

@@ -1,3 +1,4 @@
+import json
 from datetime import date
 from decimal import Decimal
 from unittest.mock import patch
@@ -14,7 +15,12 @@ from shop.models import (
 )
 from shop.staff_ai_insights import (
     ANALYTICS_SYSTEM_PROMPT,
+    STOCK_PROMPT_VERSION,
     STOCK_SYSTEM_PROMPT,
+    _MAX_USER_CHARS,
+    _group_racket_holes,
+    _group_shoe_gaps,
+    _sku_brief,
     build_analytics_insight_payload,
     build_stock_insight_payload,
     validate_analytics_report,
@@ -43,8 +49,10 @@ class InsightPromptTests(TestCase):
             'Stock receive',
             'hot size',
             'Working capital',
+            'Keep the brief tight',
         ):
             self.assertIn(token, STOCK_SYSTEM_PROMPT)
+        self.assertEqual(STOCK_PROMPT_VERSION, 'exec-stock-v2')
 
 
 class InsightValidationTests(TestCase):
@@ -173,6 +181,41 @@ class InsightPayloadTests(TestCase):
         self.assertIn('stock_kpis', payload)
         self.assertEqual(payload['cover_rules']['dead_if_no_sales_days'], 90)
         self.assertIn('category_mix', payload)
+        dumped = json.dumps(payload, ensure_ascii=False, default=str)
+        self.assertLessEqual(len(dumped), _MAX_USER_CHARS)
+
+    def test_stock_helpers_compact_gaps_and_skus(self):
+        gaps = _group_shoe_gaps(
+            [
+                {'size': 'US 10', 'column': 'Men clay'},
+                {'size': 'US 10.5', 'column': 'Men clay'},
+                {'size': 'US 8', 'column': 'Women AC'},
+            ]
+        )
+        self.assertEqual(gaps[0]['column'], 'Men clay')
+        self.assertEqual(gaps[0]['count'], 2)
+        holes = _group_racket_holes(
+            [
+                {'tier': '≤600₾', 'grip': 'L2', 'weight': '295–304g'},
+                {'tier': '≤600₾', 'grip': 'L3', 'weight': '295–304g'},
+            ]
+        )
+        self.assertEqual(holes[0]['count'], 2)
+        brief = _sku_brief(
+            {
+                'brand': 'Wilson',
+                'name': 'Blade 100 v9',
+                'type': 'Tennis Racket',
+                'qty': 2,
+                'shelf_value': 400,
+                'landed_unit': 180,
+                'sold_30d': 1,
+                'sold_90d': 3,
+                'weeks_cover': 14.0,
+            }
+        )
+        self.assertEqual(brief['sku'], 'Wilson Blade 100 v9')
+        self.assertEqual(brief['woc'], 14.0)
 
 
 @override_settings(SECURE_SSL_REDIRECT=False, BUYING_OPENAI_API_KEY='')
