@@ -13,6 +13,7 @@ from shop.models import (
 )
 from shop.staff_ai_insights import (
     ANALYTICS_SYSTEM_PROMPT,
+    ORDERS_SYSTEM_PROMPT,
     STOCK_PROMPT_VERSION,
     STOCK_SYSTEM_PROMPT,
     _group_racket_holes,
@@ -20,6 +21,7 @@ from shop.staff_ai_insights import (
     _sku_brief,
     build_analytics_insight_payload,
     build_insight_export_markdown,
+    build_orders_insight_payload,
     build_stock_insight_payload,
     validate_analytics_report,
     validate_stock_report,
@@ -51,6 +53,17 @@ class InsightPromptTests(TestCase):
         ):
             self.assertIn(token, STOCK_SYSTEM_PROMPT)
         self.assertEqual(STOCK_PROMPT_VERSION, 'exec-stock-v2')
+
+    def test_orders_prompt_is_for_commercial_director(self):
+        for token in (
+            'commercial director',
+            'line-level',
+            'pnl_totals',
+            'coverage',
+            'Customer outreach',
+            'Never invent',
+        ):
+            self.assertIn(token, ORDERS_SYSTEM_PROMPT)
 
 
 class InsightValidationTests(TestCase):
@@ -172,7 +185,9 @@ class InsightPayloadTests(TestCase):
         self.assertTrue(any(x.startswith('same_month_last_year') for x in labels))
         month = next(p for p in payload['periods'] if p['label'] == 'this_month')
         self.assertEqual(month['orders'], 1)
-        self.assertIn('Buying module', payload['business']['tools_available'])
+        self.assertTrue(
+            any('Buying module' in t for t in payload['business']['tools_available'])
+        )
 
     def test_stock_payload_has_cover_rules_and_kpis(self):
         payload = build_stock_insight_payload(today=date(2026, 8, 13))
@@ -196,6 +211,29 @@ class InsightPayloadTests(TestCase):
         self.assertIn('## System prompt', stock_body)
         self.assertIn('stock_kpis', stock_body)
         self.assertIn(STOCK_SYSTEM_PROMPT.strip()[:40], stock_body)
+        orders_name, orders_body = build_insight_export_markdown('orders', today=today)
+        self.assertTrue(orders_name.startswith('tenrivals-orders-ai-brief-'))
+        self.assertIn('## System prompt', orders_body)
+        self.assertIn('commercial director', orders_body)
+        self.assertIn('Wilson Blade 100', orders_body)
+        self.assertIn(ORDERS_SYSTEM_PROMPT.strip()[:40], orders_body)
+
+    def test_orders_payload_includes_lines_and_excludes_cancelled_from_pnl(self):
+        today = date(2026, 8, 13)
+        kept = self._order(today)
+        cancelled = self._order(date(2026, 8, 12), gross='50.00', cost='10.00')
+        cancelled.status = SalesOrder.Status.CANCELLED
+        cancelled.invoice_number = 'INS-cancelled'
+        cancelled.save(update_fields=['status', 'invoice_number'])
+        payload = build_orders_insight_payload(today=today)
+        self.assertEqual(payload['scope']['order_count'], 2)
+        invoices = {row['invoice']: row for row in payload['orders']}
+        self.assertTrue(invoices[kept.invoice_number]['in_pnl'])
+        self.assertFalse(invoices['INS-cancelled']['in_pnl'])
+        self.assertEqual(payload['pnl_totals']['orders'], 1)
+        self.assertEqual(len(invoices[kept.invoice_number]['lines']), 1)
+        self.assertEqual(invoices[kept.invoice_number]['lines'][0]['title'], 'Wilson Blade 100')
+        self.assertIn('profit', invoices[kept.invoice_number]['finance'])
 
     def test_stock_helpers_compact_gaps_and_skus(self):
         gaps = _group_shoe_gaps(
@@ -241,6 +279,7 @@ class InsightViewTests(TestCase):
         )
         self.url = reverse('administration:staff_sales_analytics_insights')
         self.stock_url = reverse('administration:staff_stock_stats_insights')
+        self.orders_url = reverse('administration:staff_sales_orders_insights')
 
     def test_anonymous_redirected(self):
         response = self.client.get(self.url)
@@ -265,3 +304,7 @@ class InsightViewTests(TestCase):
         self.assertEqual(stock.status_code, 200)
         self.assertIn('tenrivals-stock-ai-brief-', stock['Content-Disposition'])
         self.assertIn('## System prompt', stock.content.decode('utf-8'))
+        orders = self.client.get(self.orders_url)
+        self.assertEqual(orders.status_code, 200)
+        self.assertIn('tenrivals-orders-ai-brief-', orders['Content-Disposition'])
+        self.assertIn('commercial director', orders.content.decode('utf-8'))

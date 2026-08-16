@@ -115,6 +115,12 @@ urlpatterns = [
     ),
     path("orders/", staff_sales_views.staff_sales_orders, name="staff_sales_orders"),
     path(
+        "orders/insights/",
+        staff_ai_insights.staff_ai_insights,
+        {'kind': 'orders'},
+        name="staff_sales_orders_insights",
+    ),
+    path(
         "orders/<int:pk>/status/",
         staff_sales_views.staff_sales_order_set_status,
         name="staff_sales_order_set_status",

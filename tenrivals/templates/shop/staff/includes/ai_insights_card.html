@@ -11,10 +11,12 @@
 <div class="ai-brief">
   <div class="ai-brief__head">
     <div>
-      <h2 class="ai-brief__title">{% if ai_insight_kind == 'stock' %}Stock AI brief pack{% else %}Analytics AI brief pack{% endif %}</h2>
+      <h2 class="ai-brief__title">{% if ai_insight_kind == 'stock' %}Stock AI brief pack{% elif ai_insight_kind == 'orders' %}Orders AI brief pack{% else %}Analytics AI brief pack{% endif %}</h2>
       <p class="ai-brief__meta">
         {% if ai_insight_kind == 'stock' %}
           Download the COO prompt plus live stock, size/grip matrices, and sales velocity.
+        {% elif ai_insight_kind == 'orders' %}
+          Download the commercial-director prompt plus every sales order, line item, and staff P&amp;L field.
         {% else %}
           Download the COO prompt plus this month, YTD, all-time, and last-year comps.
         {% endif %}

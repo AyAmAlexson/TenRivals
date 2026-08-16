@@ -14,21 +14,30 @@ from decimal import Decimal
 from collections import defaultdict
 
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.db.models import Prefetch
 from django.http import HttpResponse
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 
 from .models import SalesOrder, SalesOrderLine
+from .sales_order_utils import parse_services_payload
 from .staff_analytics import (
     _EXCLUDED_STATUSES,
+    _add_metrics,
+    _finalize_metrics,
+    _zero_metrics,
     build_sales_analytics,
+    compute_order_economics,
+    is_card_payment,
 )
 from .staff_stock_stats import build_stock_stats, stock_products_queryset, _stock_qty, _unit_price_stock
 
 ANALYTICS_PROMPT_VERSION = 'exec-analytics-v1'
 STOCK_PROMPT_VERSION = 'exec-stock-v2'
+ORDERS_PROMPT_VERSION = 'exec-orders-cco-v1'
 KIND_ANALYTICS = 'analytics'
 KIND_STOCK = 'stock'
+KIND_ORDERS = 'orders'
 
 _SEVERITY = ('high', 'medium', 'low')
 _HORIZON = ('this_week', 'this_month', '90_days')
@@ -262,6 +271,161 @@ def build_analytics_insight_payload(*, today: date | None = None) -> dict:
             'same_month_last_year_full is the full calendar month last year when data exists.',
             'all_time starts at the first completed order.',
         ],
+    }
+
+
+def _public_order_metrics(raw: dict) -> dict:
+    m = _finalize_metrics(dict(raw))
+    return {
+        'revenue': _n(m['revenue']),
+        'vat': _n(m['vat']),
+        'net': _n(m['net']),
+        'cogs': _n(m['cogs']),
+        'income': _n(m['income']),
+        'tax': _n(m['tax']),
+        'acquiring': _n(m['acquiring']),
+        'profit': _n(m['profit']),
+        'margin_pct': _n(m.get('margin_pct')),
+        'roi_pct': _n(m.get('roi_pct')),
+        'coverage_pct': _n(m.get('coverage_pct')),
+        'aov': _n(m.get('aov')),
+        'items': m.get('items', 0),
+        'card_revenue': _n(m.get('card_revenue')),
+        'card_share_pct': _n(m.get('card_share_pct')),
+    }
+
+
+def _serialize_order_line(line: SalesOrderLine) -> dict:
+    qty = int(line.quantity or 0)
+    lc = line.landed_cost_gel
+    known = lc is not None and lc != 0
+    product = line.product if line.product_id else None
+    line_cogs = (Decimal(qty) * lc) if lc is not None else None
+    return {
+        'title': line.display_title(),
+        'brand': (product.brand or '').strip() if product else '',
+        'product_id': line.product_id,
+        'free_text': not bool(line.product_id),
+        'category': line.analytics_category_label(),
+        'product_type': line.product_type or '',
+        'channel': line.sale_channel or SalesOrderLine.SaleChannel.STOCK,
+        'variant': (line.variant_label or '').strip(),
+        'qty': qty,
+        'unit_price_gross': _n(line.unit_price_gross),
+        'discount_pct': _n(line.discount_percent or Decimal('0')),
+        'line_gross': _n(line.line_gross),
+        'line_vat': _n(line.line_vat),
+        'line_net': _n(line.line_net),
+        'landed_unit': _n(lc),
+        'line_cogs': _n(line_cogs),
+        'known_landed_cost': known,
+    }
+
+
+def _serialize_order_for_ai(order: SalesOrder) -> dict:
+    raw = compute_order_economics(order)
+    metrics = _public_order_metrics(raw)
+    in_pnl = order.status not in _EXCLUDED_STATUSES
+    cust = order.customer
+    services = [
+        {'name': s['name'], 'gross': _n(s['gross']), 'cost': _n(s['cost'])}
+        for s in parse_services_payload(order.services or [])
+    ]
+    return {
+        'invoice': order.invoice_number,
+        'date': order.order_date.isoformat() if order.order_date else None,
+        'status': order.status,
+        'in_pnl': in_pnl,
+        'customer_id': order.customer_id,
+        'customer': cust.display_name() if cust else '',
+        'payment_method': order.payment_method or '',
+        'card_payment': is_card_payment(order.payment_method),
+        'payment_currency': order.payment_currency_display(),
+        'exchange_rate': _n(order.exchange_rate),
+        'amount_in_payment_currency': _n(order.amount_in_payment_currency),
+        'fiscal_receipt': order.fiscal_receipt or '',
+        'promo_code': order.promo_code_label or '',
+        'promo_discount_gross': _n(order.promo_discount_gross),
+        'delivery_gross': _n(order.delivery_gross),
+        'delivery_cost': _n(order.delivery_cost_gel),
+        'services': services,
+        'cogs_fill': order.cogs_fill_status(),
+        'finance': metrics,
+        'lines': [_serialize_order_line(line) for line in order.lines.all()],
+    }
+
+
+def build_orders_insight_payload(*, today: date | None = None) -> dict:
+    """Every sales order with line items and staff P&L fields."""
+    today = today or date.today()
+    orders = list(
+        SalesOrder.objects.select_related('customer')
+        .prefetch_related(
+            Prefetch(
+                'lines',
+                queryset=SalesOrderLine.objects.select_related('product').order_by('id'),
+            )
+        )
+        .order_by('order_date', 'invoice_number')
+    )
+    pnl = _zero_metrics()
+    all_raw = _zero_metrics()
+    excluded_revenue = Decimal('0')
+    status_counts: dict[str, int] = defaultdict(int)
+    serialized = []
+    monthly: dict[str, dict] = {}
+    for order in orders:
+        status_counts[order.status] += 1
+        raw = compute_order_economics(order)
+        _add_metrics(all_raw, raw)
+        row = _serialize_order_for_ai(order)
+        serialized.append(row)
+        if order.status in _EXCLUDED_STATUSES:
+            excluded_revenue += raw['revenue']
+        else:
+            _add_metrics(pnl, raw)
+            month_key = order.order_date.strftime('%Y-%m') if order.order_date else 'unknown'
+            bucket = monthly.setdefault(month_key, _zero_metrics())
+            _add_metrics(bucket, raw)
+
+    month_rows = []
+    for key in sorted(monthly.keys()):
+        m = _public_order_metrics(monthly[key])
+        m['period'] = key
+        m['orders'] = monthly[key]['orders']
+        month_rows.append(m)
+
+    pnl_pub = _public_order_metrics(pnl)
+    pnl_pub['orders'] = pnl['orders']
+    all_pub = _public_order_metrics(all_raw)
+    all_pub['orders'] = all_raw['orders']
+
+    return {
+        'as_of': today.isoformat(),
+        'business': _business_context(),
+        'definitions': {
+            'revenue': 'VAT-inclusive gross ₾ (order.gross_total)',
+            'vat': '18% included',
+            'tax': '1% turnover tax on gross',
+            'acquiring': '2% of gross on card/POS payments',
+            'cogs': 'Σ qty × line landed_cost_gel (if set) + service contractor costs + delivery_cost_gel',
+            'income': '(Revenue − VAT) − COGS',
+            'profit': 'Income − TAX − Acquiring',
+            'coverage': 'share of product-line revenue with a landed_cost_gel value (including 0)',
+            'known_landed_cost': 'line flag: landed_cost_gel is not null and not 0',
+            'in_pnl': 'false for CANCELLED and REFUNDED — still listed, excluded from pnl_totals',
+            'lines': 'product or free-text invoice lines; services and delivery sit on the order',
+        },
+        'scope': {
+            'order_count': len(serialized),
+            'status_counts': dict(status_counts),
+            'excluded_statuses': list(_EXCLUDED_STATUSES),
+            'cancelled_refunded_revenue': _n(excluded_revenue),
+        },
+        'pnl_totals': pnl_pub,
+        'all_orders_totals': all_pub,
+        'monthly_pnl': month_rows,
+        'orders': serialized,
     }
 
 
@@ -762,6 +926,72 @@ STOCK_JSON_SCHEMA = {
     },
 }
 
+ORDERS_JSON_SCHEMA = {
+    'name': 'staff_orders_cco_brief',
+    'strict': True,
+    'schema': {
+        'type': 'object',
+        'additionalProperties': False,
+        'properties': {
+            'headline': {'type': 'string'},
+            'executive_summary': {'type': 'string'},
+            'pnl_quality': {'type': 'string'},
+            'what_is_selling': _str_arr(
+                {'title': {'type': 'string'}, 'detail': {'type': 'string'}},
+                ['title', 'detail'],
+            ),
+            'what_is_weak': _str_arr(
+                {'title': {'type': 'string'}, 'detail': {'type': 'string'}},
+                ['title', 'detail'],
+            ),
+            'pricing_and_discount': {'type': 'string'},
+            'channel_mix': {'type': 'string'},
+            'customer_concentration': {'type': 'string'},
+            'attention': _str_arr(
+                {
+                    'title': {'type': 'string'},
+                    'severity': {'type': 'string', 'enum': list(_SEVERITY)},
+                    'detail': {'type': 'string'},
+                    'why_it_matters': {'type': 'string'},
+                },
+                ['title', 'severity', 'detail', 'why_it_matters'],
+            ),
+            'recommendations': _str_arr(
+                {
+                    'action': {'type': 'string'},
+                    'horizon': {'type': 'string', 'enum': list(_HORIZON)},
+                    'how': {'type': 'string'},
+                    'tools': {'type': 'string'},
+                    'expected_impact': {'type': 'string'},
+                },
+                ['action', 'horizon', 'how', 'tools', 'expected_impact'],
+            ),
+            'risks': _str_arr(
+                {'risk': {'type': 'string'}, 'mitigation': {'type': 'string'}},
+                ['risk', 'mitigation'],
+            ),
+            'data_quality': _str_arr(
+                {'issue': {'type': 'string'}, 'fix': {'type': 'string'}},
+                ['issue', 'fix'],
+            ),
+        },
+        'required': [
+            'headline',
+            'executive_summary',
+            'pnl_quality',
+            'what_is_selling',
+            'what_is_weak',
+            'pricing_and_discount',
+            'channel_mix',
+            'customer_concentration',
+            'attention',
+            'recommendations',
+            'risks',
+            'data_quality',
+        ],
+    },
+}
+
 
 ANALYTICS_SYSTEM_PROMPT = """You are the COO of Tenrivals, a curated tennis specialty retailer in Tbilisi, Georgia.
 
@@ -816,6 +1046,35 @@ WHAT A GOOD BRIEF DOES
 12. Data quality — SKUs without landed cost, unusable size JSON, free-text sales that hide true sell-through.
 
 Tools you may recommend: Buying module, Stock receive, Product create/edit, Preorder catalog, Promo codes, Sales orders, Customer outreach.
+"""
+
+ORDERS_SYSTEM_PROMPT = """You are writing for the commercial director of Tenrivals, a curated tennis specialty retailer in Tbilisi, Georgia.
+
+This is a line-level sales dump (every staff invoice, every line item, plus order P&L). Produce a commercial brief they can act on: assortment, pricing, mix, customers, and profit quality — not a warehouse replenishment plan and not a chart recap.
+
+VOICE
+• Direct, commercially literate. English. Short sentences. Name invoices, SKUs, categories, channels, and customers when the data supports it.
+• Never invent products, quantities, prices, customers, or invoices that are not in the JSON.
+• Use pnl_totals (CANCELLED / REFUNDED excluded) for economics. Mention cancelled/refunded leakage only from scope + orders with in_pnl=false.
+• If cost coverage is weak, treat profit, margin, and ROI as directional and say so.
+• Clay is the default Tbilisi outdoor surface; summer (especially August) is peak outdoor play; juniors are a growth slice.
+• Working capital is limited. Prefer pricing, mix, and chase-the-cost moves over “sell more of everything”.
+
+WHAT A GOOD BRIEF DOES
+1. Headline — one sentence on commercial health (volume vs mix vs margin vs coverage).
+2. Executive summary — 2–4 paragraphs: run-rate, AOV, stock vs preorder, category winners, customer concentration, whether profit is decision-grade.
+3. P&L quality — interpret revenue, VAT, COGS, income, TAX, acquiring, profit, coverage. Call out free-text lines and missing landed cost.
+4. What is selling — 4–8 concrete winners (SKU / family / category / channel) with qty and revenue/profit from the lines.
+5. What is weak — 3–6 laggards or unprofitable pockets (high discount, low margin, one-off free-text, cancelled).
+6. Pricing and discount — line discount_pct, promo_code / promo_discount_gross, delivery vs delivery_cost. Are we giving away margin?
+7. Channel mix — STOCK vs PREORDER share of qty and revenue; leakage or over-reliance.
+8. Customer concentration — top customers by revenue/profit; repeat vs one-order; risk if a name disappears.
+9. Attention — 3–8 issues with severity (coverage, concentration, discounting, FX/card mix, status pipeline).
+10. Recommendations — 4–8 actions with HOW and which tool: Sales orders, Buying module, Stock receive, Product create/edit, Preorder catalog, Promo codes, Customer outreach, price edit. Horizon: this_week / this_month / 90_days.
+11. Risks — 2–5 commercial risks + mitigation.
+12. Data quality — missing landed cost, free-text lines, empty category, payment method blank, cancelled after sale.
+
+Do not mention the source JSON. Do not tell them to “look at the orders list”. They already have it.
 """
 
 
@@ -943,6 +1202,20 @@ def insight_kind_spec(kind: str, *, today: date | None = None) -> dict:
             ),
             'output_schema': STOCK_JSON_SCHEMA,
             'data': build_stock_insight_payload(today=today),
+        }
+    if kind == KIND_ORDERS:
+        return {
+            'kind': KIND_ORDERS,
+            'title': 'Orders commercial-director brief',
+            'slug': 'orders',
+            'prompt_version': ORDERS_PROMPT_VERSION,
+            'system_prompt': ORDERS_SYSTEM_PROMPT.strip(),
+            'task': (
+                'Generate the commercial-director brief from this full Tenrivals sales dump. '
+                'Use every order and line item. Ground claims in invoices, SKUs, customers, and P&L fields.'
+            ),
+            'output_schema': ORDERS_JSON_SCHEMA,
+            'data': build_orders_insight_payload(today=today),
         }
     raise InsightError('Unknown insight type.')
 

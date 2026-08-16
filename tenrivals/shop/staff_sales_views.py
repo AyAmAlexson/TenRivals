@@ -531,6 +531,8 @@ def staff_sales_orders(request):
             'report_month': _safe_int(
                 request.GET.get('report_month'), date.today().month, 1, 12
             ),
+            'ai_insights_url': reverse('administration:staff_sales_orders_insights'),
+            'ai_insight_kind': 'orders',
         },
     )
 
