@@ -6,6 +6,9 @@
   .ai-brief__meta{font-size:13px;color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0;margin:8px 0 0;line-height:1.5;max-width:52rem}
   .ai-brief__btn{display:inline-flex;align-items:center;justify-content:center;height:40px;padding:0 16px;border:1px solid var(--accent);background:var(--accent);color:#fff;font-family:inherit;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;white-space:nowrap}
   .ai-brief__btn:hover{background:var(--accent-dark);border-color:var(--accent-dark);color:#fff}
+  .ai-brief__actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+  .ai-brief__btn--secondary{background:#fff;color:var(--accent)}
+  .ai-brief__btn--secondary:hover{background:var(--accent);color:#fff}
 </style>
 
 <div class="ai-brief">
@@ -16,13 +19,23 @@
         {% if ai_insight_kind == 'stock' %}
           Download the COO prompt plus live stock, size/grip matrices, and sales velocity.
         {% elif ai_insight_kind == 'orders' %}
-          Download the commercial-director prompt plus every sales order, line item, and staff P&amp;L field.
+          Download the commercial-director prompt plus sales orders, line items, and staff P&amp;L{% if csv_export_url %}, or a detailed CSV (one row per line){% endif %}.
+          Exports follow the date / invoice filters on this page.
         {% else %}
           Download the COO prompt plus this month, YTD, all-time, and last-year comps.
         {% endif %}
-        Run the file in ChatGPT or Claude — analysis is not generated on this site.
+        {% if ai_insight_kind == 'orders' and csv_export_url %}
+          Markdown is for ChatGPT or Claude — analysis is not generated on this site.
+        {% else %}
+          Run the file in ChatGPT or Claude — analysis is not generated on this site.
+        {% endif %}
       </p>
     </div>
-    <a class="ai-brief__btn" href="{{ ai_insights_url }}">Export for AI</a>
+    <div class="ai-brief__actions">
+      <a class="ai-brief__btn" href="{{ ai_insights_url }}{% if ai_insight_kind == 'orders' %}?start={{ start|date:'Y-m-d' }}&amp;end={{ end|date:'Y-m-d' }}{% if invoice_q %}&amp;q={{ invoice_q|urlencode }}{% endif %}{% endif %}">Export for AI</a>
+      {% if csv_export_url %}
+      <a class="ai-brief__btn ai-brief__btn--secondary" href="{{ csv_export_url }}?start={{ start|date:'Y-m-d' }}&amp;end={{ end|date:'Y-m-d' }}{% if invoice_q %}&amp;q={{ invoice_q|urlencode }}{% endif %}">Export CSV</a>
+      {% endif %}
+    </div>
   </div>
 </div>

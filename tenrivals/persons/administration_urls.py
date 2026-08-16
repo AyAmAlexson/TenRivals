@@ -93,6 +93,11 @@ urlpatterns = [
         name="staff_sales_analytics_insights",
     ),
     path(
+        "analytics/orders/csv/",
+        staff_ai_insights.staff_orders_csv,
+        name="staff_order_finance_csv",
+    ),
+    path(
         "analytics/orders/",
         staff_analytics.staff_order_finance,
         name="staff_order_finance",

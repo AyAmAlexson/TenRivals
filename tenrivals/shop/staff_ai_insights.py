@@ -7,6 +7,8 @@ data + expected JSON schema) and run it in an external model.
 from __future__ import annotations
 
 import calendar
+import csv
+import io
 import json
 import re
 from datetime import date, timedelta
@@ -20,7 +22,7 @@ from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 
 from .models import SalesOrder, SalesOrderLine
-from .sales_order_utils import parse_services_payload
+from .sales_order_utils import parse_services_payload, product_unit_gross_price
 from .staff_analytics import (
     _EXCLUDED_STATUSES,
     _add_metrics,
@@ -295,13 +297,45 @@ def _public_order_metrics(raw: dict) -> dict:
     }
 
 
-def _serialize_order_line(line: SalesOrderLine) -> dict:
+def _sales_orders_for_export(*, start: date | None = None, end: date | None = None, invoice_q: str = ''):
+    qs = (
+        SalesOrder.objects.select_related('customer')
+        .prefetch_related(
+            Prefetch(
+                'lines',
+                queryset=SalesOrderLine.objects.select_related('product').order_by('id'),
+            )
+        )
+        .order_by('order_date', 'invoice_number')
+    )
+    if start:
+        qs = qs.filter(order_date__gte=start)
+    if end:
+        qs = qs.filter(order_date__lte=end)
+    q = (invoice_q or '').strip()
+    if q:
+        qs = qs.filter(invoice_number__icontains=q)
+    return qs
+
+
+def _dt(value) -> str:
+    if not value:
+        return ''
+    if timezone.is_aware(value):
+        value = timezone.localtime(value)
+    return value.strftime('%Y-%m-%d %H:%M:%S')
+
+
+def _serialize_order_line(line: SalesOrderLine, *, detail: bool = False) -> dict:
     qty = int(line.quantity or 0)
     lc = line.landed_cost_gel
     known = lc is not None and lc != 0
     product = line.product if line.product_id else None
     line_cogs = (Decimal(qty) * lc) if lc is not None else None
-    return {
+    line_net = line.line_net or Decimal('0')
+    line_income = (line_net - line_cogs) if line_cogs is not None else None
+    row = {
+        'line_id': line.pk,
         'title': line.display_title(),
         'brand': (product.brand or '').strip() if product else '',
         'product_id': line.product_id,
@@ -309,6 +343,7 @@ def _serialize_order_line(line: SalesOrderLine) -> dict:
         'category': line.analytics_category_label(),
         'product_type': line.product_type or '',
         'channel': line.sale_channel or SalesOrderLine.SaleChannel.STOCK,
+        'channel_label': line.get_sale_channel_display() if line.sale_channel else '',
         'variant': (line.variant_label or '').strip(),
         'qty': qty,
         'unit_price_gross': _n(line.unit_price_gross),
@@ -318,23 +353,41 @@ def _serialize_order_line(line: SalesOrderLine) -> dict:
         'line_net': _n(line.line_net),
         'landed_unit': _n(lc),
         'line_cogs': _n(line_cogs),
+        'line_income': _n(line_income),
         'known_landed_cost': known,
     }
+    if detail:
+        row.update(
+            {
+                'sku': (product.sku or '') if product else '',
+                'color': (product.color or '') if product else '',
+                'catalog_name': (product.name or '') if product else '',
+                'custom_label': (line.custom_label or '').strip(),
+                'product_landed_now': _n(product.landed_cost_gel) if product else None,
+                'product_shelf_now': _n(product_unit_gross_price(product)) if product else None,
+            }
+        )
+    return row
 
 
-def _serialize_order_for_ai(order: SalesOrder) -> dict:
+def _serialize_order_for_ai(order: SalesOrder, *, detail: bool = False) -> dict:
     raw = compute_order_economics(order)
     metrics = _public_order_metrics(raw)
     in_pnl = order.status not in _EXCLUDED_STATUSES
     cust = order.customer
+    parsed_services = parse_services_payload(order.services or [])
     services = [
         {'name': s['name'], 'gross': _n(s['gross']), 'cost': _n(s['cost'])}
-        for s in parse_services_payload(order.services or [])
+        for s in parsed_services
     ]
-    return {
+    services_gross = sum((s['gross'] for s in parsed_services), Decimal('0'))
+    services_cost = sum((s['cost'] or Decimal('0') for s in parsed_services), Decimal('0'))
+    row = {
+        'order_id': order.pk,
         'invoice': order.invoice_number,
         'date': order.order_date.isoformat() if order.order_date else None,
         'status': order.status,
+        'status_label': order.get_status_display(),
         'in_pnl': in_pnl,
         'customer_id': order.customer_id,
         'customer': cust.display_name() if cust else '',
@@ -349,25 +402,44 @@ def _serialize_order_for_ai(order: SalesOrder) -> dict:
         'delivery_gross': _n(order.delivery_gross),
         'delivery_cost': _n(order.delivery_cost_gel),
         'services': services,
+        'services_gross': _n(services_gross),
+        'services_cost': _n(services_cost),
         'cogs_fill': order.cogs_fill_status(),
         'finance': metrics,
-        'lines': [_serialize_order_line(line) for line in order.lines.all()],
+        'gross_stored': _n(order.gross_total),
+        'vat_stored': _n(order.vat_total),
+        'net_stored': _n(order.net_total),
+        'lines': [_serialize_order_line(line, detail=detail) for line in order.lines.all()],
     }
-
-
-def build_orders_insight_payload(*, today: date | None = None) -> dict:
-    """Every sales order with line items and staff P&L fields."""
-    today = today or date.today()
-    orders = list(
-        SalesOrder.objects.select_related('customer')
-        .prefetch_related(
-            Prefetch(
-                'lines',
-                queryset=SalesOrderLine.objects.select_related('product').order_by('id'),
-            )
+    if detail:
+        row.update(
+            {
+                'notes': (order.notes or '').strip(),
+                'created_at': _dt(order.created_at),
+                'updated_at': _dt(order.updated_at),
+                'customer_first_name': (cust.first_name or '') if cust else '',
+                'customer_last_name': (cust.last_name or '') if cust else '',
+                'customer_local_name': cust.display_name_for_invoice() if cust else '',
+                'customer_email': (cust.email or '') if cust else '',
+                'customer_phone': (cust.phone or '') if cust else '',
+                'customer_telegram': (cust.tg_account or '') if cust else '',
+                'customer_source': (cust.source or '') if cust else '',
+                'customer_newsletter': bool(cust.newsletter_opt_in) if cust else False,
+            }
         )
-        .order_by('order_date', 'invoice_number')
-    )
+    return row
+
+
+def build_orders_insight_payload(
+    *,
+    today: date | None = None,
+    start: date | None = None,
+    end: date | None = None,
+    invoice_q: str = '',
+) -> dict:
+    """Sales orders with line items and staff P&L fields."""
+    today = today or date.today()
+    orders = list(_sales_orders_for_export(start=start, end=end, invoice_q=invoice_q))
     pnl = _zero_metrics()
     all_raw = _zero_metrics()
     excluded_revenue = Decimal('0')
@@ -418,6 +490,9 @@ def build_orders_insight_payload(*, today: date | None = None) -> dict:
         },
         'scope': {
             'order_count': len(serialized),
+            'date_from': start.isoformat() if start else None,
+            'date_to': end.isoformat() if end else None,
+            'invoice_q': (invoice_q or '').strip(),
             'status_counts': dict(status_counts),
             'excluded_statuses': list(_EXCLUDED_STATUSES),
             'cancelled_refunded_revenue': _n(excluded_revenue),
@@ -427,6 +502,202 @@ def build_orders_insight_payload(*, today: date | None = None) -> dict:
         'monthly_pnl': month_rows,
         'orders': serialized,
     }
+
+
+ORDERS_CSV_COLUMNS = (
+    ('invoice', 'invoice'),
+    ('order_id', 'order_id'),
+    ('date', 'order_date'),
+    ('status', 'status'),
+    ('status_label', 'status_label'),
+    ('in_pnl', 'in_pnl'),
+    ('cogs_fill', 'cogs_fill'),
+    ('created_at', 'created_at'),
+    ('updated_at', 'updated_at'),
+    ('customer_id', 'customer_id'),
+    ('customer', 'customer'),
+    ('customer_first_name', 'customer_first_name'),
+    ('customer_last_name', 'customer_last_name'),
+    ('customer_local_name', 'customer_local_name'),
+    ('customer_email', 'customer_email'),
+    ('customer_phone', 'customer_phone'),
+    ('customer_telegram', 'customer_telegram'),
+    ('customer_source', 'customer_source'),
+    ('customer_newsletter', 'customer_newsletter'),
+    ('payment_method', 'payment_method'),
+    ('card_payment', 'card_payment'),
+    ('payment_currency', 'payment_currency'),
+    ('exchange_rate', 'exchange_rate'),
+    ('amount_in_payment_currency', 'amount_in_payment_currency'),
+    ('fiscal_receipt', 'fiscal_receipt'),
+    ('promo_code', 'promo_code'),
+    ('promo_discount_gross', 'promo_discount_gross'),
+    ('delivery_gross', 'delivery_gross'),
+    ('delivery_cost', 'delivery_cost'),
+    ('services_json', 'services_json'),
+    ('services_gross', 'services_gross'),
+    ('services_cost', 'services_cost'),
+    ('notes', 'notes'),
+    ('gross_stored', 'order_gross_stored'),
+    ('vat_stored', 'order_vat_stored'),
+    ('net_stored', 'order_net_stored'),
+    ('order_revenue', 'order_revenue'),
+    ('order_vat', 'order_vat'),
+    ('order_net', 'order_net'),
+    ('order_cogs', 'order_cogs'),
+    ('order_income', 'order_income'),
+    ('order_tax', 'order_tax'),
+    ('order_acquiring', 'order_acquiring'),
+    ('order_profit', 'order_profit'),
+    ('order_margin_pct', 'order_margin_pct'),
+    ('order_roi_pct', 'order_roi_pct'),
+    ('order_coverage_pct', 'order_coverage_pct'),
+    ('order_items', 'order_items'),
+    ('line_no', 'line_no'),
+    ('line_id', 'line_id'),
+    ('title', 'line_title'),
+    ('catalog_name', 'catalog_name'),
+    ('custom_label', 'custom_label'),
+    ('brand', 'brand'),
+    ('sku', 'sku'),
+    ('color', 'color'),
+    ('product_id', 'product_id'),
+    ('free_text', 'free_text'),
+    ('category', 'category'),
+    ('product_type', 'product_type'),
+    ('channel', 'channel'),
+    ('channel_label', 'channel_label'),
+    ('variant', 'variant'),
+    ('qty', 'qty'),
+    ('unit_price_gross', 'unit_price_gross'),
+    ('discount_pct', 'discount_pct'),
+    ('line_gross', 'line_gross'),
+    ('line_vat', 'line_vat'),
+    ('line_net', 'line_net'),
+    ('landed_unit', 'landed_unit_snapshot'),
+    ('line_cogs', 'line_cogs'),
+    ('line_income', 'line_income'),
+    ('known_landed_cost', 'known_landed_cost'),
+    ('product_landed_now', 'product_landed_now'),
+    ('product_shelf_now', 'product_shelf_now'),
+)
+
+
+def _csv_cell(value) -> str:
+    if value is None:
+        return ''
+    if isinstance(value, bool):
+        return 'yes' if value else 'no'
+    return value
+
+
+def build_orders_csv(
+    *,
+    start: date | None = None,
+    end: date | None = None,
+    invoice_q: str = '',
+    today: date | None = None,
+) -> tuple[str, str]:
+    """One CSV row per line item (order fields repeated). Orders with no lines get one row."""
+    today = today or date.today()
+    orders = list(_sales_orders_for_export(start=start, end=end, invoice_q=invoice_q))
+    buf = io.StringIO()
+    writer = csv.writer(buf)
+    writer.writerow([header for _, header in ORDERS_CSV_COLUMNS])
+    for order in orders:
+        packed = _serialize_order_for_ai(order, detail=True)
+        fin = packed.get('finance') or {}
+        services_json = json.dumps(packed.get('services') or [], ensure_ascii=False)
+        base = {
+            'invoice': packed.get('invoice'),
+            'order_id': packed.get('order_id'),
+            'date': packed.get('date'),
+            'status': packed.get('status'),
+            'status_label': packed.get('status_label'),
+            'in_pnl': packed.get('in_pnl'),
+            'cogs_fill': packed.get('cogs_fill'),
+            'created_at': packed.get('created_at'),
+            'updated_at': packed.get('updated_at'),
+            'customer_id': packed.get('customer_id'),
+            'customer': packed.get('customer'),
+            'customer_first_name': packed.get('customer_first_name'),
+            'customer_last_name': packed.get('customer_last_name'),
+            'customer_local_name': packed.get('customer_local_name'),
+            'customer_email': packed.get('customer_email'),
+            'customer_phone': packed.get('customer_phone'),
+            'customer_telegram': packed.get('customer_telegram'),
+            'customer_source': packed.get('customer_source'),
+            'customer_newsletter': packed.get('customer_newsletter'),
+            'payment_method': packed.get('payment_method'),
+            'card_payment': packed.get('card_payment'),
+            'payment_currency': packed.get('payment_currency'),
+            'exchange_rate': packed.get('exchange_rate'),
+            'amount_in_payment_currency': packed.get('amount_in_payment_currency'),
+            'fiscal_receipt': packed.get('fiscal_receipt'),
+            'promo_code': packed.get('promo_code'),
+            'promo_discount_gross': packed.get('promo_discount_gross'),
+            'delivery_gross': packed.get('delivery_gross'),
+            'delivery_cost': packed.get('delivery_cost'),
+            'services_json': services_json,
+            'services_gross': packed.get('services_gross'),
+            'services_cost': packed.get('services_cost'),
+            'notes': packed.get('notes'),
+            'gross_stored': packed.get('gross_stored'),
+            'vat_stored': packed.get('vat_stored'),
+            'net_stored': packed.get('net_stored'),
+            'order_revenue': fin.get('revenue'),
+            'order_vat': fin.get('vat'),
+            'order_net': fin.get('net'),
+            'order_cogs': fin.get('cogs'),
+            'order_income': fin.get('income'),
+            'order_tax': fin.get('tax'),
+            'order_acquiring': fin.get('acquiring'),
+            'order_profit': fin.get('profit'),
+            'order_margin_pct': fin.get('margin_pct'),
+            'order_roi_pct': fin.get('roi_pct'),
+            'order_coverage_pct': fin.get('coverage_pct'),
+            'order_items': fin.get('items'),
+        }
+        lines = packed.get('lines') or []
+        if not lines:
+            lines = [{}]
+        for idx, line in enumerate(lines, start=1):
+            row = dict(base)
+            row['line_no'] = idx if line else ''
+            for key in (
+                'line_id',
+                'title',
+                'catalog_name',
+                'custom_label',
+                'brand',
+                'sku',
+                'color',
+                'product_id',
+                'free_text',
+                'category',
+                'product_type',
+                'channel',
+                'channel_label',
+                'variant',
+                'qty',
+                'unit_price_gross',
+                'discount_pct',
+                'line_gross',
+                'line_vat',
+                'line_net',
+                'landed_unit',
+                'line_cogs',
+                'line_income',
+                'known_landed_cost',
+                'product_landed_now',
+                'product_shelf_now',
+            ):
+                row[key] = line.get(key)
+            writer.writerow([_csv_cell(row.get(key)) for key, _ in ORDERS_CSV_COLUMNS])
+    from_part = start.isoformat() if start else 'all'
+    to_part = end.isoformat() if end else today.isoformat()
+    filename = f'tenrivals-orders-{from_part}-to-{to_part}.csv'
+    return filename, buf.getvalue()
 
 
 def _business_context() -> dict:
@@ -1172,7 +1443,14 @@ def validate_stock_report(data: object) -> dict:
     return report
 
 
-def insight_kind_spec(kind: str, *, today: date | None = None) -> dict:
+def insight_kind_spec(
+    kind: str,
+    *,
+    today: date | None = None,
+    start: date | None = None,
+    end: date | None = None,
+    invoice_q: str = '',
+) -> dict:
     """Prompt + live snapshot + output schema for one brief kind."""
     today = today or date.today()
     if kind == KIND_ANALYTICS:
@@ -1215,14 +1493,23 @@ def insight_kind_spec(kind: str, *, today: date | None = None) -> dict:
                 'Use every order and line item. Ground claims in invoices, SKUs, customers, and P&L fields.'
             ),
             'output_schema': ORDERS_JSON_SCHEMA,
-            'data': build_orders_insight_payload(today=today),
+            'data': build_orders_insight_payload(
+                today=today, start=start, end=end, invoice_q=invoice_q
+            ),
         }
     raise InsightError('Unknown insight type.')
 
 
-def build_insight_export_markdown(kind: str, *, today: date | None = None) -> tuple[str, str]:
+def build_insight_export_markdown(
+    kind: str,
+    *,
+    today: date | None = None,
+    start: date | None = None,
+    end: date | None = None,
+    invoice_q: str = '',
+) -> tuple[str, str]:
     """Return (filename, markdown body) for off-site AI analysis."""
-    spec = insight_kind_spec(kind, today=today)
+    spec = insight_kind_spec(kind, today=today, start=start, end=end, invoice_q=invoice_q)
     as_of = timezone.localtime().strftime('%Y-%m-%d %H:%M %Z')
     data_json = json.dumps(spec['data'], ensure_ascii=False, indent=2, default=str)
     schema_json = json.dumps(spec['output_schema'], ensure_ascii=False, indent=2)
@@ -1257,16 +1544,45 @@ def build_insight_export_markdown(kind: str, *, today: date | None = None) -> tu
     return filename, body
 
 
+def _optional_iso_date(raw) -> date | None:
+    text = (raw or '').strip()
+    if not text:
+        return None
+    try:
+        return date.fromisoformat(text)
+    except ValueError:
+        return None
+
+
 @login_required
 @user_passes_test(_staff_ok)
 @require_http_methods(['GET'])
 def staff_ai_insights(request, kind: str):
     """Download prompt + live snapshot as a Markdown file (no on-site LLM)."""
+    extra = {}
+    if kind == KIND_ORDERS:
+        extra['start'] = _optional_iso_date(request.GET.get('start'))
+        extra['end'] = _optional_iso_date(request.GET.get('end'))
+        extra['invoice_q'] = (request.GET.get('q') or '').strip()
     try:
-        filename, body = build_insight_export_markdown(kind)
+        filename, body = build_insight_export_markdown(kind, **extra)
     except InsightError:
         return HttpResponse('Unknown insight type.', status=404, content_type='text/plain; charset=utf-8')
     response = HttpResponse(body.encode('utf-8'), content_type='text/markdown; charset=utf-8')
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response
+
+
+@login_required
+@user_passes_test(_staff_ok)
+@require_http_methods(['GET'])
+def staff_orders_csv(request):
+    """Download one CSV row per sales line (order P&L repeated)."""
+    start = _optional_iso_date(request.GET.get('start'))
+    end = _optional_iso_date(request.GET.get('end'))
+    invoice_q = (request.GET.get('q') or '').strip()
+    filename, body = build_orders_csv(start=start, end=end, invoice_q=invoice_q)
+    response = HttpResponse('\ufeff' + body, content_type='text/csv; charset=utf-8')
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
     return response
 

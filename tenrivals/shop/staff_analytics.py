@@ -820,5 +820,8 @@ def staff_order_finance(request):
             {'key': 'margin', 'label': 'Margin', 'num': True},
             {'key': 'roi', 'label': 'ROI', 'num': True},
         ],
+        'ai_insights_url': reverse('administration:staff_sales_orders_insights'),
+        'ai_insight_kind': 'orders',
+        'csv_export_url': reverse('administration:staff_order_finance_csv'),
     }
     return render(request, 'shop/staff/order_finance.html', ctx)

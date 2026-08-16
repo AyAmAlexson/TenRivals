@@ -50,6 +50,8 @@
   <button type="submit" class="btn btn--sm">Apply</button>
 </form>
 
+{% include 'shop/staff/includes/ai_insights_card.html' %}
+
 <p class="of-meta">{{ orders_count }} order{{ orders_count|pluralize }} in range · totals over {{ included_count }} active (non-cancelled / non-refunded)</p>
 
 <div class="of-table-wrap">

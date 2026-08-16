@@ -21,6 +21,7 @@ from shop.staff_ai_insights import (
     _sku_brief,
     build_analytics_insight_payload,
     build_insight_export_markdown,
+    build_orders_csv,
     build_orders_insight_payload,
     build_stock_insight_payload,
     validate_analytics_report,
@@ -235,6 +236,22 @@ class InsightPayloadTests(TestCase):
         self.assertEqual(invoices[kept.invoice_number]['lines'][0]['title'], 'Wilson Blade 100')
         self.assertIn('profit', invoices[kept.invoice_number]['finance'])
 
+    def test_orders_csv_is_line_level_and_honors_date_filter(self):
+        kept = self._order(date(2026, 8, 13))
+        self._order(date(2025, 1, 1), gross='50.00', cost='10.00')
+        filename, body = build_orders_csv(
+            start=date(2026, 8, 1),
+            end=date(2026, 8, 31),
+            today=date(2026, 8, 16),
+        )
+        self.assertTrue(filename.endswith('.csv'))
+        self.assertIn(kept.invoice_number, body)
+        self.assertNotIn('INS-2025-01-01', body)
+        self.assertIn('order_profit', body)
+        self.assertIn('line_title', body)
+        self.assertIn('landed_unit_snapshot', body)
+        self.assertIn('Wilson Blade 100', body)
+
     def test_stock_helpers_compact_gaps_and_skus(self):
         gaps = _group_shoe_gaps(
             [
@@ -280,6 +297,8 @@ class InsightViewTests(TestCase):
         self.url = reverse('administration:staff_sales_analytics_insights')
         self.stock_url = reverse('administration:staff_stock_stats_insights')
         self.orders_url = reverse('administration:staff_sales_orders_insights')
+        self.csv_url = reverse('administration:staff_order_finance_csv')
+        self.finance_url = reverse('administration:staff_order_finance')
 
     def test_anonymous_redirected(self):
         response = self.client.get(self.url)
@@ -308,3 +327,11 @@ class InsightViewTests(TestCase):
         self.assertEqual(orders.status_code, 200)
         self.assertIn('tenrivals-orders-ai-brief-', orders['Content-Disposition'])
         self.assertIn('commercial director', orders.content.decode('utf-8'))
+        csv_resp = self.client.get(self.csv_url)
+        self.assertEqual(csv_resp.status_code, 200)
+        self.assertIn('text/csv', csv_resp['Content-Type'])
+        self.assertIn('tenrivals-orders-', csv_resp['Content-Disposition'])
+        finance = self.client.get(self.finance_url)
+        self.assertEqual(finance.status_code, 200)
+        self.assertContains(finance, 'Export for AI')
+        self.assertContains(finance, 'Export CSV')
