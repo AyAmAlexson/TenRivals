@@ -52,9 +52,15 @@ def build_stock_stats() -> dict[str, Any]:
     positions = len(products)
 
     total_value = Decimal('0')
+    landed_value = Decimal('0')
+    units_with_known_cost = 0
     for p in products:
         q = _stock_qty(p)
         total_value += _unit_price_stock(p) * q
+        lc = p.landed_cost_gel
+        if lc is not None and lc != 0:
+            landed_value += lc * q
+            units_with_known_cost += q
 
     # Product-type breakdown
     type_units_table: dict[str, int] = defaultdict(int)
@@ -66,8 +72,12 @@ def build_stock_stats() -> dict[str, Any]:
         type_units_table[name] += q
         type_value_table[name] += u * q
 
-    total_units = sum(type_units_table.values()) or 1
+    total_units = sum(type_units_table.values())
     total_val = sum(type_value_table.values(), Decimal('0')) or Decimal('1')
+    units_pct_base = total_units or 1
+    coverage_pct = None
+    if total_units:
+        coverage_pct = round(100 * units_with_known_cost / total_units, 1)
 
     type_rows = []
     for name in sorted(type_units_table.keys(), key=lambda k: (-type_units_table[k], k)):
@@ -77,7 +87,7 @@ def build_stock_stats() -> dict[str, Any]:
             {
                 'name': name,
                 'units': u,
-                'units_pct': round(100 * u / total_units, 1),
+                'units_pct': round(100 * u / units_pct_base, 1),
                 'value': v,
                 'value_pct': round(float(100 * v / total_val), 1),
             }
@@ -297,6 +307,9 @@ def build_stock_stats() -> dict[str, Any]:
         'positions': positions,
         'total_units': total_units,
         'total_value': total_value,
+        'landed_value': landed_value,
+        'units_with_known_cost': units_with_known_cost,
+        'coverage_pct': coverage_pct,
         'type_rows': type_rows,
         'shoe_col_labels': shoe_col_labels,
         'shoe_rows': shoe_rows_out,
