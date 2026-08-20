@@ -78,6 +78,21 @@ def parse_invoice_number(full: str) -> tuple[int, int] | None:
     return int(m.group(1)), int(m.group(2))
 
 
+def format_invoice_number(year: int, seq: int) -> str:
+    return f'{year}-{seq:06d}'
+
+
+def normalize_invoice_number(full: str) -> str | None:
+    """Return canonical YYYY-NNNNNN or None if invalid."""
+    parsed = parse_invoice_number(full)
+    if not parsed:
+        return None
+    year, seq = parsed
+    if seq < 1 or seq > 999999:
+        return None
+    return format_invoice_number(year, seq)
+
+
 def max_issued_invoice_seq_for_year(year: int) -> int:
     """Highest *standard* numeric suffix among existing orders for that year.
 
@@ -96,12 +111,19 @@ def max_issued_invoice_seq_for_year(year: int) -> int:
 
 
 def peek_next_invoice_number(year: int) -> str:
-    """Next number that allocate_invoice_number would issue (read-only)."""
+    """Next free number that allocate_invoice_number would issue (read-only)."""
     row, _ = SalesInvoiceYearSequence.objects.get_or_create(
         year=year,
         defaults={'last_seq': 38},
     )
-    return f'{year}-{row.last_seq + 1:06d}'
+    seq = max(row.last_seq, max_issued_invoice_seq_for_year(year))
+    while True:
+        seq += 1
+        if seq >= 100000:
+            raise ValueError(f'Invoice sequence overflow for {year}.')
+        candidate = format_invoice_number(year, seq)
+        if not SalesOrder.objects.filter(invoice_number=candidate).exists():
+            return candidate
 
 
 def set_next_invoice_number(full: str) -> None:
@@ -115,7 +137,7 @@ def set_next_invoice_number(full: str) -> None:
     year, seq = parsed
     if seq < 1 or seq > 999999:
         raise ValueError('Sequence part must be between 000001 and 999999.')
-    full_norm = f'{year}-{seq:06d}'
+    full_norm = format_invoice_number(year, seq)
     if SalesOrder.objects.filter(invoice_number=full_norm).exists():
         raise ValueError(f'Invoice number {full_norm} is already used.')
     max_issued = max_issued_invoice_seq_for_year(year)
@@ -132,15 +154,49 @@ def set_next_invoice_number(full: str) -> None:
         row.save(update_fields=['last_seq'])
 
 
+def bump_invoice_sequence_to_at_least(year: int, seq: int) -> None:
+    """Ensure the year counter is at least ``seq`` (after a manual invoice claim)."""
+    if seq < 1 or seq >= 100000:
+        return
+    with transaction.atomic():
+        row, _ = SalesInvoiceYearSequence.objects.select_for_update().get_or_create(
+            year=year,
+            defaults={'last_seq': 38},
+        )
+        if row.last_seq < seq:
+            row.last_seq = seq
+            row.save(update_fields=['last_seq'])
+
+
 def allocate_invoice_number(order_year: int) -> str:
+    """Issue the next free standard invoice number for ``order_year``.
+
+    Skips numbers that already exist (manual claims / races) so allocate never
+    returns a colliding value under the year-sequence lock.
+    """
     with transaction.atomic():
         row, _ = SalesInvoiceYearSequence.objects.select_for_update().get_or_create(
             year=order_year,
             defaults={'last_seq': 38},
         )
-        row.last_seq += 1
-        row.save(update_fields=['last_seq'])
-        return f'{order_year}-{row.last_seq:06d}'
+        issued = max_issued_invoice_seq_for_year(order_year)
+        if row.last_seq < issued:
+            row.last_seq = issued
+        while True:
+            row.last_seq += 1
+            if row.last_seq >= 100000:
+                raise ValueError(f'Invoice sequence overflow for {order_year}.')
+            candidate = format_invoice_number(order_year, row.last_seq)
+            if not SalesOrder.objects.filter(invoice_number=candidate).exists():
+                row.save(update_fields=['last_seq'])
+                return candidate
+
+
+def invoice_number_is_available(full: str, *, exclude_pk: int | None = None) -> bool:
+    qs = SalesOrder.objects.filter(invoice_number=full)
+    if exclude_pk is not None:
+        qs = qs.exclude(pk=exclude_pk)
+    return not qs.exists()
 
 
 def allocate_order_for_me_number(order_year: int) -> str:

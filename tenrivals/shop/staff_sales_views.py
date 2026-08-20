@@ -15,7 +15,7 @@ from django.urls import reverse
 from django.templatetags.static import static
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from django.db.models import Exists, OuterRef, Prefetch, Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
@@ -34,6 +34,7 @@ from .sales_order_stock import (
 )
 from .sales_order_utils import (
     allocate_invoice_number,
+    bump_invoice_sequence_to_at_least,
     compute_order_totals,
     gross_split_vat_net,
     line_amounts,
@@ -636,6 +637,10 @@ def staff_sales_order_edit(request, pk=None):
                 messages.error(request, 'Add at least one product line.')
             else:
                 try:
+                    invoice_reassigned = False
+                    requested_invoice = (
+                        form.cleaned_data.get('invoice_number') or ''
+                    ).strip()
                     with transaction.atomic():
                         if instance and instance.pk:
                             locked = SalesOrder.objects.select_for_update().get(pk=instance.pk)
@@ -644,7 +649,9 @@ def staff_sales_order_edit(request, pk=None):
                                 release_lines_to_stock(old_lines)
 
                         order = parent
-                        if instance is None:
+                        if requested_invoice:
+                            order.invoice_number = requested_invoice
+                        elif instance is None:
                             order.invoice_number = allocate_invoice_number(
                                 order.order_date.year
                             )
@@ -653,7 +660,26 @@ def staff_sales_order_edit(request, pk=None):
                         order.net_total = net
                         order.services = ser_out
                         apply_payment_currency_fields(order, gross)
-                        order.save()
+                        sid = transaction.savepoint()
+                        try:
+                            order.save()
+                            transaction.savepoint_commit(sid)
+                        except IntegrityError:
+                            # Concurrent create/edit claimed the same invoice #.
+                            transaction.savepoint_rollback(sid)
+                            year = order.order_date.year
+                            parsed = parse_invoice_number(order.invoice_number or '')
+                            if parsed:
+                                year = parsed[0]
+                            order.invoice_number = allocate_invoice_number(year)
+                            order.save()
+                            invoice_reassigned = True
+                        if requested_invoice and not invoice_reassigned:
+                            parsed = parse_invoice_number(order.invoice_number)
+                            if parsed:
+                                bump_invoice_sequence_to_at_least(
+                                    parsed[0], parsed[1]
+                                )
                         order.lines.all().delete()
                         for spec in line_specs:
                             cd = spec['cleaned']
@@ -689,7 +715,14 @@ def staff_sales_order_edit(request, pk=None):
                                 ).all()
                             )
                             take_lines_from_stock(new_lines)
-                    messages.success(request, 'Order saved.')
+                    if invoice_reassigned:
+                        messages.warning(
+                            request,
+                            f'Invoice {requested_invoice or "number"} was taken; '
+                            f'saved as {order.invoice_number}.',
+                        )
+                    else:
+                        messages.success(request, 'Order saved.')
                     return redirect('administration:staff_sales_orders')
                 except Exception as e:
                     messages.error(request, f'Could not save order: {e}')

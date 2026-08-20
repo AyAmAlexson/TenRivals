@@ -46,6 +46,12 @@
     </div>
     <div class="form-row">
       <div class="form-group">
+        <label for="{{ form.invoice_number.id_for_label }}">Invoice #</label>
+        {{ form.invoice_number }}
+        {% if form.invoice_number.help_text %}<p class="page-meta" style="margin:6px 0 0;font-size:12px">{{ form.invoice_number.help_text }}</p>{% endif %}
+        {% if form.invoice_number.errors %}<div class="field-errors">{{ form.invoice_number.errors }}</div>{% endif %}
+      </div>
+      <div class="form-group">
         <label for="{{ form.fiscal_receipt.id_for_label }}">Fiscal receipt #</label>
         {{ form.fiscal_receipt }}
       </div>
@@ -81,11 +87,6 @@
         <div class="mono" id="sum-payment-currency" style="font-size:18px;font-weight:700;padding-top:6px">—</div>
       </div>
     </div>
-    {% if order %}
-    <p class="page-meta" style="margin-bottom:16px">Invoice # <span class="mono">{{ order.invoice_number }}</span> (read-only)</p>
-    {% else %}
-    <p class="page-meta" style="margin-bottom:16px">Invoice # is assigned automatically on save.</p>
-    {% endif %}
 
     <h3 class="card-title" style="margin-top:8px;font-size:14px">Line items</h3>
     <p class="page-meta" style="margin-bottom:10px;font-size:12px">Products show <strong>brand — model — type — specs — variants</strong>. Rackets and shoes need <strong>Size / grip</strong>. Stock is reserved when the order status is not Cancelled/Refunded. Untick <strong>In stock</strong> to type a free-text item (legacy orders): such lines are not checked against and do not affect the warehouse — include size/grip in the name and pick a <strong>Category</strong> for analytics. <strong>Channel</strong> (In stock / Preorder) is an analytics tag only — it does not change warehouse behaviour.</p>

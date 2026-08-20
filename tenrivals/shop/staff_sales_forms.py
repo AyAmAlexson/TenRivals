@@ -124,6 +124,7 @@ class SalesOrderForm(forms.ModelForm):
     class Meta:
         model = SalesOrder
         fields = [
+            'invoice_number',
             'customer',
             'order_date',
             'status',
@@ -136,6 +137,17 @@ class SalesOrderForm(forms.ModelForm):
             'notes',
         ]
         widgets = {
+            'invoice_number': forms.TextInput(
+                attrs={
+                    'pattern': r'\d{4}-\d{6}',
+                    'maxlength': '11',
+                    'inputmode': 'numeric',
+                    'autocomplete': 'off',
+                    'spellcheck': 'false',
+                    'placeholder': 'YYYY-NNNNNN',
+                    'style': 'width:100%;max-width:180px;padding:9px 12px;border:1px solid #e5e7eb;font-size:14px;font-family:ui-monospace,Menlo,monospace',
+                }
+            ),
             'order_date': forms.DateInput(attrs={'type': 'date'}),
             'notes': forms.Textarea(attrs={'rows': 3}),
             'exchange_rate': forms.NumberInput(
@@ -157,6 +169,14 @@ class SalesOrderForm(forms.ModelForm):
         self.fields['delivery_cost_gel'].label = 'Delivery cost (₾, staff-only)'
         self.fields['delivery_cost_gel'].required = False
         self.fields['exchange_rate'].required = False
+        inv = self.fields['invoice_number']
+        inv.label = 'Invoice #'
+        if self.instance.pk:
+            inv.required = True
+            inv.help_text = 'Must be unique (YYYY-NNNNNN).'
+        else:
+            inv.required = False
+            inv.help_text = 'Leave blank to assign the next number on save.'
         cur = 'GEL'
         if self.instance.pk:
             cur = normalize_payment_currency(self.instance.payment_currency)
@@ -167,6 +187,25 @@ class SalesOrderForm(forms.ModelForm):
             self.fields['exchange_rate'].initial = self.instance.exchange_rate
         elif not self.instance.pk:
             self.fields['exchange_rate'].initial = Decimal('1')
+
+    def clean_invoice_number(self):
+        from .sales_order_utils import (
+            invoice_number_is_available,
+            normalize_invoice_number,
+        )
+
+        raw = (self.cleaned_data.get('invoice_number') or '').strip()
+        if not raw:
+            if self.instance.pk:
+                raise ValidationError('Invoice number is required.')
+            return ''
+        norm = normalize_invoice_number(raw)
+        if not norm:
+            raise ValidationError('Use format YYYY-NNNNNN (e.g. 2026-000040).')
+        exclude_pk = self.instance.pk if self.instance.pk else None
+        if not invoice_number_is_available(norm, exclude_pk=exclude_pk):
+            raise ValidationError(f'Invoice number {norm} is already used.')
+        return norm
 
     def clean_payment_currency(self):
         raw = (self.cleaned_data.get('payment_currency') or '').strip()

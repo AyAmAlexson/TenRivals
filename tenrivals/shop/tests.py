@@ -564,3 +564,66 @@ class LegacySalesImportHelpersTests(TestCase):
             status=SalesOrder.Status.COMPLETED,
         )
         self.assertEqual(max_issued_invoice_seq_for_year(2026), 50)
+
+    def test_allocate_skips_existing_numbers(self):
+        from shop.models import SalesInvoiceYearSequence
+        from shop.sales_order_utils import allocate_invoice_number
+
+        SalesInvoiceYearSequence.objects.update_or_create(
+            year=2026, defaults={'last_seq': 40}
+        )
+        cust = Customer.objects.create(first_name='A', last_name='B')
+        SalesOrder.objects.create(
+            invoice_number='2026-000041',
+            customer=cust,
+            order_date='2026-03-01',
+            status=SalesOrder.Status.COMPLETED,
+        )
+        self.assertEqual(allocate_invoice_number(2026), '2026-000042')
+
+    def test_invoice_number_form_uniqueness(self):
+        from shop.staff_sales_forms import SalesOrderForm
+
+        cust = Customer.objects.create(first_name='A', last_name='B')
+        existing = SalesOrder.objects.create(
+            invoice_number='2026-000060',
+            customer=cust,
+            order_date='2026-03-01',
+            status=SalesOrder.Status.COMPLETED,
+        )
+        form = SalesOrderForm(
+            data={
+                'invoice_number': '2026-000060',
+                'customer': cust.pk,
+                'order_date': '2026-03-02',
+                'status': SalesOrder.Status.COMPLETED,
+                'delivery_gross': '0',
+                'delivery_cost_gel': '0',
+                'fiscal_receipt': '',
+                'payment_method': 'Cash',
+                'payment_currency': 'GEL',
+                'exchange_rate': '1',
+                'notes': '',
+            }
+        )
+        self.assertFalse(form.is_valid())
+        self.assertIn('invoice_number', form.errors)
+
+        form_ok = SalesOrderForm(
+            instance=existing,
+            data={
+                'invoice_number': '2026-000061',
+                'customer': cust.pk,
+                'order_date': '2026-03-01',
+                'status': SalesOrder.Status.COMPLETED,
+                'delivery_gross': '0',
+                'delivery_cost_gel': '0',
+                'fiscal_receipt': '',
+                'payment_method': 'Cash',
+                'payment_currency': 'GEL',
+                'exchange_rate': '1',
+                'notes': '',
+            },
+        )
+        self.assertTrue(form_ok.is_valid(), form_ok.errors)
+        self.assertEqual(form_ok.cleaned_data['invoice_number'], '2026-000061')
