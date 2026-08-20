@@ -8,6 +8,24 @@ from . import staff_views
 urlpatterns = [
     path('', staff_views.buying_requests, name='buying_requests'),
     path('new/', staff_views.buying_request_new, name='buying_request_new'),
+    path('calculator/', staff_views.buying_calculator_list, name='buying_calculator_list'),
+    path('calculator/new/', staff_views.buying_calculator, name='buying_calculator'),
+    path(
+        'calculator/add-supplier/',
+        staff_views.buying_calculator_add_supplier,
+        name='buying_calculator_add_supplier',
+    ),
+    path('calculator/<int:pk>/', staff_views.buying_calculator_detail, name='buying_calculator_detail'),
+    path(
+        'calculator/<int:pk>/edit/',
+        staff_views.buying_calculator,
+        name='buying_calculator_edit',
+    ),
+    path(
+        'calculator/<int:pk>/recalculate/',
+        staff_views.buying_calculator_recalculate,
+        name='buying_calculator_recalculate',
+    ),
     path('<int:pk>/', staff_views.buying_request_detail, name='buying_request_detail'),
     path(
         '<int:pk>/progress/',

@@ -20,10 +20,14 @@ from .fulfillment import FulfillmentProvider, FulfillmentRoute, FulfillmentWareh
 from .pricing import CalculationRule, CostScenario
 from .fx import FxRate
 from .optimization import OptimizationCandidate, OptimizationScenario
+from .batch import BuyingBatch, BuyingBatchLine, BuyingBatchQuote
 from .audit import ManualOverride
 from .permissions import BuyingPermissions
 
 __all__ = [
+    'BuyingBatch',
+    'BuyingBatchLine',
+    'BuyingBatchQuote',
     'BuyingPermissions',
     'BuyingRequest',
     'CalculationRule',

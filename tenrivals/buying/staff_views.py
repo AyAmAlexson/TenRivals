@@ -2,17 +2,21 @@
 
 from __future__ import annotations
 
+import json
 from decimal import Decimal
 
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
 from django.db.models import Min, Q
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
-
+from django.utils.safestring import mark_safe
 from .ai.base import AIProviderError
 from .auth import buying_permission_required
 from .forms import (
+    BuyingBatchForm,
+    BuyingBatchLineFormSet,
     BuyingRequestForm,
     CalculationRuleForm,
     FulfillmentProviderForm,
@@ -21,10 +25,13 @@ from .forms import (
     NormalizedProductForm,
     OptimizationCandidateForm,
     OverrideForm,
+    QuickSupplierForm,
     SupplierForm,
     SupplierOfferForm,
 )
 from .models import (
+    BuyingBatch,
+    BuyingBatchQuote,
     BuyingRequest,
     CalculationRule,
     CostScenario,
@@ -778,3 +785,154 @@ def _form_page(request, form, *, heading: str, nav: str, back: str):
             'back_url_name': back,
         },
     )
+
+
+# --------------------------------------------------------------------------- #
+# Buying calculator (manual batch landed-cost)
+# --------------------------------------------------------------------------- #
+
+@buying_permission_required('buying.view')
+def buying_calculator_list(request):
+    qs = (
+        BuyingBatch.objects.select_related('supplier', 'created_by')
+        .exclude(status=BuyingBatch.Status.ARCHIVED)
+        .prefetch_related('lines')[:100]
+    )
+    return render(
+        request,
+        'buying/staff/calculator_list.html',
+        {
+            'staff_nav_active': 'buying_calculator',
+            'page_heading': 'Buying calculator',
+            'batches': qs,
+        },
+    )
+
+
+@buying_permission_required('buying.create')
+def buying_calculator(request, pk: int | None = None):
+    """Create or edit a calculator batch, then recalculate routes."""
+    from buying.services.batch_calculator import recalculate_batch
+
+    batch = get_object_or_404(BuyingBatch, pk=pk) if pk else None
+    if request.method == 'POST':
+        form = BuyingBatchForm(request.POST, instance=batch)
+        formset = BuyingBatchLineFormSet(request.POST, instance=batch)
+        if form.is_valid() and formset.is_valid():
+            batch = form.save(commit=False)
+            if not batch.pk:
+                batch.created_by = request.user
+            batch.save()
+            formset.instance = batch
+            formset.save()
+            for i, line in enumerate(batch.lines.order_by('id'), start=1):
+                updates = []
+                if line.sort_order != i:
+                    line.sort_order = i
+                    updates.append('sort_order')
+                if not (line.currency or '').strip():
+                    line.currency = batch.supplier.currency
+                    updates.append('currency')
+                if updates:
+                    updates.append('updated_at')
+                    line.save(update_fields=updates)
+            quotes = recalculate_batch(batch)
+            if not quotes:
+                messages.warning(
+                    request,
+                    'Batch saved, but no fulfillment routes apply for this store country '
+                    f'({batch.supplier.country}). Check Onex applicability and routes.',
+                )
+            else:
+                messages.success(
+                    request,
+                    f'Calculated {len(quotes)} delivery scenario(s) for {batch.supplier.name}.',
+                )
+            return redirect('administration:buying_calculator_detail', pk=batch.pk)
+    else:
+        form = BuyingBatchForm(instance=batch)
+        formset = BuyingBatchLineFormSet(instance=batch)
+
+    return render(
+        request,
+        'buying/staff/calculator_form.html',
+        {
+            'staff_nav_active': 'buying_calculator',
+            'page_heading': 'Edit calculator cart' if pk else 'Buying calculator',
+            'page_note_text': (
+                'Pick a store (country comes from the supplier record). Add one or more items '
+                'from that store. Weight is optional — category shipping-weight rules fill gaps. '
+                'Results show every applicable Onex route with batch and per-line landed cost.'
+            ),
+            'form': form,
+            'formset': formset,
+            'batch': batch,
+            'quick_supplier_form': QuickSupplierForm(),
+            'suppliers_json': mark_safe(json.dumps([
+                {'id': s.pk, 'currency': s.currency, 'country': s.country, 'name': s.name}
+                for s in Supplier.objects.filter(enabled=True).order_by('name')
+            ])),
+        },
+    )
+
+
+@buying_permission_required('buying.manage_suppliers')
+def buying_calculator_add_supplier(request):
+    """Quick-add a manual store, then return to the calculator form."""
+    if request.method != 'POST':
+        return redirect('administration:buying_calculator')
+    form = QuickSupplierForm(request.POST)
+    if form.is_valid():
+        supplier = form.save()
+        messages.success(request, f'Store “{supplier.name}” added ({supplier.country}).')
+        return redirect(f"{reverse('administration:buying_calculator')}?supplier={supplier.pk}")
+    messages.error(request, 'Could not add store: ' + '; '.join(
+        f'{k}: {", ".join(v)}' for k, v in form.errors.items()
+    ))
+    return redirect('administration:buying_calculator')
+
+
+@buying_permission_required('buying.view')
+def buying_calculator_detail(request, pk: int):
+    batch = get_object_or_404(
+        BuyingBatch.objects.select_related('supplier', 'created_by').prefetch_related('lines'),
+        pk=pk,
+    )
+    quotes = list(
+        BuyingBatchQuote.objects.filter(
+            batch=batch,
+            status__in=(
+                BuyingBatchQuote.Status.CALCULATED,
+                BuyingBatchQuote.Status.CALCULATION_BLOCKED,
+            ),
+            partition_key='all',
+        )
+        .select_related('fulfillment_route', 'fulfillment_route__provider', 'fulfillment_route__warehouse')
+        .order_by('rank', 'id')
+    )
+    return render(
+        request,
+        'buying/staff/calculator_detail.html',
+        {
+            'staff_nav_active': 'buying_calculator',
+            'page_heading': batch.display_title(),
+            'page_note_text': (
+                f'{batch.supplier.name} · {batch.supplier.country} · '
+                f'{batch.lines.count()} item(s) · combined shipment'
+            ),
+            'batch': batch,
+            'quotes': quotes,
+        },
+    )
+
+
+@buying_permission_required('buying.create')
+def buying_calculator_recalculate(request, pk: int):
+    from buying.services.batch_calculator import recalculate_batch
+
+    if request.method != 'POST':
+        return redirect('administration:buying_calculator_detail', pk=pk)
+    batch = get_object_or_404(BuyingBatch, pk=pk)
+    quotes = recalculate_batch(batch)
+    messages.success(request, f'Recalculated {len(quotes)} scenario(s).')
+    return redirect('administration:buying_calculator_detail', pk=pk)

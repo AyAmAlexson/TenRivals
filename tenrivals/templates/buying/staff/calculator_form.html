@@ -1,0 +1,163 @@
+{% extends 'persons/staff_base.html' %}
+{% block title %}{{ page_heading }} | Staff{% endblock %}
+{% block page_heading %}{{ page_heading }}{% endblock %}
+{% block page_note %}{% if page_note_text %}<p class="page-note">{{ page_note_text }}</p>{% endif %}{% endblock %}
+{% block extra_head %}
+<style>
+  .calc-lines{width:100%;border-collapse:collapse;font-size:13px}
+  .calc-lines th,.calc-lines td{padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+  .calc-lines th{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);text-align:left}
+  .calc-lines input,.calc-lines select{width:100%;max-width:100%;box-sizing:border-box}
+  .calc-lines .col-qty{width:72px}
+  .calc-lines .col-price{width:110px}
+  .calc-lines .col-cur{width:72px}
+  .calc-lines .col-w{width:90px}
+  .calc-lines .col-del{width:40px;text-align:center}
+  .calc-meta{font-size:13px;color:var(--muted);margin:8px 0 0;font-weight:400;text-transform:none}
+  .calc-quick{margin-top:20px;padding-top:16px;border-top:1px solid var(--line)}
+  .calc-quick h3{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;margin:0 0 10px}
+</style>
+{% endblock %}
+{% block content %}
+<div class="card">
+  <form method="post" id="calc-form">
+    {% csrf_token %}
+    {{ formset.management_form }}
+    {% if form.non_field_errors %}<div class="field-errors">{{ form.non_field_errors }}</div>{% endif %}
+    <div class="form-row">
+      <div class="form-group">
+        <label for="{{ form.supplier.id_for_label }}">Store</label>
+        {{ form.supplier }}
+        {% if form.supplier.errors %}<div class="field-errors">{{ form.supplier.errors }}</div>{% endif %}
+        <p class="calc-meta" id="supplier-meta">Country is taken from the selected store.</p>
+      </div>
+      <div class="form-group">
+        <label for="{{ form.title.id_for_label }}">Cart title (optional)</label>
+        {{ form.title }}
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="{{ form.notes.id_for_label }}">Notes</label>
+      {{ form.notes }}
+    </div>
+
+    <h2 class="card-title" style="margin-top:8px">Items (same store)</h2>
+    <div class="table-wrap">
+      <table class="calc-lines" id="calc-lines">
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th class="col-price">Unit price</th>
+            <th class="col-cur">Cur</th>
+            <th class="col-qty">Qty</th>
+            <th>Category</th>
+            <th class="col-w">Weight g</th>
+            <th>URL</th>
+            <th class="col-del"></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for f in formset %}
+          <tr class="calc-line{% if f.DELETE.value %} is-deleted{% endif %}">
+            <td>
+              {% for hidden in f.hidden_fields %}{{ hidden }}{% endfor %}
+              {{ f.title }}
+              {% if f.title.errors %}<div class="field-errors">{{ f.title.errors }}</div>{% endif %}
+              <div style="margin-top:4px">{{ f.sku_hint }}</div>
+            </td>
+            <td class="col-price">{{ f.unit_price }}{% if f.unit_price.errors %}<div class="field-errors">{{ f.unit_price.errors }}</div>{% endif %}</td>
+            <td class="col-cur">{{ f.currency }}</td>
+            <td class="col-qty">{{ f.quantity }}</td>
+            <td>{{ f.category }}</td>
+            <td class="col-w">{{ f.weight_g }}</td>
+            <td>{{ f.url }}</td>
+            <td class="col-del">
+              {% if f.instance.pk %}{{ f.DELETE }}{% else %}<button type="button" class="btn btn--sm btn--outline calc-remove" aria-label="Remove row">×</button>{% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <p style="margin:12px 0">
+      <button type="button" class="btn btn--sm btn--outline" id="calc-add-line">+ Add item</button>
+    </p>
+    <div class="actions">
+      <a class="btn btn--outline" href="{% url 'administration:buying_calculator_list' %}">Cancel</a>
+      <button type="submit" class="btn">Calculate</button>
+    </div>
+  </form>
+
+  <div class="calc-quick">
+    <h3>Add store if missing</h3>
+    <form method="post" action="{% url 'administration:buying_calculator_add_supplier' %}" class="form-row">
+      {% csrf_token %}
+      <div class="form-group"><label>Name</label>{{ quick_supplier_form.name }}</div>
+      <div class="form-group"><label>Website</label>{{ quick_supplier_form.base_url }}</div>
+      <div class="form-group"><label>Country</label>{{ quick_supplier_form.country }}</div>
+      <div class="form-group"><label>Currency</label>{{ quick_supplier_form.currency }}</div>
+      <div class="form-group"><label>Onex</label>{{ quick_supplier_form.onex_applicability }}</div>
+      <div class="form-group" style="align-self:flex-end"><button type="submit" class="btn btn--sm btn--outline">Add store</button></div>
+    </form>
+  </div>
+</div>
+
+<template id="calc-empty-row">
+  {# Filled by JS from last empty form pattern — see script #}
+</template>
+<script>
+(function(){
+  var suppliers = {{ suppliers_json|safe }};
+  var byId = {};
+  suppliers.forEach(function(s){ byId[String(s.id)] = s; });
+  var sel = document.getElementById('id_supplier');
+  var meta = document.getElementById('supplier-meta');
+  function syncSupplier(){
+    var s = byId[sel && sel.value];
+    if(!s){ if(meta) meta.textContent = 'Country is taken from the selected store.'; return; }
+    if(meta) meta.textContent = s.name + ' · country ' + s.country + ' · default currency ' + s.currency;
+    document.querySelectorAll('#calc-lines input[name$="-currency"]').forEach(function(inp){
+      if(!inp.value) inp.value = s.currency;
+    });
+  }
+  if(sel){ sel.addEventListener('change', syncSupplier); syncSupplier();
+    var params = new URLSearchParams(window.location.search);
+    var pref = params.get('supplier');
+    if(pref && !sel.value){ sel.value = pref; syncSupplier(); }
+  }
+
+  var totalForms = document.getElementById('id_lines-TOTAL_FORMS');
+  var tbody = document.querySelector('#calc-lines tbody');
+  document.getElementById('calc-add-line').addEventListener('click', function(){
+    var idx = parseInt(totalForms.value, 10);
+    var html = tbody.querySelector('tr').outerHTML
+      .replace(/lines-(\d+)-/g, 'lines-' + idx + '-')
+      .replace(/lines_(\d+)_/g, 'lines_' + idx + '_');
+    var wrap = document.createElement('tbody');
+    wrap.innerHTML = html;
+    var row = wrap.firstElementChild;
+    row.querySelectorAll('input, select').forEach(function(el){
+      if(el.type === 'checkbox'){ el.checked = false; return; }
+      if(el.name && el.name.indexOf('-DELETE') !== -1) return;
+      if(el.name && el.name.indexOf('-id') !== -1){ el.value = ''; return; }
+      if(el.name && el.name.indexOf('-quantity') !== -1){ el.value = '1'; return; }
+      if(el.name && el.name.indexOf('-currency') !== -1){
+        var s = byId[sel && sel.value];
+        el.value = s ? s.currency : '';
+        return;
+      }
+      el.value = '';
+    });
+    tbody.appendChild(row);
+    totalForms.value = idx + 1;
+  });
+  tbody.addEventListener('click', function(e){
+    var btn = e.target.closest('.calc-remove');
+    if(!btn) return;
+    var row = btn.closest('tr');
+    if(tbody.querySelectorAll('tr').length <= 1) return;
+    row.remove();
+  });
+})();
+</script>
+{% endblock %}

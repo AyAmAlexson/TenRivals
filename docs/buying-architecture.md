@@ -113,6 +113,9 @@ path('buying/', include('buying.staff_urls')),
 |---|---|---|
 | Buying Requests | `/administration/buying/` | `administration:buying_requests` |
 | New Request | `/administration/buying/new/` | `administration:buying_request_new` |
+| Calculator (list) | `/administration/buying/calculator/` | `administration:buying_calculator_list` |
+| Calculator (new cart) | `/administration/buying/calculator/new/` | `administration:buying_calculator` |
+| Calculator detail | `/administration/buying/calculator/<id>/` | `administration:buying_calculator_detail` |
 | Request detail | `/administration/buying/<id>/` | `administration:buying_request_detail` |
 | Progress JSON (polling) | `/administration/buying/<id>/progress/` | `administration:buying_request_progress` |
 | Cost Scenario detail | `/administration/buying/scenarios/<id>/` | `administration:buying_scenario_detail` |
@@ -691,7 +694,7 @@ Staff page: `/administration/buying/ai/` — provider, models, API status, last 
 
 Зафиксировано по итогам согласования. Ничего из этого не пишется сейчас; текущие решения не должны этому мешать.
 
-1. **Buying Batch** — объединение нескольких `BuyingRequest` в одну закупку («Friday Buying Batch»). Задел: у `BuyingRequest` позже появляется nullable FK `batch`; `CostScenario`/`OptimizationScenario` уже работают с группировкой офферов (grouped_order, merge) и allocation-методами, поэтому batch-оптимизация ляжет на существующие движки без миграции логики. Ничто в моделях не предполагает «один запрос = одна закупка».
+1. **Buying Batch / Calculator** — staff **Buying Calculator** (`BuyingBatch` + `BuyingBatchLine` + `BuyingBatchQuote`) is the first implementation: manual multi-item cart for one supplier, combined-shipment quotes via `engine/batch_pricing.py` (shared intl/customs, allocation by value). Later: partition optimizer (`evaluate_partitions`) to compare one order vs splits; optional nullable FK from `BuyingRequest` → `batch`. `CostScenario`/`OptimizationScenario` remain for search-driven single-item flows.
 2. **Purchase Flow** — полная цепочка `BuyingRequest → Customer Offer → Purchase Order → Shipment → Stock Receipt`. Задел: `CostScenario` хранит самодостаточный snapshot расчёта (`calculation_details` + версии правил), поэтому выбранный сценарий конвертируется в PurchaseOrder без пересчёта; финальная точка интеграции — существующий `shop.StockReceipt` (weighted-avg landed cost уже реализован). У `BuyingRequest` позже появляется ссылка на выбранный сценарий/созданный заказ.
 3. **Price History** — история цен по карточкам поставщиков: модель `SupplierPriceSnapshot` (`product_mapping` FK, `original_price`, `current_price`, `currency`, `stock_status`, `checked_at`, `source`). Каждый успешный `get_product_details` пишет снимок начиная с Phase 3 (запись дешёвая, UI позже). Использование: анализ скидок, прогноз распродаж, поведение поставщиков, рекомендации.
 4. **Availability History** — покрывается тем же снимком (`stock_status`/`requested_variant_available` в `SupplierPriceSnapshot`): появление/исчезновение товара у поставщика восстанавливается из последовательности снимков.

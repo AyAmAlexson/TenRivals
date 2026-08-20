@@ -5,6 +5,8 @@ from django import forms
 from shop.models import Customer
 
 from .models import (
+    BuyingBatch,
+    BuyingBatchLine,
     BuyingRequest,
     CalculationRule,
     FulfillmentProvider,
@@ -12,6 +14,7 @@ from .models import (
     FulfillmentWarehouse,
     NormalizedProduct,
     OptimizationCandidate,
+    ProductCategory,
     Supplier,
     SupplierOffer,
 )
@@ -217,3 +220,93 @@ class OverrideForm(forms.Form):
     def __init__(self, *args, components=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['component'].choices = components or []
+
+
+class BuyingBatchForm(forms.ModelForm):
+    class Meta:
+        model = BuyingBatch
+        fields = ['supplier', 'title', 'notes']
+        widgets = {
+            'notes': forms.Textarea(attrs={'rows': 2}),
+            'title': forms.TextInput(attrs={'placeholder': 'Optional label for this cart'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['supplier'].queryset = Supplier.objects.filter(enabled=True).order_by('name')
+        self.fields['supplier'].empty_label = 'Select store…'
+        self.fields['title'].required = False
+        self.fields['notes'].required = False
+
+
+class BuyingBatchLineForm(forms.ModelForm):
+    class Meta:
+        model = BuyingBatchLine
+        fields = [
+            'title',
+            'unit_price',
+            'currency',
+            'quantity',
+            'category',
+            'weight_g',
+            'url',
+            'sku_hint',
+        ]
+        widgets = {
+            'title': forms.TextInput(attrs={'placeholder': 'Product name'}),
+            'url': forms.URLInput(attrs={'placeholder': 'https://…'}),
+            'sku_hint': forms.TextInput(attrs={'placeholder': 'SKU (optional)'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['category'].choices = [('', 'Category…')] + list(ProductCategory.choices)
+        self.fields['weight_g'].required = False
+        self.fields['url'].required = False
+        self.fields['sku_hint'].required = False
+        self.fields['category'].required = False
+
+
+BuyingBatchLineFormSet = forms.inlineformset_factory(
+    BuyingBatch,
+    BuyingBatchLine,
+    form=BuyingBatchLineForm,
+    extra=1,
+    min_num=1,
+    validate_min=True,
+    can_delete=True,
+)
+
+
+class QuickSupplierForm(forms.ModelForm):
+    """Minimal store create for the calculator (manual-only, no connector)."""
+
+    class Meta:
+        model = Supplier
+        fields = ['name', 'base_url', 'country', 'currency', 'onex_applicability']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['country'].widget.attrs['placeholder'] = 'US'
+        self.fields['currency'].widget.attrs['placeholder'] = 'USD'
+        self.fields['base_url'].widget.attrs['placeholder'] = 'https://…'
+        self.fields['onex_applicability'].initial = 'supported'
+
+    def save(self, commit=True):
+        from django.utils.text import slugify
+
+        instance = super().save(commit=False)
+        instance.connector_class = ''
+        instance.enabled = True
+        base = slugify(instance.name)[:50] or 'store'
+        code = base
+        n = 2
+        while Supplier.objects.filter(code=code).exclude(pk=instance.pk).exists():
+            code = f'{base}-{n}'
+            n += 1
+        instance.code = code
+        if not instance.default_destination_country:
+            instance.default_destination_country = instance.country
+        if commit:
+            instance.save()
+        return instance

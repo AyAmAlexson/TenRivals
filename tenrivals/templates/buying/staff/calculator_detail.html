@@ -1,0 +1,140 @@
+{% extends 'persons/staff_base.html' %}
+{% block title %}{{ page_heading }} | Calculator | Staff{% endblock %}
+{% block page_heading %}{{ page_heading }}{% endblock %}
+{% block page_note %}{% if page_note_text %}<p class="page-note">{{ page_note_text }}</p>{% endif %}{% endblock %}
+{% block extra_head %}
+<style>
+  .calc-actions{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:18px}
+  .calc-quote{background:#fff;border:1px solid var(--line);padding:18px 20px;margin-bottom:16px}
+  .calc-quote.is-blocked{border-color:#d97706}
+  .calc-quote__head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;align-items:flex-start}
+  .calc-quote__title{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;margin:0}
+  .calc-quote__meta{font-size:13px;color:var(--muted);font-weight:400;text-transform:none;margin:6px 0 0;line-height:1.45}
+  .calc-quote__landed{font-size:clamp(24px,3vw,32px);font-weight:800;line-height:1.1;letter-spacing:.02em}
+  .calc-kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin:14px 0}
+  .calc-kpi{font-size:12px;color:var(--muted)}
+  .calc-kpi strong{display:block;font-size:15px;color:var(--ink);font-weight:600;margin-top:2px;font-variant-numeric:tabular-nums}
+  .calc-warn{font-size:12px;color:#92400e;margin:8px 0 0;font-weight:400;text-transform:none}
+  .calc-lines-detail{margin-top:12px;overflow:auto}
+  .calc-lines-detail table{width:100%;border-collapse:collapse;font-size:12.5px}
+  .calc-lines-detail th,.calc-lines-detail td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left}
+  .calc-lines-detail th{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+  .calc-lines-detail .num{text-align:right;font-variant-numeric:tabular-nums}
+  details.calc-more{margin-top:10px}
+  details.calc-more summary{cursor:pointer;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.08em}
+</style>
+{% endblock %}
+{% block content %}
+<div class="calc-actions">
+  <a class="btn btn--sm btn--outline" href="{% url 'administration:buying_calculator_edit' batch.pk %}">Edit cart</a>
+  <form method="post" action="{% url 'administration:buying_calculator_recalculate' batch.pk %}" style="margin:0">
+    {% csrf_token %}
+    <button type="submit" class="btn btn--sm">Recalculate</button>
+  </form>
+  <a class="btn btn--sm btn--outline" href="{% url 'administration:buying_calculator' %}">New cart</a>
+  <a class="btn btn--sm btn--outline" href="{% url 'administration:buying_calculator_list' %}">All carts</a>
+</div>
+
+<div class="card" style="margin-bottom:18px">
+  <h2 class="card-title">Cart lines</h2>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Product</th>
+          <th>Category</th>
+          <th class="num">Qty</th>
+          <th class="num">Unit</th>
+          <th class="num">Weight g</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for line in batch.lines.all %}
+        <tr>
+          <td class="mono">{{ line.sort_order }}</td>
+          <td>{{ line.title }}{% if line.sku_hint %}<div class="page-note" style="margin:2px 0 0">{{ line.sku_hint }}</div>{% endif %}</td>
+          <td>{{ line.get_category_display|default:"—" }}</td>
+          <td class="num mono">{{ line.quantity }}</td>
+          <td class="num mono">{{ line.unit_price }} {{ line.currency }}</td>
+          <td class="num mono">{% if line.weight_g %}{{ line.weight_g }}{% else %}—{% endif %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% for q in quotes %}
+<div class="calc-quote{% if q.status == 'calculation_blocked' %} is-blocked{% endif %}">
+  <div class="calc-quote__head">
+    <div>
+      <h2 class="calc-quote__title">
+        {% if q.rank %}#{{ q.rank }} · {% endif %}
+        {{ q.fulfillment_route.name }}
+      </h2>
+      <p class="calc-quote__meta">
+        {{ q.fulfillment_route.provider.name }}
+        · {{ q.fulfillment_route.warehouse.country }}
+        {% if q.estimated_min_days or q.estimated_max_days %}
+          · {{ q.estimated_min_days|default:"?" }}–{{ q.estimated_max_days|default:"?" }} days
+        {% endif %}
+        · {{ q.get_status_display }}
+        · {{ q.get_confidence_display }}
+      </p>
+    </div>
+    <div style="text-align:right">
+      <div class="calc-quote__landed">{{ q.landed_cost }}&nbsp;₾</div>
+      <p class="calc-quote__meta">Landed · sell std {{ q.price_standard }} ₾</p>
+    </div>
+  </div>
+  <div class="calc-kpis">
+    <div class="calc-kpi">Items<strong>{{ q.item_cost }} ₾</strong></div>
+    <div class="calc-kpi">Local ship<strong>{{ q.local_shipping }} ₾</strong></div>
+    <div class="calc-kpi">Intl ship<strong>{{ q.international_shipping }} ₾</strong></div>
+    <div class="calc-kpi">Payment fee<strong>{{ q.payment_fee }} ₾</strong></div>
+    <div class="calc-kpi">Import VAT<strong>{{ q.georgia_vat }} ₾</strong></div>
+    <div class="calc-kpi">Customs + decl.<strong>{{ q.customs }} + {{ q.declaration_service }} ₾</strong></div>
+    <div class="calc-kpi">Shared total<strong>{{ q.shared_cost_total }} ₾</strong></div>
+    <div class="calc-kpi">Weight<strong>{% if q.chargeable_weight_g %}{{ q.chargeable_weight_g }} g{% else %}—{% endif %}</strong></div>
+  </div>
+  {% if q.warnings %}
+  <p class="calc-warn">{{ q.warnings|join:" · " }}</p>
+  {% endif %}
+
+  <details class="calc-more" open>
+    <summary>Per-line landed (by value)</summary>
+    <div class="calc-lines-detail">
+      <table>
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th class="num">Item ₾</th>
+            <th class="num">Allocated shared ₾</th>
+            <th class="num">Landed ₾</th>
+            <th class="num">Std sell ₾</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for lr in q.line_results %}
+          <tr>
+            <td>{{ lr.title }}{% if lr.quantity and lr.quantity != 1 %} ×{{ lr.quantity }}{% endif %}</td>
+            <td class="num mono">{{ lr.item_cost_gel }}</td>
+            <td class="num mono">{{ lr.allocated_shared_gel }}</td>
+            <td class="num mono">{{ lr.landed_cost_gel }}</td>
+            <td class="num mono">{{ lr.price_standard_gel }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="5">No line breakdown.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </details>
+</div>
+{% empty %}
+<div class="card">
+  <p class="page-note">No quotes yet. Edit the cart and calculate, or check that this store country has an enabled fulfillment route.</p>
+</div>
+{% endfor %}
+{% endblock %}

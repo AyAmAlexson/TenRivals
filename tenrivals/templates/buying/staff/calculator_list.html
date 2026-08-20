@@ -1,0 +1,40 @@
+{% extends 'persons/staff_base.html' %}
+{% block title %}Buying calculator | Staff{% endblock %}
+{% block page_heading %}Buying calculator{% endblock %}
+{% block page_note %}<p class="page-note">Manual landed-cost carts for one store — no scraping. Add items yourself; every Onex route for that country is priced as one combined shipment.</p>{% endblock %}
+{% block content %}
+<div class="staff-toolbar" style="margin-bottom:16px">
+  <a href="{% url 'administration:buying_calculator' %}" class="btn btn--sm">NEW CART</a>
+</div>
+<div class="card">
+  <h2 class="card-title">Recent carts</h2>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Cart</th>
+          <th>Store</th>
+          <th>Country</th>
+          <th>Items</th>
+          <th>Status</th>
+          <th>Updated</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for b in batches %}
+        <tr>
+          <td><a href="{% url 'administration:buying_calculator_detail' b.pk %}">{{ b.display_title }}</a></td>
+          <td>{{ b.supplier.name }}</td>
+          <td class="mono">{{ b.supplier.country }}</td>
+          <td class="mono">{{ b.lines.count }}</td>
+          <td>{{ b.get_status_display }}</td>
+          <td class="mono">{{ b.updated_at|date:"Y-m-d H:i" }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6">No calculator carts yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
