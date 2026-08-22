@@ -1903,6 +1903,16 @@ def _send_checkout_customer_submitted_email(
 def checkout(request):
     rows, subtotal = build_cart_page_rows(request)
     if not rows:
+        # Double-submit / refresh after success: cart already cleared but order exists.
+        if (
+            request.method == 'POST'
+            and request.POST.get('action') == 'submit_order'
+        ):
+            completed_id = request.session.get('checkout_completed_order_id')
+            if completed_id and SalesOrder.objects.filter(pk=completed_id).exists():
+                return _shop_redirect(
+                    request, 'shop:checkout_success', order_id=completed_id
+                )
         messages.error(request, 'Your cart is empty.')
         return _shop_redirect(request, 'shop:cart')
 
@@ -2022,6 +2032,8 @@ def checkout(request):
                 for err in stock_errors:
                     messages.error(request, err)
             else:
+                order = None
+                order_id = None
                 try:
                     with transaction.atomic():
                         if request.user.is_authenticated:
@@ -2121,6 +2133,7 @@ def checkout(request):
                             qty = int(r['qty'])
                             vk = (r['variant_label'] if r['variant_label'] != '—' else '').strip()
                             lg, lv, ln = line_amounts(qty, unit, Decimal('0.00'))
+                            # Freeze product landed cost at checkout (same snapshot staff form uses).
                             line = SalesOrderLine.objects.create(
                                 order=order,
                                 product=r['product'],
@@ -2129,6 +2142,8 @@ def checkout(request):
                                 unit_price_gross=unit,
                                 discount_percent=Decimal('0.00'),
                                 variant_label=vk,
+                                landed_cost_gel=r['product'].landed_cost_gel,
+                                sale_channel=SalesOrderLine.SaleChannel.STOCK,
                                 line_gross=lg,
                                 line_vat=lv,
                                 line_net=ln,
@@ -2182,13 +2197,30 @@ def checkout(request):
                                 else None,
                                 discount_gross=promo_d,
                             )
-
+                        order_id = order.pk
+                except Exception as exc:
+                    # Parallel double-submit: the other request may already have succeeded.
+                    completed_id = request.session.get('checkout_completed_order_id')
+                    if completed_id and SalesOrder.objects.filter(pk=completed_id).exists():
+                        return _shop_redirect(
+                            request, 'shop:checkout_success', order_id=completed_id
+                        )
+                    messages.error(request, f'Could not submit order: {exc}')
+                else:
+                    # Order is committed. Never fail the shopper into an error page from here —
+                    # cart clear / emails are best-effort side effects.
+                    request.session['checkout_completed_order_id'] = order_id
+                    try:
                         cart_data = get_cart(request)
                         cart_data['lines'] = []
                         cart_data['promo_code'] = ''
                         save_cart(request, cart_data)
-
-                        staff_path = reverse('administration:staff_sales_order_edit', args=[order.pk])
+                    except Exception:
+                        pass
+                    try:
+                        staff_path = reverse(
+                            'administration:staff_sales_order_edit', args=[order_id]
+                        )
                         staff_url = request.build_absolute_uri(staff_path)
                         _send_checkout_email(
                             f'TR - NEW Order Submitted - {order.invoice_number} - {order.gross_total} GEL',
@@ -2212,9 +2244,11 @@ def checkout(request):
                             discount=order.promo_discount_gross,
                             total=order.gross_total,
                         )
-                    return _shop_redirect(request, 'shop:checkout_success', order_id=order.pk)
-                except Exception as exc:
-                    messages.error(request, f'Could not submit order: {exc}')
+                    except Exception:
+                        pass
+                    return _shop_redirect(
+                        request, 'shop:checkout_success', order_id=order_id
+                    )
 
     return render(
         request,

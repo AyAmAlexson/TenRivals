@@ -627,3 +627,107 @@ class LegacySalesImportHelpersTests(TestCase):
         )
         self.assertTrue(form_ok.is_valid(), form_ok.errors)
         self.assertEqual(form_ok.cleaned_data['invoice_number'], '2026-000061')
+
+
+@override_settings(SECURE_SSL_REDIRECT=False)
+class StorefrontCheckoutTests(TestCase):
+    def setUp(self):
+        from shop.cart_session import SESSION_CART_KEY, get_cart, try_add_to_cart
+        from shop.site_locale import shop_reverse
+
+        self.shop_reverse = shop_reverse
+        self.try_add_to_cart = try_add_to_cart
+        self.SESSION_CART_KEY = SESSION_CART_KEY
+        self.get_cart = get_cart
+        self.product = Product.objects.create(
+            type=ProductType.ACCESSORIES,
+            name='Checkout Grip',
+            initial_price=Decimal('40.00'),
+            actual_price=Decimal('35.00'),
+            landed_cost_gel=Decimal('12.50'),
+            in_stock=True,
+            is_active=True,
+        )
+        ProductListing.objects.create(
+            product=self.product,
+            channel=ProductListingChannel.STOCK,
+            quantity=5,
+        )
+        self.checkout_url = shop_reverse('shop:checkout', site_locale='ge_en')
+
+    def _add_to_cart(self):
+        from django.contrib.auth.models import AnonymousUser
+        from django.contrib.sessions.middleware import SessionMiddleware
+        from django.test import RequestFactory
+
+        rf = RequestFactory()
+        req = rf.get('/')
+        req.user = AnonymousUser()
+        middleware = SessionMiddleware(lambda r: None)
+        middleware.process_request(req)
+        req.session.save()
+        ok, msg, _ = self.try_add_to_cart(
+            req, product_id=self.product.pk, variant='', qty=1
+        )
+        self.assertTrue(ok, msg)
+        cart = self.get_cart(req)
+        session = self.client.session
+        session[self.SESSION_CART_KEY] = cart
+        session.save()
+
+    def test_checkout_snapshots_landed_cost(self):
+        self._add_to_cart()
+        response = self.client.post(
+            self.checkout_url + '?guest=1',
+            {
+                'action': 'submit_order',
+                'first_name': 'Anna',
+                'last_name': 'Buyer',
+                'phone': '+995555000111',
+                'email': 'anna-checkout@test.com',
+                'tg_account': '',
+                'delivery_city': 'TBILISI',
+                'delivery_city_other': '',
+                'delivery_address': 'Rustaveli 1',
+                'payment_method': 'COD',
+                'comment': '',
+            },
+        )
+        self.assertEqual(response.status_code, 302, getattr(response, 'content', b'')[:800])
+        order = SalesOrder.objects.latest('id')
+        line = order.lines.get()
+        self.assertEqual(line.landed_cost_gel, Decimal('12.50'))
+        self.assertIn(f'/checkout/success/{order.pk}/', response['Location'])
+
+    def test_empty_cart_after_success_redirects_to_thank_you(self):
+        from datetime import date
+
+        order = SalesOrder.objects.create(
+            invoice_number='2026-009999',
+            customer=Customer.objects.create(
+                first_name='X', email='x-thanks@test.com'
+            ),
+            order_date=date(2026, 8, 1),
+            gross_total=Decimal('10.00'),
+            vat_total=Decimal('0.00'),
+            net_total=Decimal('10.00'),
+            status=SalesOrder.Status.SUBMITTED,
+        )
+        session = self.client.session
+        session['checkout_completed_order_id'] = order.pk
+        session.save()
+        response = self.client.post(
+            self.checkout_url + '?guest=1',
+            {
+                'action': 'submit_order',
+                'first_name': 'X',
+                'last_name': 'Y',
+                'phone': '1',
+                'email': 'x-thanks@test.com',
+                'delivery_city': 'TBILISI',
+                'delivery_address': 'A',
+                'payment_method': 'COD',
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(f'/checkout/success/{order.pk}/', response['Location'])

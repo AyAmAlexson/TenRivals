@@ -184,7 +184,7 @@
 
         <section class="card">
           <h2>5. Confirm</h2>
-          <button class="btn" type="submit" name="action" value="submit_order">CHECKOUT</button>
+          <button class="btn" type="submit" name="action" value="submit_order" id="checkout-submit-btn">CHECKOUT</button>
         </section>
         {% endif %}
       </div>
@@ -225,6 +225,36 @@
       cityOther.style.display = citySel.value === 'OTHER' ? '' : 'none';
     });
   }
+  // Prevent double-submit without dropping action=submit_order (disabled
+  // submitters are omitted from the POST body in browsers).
+  (function() {
+    const form = document.querySelector('main.checkout form[method="post"]');
+    const btn = document.getElementById('checkout-submit-btn');
+    if (!form || !btn) return;
+    form.addEventListener('submit', function(e) {
+      const submitter = e.submitter || document.activeElement;
+      const isCheckout =
+        submitter === btn ||
+        (submitter && submitter.getAttribute && submitter.getAttribute('value') === 'submit_order');
+      if (!isCheckout) return;
+      if (btn.dataset.submitting === '1') {
+        e.preventDefault();
+        return;
+      }
+      btn.dataset.submitting = '1';
+      let hidden = form.querySelector('input[name="action"][data-checkout-guard="1"]');
+      if (!hidden) {
+        hidden = document.createElement('input');
+        hidden.type = 'hidden';
+        hidden.name = 'action';
+        hidden.value = 'submit_order';
+        hidden.setAttribute('data-checkout-guard', '1');
+        form.appendChild(hidden);
+      }
+      btn.disabled = true;
+      btn.textContent = 'PLACING ORDER…';
+    });
+  })();
 </script>
 {% include 'shop/includes/shop_public_header_scripts.html' %}
 </body>
