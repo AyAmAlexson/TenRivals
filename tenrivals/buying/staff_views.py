@@ -861,10 +861,10 @@ def buying_calculator(request, pk: int | None = None):
             'page_heading': 'Edit calculator cart' if pk else 'Buying calculator',
             'page_note_text': (
                 'Pick a store (country comes from the supplier record). Add one or more items '
-                'from that store. Weight is optional — category shipping-weight rules fill gaps. '
+                'from that store — a single line is enough. Category is required: shipping weight '
+                'is estimated as product weights by category plus one box for the whole cart. '
                 'Results show every applicable Onex route with batch and per-line landed cost.'
-            ),
-            'form': form,
+            ),            'form': form,
             'formset': formset,
             'batch': batch,
             'quick_supplier_form': QuickSupplierForm(),

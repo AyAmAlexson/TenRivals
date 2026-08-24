@@ -46,7 +46,7 @@
           <th>Category</th>
           <th class="num">Qty</th>
           <th class="num">Unit</th>
-          <th class="num">Weight g</th>
+          <th class="num">Est. item g</th>
         </tr>
       </thead>
       <tbody>
@@ -57,7 +57,7 @@
           <td>{{ line.get_category_display|default:"—" }}</td>
           <td class="num mono">{{ line.quantity }}</td>
           <td class="num mono">{{ line.unit_price }} {{ line.currency }}</td>
-          <td class="num mono">{% if line.weight_g %}{{ line.weight_g }}{% else %}—{% endif %}</td>
+          <td class="num mono">{% if line.weight_g %}{{ line.weight_g }}{% else %}auto{% endif %}</td>
         </tr>
         {% endfor %}
       </tbody>
@@ -96,7 +96,13 @@
     <div class="calc-kpi">Import VAT<strong>{{ q.georgia_vat }} ₾</strong></div>
     <div class="calc-kpi">Customs + decl.<strong>{{ q.customs }} + {{ q.declaration_service }} ₾</strong></div>
     <div class="calc-kpi">Shared total<strong>{{ q.shared_cost_total }} ₾</strong></div>
-    <div class="calc-kpi">Weight<strong>{% if q.chargeable_weight_g %}{{ q.chargeable_weight_g }} g{% else %}—{% endif %}</strong></div>
+    <div class="calc-kpi">Weight<strong>{% if q.chargeable_weight_g %}{{ q.chargeable_weight_g }} g{% else %}—{% endif %}</strong>
+      {% with w=q.calculation_details.weight %}
+      {% if w.products_g != None and w.box_g != None %}
+      <span style="display:block;font-size:11px;font-weight:400;color:var(--muted);margin-top:2px;text-transform:none;letter-spacing:0">{{ w.products_g }} g items + {{ w.box_g }} g box</span>
+      {% endif %}
+      {% endwith %}
+    </div>
   </div>
   {% if q.warnings %}
   <p class="calc-warn">{{ q.warnings|join:" · " }}</p>

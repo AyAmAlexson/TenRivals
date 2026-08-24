@@ -151,6 +151,46 @@ class BatchPricingTests(TestCase):
         self.assertEqual(quote.status, BuyingBatchQuote.Status.CALCULATION_BLOCKED)
         self.assertIn('blocking:missing_weight', quote.warnings)
 
+    @override_settings(BUYING_NBG_LIVE_FETCH_ON_MISS=False)
+    def test_category_weight_plus_one_box(self):
+        from buying.engine.batch_pricing import CATEGORY_ITEM_WEIGHT_G, DEFAULT_BOX_PACKAGING_G
+
+        # No WEIGHT rule for apparel in fixtures → code fallback + default box.
+        quote = build_batch_route_quote(
+            self.supplier,
+            [
+                BatchLineInput(
+                    line_id=1,
+                    title='Shirt',
+                    unit_price=Decimal('40'),
+                    currency='USD',
+                    quantity=2,
+                    category='apparel',
+                    weight_g=None,
+                ),
+                BatchLineInput(
+                    line_id=2,
+                    title='Shorts',
+                    unit_price=Decimal('30'),
+                    currency='USD',
+                    quantity=1,
+                    category='apparel',
+                    weight_g=None,
+                ),
+            ],
+            self.route,
+            tax_display_mode='prices_include_vat',
+            local_shipping_cost=Decimal('12.00'),
+        )
+        self.assertEqual(quote.status, BuyingBatchQuote.Status.CALCULATED)
+        item = CATEGORY_ITEM_WEIGHT_G['apparel']
+        # Racquet test rule has packaging_g=0; apparel has no rule → default box.
+        expected = item * 3 + DEFAULT_BOX_PACKAGING_G
+        self.assertEqual(quote.chargeable_weight_g, expected)
+        w = quote.calculation_details['weight']
+        self.assertEqual(w['products_g'], item * 3)
+        self.assertEqual(w['box_g'], DEFAULT_BOX_PACKAGING_G)
+
 
 def _three_quarters(total: Decimal) -> Decimal:
     return (total * Decimal('0.75')).quantize(Decimal('0.01'))
@@ -204,16 +244,24 @@ class BatchCalculatorServiceAndViewsTests(TestCase):
                 'lines-0-currency': 'USD',
                 'lines-0-quantity': '1',
                 'lines-0-category': 'racquet',
-                'lines-0-weight_g': '1000',
                 'lines-0-url': '',
                 'lines-0-sku_hint': '',
             },
         )
         self.assertEqual(response.status_code, 302)
         batch = BuyingBatch.objects.get()
+        self.assertEqual(batch.lines.count(), 1)
         detail = self.client.get(
             reverse('administration:buying_calculator_detail', args=[batch.pk])
         )
         self.assertEqual(detail.status_code, 200)
         self.assertContains(detail, 'Landed')
         self.assertContains(detail, 'Wilson Blade')
+
+    def test_calculator_rejects_empty_second_line_not_required(self):
+        """One filled line is enough — no phantom second row on the form."""
+        url = reverse('administration:buying_calculator')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        formset = response.context['formset']
+        self.assertEqual(formset.total_form_count(), 1)

@@ -36,6 +36,21 @@ RuleType = CalculationRule.RuleType
 
 BATCH_CALCULATION_VERSION = 'batch-combined-2026.08'
 
+# Approximate product shipping weight when no CalculationRule exists (grams / unit).
+# Box / outer packaging is added once per batch — not per line.
+CATEGORY_ITEM_WEIGHT_G: dict[str, int] = {
+    'racquet': 700,
+    'shoes': 1200,
+    'string_reel': 450,
+    'string_set': 120,
+    'overgrip': 80,
+    'balls': 650,
+    'apparel': 350,
+    'bag': 900,
+    'accessory': 200,
+}
+DEFAULT_BOX_PACKAGING_G = 300
+
 
 @dataclass
 class BatchLineInput:
@@ -49,38 +64,40 @@ class BatchLineInput:
     sort_order: int = 1
 
 
-def resolve_line_chargeable_weight(
+def resolve_line_item_weight_g(
     supplier: Supplier,
     category: str,
     weight_g: int | None,
-    quantity: int,
 ) -> tuple[int | None, dict]:
-    """Shipping weight for one calculator line (manual g or category rule)."""
+    """Per-unit product shipping weight (no outer box). Manual override or category."""
     scope = {
         'country': supplier.country,
         'supplier': supplier,
         'category': category or '',
     }
     weight_rule = resolve_rule(RuleType.WEIGHT, **scope)
-    packaging_g = int(weight_rule.params.get('packaging_g', 0) or 0) if weight_rule else 0
 
     if weight_g:
-        shipping_item_g = int(weight_g) + packaging_g
-        source, exact = SOURCE_MANUAL, True
+        item_g, source, exact = int(weight_g), SOURCE_MANUAL, True
     elif weight_rule and weight_rule.params.get('default_g'):
-        shipping_item_g = int(weight_rule.params['default_g'])
+        item_g = int(weight_rule.params['default_g'])
         source, exact = SOURCE_CONFIGURED_RULE, False
+    elif category and category in CATEGORY_ITEM_WEIGHT_G:
+        item_g = CATEGORY_ITEM_WEIGHT_G[category]
+        source, exact = 'category_fallback', False
     else:
-        shipping_item_g, source, exact = None, 'missing', False
+        item_g, source, exact = None, 'missing', False
 
-    total = shipping_item_g * quantity if shipping_item_g is not None else None
+    packaging_hint = 0
+    if weight_rule:
+        packaging_hint = int(weight_rule.params.get('packaging_g', 0) or 0)
+
     meta = {
-        'shipping_item_g': shipping_item_g,
+        'shipping_item_g': item_g,
         'shipping_source': source,
         'shipping_exact': exact,
-        'packaging_g': packaging_g,
-        'chargeable_g': total,
-        'quantity': quantity,
+        'packaging_g_rule': packaging_hint,
+        'quantity_unit_g': item_g,
         'exact': exact,
         'category': category or '',
         'weight_rule': (
@@ -89,6 +106,63 @@ def resolve_line_chargeable_weight(
             else None
         ),
     }
+    return item_g, meta
+
+
+def resolve_batch_box_packaging_g(
+    supplier: Supplier, categories: list[str]
+) -> tuple[int, dict]:
+    """Outer box once per combined shipment."""
+    for cat in categories:
+        if not cat:
+            continue
+        rule = resolve_rule(
+            RuleType.WEIGHT,
+            country=supplier.country,
+            supplier=supplier,
+            category=cat,
+        )
+        if rule and rule.params.get('packaging_g') not in (None, ''):
+            box_g = int(rule.params['packaging_g'])
+            return box_g, {
+                'box_g': box_g,
+                'source': SOURCE_CONFIGURED_RULE,
+                'weight_rule_id': rule.pk,
+                'category': cat,
+            }
+    # Global / uncategorized weight rule may carry packaging only.
+    rule = resolve_rule(
+        RuleType.WEIGHT,
+        country=supplier.country,
+        supplier=supplier,
+        category='',
+    )
+    if rule and rule.params.get('packaging_g') not in (None, ''):
+        box_g = int(rule.params['packaging_g'])
+        return box_g, {
+            'box_g': box_g,
+            'source': SOURCE_CONFIGURED_RULE,
+            'weight_rule_id': rule.pk,
+            'category': '',
+        }
+    return DEFAULT_BOX_PACKAGING_G, {
+        'box_g': DEFAULT_BOX_PACKAGING_G,
+        'source': 'default_box',
+        'weight_rule_id': None,
+        'category': '',
+    }
+
+
+def resolve_line_chargeable_weight(
+    supplier: Supplier,
+    category: str,
+    weight_g: int | None,
+    quantity: int,
+) -> tuple[int | None, dict]:
+    """Backward-compatible helper: line item weight × qty (no shared box)."""
+    item_g, meta = resolve_line_item_weight_g(supplier, category, weight_g)
+    total = item_g * quantity if item_g is not None else None
+    meta = {**meta, 'chargeable_g': total, 'quantity': quantity, 'packaging_g': 0}
     return total, meta
 
 
@@ -182,23 +256,25 @@ def build_batch_route_quote(
                 cart_supplier_currency += _q2(gel / sup_rate) if sup_rate else original
             except FxRateUnavailable:
                 cart_supplier_currency += original
-        w_total, w_meta = resolve_line_chargeable_weight(
-            supplier, ln.category or '', ln.weight_g, int(ln.quantity or 1)
+        w_item, w_meta = resolve_line_item_weight_g(
+            supplier, ln.category or '', ln.weight_g
         )
+        qty = int(ln.quantity or 1)
+        w_products = w_item * qty if w_item is not None else None
         line_meta.append(
             {
                 'line_id': ln.line_id,
                 'title': ln.title,
                 'sort_order': ln.sort_order,
-                'quantity': int(ln.quantity or 1),
+                'quantity': qty,
                 'category': ln.category or '',
                 'currency': currency,
                 'unit_price': str(_dec(ln.unit_price)),
                 'item_original': str(_q2(original)),
                 'item_cost_gel': str(gel),
                 'fx': {**fx_meta, 'rate_gel': str(fx_rate)},
-                'weight': w_meta,
-                'weight_g_total': w_total,
+                'weight': {**w_meta, 'quantity': qty, 'products_g': w_products},
+                'weight_g_total': w_products,
             }
         )
 
@@ -317,21 +393,31 @@ def build_batch_route_quote(
 
     local_cost = _q2(item_cost + local_shipping)
 
-    # --- Weight -------------------------------------------------------------
+    # --- Weight: Σ(category/manual item × qty) + one outer box ---------------
     weight_exact = True
-    total_weight_g = 0
-    any_weight = False
+    products_weight_g = 0
+    any_weight = True
     for meta in line_meta:
         w = meta.get('weight_g_total')
         if w is None:
+            any_weight = False
             weight_exact = False
             continue
-        any_weight = True
-        total_weight_g += int(w)
+        products_weight_g += int(w)
         if not (meta.get('weight') or {}).get('exact', False):
             weight_exact = False
-    if not any_weight:
+
+    box_meta: dict[str, Any] = {}
+    if any_weight:
+        box_g, box_meta = resolve_batch_box_packaging_g(
+            supplier, [m.get('category') or '' for m in line_meta]
+        )
+        total_weight_g = products_weight_g + int(box_g)
+        if box_meta.get('source') != SOURCE_CONFIGURED_RULE:
+            weight_exact = False
+    else:
         total_weight_g = None
+        box_g = 0
         bd.block('missing_weight')
         weight_exact = False
 
@@ -354,7 +440,7 @@ def build_batch_route_quote(
             rule=intl_rule,
             amount_original=amount,
             currency=currency,
-            note=f'{kg} kg chargeable batch weight',
+            note=f'{kg} kg chargeable ({products_weight_g} g products + {box_g} g box)',
         )
         if not weight_exact:
             bd.warn('estimated:weight')
@@ -699,6 +785,13 @@ def build_batch_route_quote(
                 'rounding': _rule_snapshot(rounding_rule),
             },
             'line_count': len(lines),
+            'weight': {
+                'products_g': products_weight_g if any_weight else None,
+                'box_g': box_g if any_weight else None,
+                'box': box_meta if any_weight else None,
+                'chargeable_g': total_weight_g,
+                'exact': weight_exact,
+            },
             'blocking_issues': bd.blocking_issues,
             'partition_key': 'all',
             # Contract stub for later optimizer:

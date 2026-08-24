@@ -90,27 +90,40 @@ class Command(BaseCommand):
              {'minimum': '0.03', 'standard': '0.10', 'premium': '0.25'}, {}),
             (RuleType.VOLUMETRIC_WEIGHT, 'Volumetric weight (standard formula)',
              {'divisor': '6000'}, {}),
-            # Shipping Weight Engine: full parcel estimate (never product unstrung grams)
-            (RuleType.WEIGHT, 'Racquet shipping weight (parcel)',
-             {'default_g': '1000'}, {'category': 'racquet'}),
-            (RuleType.WEIGHT, 'Shoes shipping weight (parcel)',
-             {'default_g': '1500'}, {'category': 'shoes'}),
+            # Shipping Weight Engine: item estimate + outer box once per batch
+            (RuleType.WEIGHT, 'Racquet shipping weight (item)',
+             {'default_g': '700', 'packaging_g': '300'}, {'category': 'racquet'}),
+            (RuleType.WEIGHT, 'Shoes shipping weight (item)',
+             {'default_g': '1200', 'packaging_g': '300'}, {'category': 'shoes'}),
+            (RuleType.WEIGHT, 'String reel shipping weight (item)',
+             {'default_g': '450', 'packaging_g': '300'}, {'category': 'string_reel'}),
+            (RuleType.WEIGHT, 'String set shipping weight (item)',
+             {'default_g': '120', 'packaging_g': '300'}, {'category': 'string_set'}),
+            (RuleType.WEIGHT, 'Overgrip shipping weight (item)',
+             {'default_g': '80', 'packaging_g': '300'}, {'category': 'overgrip'}),
+            (RuleType.WEIGHT, 'Balls shipping weight (item)',
+             {'default_g': '650', 'packaging_g': '300'}, {'category': 'balls'}),
+            (RuleType.WEIGHT, 'Apparel shipping weight (item)',
+             {'default_g': '350', 'packaging_g': '300'}, {'category': 'apparel'}),
+            (RuleType.WEIGHT, 'Bag shipping weight (item)',
+             {'default_g': '900', 'packaging_g': '300'}, {'category': 'bag'}),
+            (RuleType.WEIGHT, 'Accessory shipping weight (item)',
+             {'default_g': '200', 'packaging_g': '300'}, {'category': 'accessory'}),
         ]
         for rule_type, name, params, scope in global_rules:
             created_counts['rules'] += self._rule(rule_type, name, params, **scope)
 
-        # Disable obsolete packaging-only racquet rule if a parcel default exists
-        if CalculationRule.objects.filter(
-            rule_type=RuleType.WEIGHT, category='racquet', enabled=True,
-            name='Racquet shipping weight (parcel)',
-        ).exists():
+        # Retire obsolete full-parcel-only names if item+box rules exist
+        for obsolete in (
+            'Racquet shipping weight (parcel)',
+            'Shoes shipping weight (parcel)',
+            'Racquet packaging allowance',
+        ):
             disabled = CalculationRule.objects.filter(
-                rule_type=RuleType.WEIGHT,
-                name='Racquet packaging allowance',
-                enabled=True,
+                rule_type=RuleType.WEIGHT, name=obsolete, enabled=True,
             ).update(enabled=False)
             if disabled:
-                self.stdout.write('Disabled obsolete rule: Racquet packaging allowance')
+                self.stdout.write(f'Disabled obsolete rule: {obsolete}')
 
         self.stdout.write(self.style.SUCCESS(
             'Onex seed done: +{warehouses} warehouse(s), +{routes} route(s), '

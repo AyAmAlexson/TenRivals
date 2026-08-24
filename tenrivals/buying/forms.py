@@ -248,7 +248,6 @@ class BuyingBatchLineForm(forms.ModelForm):
             'currency',
             'quantity',
             'category',
-            'weight_g',
             'url',
             'sku_hint',
         ]
@@ -261,17 +260,44 @@ class BuyingBatchLineForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['category'].choices = [('', 'Category…')] + list(ProductCategory.choices)
-        self.fields['weight_g'].required = False
         self.fields['url'].required = False
         self.fields['sku_hint'].required = False
-        self.fields['category'].required = False
+        self.fields['category'].required = True
+        self.fields['currency'].required = False
+        # Avoid treating blank extra rows as "partially filled" via model default qty=1.
+        if not self.is_bound and not getattr(self.instance, 'pk', None):
+            self.fields['quantity'].initial = 1
+
+    def clean_category(self):
+        value = (self.cleaned_data.get('category') or '').strip()
+        if not value:
+            raise forms.ValidationError('Select a product category (used for shipping weight).')
+        return value
+
+
+class BuyingBatchLineFormSetBase(forms.BaseInlineFormSet):
+    def clean(self):
+        super().clean()
+        if any(self.errors):
+            return
+        alive = 0
+        for form in self.forms:
+            if not hasattr(form, 'cleaned_data') or not form.cleaned_data:
+                continue
+            if form.cleaned_data.get('DELETE'):
+                continue
+            if form.cleaned_data.get('title') and form.cleaned_data.get('unit_price') is not None:
+                alive += 1
+        if alive < 1:
+            raise forms.ValidationError('Add at least one product line.')
 
 
 BuyingBatchLineFormSet = forms.inlineformset_factory(
     BuyingBatch,
     BuyingBatchLine,
     form=BuyingBatchLineForm,
-    extra=1,
+    formset=BuyingBatchLineFormSetBase,
+    extra=0,
     min_num=1,
     validate_min=True,
     can_delete=True,

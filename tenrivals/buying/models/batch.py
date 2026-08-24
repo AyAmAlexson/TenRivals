@@ -78,7 +78,7 @@ class BuyingBatchLine(models.Model):
     weight_g = models.PositiveIntegerField(
         null=True,
         blank=True,
-        help_text='Parcel / shipping weight per unit (g). Empty → category weight rule.',
+        help_text='Optional per-unit override (g). Empty → category estimate; box is added once per batch.',
     )
     url = models.URLField(max_length=600, blank=True)
     sku_hint = models.CharField(max_length=80, blank=True)

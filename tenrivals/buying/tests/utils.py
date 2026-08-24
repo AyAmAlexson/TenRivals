@@ -150,3 +150,10 @@ def make_standard_rules(route):
         name='Volumetric weight',
         params={'divisor': '6000'},
     )
+    # packaging_g=0 so batch “one box” does not change kg vs single-offer fixtures.
+    CalculationRule.objects.create(
+        rule_type=CalculationRule.RuleType.WEIGHT,
+        name='Racquet item weight (test)',
+        category='racquet',
+        params={'default_g': '1000', 'packaging_g': '0'},
+    )

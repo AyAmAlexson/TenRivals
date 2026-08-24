@@ -11,11 +11,12 @@
   .calc-lines .col-qty{width:72px}
   .calc-lines .col-price{width:110px}
   .calc-lines .col-cur{width:72px}
-  .calc-lines .col-w{width:90px}
   .calc-lines .col-del{width:40px;text-align:center}
   .calc-meta{font-size:13px;color:var(--muted);margin:8px 0 0;font-weight:400;text-transform:none}
   .calc-quick{margin-top:20px;padding-top:16px;border-top:1px solid var(--line)}
   .calc-quick h3{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;margin:0 0 10px}
+  .calc-line.is-deleted{opacity:.45}
+  .field-errors{color:#b91c1c;font-size:12px;margin-top:4px}
 </style>
 {% endblock %}
 {% block content %}
@@ -24,6 +25,7 @@
     {% csrf_token %}
     {{ formset.management_form }}
     {% if form.non_field_errors %}<div class="field-errors">{{ form.non_field_errors }}</div>{% endif %}
+    {% if formset.non_form_errors %}<div class="field-errors">{{ formset.non_form_errors }}</div>{% endif %}
     <div class="form-row">
       <div class="form-group">
         <label for="{{ form.supplier.id_for_label }}">Store</label>
@@ -42,6 +44,7 @@
     </div>
 
     <h2 class="card-title" style="margin-top:8px">Items (same store)</h2>
+    <p class="calc-meta">Shipping weight is estimated from category (products) plus one box for the whole cart — you do not enter grams.</p>
     <div class="table-wrap">
       <table class="calc-lines" id="calc-lines">
         <thead>
@@ -51,7 +54,6 @@
             <th class="col-cur">Cur</th>
             <th class="col-qty">Qty</th>
             <th>Category</th>
-            <th class="col-w">Weight g</th>
             <th>URL</th>
             <th class="col-del"></th>
           </tr>
@@ -68,11 +70,14 @@
             <td class="col-price">{{ f.unit_price }}{% if f.unit_price.errors %}<div class="field-errors">{{ f.unit_price.errors }}</div>{% endif %}</td>
             <td class="col-cur">{{ f.currency }}</td>
             <td class="col-qty">{{ f.quantity }}</td>
-            <td>{{ f.category }}</td>
-            <td class="col-w">{{ f.weight_g }}</td>
+            <td>{{ f.category }}{% if f.category.errors %}<div class="field-errors">{{ f.category.errors }}</div>{% endif %}</td>
             <td>{{ f.url }}</td>
             <td class="col-del">
-              {% if f.instance.pk %}{{ f.DELETE }}{% else %}<button type="button" class="btn btn--sm btn--outline calc-remove" aria-label="Remove row">×</button>{% endif %}
+              {% if formset.can_delete and f.instance.pk %}
+                <label title="Delete">{{ f.DELETE }}</label>
+              {% else %}
+                <button type="button" class="btn btn--sm btn--outline calc-remove" aria-label="Remove row">×</button>
+              {% endif %}
             </td>
           </tr>
           {% endfor %}
@@ -102,9 +107,6 @@
   </div>
 </div>
 
-<template id="calc-empty-row">
-  {# Filled by JS from last empty form pattern — see script #}
-</template>
 <script>
 (function(){
   var suppliers = {{ suppliers_json|safe }};
@@ -128,14 +130,28 @@
 
   var totalForms = document.getElementById('id_lines-TOTAL_FORMS');
   var tbody = document.querySelector('#calc-lines tbody');
+
+  function reindexRows(){
+    var rows = tbody.querySelectorAll('tr.calc-line');
+    rows.forEach(function(row, idx){
+      row.querySelectorAll('input, select, label, textarea').forEach(function(el){
+        ['name', 'id', 'for'].forEach(function(attr){
+          var v = el.getAttribute(attr);
+          if(!v) return;
+          el.setAttribute(attr, v.replace(/lines-(\d+)/g, 'lines-' + idx).replace(/lines_(\d+)/g, 'lines_' + idx));
+        });
+      });
+    });
+    totalForms.value = String(rows.length);
+  }
+
   document.getElementById('calc-add-line').addEventListener('click', function(){
-    var idx = parseInt(totalForms.value, 10);
-    var html = tbody.querySelector('tr').outerHTML
-      .replace(/lines-(\d+)-/g, 'lines-' + idx + '-')
-      .replace(/lines_(\d+)_/g, 'lines_' + idx + '_');
+    var first = tbody.querySelector('tr.calc-line');
+    if(!first) return;
     var wrap = document.createElement('tbody');
-    wrap.innerHTML = html;
+    wrap.innerHTML = first.outerHTML;
     var row = wrap.firstElementChild;
+    row.classList.remove('is-deleted');
     row.querySelectorAll('input, select').forEach(function(el){
       if(el.type === 'checkbox'){ el.checked = false; return; }
       if(el.name && el.name.indexOf('-DELETE') !== -1) return;
@@ -148,15 +164,22 @@
       }
       el.value = '';
     });
+    // Fresh rows use remove button, not DELETE checkbox.
+    var delCell = row.querySelector('.col-del');
+    if(delCell){
+      delCell.innerHTML = '<button type="button" class="btn btn--sm btn--outline calc-remove" aria-label="Remove row">×</button>';
+    }
     tbody.appendChild(row);
-    totalForms.value = idx + 1;
+    reindexRows();
   });
+
   tbody.addEventListener('click', function(e){
     var btn = e.target.closest('.calc-remove');
     if(!btn) return;
-    var row = btn.closest('tr');
-    if(tbody.querySelectorAll('tr').length <= 1) return;
-    row.remove();
+    var rows = tbody.querySelectorAll('tr.calc-line');
+    if(rows.length <= 1) return;
+    btn.closest('tr').remove();
+    reindexRows();
   });
 })();
 </script>
