@@ -38,6 +38,7 @@
 {% block content %}
 <div class="staff-toolbar">
   <a href="{% url 'administration:staff_customer_new' %}" class="btn">New customer</a>
+  <a href="{% url 'administration:staff_customer_merge' %}" class="btn btn--outline">Merge customers</a>
   <form method="get" action="{% url 'administration:staff_customers' %}" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
     <input type="search" name="q" value="{{ search_q }}" placeholder="Search name, phone, email" style="min-width:220px;padding:9px 12px;border:1px solid var(--line);font-family:inherit;font-size:14px">
     <button type="submit" class="btn btn--sm">Search</button>

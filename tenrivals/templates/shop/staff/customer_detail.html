@@ -49,6 +49,7 @@
 </a>
 <div class="staff-toolbar">
   <a href="{% url 'administration:staff_customer_edit' customer.pk %}" class="btn btn--sm">Edit customer</a>
+  <a href="{% url 'administration:staff_customer_merge' %}?survivor={{ customer.pk }}" class="btn btn--sm btn--outline" style="margin-right:0">Merge into…</a>
   <a href="{% url 'administration:staff_sales_order_new' %}?customer={{ customer.pk }}" class="btn btn--sm btn--outline" style="margin-right:0">New order</a>
   {% if linked_user %}
   <a href="{% url 'administration:superuser_user_edit' linked_user.pk %}" class="btn btn--sm btn--outline" style="margin-right:0">User account</a>

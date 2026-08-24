@@ -1,0 +1,180 @@
+{% extends 'persons/staff_base.html' %}
+{% block title %}Merge customers — Staff | Tenrivals{% endblock %}
+{% block page_heading %}{{ page_heading }}{% endblock %}
+{% block page_note %}
+<p class="page-note">
+  Keep the <strong>survivor</strong> customer; move all sales orders, Order For Me, and buying requests from the <strong>donor</strong>, then delete the donor.
+  When both have a field filled differently, choose survivor / donor / custom. Unchosen values are appended to notes as
+  <code>Merge alternative &lt;field&gt; &lt;value&gt;</code>.
+</p>
+{% endblock %}
+{% block extra_head %}
+<style>
+  .merge-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px}
+  @media(max-width:800px){.merge-grid{grid-template-columns:1fr}}
+  .merge-card{background:#fff;border:1px solid var(--line);padding:16px 18px}
+  .merge-card__title{margin:0 0 10px;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+  .merge-card select{width:100%;max-width:100%;padding:9px 12px;border:1px solid var(--line);font-family:inherit;font-size:14px;background:#fff}
+  .merge-hint{margin:8px 0 0;font-size:13px;color:var(--muted);line-height:1.45}
+  .merge-related{margin:0 0 18px;padding:12px 14px;border:1px solid var(--line);background:#fafafa;font-size:14px}
+  .merge-related strong{font-weight:600}
+  .conflict-list{display:flex;flex-direction:column;gap:14px;margin:0 0 20px}
+  .conflict{
+    background:#fff;border:1px solid var(--line);padding:14px 16px;
+  }
+  .conflict__label{margin:0 0 10px;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
+  .conflict__opts{display:flex;flex-direction:column;gap:8px}
+  .conflict__opt{
+    display:flex;align-items:flex-start;gap:10px;padding:8px 10px;border:1px solid transparent;
+  }
+  .conflict__opt:has(input:checked){border-color:#cbd5e1;background:#f8fafc}
+  .conflict__opt input{margin-top:3px;flex:0 0 auto}
+  .conflict__opt-body{min-width:0;flex:1}
+  .conflict__opt-title{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:2px}
+  .conflict__opt-value{font-size:14px;overflow-wrap:anywhere;white-space:pre-wrap}
+  .conflict__custom{margin-top:6px;width:100%;padding:8px 10px;border:1px solid var(--line);font-family:inherit;font-size:14px}
+  .merge-actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+  .merge-error{margin:0 0 14px;padding:10px 12px;border:1px solid #fecaca;background:#fef2f2;color:#991b1b;font-size:14px}
+  .kv-mini{display:grid;grid-template-columns:110px 1fr;gap:4px 10px;font-size:13px;margin-top:10px}
+  .kv-mini dt{color:var(--muted);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+  .kv-mini dd{margin:0;overflow-wrap:anywhere}
+</style>
+{% endblock %}
+{% block content %}
+<a href="{% url 'administration:staff_customers' %}" class="back-link" style="display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:600;color:var(--muted);margin-bottom:16px">
+  ← Back to customers
+</a>
+
+{% if select_error %}
+<div class="merge-error">{{ select_error }}</div>
+{% endif %}
+
+<form method="get" action="{% url 'administration:staff_customer_merge' %}" class="staff-narrow" style="max-width:920px;margin-bottom:8px">
+  <div class="merge-grid">
+    <div class="merge-card">
+      <h2 class="merge-card__title">Survivor (keep)</h2>
+      <label for="survivor" class="visually-hidden">Survivor</label>
+      <select id="survivor" name="survivor" required>
+        <option value="">Select customer…</option>
+        {% for c in customer_choices %}
+        <option value="{{ c.id }}" {% if survivor_id|stringformat:"s" == c.id|stringformat:"s" %}selected{% endif %}>{{ c.label }}</option>
+        {% endfor %}
+      </select>
+      <p class="merge-hint">This record remains after the merge.</p>
+    </div>
+    <div class="merge-card">
+      <h2 class="merge-card__title">Donor (merge from)</h2>
+      <label for="donor" class="visually-hidden">Donor</label>
+      <select id="donor" name="donor" required>
+        <option value="">Select customer…</option>
+        {% for c in customer_choices %}
+        <option value="{{ c.id }}" {% if donor_id|stringformat:"s" == c.id|stringformat:"s" %}selected{% endif %}>{{ c.label }}</option>
+        {% endfor %}
+      </select>
+      <p class="merge-hint">Orders move here → survivor; this record is deleted.</p>
+    </div>
+  </div>
+  <button type="submit" class="btn btn--sm">Compare &amp; continue</button>
+</form>
+
+{% if survivor and donor %}
+<div class="staff-narrow" style="max-width:920px;margin-top:22px">
+  <div class="merge-related">
+    From donor <strong>#{{ donor.pk }} {{ donor.display_name }}</strong> → survivor
+    <strong>#{{ survivor.pk }} {{ survivor.display_name }}</strong>:
+    {{ related.sales_orders }} sales order{{ related.sales_orders|pluralize }},
+    {{ related.order_for_me }} Order For Me,
+    {{ related.buying_requests }} buying request{{ related.buying_requests|pluralize }}.
+    Empty survivor fields will be filled from the donor automatically when there is no conflict.
+  </div>
+
+  <div class="merge-grid" style="margin-bottom:20px">
+    <div class="merge-card">
+      <h2 class="merge-card__title">Survivor snapshot</h2>
+      <dl class="kv-mini">
+        <dt>Email</dt><dd>{{ survivor.email|default:"—" }}</dd>
+        <dt>Phone</dt><dd>{{ survivor.phone|default:"—" }}</dd>
+        <dt>Telegram</dt><dd>{{ survivor.tg_account|default:"—" }}</dd>
+        <dt>Account</dt><dd>{% if survivor.user %}#{{ survivor.user.pk }} {{ survivor.user.email }}{% else %}Guest{% endif %}</dd>
+      </dl>
+    </div>
+    <div class="merge-card">
+      <h2 class="merge-card__title">Donor snapshot</h2>
+      <dl class="kv-mini">
+        <dt>Email</dt><dd>{{ donor.email|default:"—" }}</dd>
+        <dt>Phone</dt><dd>{{ donor.phone|default:"—" }}</dd>
+        <dt>Telegram</dt><dd>{{ donor.tg_account|default:"—" }}</dd>
+        <dt>Account</dt><dd>{% if donor.user %}#{{ donor.user.pk }} {{ donor.user.email }}{% else %}Guest{% endif %}</dd>
+      </dl>
+    </div>
+  </div>
+
+  <form method="post" action="{% url 'administration:staff_customer_merge' %}">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="merge">
+    <input type="hidden" name="survivor_id" value="{{ survivor.pk }}">
+    <input type="hidden" name="donor_id" value="{{ donor.pk }}">
+
+    {% if conflicts %}
+    <h2 class="merge-card__title" style="margin-bottom:12px">Resolve conflicts</h2>
+    <div class="conflict-list">
+      {% for c in conflicts %}
+      <div class="conflict" data-field="{{ c.field }}">
+        <h3 class="conflict__label">{{ c.label }}</h3>
+        <div class="conflict__opts">
+          <label class="conflict__opt">
+            <input type="radio" name="choice_{{ c.field }}" value="survivor" checked>
+            <span class="conflict__opt-body">
+              <span class="conflict__opt-title">Survivor</span>
+              <span class="conflict__opt-value">{{ c.survivor_display }}</span>
+            </span>
+          </label>
+          <label class="conflict__opt">
+            <input type="radio" name="choice_{{ c.field }}" value="donor">
+            <span class="conflict__opt-body">
+              <span class="conflict__opt-title">Donor</span>
+              <span class="conflict__opt-value">{{ c.donor_display }}</span>
+            </span>
+          </label>
+          {% if c.field == 'user' %}
+          <label class="conflict__opt">
+            <input type="radio" name="choice_{{ c.field }}" value="none">
+            <span class="conflict__opt-body">
+              <span class="conflict__opt-title">Unlink both</span>
+              <span class="conflict__opt-value">Keep no site account on the survivor (both alternatives go to notes).</span>
+            </span>
+          </label>
+          {% else %}
+          <label class="conflict__opt">
+            <input type="radio" name="choice_{{ c.field }}" value="custom">
+            <span class="conflict__opt-body">
+              <span class="conflict__opt-title">Custom</span>
+              {% if c.field == 'newsletter_opt_in' %}
+              <select name="custom_{{ c.field }}" class="conflict__custom">
+                <option value="true">Yes</option>
+                <option value="false">No</option>
+              </select>
+              {% elif c.field == 'comment' or c.field == 'address' %}
+              <textarea name="custom_{{ c.field }}" class="conflict__custom" rows="3" placeholder="Write your own value"></textarea>
+              {% else %}
+              <input type="text" name="custom_{{ c.field }}" class="conflict__custom" placeholder="Write your own value">
+              {% endif %}
+            </span>
+          </label>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="merge-hint" style="margin-bottom:16px">No field collisions. Empty survivor fields will be filled from the donor; a merge note will be added to comments.</p>
+    {% endif %}
+
+    <div class="merge-actions">
+      <button type="submit" class="btn">Merge &amp; delete donor</button>
+      <a href="{% url 'administration:staff_customers' %}" class="btn btn--sm btn--outline">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endif %}
+{% endblock %}

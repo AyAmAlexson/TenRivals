@@ -22,6 +22,12 @@ from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.views.decorators.http import require_POST
 
+from .customer_merge import (
+    count_related,
+    find_field_conflicts,
+    merge_customers,
+    parse_resolutions_from_post,
+)
 from .models import Customer, Product, SalesOrder, SalesOrderLine
 from .sales_order_stock import (
     get_variant_qty_map,
@@ -445,6 +451,127 @@ def staff_customer_delete(request, pk):
     else:
         messages.success(request, f'Customer {label} deleted.')
     return redirect('administration:staff_customers')
+
+
+def _customer_option_label(c: Customer) -> str:
+    bits = [f'#{c.pk}', c.display_name()]
+    email = (c.email or '').strip()
+    phone = (c.phone or '').strip()
+    if email:
+        bits.append(email)
+    if phone:
+        bits.append(phone)
+    bits.append('Registered' if c.user_id else 'Guest')
+    return ' · '.join(bits)
+
+
+@login_required
+@user_passes_test(_staff_ok)
+def staff_customer_merge(request):
+    """
+    Merge donor customer into survivor: move orders / OFM / buying requests,
+    resolve field collisions, append unchosen values to notes, delete donor.
+    """
+    customers_qs = Customer.objects.select_related('user').order_by(
+        'last_name', 'first_name', 'id'
+    )
+    customer_choices = [
+        {'id': c.pk, 'label': _customer_option_label(c)} for c in customers_qs
+    ]
+
+    survivor = None
+    donor = None
+    conflicts = []
+    related = {'sales_orders': 0, 'order_for_me': 0, 'buying_requests': 0}
+    error = ''
+
+    survivor_id = (request.POST.get('survivor_id') or request.GET.get('survivor') or '').strip()
+    donor_id = (request.POST.get('donor_id') or request.GET.get('donor') or '').strip()
+
+    if survivor_id and donor_id:
+        try:
+            sid = int(survivor_id)
+            did = int(donor_id)
+        except (TypeError, ValueError):
+            error = 'Invalid customer ids.'
+            sid = did = None
+        if sid is not None and did is not None:
+            if sid == did:
+                error = 'Survivor and donor must be different customers.'
+            else:
+                survivor = Customer.objects.select_related('user').filter(pk=sid).first()
+                donor = Customer.objects.select_related('user').filter(pk=did).first()
+                if survivor is None or donor is None:
+                    error = 'One or both customers were not found.'
+                    survivor = donor = None
+                else:
+                    conflicts = find_field_conflicts(survivor, donor)
+                    related = count_related(donor)
+
+    if request.method == 'POST' and request.POST.get('action') == 'merge':
+        if error or survivor is None or donor is None:
+            messages.error(request, error or 'Select survivor and donor first.')
+        else:
+            conflict_fields = [c.field for c in conflicts]
+            resolutions = parse_resolutions_from_post(request.POST, conflict_fields)
+            missing = []
+            for c in conflicts:
+                res = resolutions.get(c.field)
+                if not res:
+                    missing.append(c.label)
+                    continue
+                if c.field == 'user':
+                    if res.choice not in ('survivor', 'donor', 'none'):
+                        missing.append(c.label)
+                    continue
+                if res.choice not in ('survivor', 'donor', 'custom'):
+                    missing.append(c.label)
+                    continue
+                if (
+                    res.choice == 'custom'
+                    and c.field == 'first_name'
+                    and not res.custom_value.strip()
+                ):
+                    missing.append(c.label)
+            if missing:
+                messages.error(
+                    request,
+                    'Please resolve all conflicts'
+                    + (f': {", ".join(missing)}' if missing else '')
+                    + '.',
+                )
+            else:
+                try:
+                    merged = merge_customers(survivor, donor, resolutions)
+                except Exception as exc:
+                    messages.error(request, f'Merge failed: {exc}')
+                else:
+                    moved = related['sales_orders']
+                    messages.success(
+                        request,
+                        f'Merged customer #{donor.pk} into #{merged.pk}. '
+                        f'Moved {moved} sales order(s), '
+                        f'{related["order_for_me"]} Order For Me, '
+                        f'{related["buying_requests"]} buying request(s).',
+                    )
+                    return redirect('administration:staff_customer_detail', pk=merged.pk)
+
+    return render(
+        request,
+        'shop/staff/customer_merge.html',
+        {
+            'customer_choices': customer_choices,
+            'survivor': survivor,
+            'donor': donor,
+            'survivor_id': survivor.pk if survivor else (survivor_id or ''),
+            'donor_id': donor.pk if donor else (donor_id or ''),
+            'conflicts': conflicts,
+            'related': related,
+            'select_error': error,
+            'staff_nav_active': 'customers',
+            'page_heading': 'Merge customers',
+        },
+    )
 
 
 @login_required

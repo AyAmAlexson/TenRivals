@@ -233,6 +233,120 @@ class CustomerDuplicateAndDeleteTests(TestCase):
 
 
 @override_settings(SECURE_SSL_REDIRECT=False)
+class CustomerMergeTests(TestCase):
+    def setUp(self):
+        User = get_user_model()
+        self.staff = User.objects.create_superuser(
+            email='staff-merge@test.com',
+            password='secret-secret',
+        )
+        self.client.force_login(self.staff)
+
+    def test_merge_moves_orders_and_fills_empty_fields(self):
+        from shop.customer_merge import merge_customers
+
+        survivor = Customer.objects.create(
+            first_name='Keep',
+            last_name='Me',
+            email='survivor@test.com',
+            phone='',
+        )
+        donor = Customer.objects.create(
+            first_name='Guest',
+            last_name='Buyer',
+            email='donor@test.com',
+            phone='555123',
+            address='Tbilisi',
+        )
+        order = SalesOrder.objects.create(
+            invoice_number='2026-000201',
+            customer=donor,
+            order_date='2026-08-01',
+            status=SalesOrder.Status.COMPLETED,
+        )
+        merged = merge_customers(survivor, donor, {})
+        order.refresh_from_db()
+        self.assertEqual(order.customer_id, merged.pk)
+        self.assertFalse(Customer.objects.filter(pk=donor.pk).exists())
+        self.assertEqual(merged.phone, '555123')
+        self.assertEqual(merged.address, 'Tbilisi')
+        self.assertEqual(merged.email, 'survivor@test.com')
+        self.assertIn(f'Merged from customer #{donor.pk}', merged.comment)
+        self.assertIn('Merge alternative', merged.comment)  # email conflict → alternative
+
+    def test_merge_conflict_records_alternative_in_notes(self):
+        from shop.customer_merge import FieldResolution, find_field_conflicts, merge_customers
+
+        survivor = Customer.objects.create(
+            first_name='Anna',
+            last_name='One',
+            email='anna@test.com',
+            phone='111',
+        )
+        donor = Customer.objects.create(
+            first_name='Anna',
+            last_name='Two',
+            email='anna-guest@test.com',
+            phone='222',
+        )
+        conflicts = find_field_conflicts(survivor, donor)
+        fields = {c.field for c in conflicts}
+        self.assertIn('email', fields)
+        self.assertIn('phone', fields)
+        self.assertIn('last_name', fields)
+
+        merged = merge_customers(
+            survivor,
+            donor,
+            {
+                'email': FieldResolution(choice='donor'),
+                'phone': FieldResolution(choice='custom', custom_value='999'),
+                'last_name': FieldResolution(choice='survivor'),
+            },
+        )
+        self.assertEqual(merged.email, 'anna-guest@test.com')
+        self.assertEqual(merged.phone, '999')
+        self.assertEqual(merged.last_name, 'One')
+        self.assertIn('Merge alternative email anna@test.com', merged.comment)
+        self.assertIn('Merge alternative phone 111', merged.comment)
+        self.assertIn('Merge alternative phone 222', merged.comment)
+        self.assertIn('Merge alternative last_name Two', merged.comment)
+
+    def test_staff_merge_view_post(self):
+        survivor = Customer.objects.create(
+            first_name='S',
+            last_name='V',
+            email='s-view@test.com',
+        )
+        donor = Customer.objects.create(
+            first_name='D',
+            last_name='N',
+            email='d-view@test.com',
+            phone='777',
+        )
+        SalesOrder.objects.create(
+            invoice_number='2026-000202',
+            customer=donor,
+            order_date='2026-08-02',
+            status=SalesOrder.Status.COMPLETED,
+        )
+        url = reverse('administration:staff_customer_merge')
+        response = self.client.post(
+            url,
+            {
+                'action': 'merge',
+                'survivor_id': survivor.pk,
+                'donor_id': donor.pk,
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        survivor.refresh_from_db()
+        self.assertFalse(Customer.objects.filter(pk=donor.pk).exists())
+        self.assertEqual(survivor.sales_orders.count(), 1)
+        self.assertEqual(survivor.phone, '777')
+
+
+@override_settings(SECURE_SSL_REDIRECT=False)
 class CustomerAttributionTests(TestCase):
     def test_format_utm_and_organic_default(self):
         self.assertEqual(
