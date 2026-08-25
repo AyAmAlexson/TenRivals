@@ -30,11 +30,28 @@ from buying.models import (
     CalculationRule,
     FulfillmentRoute,
     Supplier,
+    TaxDisplayMode,
 )
 
 RuleType = CalculationRule.RuleType
 
 BATCH_CALCULATION_VERSION = 'batch-combined-2026.08'
+
+# Tax already baked into the shelf/unit price we enter (Onex keeps it — do not strip).
+_TAX_INCLUDED_IN_PRICE_MODES = frozenset(
+    {
+        TaxDisplayMode.PRICES_INCLUDE_VAT,
+        TaxDisplayMode.VAT_INCLUDED,
+        'prices_include_vat',
+        'vat_included',
+    }
+)
+_NO_LOCAL_TAX_MODES = frozenset(
+    {
+        TaxDisplayMode.NO_LOCAL_TAX,
+        'no_local_tax',
+    }
+)
 
 # Approximate product shipping weight when no CalculationRule exists (grams / unit).
 # Box / outer packaging is added once per batch — not per line.
@@ -361,10 +378,12 @@ def build_batch_route_quote(
             bd.warn('unknown:local_shipping')
 
     # --- Local tax ----------------------------------------------------------
-    if tax_mode in ('prices_include_vat', 'no_local_tax'):
+    # Calculator / Onex path: shelf price is entered as paid to the shop.
+    # Local VAT in that price is NOT stripped when shipping via Onex.
+    if tax_mode in _TAX_INCLUDED_IN_PRICE_MODES or tax_mode in _NO_LOCAL_TAX_MODES:
         note = (
-            'VAT already included in product prices'
-            if tax_mode == 'prices_include_vat'
+            'Local tax already included in entered prices (kept for Onex — not stripped)'
+            if tax_mode in _TAX_INCLUDED_IN_PRICE_MODES
             else 'Supplier charges no local tax'
         )
         local_tax = bd.add(

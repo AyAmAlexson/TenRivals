@@ -39,7 +39,13 @@ from buying.engine.fx import FxRateUnavailable, get_fx_rate_to_gel
 from buying.engine.rule_handlers import get_handler
 from buying.engine.rules import resolve_rule_checked
 from buying.engine.weight import resolve_chargeable_weight
-from buying.models import CalculationRule, CostScenario, FulfillmentRoute, SupplierOffer
+from buying.models import (
+    CalculationRule,
+    CostScenario,
+    FulfillmentRoute,
+    SupplierOffer,
+    TaxDisplayMode,
+)
 
 RuleType = CalculationRule.RuleType
 
@@ -297,6 +303,14 @@ def build_cost_scenario(
             bd.warn('provisional:local_shipping_unknown')
 
     # --- Local (supplier-country) tax — separate from Georgian VAT -----------
+    # Onex: shelf price is what we pay the shop; included local tax is not stripped.
+    _tax_in_price = offer.tax_display_mode in (
+        'prices_include_vat',
+        'vat_included',
+        TaxDisplayMode.PRICES_INCLUDE_VAT,
+        TaxDisplayMode.VAT_INCLUDED,
+    )
+    _no_local = offer.tax_display_mode in ('no_local_tax', TaxDisplayMode.NO_LOCAL_TAX)
     if offer.supplier_tax_amount is not None:
         exact = offer.supplier_tax_source in ('parsed', 'checkout_simulation', 'manual_entry', 'manual_override')
         local_tax = bd.add(
@@ -304,10 +318,10 @@ def build_cost_scenario(
             source=offer.supplier_tax_source, exact=exact,
             amount_original=_dec(offer.supplier_tax_amount), currency=offer.currency,
         )
-    elif offer.tax_display_mode in ('prices_include_vat', 'no_local_tax'):
+    elif _tax_in_price or _no_local:
         note = (
-            'VAT already included in the product price'
-            if offer.tax_display_mode == 'prices_include_vat'
+            'Local tax already included in product price (kept for Onex — not stripped)'
+            if _tax_in_price
             else 'Supplier charges no local tax'
         )
         local_tax = bd.add('local_tax', 'Local tax', Decimal('0'), source='parsed', exact=True, note=note)

@@ -869,7 +869,18 @@ def buying_calculator(request, pk: int | None = None):
             'batch': batch,
             'quick_supplier_form': QuickSupplierForm(),
             'suppliers_json': mark_safe(json.dumps([
-                {'id': s.pk, 'currency': s.currency, 'country': s.country, 'name': s.name}
+                {
+                    'id': s.pk,
+                    'currency': s.currency,
+                    'country': s.country,
+                    'name': s.name,
+                    'tax_display_mode': s.tax_display_mode,
+                    'free_shipping_threshold': (
+                        str(s.free_shipping_threshold)
+                        if s.free_shipping_threshold is not None
+                        else None
+                    ),
+                }
                 for s in Supplier.objects.filter(enabled=True).order_by('name')
             ])),
         },

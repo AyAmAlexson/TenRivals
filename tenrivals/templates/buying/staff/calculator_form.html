@@ -102,6 +102,8 @@
       <div class="form-group"><label>Country</label>{{ quick_supplier_form.country }}</div>
       <div class="form-group"><label>Currency</label>{{ quick_supplier_form.currency }}</div>
       <div class="form-group"><label>Onex</label>{{ quick_supplier_form.onex_applicability }}</div>
+      <div class="form-group"><label>Tax mode</label>{{ quick_supplier_form.tax_display_mode }}</div>
+      <div class="form-group"><label>Free ship from</label>{{ quick_supplier_form.free_shipping_threshold }}</div>
       <div class="form-group" style="align-self:flex-end"><button type="submit" class="btn btn--sm btn--outline">Add store</button></div>
     </form>
   </div>
@@ -117,7 +119,16 @@
   function syncSupplier(){
     var s = byId[sel && sel.value];
     if(!s){ if(meta) meta.textContent = 'Country is taken from the selected store.'; return; }
-    if(meta) meta.textContent = s.name + ' · country ' + s.country + ' · default currency ' + s.currency;
+    var bits = [s.name, 'country ' + s.country, 'currency ' + s.currency];
+    if(s.free_shipping_threshold){
+      bits.push('free local ship from ' + s.free_shipping_threshold + ' ' + s.currency);
+    } else {
+      bits.push('no free-ship threshold set');
+    }
+    if(s.tax_display_mode){
+      bits.push('tax mode ' + s.tax_display_mode);
+    }
+    if(meta) meta.textContent = bits.join(' · ');
     document.querySelectorAll('#calc-lines input[name$="-currency"]').forEach(function(inp){
       if(!inp.value) inp.value = s.currency;
     });

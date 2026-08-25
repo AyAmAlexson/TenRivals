@@ -17,6 +17,7 @@ from .models import (
     ProductCategory,
     Supplier,
     SupplierOffer,
+    TaxDisplayMode,
 )
 
 
@@ -96,6 +97,17 @@ class SupplierForm(forms.ModelForm):
             'return_complexity', 'reliability_score', 'risk_score', 'notes',
         ]
         widgets = {'notes': forms.Textarea(attrs={'rows': 3})}
+        help_texts = {
+            'free_shipping_threshold': (
+                'Free local shipping to the Onex warehouse when the cart (in this '
+                'store’s currency) reaches this amount. Different per shop.'
+            ),
+            'tax_display_mode': (
+                'For Onex calculator: use “Prices include VAT” / “VAT included” when '
+                'you type shelf prices with local tax already in them — tax is kept '
+                '(not stripped). Use “No local tax” only if the shop never charges it.'
+            ),
+        }
 
 
 class FulfillmentProviderForm(forms.ModelForm):
@@ -309,7 +321,15 @@ class QuickSupplierForm(forms.ModelForm):
 
     class Meta:
         model = Supplier
-        fields = ['name', 'base_url', 'country', 'currency', 'onex_applicability']
+        fields = [
+            'name',
+            'base_url',
+            'country',
+            'currency',
+            'onex_applicability',
+            'tax_display_mode',
+            'free_shipping_threshold',
+        ]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -317,6 +337,14 @@ class QuickSupplierForm(forms.ModelForm):
         self.fields['currency'].widget.attrs['placeholder'] = 'USD'
         self.fields['base_url'].widget.attrs['placeholder'] = 'https://…'
         self.fields['onex_applicability'].initial = 'supported'
+        self.fields['tax_display_mode'].initial = TaxDisplayMode.PRICES_INCLUDE_VAT
+        self.fields['free_shipping_threshold'].required = False
+        self.fields['free_shipping_threshold'].help_text = (
+            'Cart total in store currency for free local shipping to Onex (optional).'
+        )
+        self.fields['tax_display_mode'].help_text = (
+            'Prices include VAT = you type tax-inclusive shelf prices (Onex keeps tax).'
+        )
 
     def save(self, commit=True):
         from django.utils.text import slugify
@@ -333,6 +361,8 @@ class QuickSupplierForm(forms.ModelForm):
         instance.code = code
         if not instance.default_destination_country:
             instance.default_destination_country = instance.country
+        if not instance.tax_display_mode or instance.tax_display_mode == TaxDisplayMode.UNKNOWN:
+            instance.tax_display_mode = TaxDisplayMode.PRICES_INCLUDE_VAT
         if commit:
             instance.save()
         return instance
