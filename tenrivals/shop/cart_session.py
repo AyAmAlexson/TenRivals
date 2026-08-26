@@ -200,11 +200,6 @@ def save_cart(request, cart: dict[str, Any]) -> None:
     _save_session_payload(request, cart)
 
 
-def _legacy_get_cart_compat(request) -> dict[str, Any]:
-    """Back-compat for old imports/tests if needed."""
-    return get_cart(request)
-
-
 def cart_line_count_units(cart: dict[str, Any]) -> int:
     return sum(int(x.get('qty') or 0) for x in cart.get('lines') or [])
 

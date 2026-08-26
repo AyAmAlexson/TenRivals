@@ -161,3 +161,9 @@ tenrivals/celerybeat-schedule-*.db
 tenrivals/celerybeat-schedule-wal
 
 tenrivals/media/
+# Local junk / one-off dumps
+.DS_Store
+**/.DS_Store
+*.pem
+*_export.csv
+tenrivals/customers_export.csv

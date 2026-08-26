@@ -44,7 +44,6 @@ PyJWT==2.8.0
 pyTelegramBotAPI==4.26.0
 python-crontab==3.2.0
 python-dateutil==2.9.0.post0
-python-telegram-bot==21.11.1
 python3-openid==3.2.0
 qrcode==8.0
 redis==5.2.1
