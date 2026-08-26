@@ -6,10 +6,8 @@
   {{ buying_request.created_at|date:'Y-m-d H:i' }} · {{ buying_request.staff_user.get_full_name|default:buying_request.staff_user.email }}
   {% if buying_request.client %} · Client: {{ buying_request.client }}{% endif %}
   · Status: <strong>{{ buying_request.get_status_display }}</strong>
-{% if search_progress.total %}
-  · Connectors: {{ search_progress.checked }}/{{ search_progress.total }} checked
-  {% if search_progress.offers_found %} · Offers {{ search_progress.offers_found }}{% endif %}
-  {% if search_progress.best_landed_cost %} · Best cost {{ search_progress.best_landed_cost }} ₾ ({{ search_progress.best_supplier }}){% endif %}
+  {% if search_progress.total %}
+  · Connectors: Completed {{ search_progress.completed }}/{{ search_progress.total }}
   {% if search_progress.running %} · In progress {{ search_progress.running }}{% endif %}
   {% if search_progress.failed %} · Failed {{ search_progress.failed }}{% endif %}
   {% endif %}
@@ -58,34 +56,23 @@
 </div>
 
 {% if search_progress.total %}
-<div class="card" id="search-summary-card" style="{% if search_progress.done %}border-color:var(--ok, #2a7a4b){% endif %}">
-  <h2 class="card-title" style="text-transform:uppercase;letter-spacing:.04em">Search summary</h2>
-  <p id="search-result-summary" style="font-size:16px;margin:0;font-weight:400;text-transform:none">
-    Found <strong id="sum-offers">{{ search_progress.offers_found }}</strong> offer{% if search_progress.offers_found != 1 %}s{% endif %},
-    checked <strong id="sum-checked">{{ search_progress.checked }}</strong> of <strong id="sum-total">{{ search_progress.total }}</strong> suppliers{% if search_progress.best_landed_cost %},
-    best cost <strong id="sum-cost">{{ search_progress.best_landed_cost }} ₾</strong>
-    — <strong id="sum-supplier">{{ search_progress.best_supplier }}</strong>{% else %}<span id="sum-best-tail">{% if search_progress.done %}, no priced offers yet{% endif %}</span>{% endif %}.
-  </p>
-  <p class="page-note" id="search-progress-summary" style="margin:10px 0 0">
+<div class="card" id="search-progress-card">
+  <h2 class="card-title">Connector progress</h2>
+  <p class="page-note" id="search-progress-summary">
     Completed {{ search_progress.completed }}/{{ search_progress.total }}
     · Pending {{ search_progress.pending }} · Running {{ search_progress.running }} · Failed {{ search_progress.failed }}
   </p>
-</div>
-
-<div class="card" id="search-progress-card">
-  <h2 class="card-title">Connector progress</h2>
   <div class="table-wrap">
     <table>
-      <thead><tr><th>Supplier</th><th>Status</th><th>Tier</th><th>Candidates</th><th>Offers</th><th>Error</th></tr></thead>
+      <thead><tr><th>Supplier</th><th>Status</th><th>Candidates</th><th>Offers</th><th>Error</th></tr></thead>
       <tbody id="search-progress-body">
         {% for run in search_progress.runs %}
         <tr>
           <td>{{ run.supplier_name }}</td>
           <td>{{ run.status }}</td>
-          <td>{% if run.readiness %}<code>{{ run.readiness.tier }}</code>{% else %}—{% endif %}</td>
           <td>{{ run.candidates_found }}</td>
           <td>{{ run.offers_created }}</td>
-          <td>{% if run.error_message %}{{ run.error_type }}{% if run.error_type %}: {% endif %}{{ run.error_message|truncatechars:80 }}{% else %}—{% endif %}</td>
+          <td>{% if run.error_message %}{{ run.error_type }}: {{ run.error_message|truncatechars:80 }}{% else %}—{% endif %}</td>
         </tr>
         {% endfor %}
       </tbody>
@@ -100,20 +87,12 @@
   <p class="page-note">
     AI: {{ buying_request.normalized_product.model_version|default:'—' }} / {{ buying_request.normalized_product.prompt_version|default:'—' }}
     {% if buying_request.normalized_product.edited_by_staff %} · edited by staff{% endif %}
-    {% if buying_request.normalized_product.enrichment_snapshot %} · canonical enrichment applied{% endif %}
-  </p>
-  <p class="page-note">
-    Field sources:
-    <span class="badge">client</span> request text ·
-    <span class="badge">ai</span> AI ·
-    <span class="badge badge--yes">canonical</span> racquet KB ·
-    <span class="badge badge--no">staff</span> manual edit
   </p>
   {% else %}
   <p class="page-note">Not normalized yet. Run “Normalize” or fill the fields manually and save.</p>
   {% endif %}
   {% if uncertainties %}
-  <div class="alert alert-info">Uncertainties: {{ uncertainties|join:'; ' }}</div>
+  <div class="alert alert-info">AI uncertainties: {{ uncertainties|join:'; ' }}</div>
   {% endif %}
   {% if perms.buying.create %}
   <form method="post">
@@ -121,17 +100,7 @@
     <div class="form-row">
       {% for field in normalized_form.visible_fields %}
       <div class="form-group">
-        <label for="{{ field.id_for_label }}">
-          {{ field.label }}
-          {% if field_sources %}
-            {% for key, src in field_sources.items %}
-              {% if key == field.name %}
-              <span class="badge {% if src == 'canonical' %}badge--yes{% elif src == 'staff' %}badge--no{% endif %}"
-                    style="font-weight:400;text-transform:none;letter-spacing:0;margin-left:6px">{{ src }}</span>
-              {% endif %}
-            {% endfor %}
-          {% endif %}
-        </label>
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
         {{ field }}
         {% if field.errors %}<div class="field-errors">{{ field.errors }}</div>{% endif %}
       </div>
@@ -156,9 +125,7 @@
       <thead>
         <tr>
           <th>Supplier</th><th>Product</th><th>Price</th><th>Tax</th><th>Destination</th>
-          <th>Ship</th><th>Auth</th>
-          <th>Context</th><th>Identity</th><th>Variant</th><th>Eligibility</th>
-          <th>Onex</th><th>Match</th><th>Checked</th><th></th>
+          <th>Ship</th><th>Auth</th><th>Context</th><th>Onex</th><th>Variant</th><th>Match</th><th>Checked</th><th></th>
         </tr>
       </thead>
       <tbody>
@@ -189,13 +156,9 @@
             {% if offer.amount_missing_for_free_shipping %}<div class="page-note">Need {{ offer.amount_missing_for_free_shipping }} more</div>{% endif %}
           </td>
           <td>{{ offer.authentication_status|default:'—' }}</td>
-          <td><span class="badge {% if offer.purchase_context_confirmed == 'confirmed' %}badge--yes{% else %}badge--no{% endif %}">{{ offer.get_purchase_context_confirmed_display|default:offer.get_purchase_context_status_display }}</span></td>
-          <td><span class="badge {% if offer.product_identity_confirmed == 'confirmed' %}badge--yes{% else %}badge--no{% endif %}">{{ offer.get_product_identity_confirmed_display }}</span></td>
-          <td>
-            <span class="badge {% if offer.requested_variant_confirmed == 'confirmed' %}badge--yes{% elif offer.requested_variant_confirmed == 'unavailable' %}badge--no{% endif %}">{{ offer.get_requested_variant_confirmed_display }}</span>
-          </td>
-          <td><span class="badge {% if offer.eligibility_status == 'verified' %}badge--yes{% else %}badge--no{% endif %}">{{ offer.get_eligibility_status_display }}</span></td>
+          <td>{{ offer.get_purchase_context_status_display }}</td>
           <td>{{ offer.supplier.get_onex_applicability_display }}</td>
+          <td>{% if offer.requested_variant_available %}<span class="badge badge--yes">Yes</span>{% elif offer.requested_variant_available == False %}<span class="badge badge--no">No</span>{% else %}—{% endif %}</td>
           <td>{{ offer.get_match_status_display }}</td>
           <td>{{ offer.checked_at|date:'Y-m-d H:i' }}</td>
           <td>{% if perms.buying.create %}<a class="btn btn--sm" href="{% url 'administration:buying_offer_edit' buying_request.pk offer.pk %}">Edit</a>{% endif %}</td>
@@ -232,18 +195,7 @@
           <td>{{ s.fulfillment_route.name }}</td>
           <td>{{ s.supplier_offer.selected_destination_country|default:s.supplier_offer.supplier.country }}</td>
           <td>{{ s.item_cost }} ₾</td>
-          <td>
-            {% if s.calculation_details.local_shipping_status == 'unknown' %}
-              <span class="badge badge--no">Unknown</span>
-              <div class="page-note" style="margin:2px 0 0">Price may increase</div>
-            {% elif s.calculation_details.local_shipping_status == 'confirmed_zero' %}
-              0.00 ₾ <div class="page-note" style="margin:2px 0 0">Confirmed free</div>
-            {% elif s.calculation_details.local_shipping_status == 'estimated_amount' %}
-              {{ s.local_shipping }} ₾ <div class="page-note" style="margin:2px 0 0">Estimated</div>
-            {% else %}
-              {{ s.local_shipping }} ₾
-            {% endif %}
-          </td>
+          <td>{{ s.local_shipping }} ₾</td>
           <td>{{ s.international_shipping }} ₾</td>
           <td>{{ s.georgia_vat }} ₾</td>
           <td>{{ s.payment_fee }} ₾</td>
@@ -285,34 +237,13 @@
 <script>
 (function(){
   var url = "{% url 'administration:buying_request_progress' buying_request.pk %}";
-  function renderSummary(data){
-    var offers = document.getElementById('sum-offers');
-    var checked = document.getElementById('sum-checked');
-    var total = document.getElementById('sum-total');
-    var result = document.getElementById('search-result-summary');
-    var prog = document.getElementById('search-progress-summary');
-    if(offers) offers.textContent = data.offers_found;
-    if(checked) checked.textContent = data.checked;
-    if(total) total.textContent = data.total;
-    if(result){
-      var text = 'Found ' + data.offers_found + ' offer' + (data.offers_found === 1 ? '' : 's')
-        + ', checked ' + data.checked + ' of ' + data.total + ' suppliers';
-      if(data.best_landed_cost){
-        text += ', best cost ' + data.best_landed_cost + ' ₾ — ' + data.best_supplier;
-      } else if(data.done){
-        text += ', no priced offers yet';
-      }
-      text += '.';
-      result.textContent = text;
-    }
-    if(prog){
-      prog.textContent = 'Completed '+data.completed+'/'+data.total
-        +' · Pending '+data.pending+' · Running '+data.running+' · Failed '+data.failed;
-    }
-  }
   function tick(){
     fetch(url, {credentials:'same-origin'}).then(function(r){ return r.json(); }).then(function(data){
-      renderSummary(data);
+      var sum = document.getElementById('search-progress-summary');
+      if(sum){
+        sum.textContent = 'Completed '+data.completed+'/'+data.total
+          +' · Pending '+data.pending+' · Running '+data.running+' · Failed '+data.failed;
+      }
       if(data.pending===0 && data.running===0){ location.reload(); }
     }).catch(function(){});
   }

@@ -140,7 +140,7 @@ class SearchOrchestrationTests(TestCase):
         self.assertTrue(payload['done'])
 
     def test_progress_payload_ignores_unavailable_best_cost(self):
-        from buying.models import CostScenario, OfferEligibility
+        from buying.models import OfferEligibility
         from buying.services.offers import rebuild_scenarios_for_offer
         from buying.services.search import progress_payload
 
