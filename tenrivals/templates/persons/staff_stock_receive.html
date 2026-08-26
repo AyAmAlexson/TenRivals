@@ -30,6 +30,7 @@
   <h2 class="card-title">New batch</h2>
   <form method="post" id="receive-form">
     {% csrf_token %}
+    <input type="hidden" name="receive_token" value="{{ receive_token }}">
     <input type="hidden" name="lines-TOTAL_FORMS" id="id_lines-TOTAL_FORMS" value="{{ initial_rows|length }}">
     <div class="table-wrap">
       <table class="receive-lines">
@@ -91,7 +92,7 @@
       <input type="text" name="note" id="id_receive_note" maxlength="200" value="{{ note_value }}">
     </div>
     <div class="actions">
-      <button type="submit" class="btn">Record batch</button>
+      <button type="submit" class="btn" id="receive-submit">Record batch</button>
       <a href="{% url 'administration:staff_stock' %}" class="btn btn--outline">Back to stock</a>
     </div>
   </form>
@@ -354,6 +355,16 @@
     bindRow(row);
     row.querySelector('.js-product').focus();
   });
+
+  const form = document.getElementById('receive-form');
+  const submitBtn = document.getElementById('receive-submit');
+  if(form && submitBtn){
+    form.addEventListener('submit', function(){
+      if(submitBtn.disabled) return false;
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Recording…';
+    });
+  }
 })();
 </script>
 {% endblock %}

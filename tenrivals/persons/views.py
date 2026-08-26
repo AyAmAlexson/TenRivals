@@ -54,6 +54,8 @@ from shop.stock_receipts import (
 from shop.sales_order_utils import allocate_order_for_me_number
 import hashlib
 import hmac
+import uuid
+from django.core.cache import cache
 from django.utils.encoding import force_str
 import logging
 from django.http import HttpResponsePermanentRedirect, HttpResponseRedirect, JsonResponse
@@ -1206,11 +1208,18 @@ def staff_stock_list(request):
     return _staff_listings_page(request, ProductListingChannel.STOCK, "stock")
 
 
+def _stock_receive_token_key(user_id: int, token: str) -> str:
+    return f"stock_receive_once:{user_id}:{token}"
+
+
 @login_required
 @user_passes_test(_superuser_required)
 def staff_stock_receive(request):
     """Receive a purchase batch: multi-line cost update ± stock increment."""
     from decimal import Decimal, InvalidOperation
+
+    posted_token = (request.POST.get("receive_token") or "").strip()
+    receive_token = posted_token if len(posted_token) == 32 else uuid.uuid4().hex
 
     if request.method == "POST":
         errors: list[str] = []
@@ -1295,6 +1304,13 @@ def staff_stock_receive(request):
             for e in errors:
                 messages.error(request, e)
         else:
+            token_key = _stock_receive_token_key(request.user.pk, receive_token)
+            if not cache.add(token_key, 1, timeout=3600):
+                messages.info(
+                    request,
+                    "This batch was already recorded. Duplicate submit ignored — check Recent receipts.",
+                )
+                return redirect("administration:staff_stock_receive")
             try:
                 receipts = receive_stock_lines(
                     lines=line_specs,
@@ -1302,7 +1318,11 @@ def staff_stock_receive(request):
                     created_by=request.user,
                 )
             except ValueError as exc:
+                cache.delete(token_key)
                 messages.error(request, f"Batch not recorded: {exc}")
+            except Exception:
+                cache.delete(token_key)
+                raise
             else:
                 n = len(receipts)
                 units = sum(r.quantity for r in receipts)
@@ -1398,6 +1418,7 @@ def staff_stock_receive(request):
             "variant_map": variant_map,
             "initial_rows": initial_rows,
             "note_value": note_value,
+            "receive_token": receive_token,
             "receipts": receipts,
             "staff_nav_active": "stock",
             "page_heading": "Receive stock",
