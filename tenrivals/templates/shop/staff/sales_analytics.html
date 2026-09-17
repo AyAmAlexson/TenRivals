@@ -1,7 +1,7 @@
 {% extends 'persons/staff_base.html' %}
 {% block title %}Sales analytics — Staff | Tenrivals{% endblock %}
 {% block page_heading %}{{ page_heading }}{% endblock %}
-{% block page_note %}<p class="page-note">Staff-only economics. Cancelled / refunded orders excluded. TAX = {{ tax_rate_pct|floatformat:0 }}% turnover on gross; acquiring = {{ acquiring_rate_pct|floatformat:0 }}% of gross for card payments (payment method mentions card / terminal / POS). Lines without landed cost count in revenue but not in COGS — watch cost coverage.</p>{% endblock %}
+{% block page_note %}<p class="page-note">Staff-only economics. Cancelled / refunded orders excluded. Revenue is the customer payment. Net Proceeds = Revenue − VAT − TAX − Acquiring. Gross Profit = Revenue − VAT − COGS. Profit = Net Proceeds − COGS. TAX = {{ tax_rate_pct|floatformat:0 }}% turnover on gross; acquiring = {{ acquiring_rate_pct|floatformat:0 }}% of gross for card payments (payment method mentions card / terminal / POS). Lines without landed cost count in revenue but not in COGS — watch cost coverage.</p>{% endblock %}
 {% block extra_head %}
 {{ chart|json_script:"analytics-chart-data" }}
 {{ stock_value_chart|json_script:"stock-value-chart-data" }}
@@ -22,20 +22,6 @@
   .stat-card__hint{font-size:12px;color:var(--muted);margin-top:4px}
   .stat-card--good .stat-card__value{color:#065f46}
   .stat-card--warn .stat-card__value{color:#92400e}
-  .an-month{margin:0 0 26px;padding:18px 20px 20px;background:#fff;border:1px solid var(--line)}
-  .an-month__head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px}
-  .an-month__title{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;margin:0}
-  .an-month__range{font-size:12px;color:var(--muted);font-weight:400}
-  .an-month__grid{display:grid;grid-template-columns:1.35fr repeat(3,minmax(0,1fr));gap:14px}
-  @media(max-width:900px){.an-month__grid{grid-template-columns:1fr 1fr}}
-  @media(max-width:560px){.an-month__grid{grid-template-columns:1fr}}
-  .an-kpi{padding:14px 16px;border:1px solid var(--line);background:#fafafa;min-width:0}
-  .an-kpi--profit{background:#fdf2f2;border-color:#f0c4c7}
-  .an-kpi__label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
-  .an-kpi__value{font-size:34px;font-weight:800;line-height:1.1;margin-top:8px;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
-  .an-kpi--profit .an-kpi__value{color:var(--accent);font-size:40px}
-  .an-kpi__value.neg{color:#b91c1c}
-  .an-kpi__hint{font-size:12px;color:var(--muted);margin-top:6px;font-weight:400}
   .an-table th.col-profit,.an-table td.col-profit{background:#fdf2f2;color:#7f1d1d;font-weight:700}
   .an-table th.col-profit{color:var(--accent);font-weight:800;text-transform:uppercase}
   .an-table tfoot td.col-profit{background:#fce8e9}
@@ -54,36 +40,7 @@
 </style>
 {% endblock %}
 {% block content %}
-{% with mm=month_metrics.metrics %}
-<section class="an-month" aria-label="Current month key metrics">
-  <div class="an-month__head">
-    <h2 class="an-month__title">This month · {{ month_metrics.label }}</h2>
-    <span class="an-month__range">{{ month_metrics.start|date:'Y-m-d' }} → {{ month_metrics.end|date:'Y-m-d' }}</span>
-  </div>
-  <div class="an-month__grid">
-    <div class="an-kpi an-kpi--profit">
-      <div class="an-kpi__label">Profit</div>
-      <div class="an-kpi__value {% if mm.profit < 0 %}neg{% endif %}">{{ mm.profit }} ₾</div>
-      <div class="an-kpi__hint">Income − TAX − Acquiring</div>
-    </div>
-    <div class="an-kpi">
-      <div class="an-kpi__label">Orders</div>
-      <div class="an-kpi__value">{{ mm.orders }}</div>
-      <div class="an-kpi__hint">Sales this month</div>
-    </div>
-    <div class="an-kpi">
-      <div class="an-kpi__label">Avg check</div>
-      <div class="an-kpi__value">{% if mm.aov is not None %}{{ mm.aov }} ₾{% else %}—{% endif %}</div>
-      <div class="an-kpi__hint">Revenue / orders</div>
-    </div>
-    <div class="an-kpi">
-      <div class="an-kpi__label">ROI</div>
-      <div class="an-kpi__value">{% if mm.roi_pct is not None %}{{ mm.roi_pct }}%{% else %}—{% endif %}</div>
-      <div class="an-kpi__hint">Profit / COGS</div>
-    </div>
-  </div>
-</section>
-{% endwith %}
+{% include 'shop/staff/includes/month_kpis.html' %}
 
 <form method="get" class="an-filters">
   <div class="form-group">
@@ -115,14 +72,19 @@
     <div class="stat-card__hint">net revenue {{ totals.net }} ₾</div>
   </div>
   <div class="stat-card">
+    <div class="stat-card__label">Net Proceeds</div>
+    <div class="stat-card__value">{{ totals.net_proceeds }} ₾</div>
+    <div class="stat-card__hint">Revenue − VAT − TAX − Acquiring</div>
+  </div>
+  <div class="stat-card">
     <div class="stat-card__label">COGS</div>
     <div class="stat-card__value">{{ totals.cogs }} ₾</div>
     <div class="stat-card__hint">known landed costs only</div>
   </div>
   <div class="stat-card">
-    <div class="stat-card__label">Income</div>
-    <div class="stat-card__value">{{ totals.income }} ₾</div>
-    <div class="stat-card__hint">(Revenue − VAT) − COGS</div>
+    <div class="stat-card__label">Gross Profit</div>
+    <div class="stat-card__value">{{ totals.gross_profit }} ₾</div>
+    <div class="stat-card__hint">Revenue − VAT − COGS</div>
   </div>
   <div class="stat-card">
     <div class="stat-card__label">TAX + Acquiring</div>
@@ -132,7 +94,7 @@
   <div class="stat-card stat-card--good">
     <div class="stat-card__label">Profit</div>
     <div class="stat-card__value">{{ totals.profit }} ₾</div>
-    <div class="stat-card__hint">Income − TAX − Acquiring</div>
+    <div class="stat-card__hint">Net Proceeds − COGS</div>
   </div>
   <div class="stat-card">
     <div class="stat-card__label">Margin / ROI</div>
@@ -220,7 +182,8 @@
           <th>Period</th>
           <th class="num">Orders</th>
           <th class="num">Revenue ₾</th>
-          <th class="num">Income ₾</th>
+          <th class="num">Net Proceeds ₾</th>
+          <th class="num">Gross Profit ₾</th>
           <th class="num col-profit">Profit ₾</th>
           <th class="num">Margin</th>
           <th class="num">ROI</th>
@@ -237,7 +200,8 @@
           <td class="mono">{{ r.label }}</td>
           <td class="mono num">{{ r.orders }}</td>
           <td class="mono num">{{ r.revenue }}</td>
-          <td class="mono num {% if r.income < 0 %}neg{% endif %}">{{ r.income }}</td>
+          <td class="mono num {% if r.net_proceeds < 0 %}neg{% endif %}">{{ r.net_proceeds }}</td>
+          <td class="mono num {% if r.gross_profit < 0 %}neg{% endif %}">{{ r.gross_profit }}</td>
           <td class="mono num col-profit {% if r.profit < 0 %}neg{% endif %}">{{ r.profit }}</td>
           <td class="mono num">{% if r.margin_pct is not None %}{{ r.margin_pct }}%{% else %}—{% endif %}</td>
           <td class="mono num">{% if r.roi_pct is not None %}{{ r.roi_pct }}%{% else %}—{% endif %}</td>
@@ -248,7 +212,7 @@
           <td class="mono num">{% if r.coverage_pct is not None %}{{ r.coverage_pct }}%{% else %}—{% endif %}</td>
         </tr>
         {% empty %}
-        <tr><td colspan="12" style="color:var(--muted)">No orders in the selected period.</td></tr>
+        <tr><td colspan="13" style="color:var(--muted)">No orders in the selected period.</td></tr>
         {% endfor %}
       </tbody>
       {% if bucket_rows %}
@@ -257,7 +221,8 @@
           <td>Total</td>
           <td class="mono num">{{ totals.orders }}</td>
           <td class="mono num">{{ totals.revenue }}</td>
-          <td class="mono num {% if totals.income < 0 %}neg{% endif %}">{{ totals.income }}</td>
+          <td class="mono num {% if totals.net_proceeds < 0 %}neg{% endif %}">{{ totals.net_proceeds }}</td>
+          <td class="mono num {% if totals.gross_profit < 0 %}neg{% endif %}">{{ totals.gross_profit }}</td>
           <td class="mono num col-profit {% if totals.profit < 0 %}neg{% endif %}">{{ totals.profit }}</td>
           <td class="mono num">{% if totals.margin_pct is not None %}{{ totals.margin_pct }}%{% else %}—{% endif %}</td>
           <td class="mono num">{% if totals.roi_pct is not None %}{{ totals.roi_pct }}%{% else %}—{% endif %}</td>
@@ -286,7 +251,7 @@
             <th class="num">Qty</th>
             <th class="num">Revenue ₾</th>
             <th class="num">Share</th>
-            <th class="num">Income ₾</th>
+            <th class="num">Gross Profit ₾</th>
             <th class="num">Margin</th>
             <th class="num">ROI</th>
             <th class="num">COGS ₾</th>
@@ -301,7 +266,7 @@
             <td class="mono num">{{ c.qty }}</td>
             <td class="mono num">{{ c.revenue }}</td>
             <td class="mono num">{% if c.share_pct is not None %}{{ c.share_pct }}%{% else %}—{% endif %}</td>
-            <td class="mono num {% if c.income < 0 %}neg{% endif %}">{{ c.income }}</td>
+            <td class="mono num {% if c.gross_profit < 0 %}neg{% endif %}">{{ c.gross_profit }}</td>
             <td class="mono num">{% if c.margin_pct is not None %}{{ c.margin_pct }}%{% else %}—{% endif %}</td>
             <td class="mono num">{% if c.roi_pct is not None %}{{ c.roi_pct }}%{% else %}—{% endif %}</td>
             <td class="mono num">{{ c.cogs }}</td>
@@ -312,7 +277,7 @@
       </table>
     </div>
   </div>
-  <p class="page-meta" style="margin:10px 0 0;font-size:12px">Line-level income (before order TAX / acquiring). Tag lines as Preorder on the order form to move them out of In stock. Past orders default to In stock until you change them.</p>
+  <p class="page-meta" style="margin:10px 0 0;font-size:12px">Line-level gross profit (Revenue − VAT − COGS, before order TAX / acquiring). Tag lines as Preorder on the order form to move them out of In stock. Past orders default to In stock until you change them.</p>
 </div>
 
 <div class="card">
@@ -323,7 +288,7 @@
     <div class="table-wrap">
       <table class="an-table">
         <thead>
-          <tr><th>Category</th><th class="num">Qty</th><th class="num">Revenue ₾</th><th class="num">Share</th><th class="num">COGS ₾</th><th class="num">Income ₾</th><th class="num">ROI</th><th class="num">Coverage</th></tr>
+          <tr><th>Category</th><th class="num">Qty</th><th class="num">Revenue ₾</th><th class="num">Share</th><th class="num">COGS ₾</th><th class="num">Gross Profit ₾</th><th class="num">ROI</th><th class="num">Coverage</th></tr>
         </thead>
         <tbody>
           {% for t in type_breakdown %}
@@ -333,7 +298,7 @@
             <td class="mono num">{{ t.revenue }}</td>
             <td class="mono num">{% if t.share_pct is not None %}{{ t.share_pct }}%{% else %}—{% endif %}</td>
             <td class="mono num">{{ t.cogs }}</td>
-            <td class="mono num {% if t.income < 0 %}neg{% endif %}">{{ t.income }}</td>
+            <td class="mono num {% if t.gross_profit < 0 %}neg{% endif %}">{{ t.gross_profit }}</td>
             <td class="mono num">{% if t.roi_pct is not None %}{{ t.roi_pct }}%{% else %}—{% endif %}</td>
             <td class="mono num">{% if t.coverage_pct is not None %}{{ t.coverage_pct }}%{% else %}—{% endif %}</td>
           </tr>
@@ -342,7 +307,7 @@
       </table>
     </div>
   </div>
-  <p class="page-meta" style="margin:10px 0 0;font-size:12px">Category ROI = income / COGS over lines with a known landed cost (before order-level TAX and acquiring).</p>
+  <p class="page-meta" style="margin:10px 0 0;font-size:12px">Category ROI = gross profit / COGS over lines with a known landed cost (before order-level TAX and acquiring).</p>
   {% else %}
   <p style="font-size:14px;color:var(--muted)">No line data in the selected period.</p>
   {% endif %}
@@ -353,7 +318,7 @@
   <div class="table-wrap">
     <table class="an-table">
       <thead>
-        <tr><th>Weekday</th><th class="num">Orders</th><th class="num">Revenue ₾</th><th class="num">Share</th><th class="num">Income ₾</th><th class="num">Profit ₾</th><th class="num">AOV ₾</th></tr>
+        <tr><th>Weekday</th><th class="num">Orders</th><th class="num">Revenue ₾</th><th class="num">Share</th><th class="num">Net Proceeds ₾</th><th class="num">Gross Profit ₾</th><th class="num">Profit ₾</th><th class="num">AOV ₾</th></tr>
       </thead>
       <tbody>
         {% for w in weekday_rows %}
@@ -362,7 +327,8 @@
           <td class="mono num">{{ w.orders }}</td>
           <td class="mono num">{{ w.revenue }}</td>
           <td class="mono num">{% if w.share_pct is not None %}{{ w.share_pct }}%{% else %}—{% endif %}</td>
-          <td class="mono num {% if w.income < 0 %}neg{% endif %}">{{ w.income }}</td>
+          <td class="mono num {% if w.net_proceeds < 0 %}neg{% endif %}">{{ w.net_proceeds }}</td>
+          <td class="mono num {% if w.gross_profit < 0 %}neg{% endif %}">{{ w.gross_profit }}</td>
           <td class="mono num {% if w.profit < 0 %}neg{% endif %}">{{ w.profit }}</td>
           <td class="mono num">{% if w.aov is not None %}{{ w.aov }}{% else %}—{% endif %}</td>
         </tr>
@@ -404,7 +370,7 @@
     <div class="table-wrap">
       <table class="an-table">
         <thead>
-          <tr><th>Product</th><th class="num">Qty</th><th class="num">Revenue ₾</th><th class="num">Income ₾</th><th class="num">Profit ₾</th></tr>
+          <tr><th>Product</th><th class="num">Qty</th><th class="num">Revenue ₾</th><th class="num">Gross Profit ₾</th><th class="num">Profit ₾</th></tr>
         </thead>
         <tbody>
           {% for p in top_products %}
@@ -412,14 +378,14 @@
             <td>{{ p.label }}</td>
             <td class="mono num">{{ p.qty }}</td>
             <td class="mono num">{{ p.revenue }}</td>
-            <td class="mono num {% if p.income < 0 %}neg{% endif %}">{{ p.income }}</td>
+            <td class="mono num {% if p.gross_profit < 0 %}neg{% endif %}">{{ p.gross_profit }}</td>
             <td class="mono num {% if p.profit < 0 %}neg{% endif %}">{{ p.profit }}</td>
           </tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
-    <p class="page-meta" style="margin-top:10px;font-size:12px">Only lines with a known landed cost. Profit = income − TAX (1% of line gross) − acquiring (2% if the order was card).</p>
+    <p class="page-meta" style="margin-top:10px;font-size:12px">Only lines with a known landed cost. Gross Profit = Revenue − VAT − COGS. Profit = Gross Profit − TAX (1% of line gross) − acquiring (2% if the order was card).</p>
     {% else %}
     <p style="font-size:14px;color:var(--muted)">No lines with landed cost yet — record costs to unlock this table.</p>
     {% endif %}
@@ -681,7 +647,7 @@
         labels: data.channel_labels,
         datasets: [
           { label: 'Revenue ₾', data: data.channel_revenue, backgroundColor: 'rgba(26,26,26,.75)' },
-          { label: 'Income ₾', data: data.channel_income, backgroundColor: 'rgba(37,99,235,.75)' },
+          { label: 'Gross Profit ₾', data: data.channel_gross_profit, backgroundColor: 'rgba(37,99,235,.75)' },
           { label: 'COGS ₾', data: data.channel_cogs, backgroundColor: 'rgba(178,0,9,.55)' }
         ]
       },

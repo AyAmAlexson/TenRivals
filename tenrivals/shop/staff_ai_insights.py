@@ -100,6 +100,8 @@ def _compact_analytics(label: str, start: date, end: date, ctx: dict) -> dict:
                 'period': r['label'],
                 'orders': r['orders'],
                 'revenue': _n(r['revenue']),
+                'net_proceeds': _n(r.get('net_proceeds')),
+                'gross_profit': _n(r.get('gross_profit')),
                 'profit': _n(r['profit']),
                 'roi_pct': _n(r.get('roi_pct')),
                 'margin_pct': _n(r.get('margin_pct')),
@@ -118,8 +120,9 @@ def _compact_analytics(label: str, start: date, end: date, ctx: dict) -> dict:
         'revenue': _n(totals.get('revenue')),
         'vat': _n(totals.get('vat')),
         'net': _n(totals.get('net')),
+        'net_proceeds': _n(totals.get('net_proceeds')),
         'cogs': _n(totals.get('cogs')),
-        'income': _n(totals.get('income')),
+        'gross_profit': _n(totals.get('gross_profit')),
         'tax': _n(totals.get('tax')),
         'acquiring': _n(totals.get('acquiring')),
         'profit': _n(totals.get('profit')),
@@ -161,7 +164,7 @@ def _compact_analytics(label: str, start: date, end: date, ctx: dict) -> dict:
                 'label': r['label'],
                 'qty': r['qty'],
                 'revenue': _n(r['revenue']),
-                'income': _n(r['income']),
+                'gross_profit': _n(r['gross_profit']),
                 'share_pct': _n(r.get('share_pct')),
                 'roi_pct': _n(r.get('roi_pct')),
                 'coverage_pct': _n(r.get('coverage_pct')),
@@ -173,7 +176,7 @@ def _compact_analytics(label: str, start: date, end: date, ctx: dict) -> dict:
                 'label': r['label'],
                 'qty': r['qty'],
                 'revenue': _n(r['revenue']),
-                'income': _n(r['income']),
+                'gross_profit': _n(r['gross_profit']),
                 'share_pct': _n(r.get('share_pct')),
                 'roi_pct': _n(r.get('roi_pct')),
                 'coverage_pct': _n(r.get('coverage_pct')),
@@ -185,7 +188,7 @@ def _compact_analytics(label: str, start: date, end: date, ctx: dict) -> dict:
                 'label': r['label'],
                 'qty': r['qty'],
                 'revenue': _n(r['revenue']),
-                'income': _n(r['income']),
+                'gross_profit': _n(r['gross_profit']),
                 'profit': _n(r['profit']),
             }
             for r in (ctx.get('top_products') or [])[:12]
@@ -255,13 +258,14 @@ def build_analytics_insight_payload(*, today: date | None = None) -> dict:
         'as_of': today.isoformat(),
         'business': _business_context(),
         'definitions': {
-            'revenue': 'VAT-inclusive gross ₾',
+            'revenue': 'VAT-inclusive customer payment ₾',
             'vat': '18% included',
             'tax': '1% turnover tax on gross',
             'acquiring': '2% of gross on card/POS payments',
             'cogs': 'known landed costs + service/delivery contractor costs',
-            'income': '(Revenue − VAT) − COGS',
-            'profit': 'Income − TAX − Acquiring',
+            'net_proceeds': 'Revenue − VAT − TAX − Acquiring',
+            'gross_profit': 'Revenue − VAT − COGS',
+            'profit': 'Net Proceeds − COGS',
             'roi': 'Profit / COGS',
             'coverage': 'share of product revenue with a known landed cost',
             'cancelled_refunded': 'excluded',
@@ -282,8 +286,9 @@ def _public_order_metrics(raw: dict) -> dict:
         'revenue': _n(m['revenue']),
         'vat': _n(m['vat']),
         'net': _n(m['net']),
+        'net_proceeds': _n(m['net_proceeds']),
         'cogs': _n(m['cogs']),
-        'income': _n(m['income']),
+        'gross_profit': _n(m['gross_profit']),
         'tax': _n(m['tax']),
         'acquiring': _n(m['acquiring']),
         'profit': _n(m['profit']),
@@ -333,7 +338,7 @@ def _serialize_order_line(line: SalesOrderLine, *, detail: bool = False) -> dict
     product = line.product if line.product_id else None
     line_cogs = (Decimal(qty) * lc) if lc is not None else None
     line_net = line.line_net or Decimal('0')
-    line_income = (line_net - line_cogs) if line_cogs is not None else None
+    line_gross_profit = (line_net - line_cogs) if line_cogs is not None else None
     row = {
         'line_id': line.pk,
         'title': line.display_title(),
@@ -353,7 +358,7 @@ def _serialize_order_line(line: SalesOrderLine, *, detail: bool = False) -> dict
         'line_net': _n(line.line_net),
         'landed_unit': _n(lc),
         'line_cogs': _n(line_cogs),
-        'line_income': _n(line_income),
+        'line_gross_profit': _n(line_gross_profit),
         'known_landed_cost': known,
     }
     if detail:
@@ -476,13 +481,14 @@ def build_orders_insight_payload(
         'as_of': today.isoformat(),
         'business': _business_context(),
         'definitions': {
-            'revenue': 'VAT-inclusive gross ₾ (order.gross_total)',
+            'revenue': 'VAT-inclusive customer payment ₾ (order.gross_total)',
             'vat': '18% included',
             'tax': '1% turnover tax on gross',
             'acquiring': '2% of gross on card/POS payments',
             'cogs': 'Σ qty × line landed_cost_gel (if set) + service contractor costs + delivery_cost_gel',
-            'income': '(Revenue − VAT) − COGS',
-            'profit': 'Income − TAX − Acquiring',
+            'net_proceeds': 'Revenue − VAT − TAX − Acquiring',
+            'gross_profit': 'Revenue − VAT − COGS',
+            'profit': 'Net Proceeds − COGS',
             'coverage': 'share of product-line revenue with a landed_cost_gel value (including 0)',
             'known_landed_cost': 'line flag: landed_cost_gel is not null and not 0',
             'in_pnl': 'false for CANCELLED and REFUNDED — still listed, excluded from pnl_totals',
@@ -544,8 +550,9 @@ ORDERS_CSV_COLUMNS = (
     ('order_revenue', 'order_revenue'),
     ('order_vat', 'order_vat'),
     ('order_net', 'order_net'),
+    ('order_net_proceeds', 'order_net_proceeds'),
     ('order_cogs', 'order_cogs'),
-    ('order_income', 'order_income'),
+    ('order_gross_profit', 'order_gross_profit'),
     ('order_tax', 'order_tax'),
     ('order_acquiring', 'order_acquiring'),
     ('order_profit', 'order_profit'),
@@ -576,7 +583,7 @@ ORDERS_CSV_COLUMNS = (
     ('line_net', 'line_net'),
     ('landed_unit', 'landed_unit_snapshot'),
     ('line_cogs', 'line_cogs'),
-    ('line_income', 'line_income'),
+    ('line_gross_profit', 'line_gross_profit'),
     ('known_landed_cost', 'known_landed_cost'),
     ('product_landed_now', 'product_landed_now'),
     ('product_shelf_now', 'product_shelf_now'),
@@ -648,8 +655,9 @@ def build_orders_csv(
             'order_revenue': fin.get('revenue'),
             'order_vat': fin.get('vat'),
             'order_net': fin.get('net'),
+            'order_net_proceeds': fin.get('net_proceeds'),
             'order_cogs': fin.get('cogs'),
-            'order_income': fin.get('income'),
+            'order_gross_profit': fin.get('gross_profit'),
             'order_tax': fin.get('tax'),
             'order_acquiring': fin.get('acquiring'),
             'order_profit': fin.get('profit'),
@@ -687,7 +695,7 @@ def build_orders_csv(
                 'line_net',
                 'landed_unit',
                 'line_cogs',
-                'line_income',
+                'line_gross_profit',
                 'known_landed_cost',
                 'product_landed_now',
                 'product_shelf_now',
@@ -1334,7 +1342,7 @@ VOICE
 WHAT A GOOD BRIEF DOES
 1. Headline — one sentence on commercial health (volume vs mix vs margin vs coverage).
 2. Executive summary — 2–4 paragraphs: run-rate, AOV, stock vs preorder, category winners, customer concentration, whether profit is decision-grade.
-3. P&L quality — interpret revenue, VAT, COGS, income, TAX, acquiring, profit, coverage. Call out free-text lines and missing landed cost.
+3. P&L quality — interpret revenue, VAT, net proceeds, COGS, gross profit, TAX, acquiring, profit, coverage. Call out free-text lines and missing landed cost.
 4. What is selling — 4–8 concrete winners (SKU / family / category / channel) with qty and revenue/profit from the lines.
 5. What is weak — 3–6 laggards or unprofitable pockets (high discount, low margin, one-off free-text, cancelled).
 6. Pricing and discount — line discount_pct, promo_code / promo_discount_gross, delivery vs delivery_cost. Are we giving away margin?

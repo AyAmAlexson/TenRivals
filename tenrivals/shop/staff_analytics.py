@@ -1,16 +1,22 @@
 """Staff-only sales analytics dashboard (landed-cost economics).
 
-Metric definitions (agreed with the owner):
-    Revenue   = gross_total (VAT-inclusive ₾)
-    VAT       = included 18%  -> gross − gross / 1.18 (stored vat_total)
-    TAX       = 1% turnover tax on gross
-    Acquiring = 2% of gross for card payments (payment_method heuristic)
-    COGS      = Σ qty × landed_cost_gel over lines with a known cost
-              + Σ service contractor costs + delivery_cost_gel
-    Income    = (Revenue − VAT) − COGS
-    Profit    = Income − TAX − Acquiring
-    Margin    = Profit / Revenue
-    ROI       = Profit / COGS
+Canonical product/order metrics:
+    Revenue        = customer payment (VAT-inclusive gross_total)
+    VAT            = included 18% (stored vat_total)
+    TAX            = 1% turnover tax on gross
+    Acquiring      = 2% of gross for card payments (payment_method heuristic)
+    COGS           = Σ qty × landed_cost_gel over lines with a known cost
+                   + Σ service contractor costs + delivery_cost_gel
+    Net Revenue    = Revenue − VAT
+    Net Proceeds   = Revenue − VAT − TAX − Acquiring
+    Gross Profit   = Revenue − VAT − COGS
+    Profit         = Revenue − VAT − TAX − Acquiring − COGS
+                   = Net Proceeds − COGS
+    Margin         = Profit / Revenue
+    ROI            = Profit / COGS
+
+Do not label Gross Profit, Net Proceeds, or Profit as Income.
+Profit here is product/order-level, not company-wide net profit.
 
 Cancelled / refunded orders are excluded everywhere. Lines without a landed
 cost contribute to Revenue but not to COGS — the dashboard reports "cost
@@ -86,6 +92,21 @@ def _bucket_label(d: date, granularity: str) -> str:
     return d.strftime('%Y-%m')
 
 
+def _derived_money(m: dict) -> dict:
+    revenue = m['revenue']
+    vat = m['vat']
+    tax = m['tax']
+    acquiring = m['acquiring']
+    cogs = m['cogs']
+    net_proceeds = _q2(revenue - vat - tax - acquiring)
+    return {
+        'net': _q2(revenue - vat),
+        'net_proceeds': net_proceeds,
+        'gross_profit': _q2(revenue - vat - cogs),
+        'profit': _q2(net_proceeds - cogs),
+    }
+
+
 def _zero_metrics() -> dict:
     return {
         'orders': 0,
@@ -94,7 +115,8 @@ def _zero_metrics() -> dict:
         'tax': Decimal('0.00'),
         'acquiring': Decimal('0.00'),
         'cogs': Decimal('0.00'),
-        'income': Decimal('0.00'),
+        'net_proceeds': Decimal('0.00'),
+        'gross_profit': Decimal('0.00'),
         'profit': Decimal('0.00'),
         'covered_gross': Decimal('0.00'),
         'product_gross': Decimal('0.00'),
@@ -104,11 +126,20 @@ def _zero_metrics() -> dict:
 
 
 def _finalize_metrics(m: dict) -> dict:
-    """Derived ratios; call after summing raw values."""
+    """Fill ratios after summing. Keep per-order Net Proceeds / Gross Profit / Profit."""
+    derived = _derived_money(m)
+    m['net'] = derived['net']
+    if not m.get('orders'):
+        m['net_proceeds'] = derived['net_proceeds']
+        m['gross_profit'] = derived['gross_profit']
+        m['profit'] = derived['profit']
+    else:
+        m.setdefault('net_proceeds', derived['net_proceeds'])
+        m.setdefault('gross_profit', derived['gross_profit'])
+        m.setdefault('profit', derived['profit'])
     revenue = m['revenue']
     cogs = m['cogs']
     profit = m['profit']
-    m['net'] = _q2(revenue - m['vat'])
     m['margin_pct'] = (profit / revenue * 100).quantize(_Q2) if revenue else None
     m['roi_pct'] = (profit / cogs * 100).quantize(_Q2) if cogs else None
     m['coverage_pct'] = (
@@ -127,7 +158,6 @@ def compute_order_economics(order: SalesOrder) -> dict:
     """Raw metric values for one order (lines must be prefetched)."""
     gross = order.gross_total or Decimal('0.00')
     vat = order.vat_total if order.vat_total is not None else Decimal('0.00')
-    net = gross - vat
     cogs = Decimal('0.00')
     covered_gross = Decimal('0.00')
     product_gross = Decimal('0.00')
@@ -143,27 +173,42 @@ def compute_order_economics(order: SalesOrder) -> dict:
     tax = _q2(gross * TURNOVER_TAX_RATE)
     card = is_card_payment(order.payment_method)
     acquiring = _q2(gross * ACQUIRING_RATE) if card else Decimal('0.00')
-    income = net - cogs
-    profit = income - tax - acquiring
-    return {
+    raw = {
         'orders': 1,
         'revenue': gross,
         'vat': vat,
         'tax': tax,
         'acquiring': acquiring,
         'cogs': _q2(cogs),
-        'income': _q2(income),
-        'profit': _q2(profit),
         'covered_gross': covered_gross,
         'product_gross': product_gross,
         'card_revenue': gross if card else Decimal('0.00'),
         'items': items,
     }
+    raw.update(_derived_money(raw))
+    return raw
+
+
+_ADDITIVE_KEYS = (
+    'orders',
+    'revenue',
+    'vat',
+    'tax',
+    'acquiring',
+    'cogs',
+    'net_proceeds',
+    'gross_profit',
+    'profit',
+    'covered_gross',
+    'product_gross',
+    'card_revenue',
+    'items',
+)
 
 
 def _add_metrics(acc: dict, m: dict) -> None:
-    for k, v in m.items():
-        acc[k] += v
+    for k in _ADDITIVE_KEYS:
+        acc[k] += m[k]
 
 
 def _parse_date(raw: str, default: date) -> date:
@@ -293,7 +338,7 @@ def build_sales_analytics(
             'qty': 0,
             'revenue': Decimal('0.00'),
             'cogs': Decimal('0.00'),
-            'income': Decimal('0.00'),
+            'gross_profit': Decimal('0.00'),
             'covered_gross': Decimal('0.00'),
             'lines': 0,
         }
@@ -304,13 +349,14 @@ def build_sales_analytics(
     daily_profit: dict[date, Decimal] = {}
 
     for o in orders:
-        m = compute_order_economics(o)
-        _add_metrics(totals, m)
+        raw = compute_order_economics(o)
+        m = _finalize_metrics(dict(raw))
+        _add_metrics(totals, raw)
         b = _bucket_start(o.order_date, granularity)
         if b not in buckets:
             buckets[b] = _zero_metrics()
-        _add_metrics(buckets[b], m)
-        _add_metrics(weekdays[o.order_date.weekday()], m)
+        _add_metrics(buckets[b], raw)
+        _add_metrics(weekdays[o.order_date.weekday()], raw)
         services_delivery_gross += m['revenue'] - m['product_gross']
         daily_profit[o.order_date] = (
             daily_profit.get(o.order_date, Decimal('0.00')) + m['profit']
@@ -350,7 +396,7 @@ def build_sales_analytics(
             crow_ch['lines'] += 1
             if line_cogs is not None:
                 crow_ch['cogs'] += line_cogs
-                crow_ch['income'] += line_net - line_cogs
+                crow_ch['gross_profit'] += line_net - line_cogs
                 crow_ch['covered_gross'] += line_gross
 
             type_label = line.analytics_category_label()
@@ -361,7 +407,7 @@ def build_sales_analytics(
                     'qty': 0,
                     'revenue': Decimal('0.00'),
                     'cogs': Decimal('0.00'),
-                    'income': Decimal('0.00'),
+                    'gross_profit': Decimal('0.00'),
                     'covered_gross': Decimal('0.00'),
                 },
             )
@@ -369,32 +415,32 @@ def build_sales_analytics(
             trow['revenue'] += line_gross
             if line_cogs is not None:
                 trow['cogs'] += line_cogs
-                trow['income'] += line_net - line_cogs
+                trow['gross_profit'] += line_net - line_cogs
                 trow['covered_gross'] += line_gross
 
             if line_cogs is not None:
                 plabel = line.display_title()
-                line_income = line_net - line_cogs
+                line_gross_profit = line_net - line_cogs
                 line_tax = _q2(line_gross * TURNOVER_TAX_RATE)
                 line_acq = (
                     _q2(line_gross * ACQUIRING_RATE)
                     if is_card_payment(o.payment_method)
                     else Decimal('0.00')
                 )
-                line_profit = _q2(line_income - line_tax - line_acq)
+                line_profit = _q2(line_gross_profit - line_tax - line_acq)
                 prow = product_rows.setdefault(
                     plabel,
                     {
                         'label': plabel,
                         'qty': 0,
                         'revenue': Decimal('0.00'),
-                        'income': Decimal('0.00'),
+                        'gross_profit': Decimal('0.00'),
                         'profit': Decimal('0.00'),
                     },
                 )
                 prow['qty'] += int(line.quantity or 0)
                 prow['revenue'] += line_gross
-                prow['income'] += line_income
+                prow['gross_profit'] += line_gross_profit
                 prow['profit'] += line_profit
 
     _finalize_metrics(totals)
@@ -421,15 +467,15 @@ def build_sales_analytics(
             if trow['revenue']
             else None
         )
-        # Category ROI/margin use line-level income (before order-level tax
-        # and acquiring, which cannot be attributed to a single line).
+        # Category ROI/margin use line-level gross profit (before order-level
+        # tax and acquiring, which cannot be attributed to a single line).
         trow['roi_pct'] = (
-            (trow['income'] / trow['cogs'] * 100).quantize(_Q2)
+            (trow['gross_profit'] / trow['cogs'] * 100).quantize(_Q2)
             if trow['cogs']
             else None
         )
         trow['margin_pct'] = (
-            (trow['income'] / trow['revenue'] * 100).quantize(_Q2)
+            (trow['gross_profit'] / trow['revenue'] * 100).quantize(_Q2)
             if trow['revenue']
             else None
         )
@@ -452,12 +498,12 @@ def build_sales_analytics(
             else None
         )
         crow['roi_pct'] = (
-            (crow['income'] / crow['cogs'] * 100).quantize(_Q2)
+            (crow['gross_profit'] / crow['cogs'] * 100).quantize(_Q2)
             if crow['cogs']
             else None
         )
         crow['margin_pct'] = (
-            (crow['income'] / crow['revenue'] * 100).quantize(_Q2)
+            (crow['gross_profit'] / crow['revenue'] * 100).quantize(_Q2)
             if crow['revenue']
             else None
         )
@@ -519,7 +565,8 @@ def build_sales_analytics(
     chart = {
         'labels': [r['label'] for r in bucket_rows],
         'revenue': [float(r['revenue']) for r in bucket_rows],
-        'income': [float(r['income']) for r in bucket_rows],
+        'net_proceeds': [float(r['net_proceeds']) for r in bucket_rows],
+        'gross_profit': [float(r['gross_profit']) for r in bucket_rows],
         'profit': [float(r['profit']) for r in bucket_rows],
         'cogs': [float(r['cogs']) for r in bucket_rows],
         'orders': [r['orders'] for r in bucket_rows],
@@ -541,7 +588,7 @@ def build_sales_analytics(
         'type_revenue': [float(r['revenue']) for r in type_breakdown],
         'channel_labels': [r['label'] for r in channel_breakdown],
         'channel_revenue': [float(r['revenue']) for r in channel_breakdown],
-        'channel_income': [float(r['income']) for r in channel_breakdown],
+        'channel_gross_profit': [float(r['gross_profit']) for r in channel_breakdown],
         'channel_cogs': [float(r['cogs']) for r in channel_breakdown],
         'channel_qty': [r['qty'] for r in channel_breakdown],
         'channel_margin': [
@@ -654,7 +701,9 @@ _ORDER_SORT_KEYS = frozenset(
         'revenue',
         'vat',
         'net',
+        'net_proceeds',
         'cogs',
+        'gross_profit',
         'income',
         'tax',
         'acquiring',
@@ -691,10 +740,12 @@ def _order_row_sort_key(row: dict, sort: str, *, reverse: bool):
         return m['vat']
     if sort == 'net':
         return m['net']
+    if sort == 'net_proceeds':
+        return m['net_proceeds']
     if sort == 'cogs':
         return m['cogs']
-    if sort == 'income':
-        return m['income']
+    if sort in ('gross_profit', 'income'):
+        return m['gross_profit']
     if sort == 'tax':
         return m['tax']
     if sort == 'acquiring':
@@ -795,6 +846,7 @@ def staff_order_finance(request):
     table = build_order_finance_table(
         start, end, invoice_q=invoice_q, sort=sort, direction=direction
     )
+    month_metrics = build_current_month_metrics(today)
     ctx = {
         **table,
         'start': start,
@@ -804,6 +856,7 @@ def staff_order_finance(request):
         'acquiring_rate_pct': ACQUIRING_RATE * 100,
         'staff_nav_active': 'order_finance',
         'page_heading': 'Orders finance',
+        'month_metrics': month_metrics,
         'sort_columns': [
             {'key': 'invoice', 'label': 'Invoice', 'num': False},
             {'key': 'date', 'label': 'Date', 'num': False},
@@ -811,11 +864,12 @@ def staff_order_finance(request):
             {'key': 'customer', 'label': 'Customer', 'num': False},
             {'key': 'revenue', 'label': 'Revenue', 'num': True},
             {'key': 'vat', 'label': 'VAT', 'num': True},
-            {'key': 'net', 'label': 'Net', 'num': True},
-            {'key': 'cogs', 'label': 'COGS', 'num': True},
-            {'key': 'income', 'label': 'Income', 'num': True},
+            {'key': 'net', 'label': 'Net Revenue', 'num': True},
             {'key': 'tax', 'label': 'TAX', 'num': True},
             {'key': 'acquiring', 'label': 'Acquiring', 'num': True},
+            {'key': 'net_proceeds', 'label': 'Net Proceeds', 'num': True},
+            {'key': 'cogs', 'label': 'COGS', 'num': True},
+            {'key': 'gross_profit', 'label': 'Gross Profit', 'num': True},
             {'key': 'profit', 'label': 'Profit', 'num': True},
             {'key': 'margin', 'label': 'Margin', 'num': True},
             {'key': 'roi', 'label': 'ROI', 'num': True},

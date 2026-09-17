@@ -1,7 +1,7 @@
 {% extends 'persons/staff_base.html' %}
 {% block title %}Orders finance — Staff | Tenrivals{% endblock %}
 {% block page_heading %}{{ page_heading }}{% endblock %}
-{% block page_note %}<p class="page-note">Per-order economics (same formulas as Analytics). Cancelled / refunded rows are shown dimmed and excluded from footer totals. Click a row to open the order. TAX = {{ tax_rate_pct|floatformat:0 }}% of gross; acquiring = {{ acquiring_rate_pct|floatformat:0 }}% of gross for card payments.</p>{% endblock %}
+{% block page_note %}<p class="page-note">Per-order economics (same formulas as Analytics). Cancelled / refunded rows are shown dimmed and excluded from footer totals. Click a row to open the order. Revenue is the customer payment. Net Proceeds = Revenue − VAT − TAX − Acquiring. Gross Profit = Revenue − VAT − COGS. Profit = Net Proceeds − COGS. TAX = {{ tax_rate_pct|floatformat:0 }}% of gross; acquiring = {{ acquiring_rate_pct|floatformat:0 }}% of gross for card payments.</p>{% endblock %}
 {% block extra_head %}
 <style>
   .of-filters{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:flex-end;margin-bottom:18px}
@@ -11,8 +11,8 @@
   .of-filters input[type="search"]{padding:8px 10px;border:1px solid var(--line);font-family:inherit;font-size:13px;background:#fff;min-width:150px}
   .of-filters input[type="search"]{min-width:200px}
   .of-meta{font-size:13px;color:var(--muted);margin:0 0 12px}
-  .of-table-wrap{overflow:auto;border:1px solid var(--line);background:#fff;max-height:calc(100vh - 260px)}
-  .of-table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:1180px}
+  .of-table-wrap{overflow:auto;border:1px solid var(--line);background:#fff;max-height:calc(100vh - 380px)}
+  .of-table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:1380px}
   .of-table th,.of-table td{padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
   .of-table thead th{position:sticky;top:0;z-index:1;background:#f9fafb;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
   .of-table thead th a{color:inherit;display:inline-flex;align-items:center;gap:4px}
@@ -32,6 +32,7 @@
 </style>
 {% endblock %}
 {% block content %}
+{% include 'shop/staff/includes/month_kpis.html' %}
 <form method="get" class="of-filters">
   <div class="form-group">
     <label for="id_of_start">From</label>
@@ -78,17 +79,18 @@
         <td class="num">{{ m.revenue }}</td>
         <td class="num">{{ m.vat }}</td>
         <td class="num">{{ m.net }}</td>
-        <td class="num">{{ m.cogs }}</td>
-        <td class="num {% if m.income < 0 %}neg{% endif %}">{{ m.income }}</td>
         <td class="num">{{ m.tax }}</td>
         <td class="num">{{ m.acquiring }}</td>
+        <td class="num {% if m.net_proceeds < 0 %}neg{% endif %}">{{ m.net_proceeds }}</td>
+        <td class="num">{{ m.cogs }}</td>
+        <td class="num {% if m.gross_profit < 0 %}neg{% endif %}">{{ m.gross_profit }}</td>
         <td class="num {% if m.profit < 0 %}neg{% endif %}">{{ m.profit }}</td>
         <td class="num">{% if m.margin_pct is not None %}{{ m.margin_pct }}%{% else %}—{% endif %}</td>
         <td class="num">{% if m.roi_pct is not None %}{{ m.roi_pct }}%{% else %}—{% endif %}</td>
       </tr>
       {% endwith %}
       {% empty %}
-      <tr><td colspan="14" style="padding:24px;text-align:center;color:var(--muted)">No orders for these filters.</td></tr>
+      <tr><td colspan="15" style="padding:24px;text-align:center;color:var(--muted)">No orders for these filters.</td></tr>
       {% endfor %}
     </tbody>
     {% if rows %}
@@ -98,10 +100,11 @@
         <td class="num">{{ totals.revenue }}</td>
         <td class="num">{{ totals.vat }}</td>
         <td class="num">{{ totals.net }}</td>
-        <td class="num">{{ totals.cogs }}</td>
-        <td class="num {% if totals.income < 0 %}neg{% endif %}">{{ totals.income }}</td>
         <td class="num">{{ totals.tax }}</td>
         <td class="num">{{ totals.acquiring }}</td>
+        <td class="num {% if totals.net_proceeds < 0 %}neg{% endif %}">{{ totals.net_proceeds }}</td>
+        <td class="num">{{ totals.cogs }}</td>
+        <td class="num {% if totals.gross_profit < 0 %}neg{% endif %}">{{ totals.gross_profit }}</td>
         <td class="num {% if totals.profit < 0 %}neg{% endif %}">{{ totals.profit }}</td>
         <td class="num">{% if totals.margin_pct is not None %}{{ totals.margin_pct }}%{% else %}—{% endif %}</td>
         <td class="num">{% if totals.roi_pct is not None %}{{ totals.roi_pct }}%{% else %}—{% endif %}</td>
