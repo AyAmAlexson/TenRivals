@@ -4,12 +4,34 @@ Staff-only analytics for the in-stock catalog (ProductListing STOCK + per-varian
 
 from __future__ import annotations
 
+import csv
+import io
+import json
 from collections import defaultdict
+from datetime import date
 from decimal import Decimal
 from typing import Any
 
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.http import HttpResponse
+from django.utils import timezone
+from django.views.decorators.http import require_http_methods
+
 from .catalog_utils import stock_catalog_in_stock_queryset
-from .models import CourtSurface, Gender, Product, ProductType, Racket, Shoe
+from .models import (
+    Accessory,
+    Apparel,
+    Bag,
+    Balls,
+    CourtSurface,
+    Gender,
+    Product,
+    ProductType,
+    Racket,
+    Shoe,
+    String,
+)
+from .sales_order_stock import APPAREL_TYPES, SHOE_TYPES, _string_effective_variant_map
 from .size_inventory import normalize_sizes_to_qty_map, us_shoe_size_labels
 
 # Hot adult ranges: highlight 0 with 🔴 only in these US size windows.
@@ -324,3 +346,251 @@ def build_stock_stats() -> dict[str, Any]:
             'Units added to catalog by month (created_at) — intake rhythm',
         ],
     }
+
+
+def _related(product: Product, attr: str, model):
+    try:
+        return getattr(product, attr)
+    except model.DoesNotExist:
+        return None
+
+
+def _variant_qty_pairs(product: Product) -> list[tuple[str, int]]:
+    """In-stock size/grip/gauge rows, or one unlabeled row for simple SKUs."""
+    listing_total = _stock_qty(product)
+    qty_map: dict[str, int] = {}
+    if product.type == ProductType.RACKET:
+        rk = _related(product, 'racket', Racket)
+        if rk is not None:
+            qty_map = normalize_sizes_to_qty_map(rk.grip_sizes, fallback_total=listing_total)
+    elif product.type in SHOE_TYPES:
+        sh = _related(product, 'shoe', Shoe)
+        if sh is not None:
+            qty_map = normalize_sizes_to_qty_map(sh.sizes, fallback_total=listing_total)
+    elif product.type in APPAREL_TYPES:
+        ap = _related(product, 'apparel', Apparel)
+        if ap is not None:
+            qty_map = normalize_sizes_to_qty_map(ap.sizes, fallback_total=listing_total)
+    elif product.type == ProductType.STRINGS:
+        st = _related(product, 'string', String)
+        if st is not None:
+            qty_map = _string_effective_variant_map(st, listing_total)
+    rows = [(label, qty) for label, qty in sorted(qty_map.items()) if int(qty or 0) > 0]
+    if rows:
+        return rows
+    if listing_total > 0:
+        return [('', listing_total)]
+    return []
+
+
+def _choice_display(obj, field: str) -> str:
+    fn = getattr(obj, f'get_{field}_display', None)
+    if callable(fn):
+        return str(fn() or '')
+    return str(getattr(obj, field, '') or '')
+
+
+def _type_spec_fields(product: Product) -> dict[str, Any]:
+    specs = {
+        'gender': '',
+        'surface': '',
+        'width': '',
+        'material': '',
+        'weight_grams': '',
+        'head_size_sq_in': '',
+        'length_in': '',
+        'balance_mm': '',
+        'swingweight': '',
+        'string_pattern': '',
+        'is_strung': '',
+        'gauge_mm': '',
+        'length_m': '',
+        'capacity_rackets': '',
+        'balls_per_can': '',
+        'specs': '',
+    }
+    rk = _related(product, 'racket', Racket)
+    sh = _related(product, 'shoe', Shoe)
+    ap = _related(product, 'apparel', Apparel)
+    st = _related(product, 'string', String)
+    bg = _related(product, 'bag', Bag)
+    bl = _related(product, 'balls', Balls)
+    ac = _related(product, 'accessory', Accessory)
+    sub = rk or sh or ap or st or bg or bl or ac
+    if sub is not None:
+        fn = getattr(sub, 'invoice_specs_slash', None)
+        if callable(fn):
+            specs['specs'] = fn()
+    if rk is not None:
+        specs.update(
+            {
+                'weight_grams': rk.weight_grams or '',
+                'head_size_sq_in': rk.head_size_sq_in or '',
+                'length_in': rk.length_in if rk.length_in is not None else '',
+                'balance_mm': rk.balance_mm or '',
+                'swingweight': rk.swingweight or '',
+                'string_pattern': (rk.string_pattern or '').strip(),
+                'is_strung': 'yes' if rk.is_strung else 'no',
+            }
+        )
+    if sh is not None:
+        specs.update(
+            {
+                'gender': _choice_display(sh, 'gender'),
+                'surface': _choice_display(sh, 'surface'),
+                'width': (sh.width or '').strip(),
+            }
+        )
+    if ap is not None:
+        specs.update(
+            {
+                'gender': _choice_display(ap, 'gender'),
+                'material': (ap.material or '').strip(),
+            }
+        )
+    if st is not None:
+        specs.update(
+            {
+                'gauge_mm': st.gauge_mm if st.gauge_mm is not None else '',
+                'material': (st.material or '').strip(),
+                'length_m': st.length_m or '',
+            }
+        )
+    if bg is not None:
+        specs['capacity_rackets'] = bg.capacity_rackets or ''
+    if bl is not None:
+        specs.update(
+            {
+                'balls_per_can': bl.balls_per_can or '',
+                'surface': _choice_display(bl, 'surface'),
+            }
+        )
+    return specs
+
+
+def _csv_cell(value) -> str:
+    if value is None:
+        return ''
+    if isinstance(value, bool):
+        return 'yes' if value else 'no'
+    if isinstance(value, Decimal):
+        return format(value, 'f')
+    return value
+
+
+def _dt(value) -> str:
+    if not value:
+        return ''
+    if timezone.is_aware(value):
+        value = timezone.localtime(value)
+    return value.strftime('%Y-%m-%d %H:%M:%S')
+
+
+STOCK_CSV_COLUMNS = (
+    ('category', 'category'),
+    ('brand', 'brand'),
+    ('name', 'name'),
+    ('variant', 'variant'),
+    ('color', 'color'),
+    ('specs', 'specs'),
+    ('gender', 'gender'),
+    ('surface', 'surface'),
+    ('width', 'width'),
+    ('material', 'material'),
+    ('weight_grams', 'weight_grams'),
+    ('head_size_sq_in', 'head_size_sq_in'),
+    ('length_in', 'length_in'),
+    ('balance_mm', 'balance_mm'),
+    ('swingweight', 'swingweight'),
+    ('string_pattern', 'string_pattern'),
+    ('is_strung', 'is_strung'),
+    ('gauge_mm', 'gauge_mm'),
+    ('length_m', 'length_m'),
+    ('capacity_rackets', 'capacity_rackets'),
+    ('balls_per_can', 'balls_per_can'),
+    ('qty', 'qty'),
+    ('landed_cost', 'landed_cost'),
+    ('shelf_price', 'shelf_price'),
+    ('discounted_price', 'discounted_price'),
+    ('sku', 'sku'),
+    ('catalog_category', 'catalog_category'),
+    ('short_description', 'short_description'),
+    ('description', 'description'),
+    ('attributes', 'attributes'),
+    ('featured', 'featured'),
+    ('is_active', 'is_active'),
+    ('in_stock', 'in_stock'),
+    ('product_id', 'product_id'),
+    ('created_at', 'created_at'),
+    ('updated_at', 'updated_at'),
+)
+
+
+def build_stock_csv(*, today: date | None = None) -> tuple[str, str]:
+    """One CSV row per in-stock variant (size / grip / gauge) or SKU."""
+    today = today or date.today()
+    buf = io.StringIO()
+    writer = csv.writer(buf)
+    writer.writerow([header for _, header in STOCK_CSV_COLUMNS])
+    products = list(stock_products_queryset())
+    rows = []
+    for product in products:
+        type_fields = _type_spec_fields(product)
+        attrs = product.attributes if isinstance(product.attributes, dict) else {}
+        attr_json = json.dumps(attrs, ensure_ascii=False) if attrs else ''
+        catalog = ''
+        if product.category_id:
+            catalog = (product.category.name or '').strip()
+        base = {
+            'category': product.get_type_display(),
+            'brand': (product.brand or '').strip(),
+            'name': (product.name or '').strip(),
+            'color': (product.color or '').strip(),
+            'landed_cost': product.landed_cost_gel,
+            'shelf_price': product.initial_price,
+            'discounted_price': product.actual_price,
+            'sku': (product.sku or '').strip(),
+            'catalog_category': catalog,
+            'short_description': (product.short_description or '').strip(),
+            'description': (product.description or '').strip(),
+            'attributes': attr_json,
+            'featured': product.featured_product,
+            'is_active': product.is_active,
+            'in_stock': product.in_stock,
+            'product_id': product.pk,
+            'created_at': _dt(product.created_at),
+            'updated_at': _dt(product.updated_at),
+            **type_fields,
+        }
+        for variant, qty in _variant_qty_pairs(product):
+            row = dict(base)
+            row['variant'] = variant
+            row['qty'] = qty
+            rows.append(row)
+    rows.sort(
+        key=lambda r: (
+            str(r.get('category') or ''),
+            str(r.get('brand') or '').lower(),
+            str(r.get('name') or '').lower(),
+            str(r.get('variant') or ''),
+        )
+    )
+    for row in rows:
+        writer.writerow([_csv_cell(row.get(key)) for key, _ in STOCK_CSV_COLUMNS])
+    filename = f'tenrivals-stock-{today.isoformat()}.csv'
+    return filename, buf.getvalue()
+
+
+def _staff_ok(user):
+    return bool(user.is_authenticated and user.is_superuser)
+
+
+@login_required
+@user_passes_test(_staff_ok)
+@require_http_methods(['GET'])
+def staff_stock_csv(request):
+    """Download every in-stock SKU/variant as CSV."""
+    filename, body = build_stock_csv()
+    response = HttpResponse('\ufeff' + body, content_type='text/csv; charset=utf-8')
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response

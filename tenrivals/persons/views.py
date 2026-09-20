@@ -1474,6 +1474,8 @@ def staff_stock_stats(request):
             ),
             "ai_insights_url": reverse("administration:staff_stock_stats_insights"),
             "ai_insight_kind": "stock",
+            "csv_export_url": reverse("administration:staff_stock_csv"),
+            "csv_export_label": "Export all stock CSV",
         }
     )
     return render(request, "persons/staff_stock_stats.html", ctx)
