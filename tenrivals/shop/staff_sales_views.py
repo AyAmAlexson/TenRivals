@@ -10,7 +10,7 @@ from decimal import Decimal
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.core.paginator import Paginator
-from django.db.models import Count, Sum
+from django.db.models import Count
 from django.urls import reverse
 from django.templatetags.static import static
 from django.contrib import messages
@@ -28,7 +28,13 @@ from .customer_merge import (
     merge_customers,
     parse_resolutions_from_post,
 )
-from .models import Customer, Product, SalesOrder, SalesOrderLine
+from .models import (
+    Customer,
+    Product,
+    SalesOrder,
+    SalesOrderLine,
+    SalesOrderPayment,
+)
 from .sales_order_stock import (
     get_variant_qty_map,
     order_status_reserves_stock,
@@ -52,7 +58,13 @@ from .sales_order_utils import (
     set_next_invoice_number,
     stock_products_for_select,
 )
-from .staff_sales_forms import CustomerForm, SalesOrderForm, SalesOrderLineFormSet
+from .staff_sales_forms import (
+    CustomerForm,
+    NewSalesOrderPaymentFormSet,
+    SalesOrderForm,
+    SalesOrderLineFormSet,
+    SalesOrderPaymentFormSet,
+)
 from .email_links import absolute_url_for_email
 from .sales_order_currency import (
     apply_payment_currency_fields,
@@ -146,10 +158,23 @@ def _invoice_context(order: SalesOrder, request=None) -> dict:
             if logo_rel.startswith('http://') or logo_rel.startswith('https://')
             else request.build_absolute_uri(logo_rel)
         )
+    payments = list(order.payments.all())
+    paid_total = order.paid_total()
+    balance_due = order.balance_due()
     return {
         'order': order,
         'lines': lines,
         'services': services,
+        'payments': payments,
+        'paid_total': paid_total,
+        'paid_total_fx': _conv(paid_total),
+        'balance_due': balance_due,
+        'balance_due_fx': _conv(balance_due),
+        # Show the paid/due block only when it carries information: partial
+        # payment, overpayment, refund, or several receipts.
+        'show_payment_schedule': bool(
+            payments and (balance_due != 0 or len(payments) > 1)
+        ),
         'delivery_gross': delivery_gross,
         'delivery_vat': delivery_vat,
         'delivery_net': delivery_net,
@@ -591,12 +616,13 @@ def staff_sales_orders(request):
     if seq_year < 1990 or seq_year > 2100:
         seq_year = today_y
     qs = SalesOrder.objects.select_related('customer').prefetch_related(
-        _sales_order_lines_prefetch()
+        _sales_order_lines_prefetch(), 'payments'
     )
     if q:
         qs = qs.filter(
             Q(invoice_number__icontains=q)
             | Q(fiscal_receipt__icontains=q)
+            | Q(payments__fiscal_receipt__icontains=q)
             | Q(customer__first_name__icontains=q)
             | Q(customer__last_name__icontains=q)
             | Q(customer__phone__icontains=q)
@@ -697,24 +723,26 @@ def staff_sales_orders_month_report(request):
     today = date.today()
     y = _safe_int(request.GET.get('year'), today.year, 1990, 2100)
     m = _safe_int(request.GET.get('month'), today.month, 1, 12)
-    qs = (
+    orders = list(
         SalesOrder.objects.filter(order_date__year=y, order_date__month=m)
+        .prefetch_related('payments')
         .order_by('invoice_number')
     )
-    agg = qs.aggregate(
-        tg=Sum('gross_total'),
-        tv=Sum('vat_total'),
-        tn=Sum('net_total'),
-    )
-    tg = (agg['tg'] or Decimal('0')).quantize(Decimal('0.01'))
-    tv = (agg['tv'] or Decimal('0')).quantize(Decimal('0.01'))
-    tn = (agg['tn'] or Decimal('0')).quantize(Decimal('0.01'))
-    logo_rel = static('assets/img/invoice_logo_frame114.svg')
-    logo_abs = (
-        request.build_absolute_uri(logo_rel)
-        if not (logo_rel.startswith('http://') or logo_rel.startswith('https://'))
-        else logo_rel
-    )
+    # Cancelled / refunded orders are listed (greyed) but excluded from totals,
+    # matching sales analytics; their receipts still show in the fiscal report.
+    for o in orders:
+        o.report_excluded = o.status in _REVENUE_EXCLUDED_STATUSES
+    counted = [o for o in orders if not o.report_excluded]
+    excluded = [o for o in orders if o.report_excluded]
+    tg = _q2(sum((o.gross_total for o in counted), Decimal('0')))
+    tv = _q2(sum((o.vat_total for o in counted), Decimal('0')))
+    tn = _q2(sum((o.net_total for o in counted), Decimal('0')))
+    excluded_gross = _q2(sum((o.gross_total for o in excluded), Decimal('0')))
+    paid_in_month = Decimal('0')
+    for o in orders:
+        for p in o.payments.all():
+            if p.paid_on.year == y and p.paid_on.month == m:
+                paid_in_month += p.amount_gross
     month_title = calendar.month_name[m]
     return render(
         request,
@@ -723,11 +751,123 @@ def staff_sales_orders_month_report(request):
             'report_year': y,
             'report_month': m,
             'month_title': month_title,
-            'orders': qs,
+            'orders': orders,
+            'excluded_count': len(excluded),
+            'excluded_gross': excluded_gross,
             'total_gross': tg,
             'total_vat': tv,
             'total_net': tn,
-            'invoice_logo_abs_url': logo_abs,
+            'paid_in_month': _q2(paid_in_month),
+            'invoice_logo_abs_url': _report_logo_abs_url(request),
+        },
+    )
+
+
+def _q2(v: Decimal) -> Decimal:
+    return Decimal(v).quantize(Decimal('0.01'))
+
+
+def _report_logo_abs_url(request) -> str:
+    logo_rel = static('assets/img/invoice_logo_frame114.svg')
+    if logo_rel.startswith('http://') or logo_rel.startswith('https://'):
+        return logo_rel
+    return request.build_absolute_uri(logo_rel)
+
+
+@login_required
+@user_passes_test(_staff_ok)
+def staff_sales_payments_month_report(request):
+    """Fiscal receipts for a calendar month (cash basis) + reconciliation
+    against the orders report, so the accountant sees why the two differ."""
+    today = date.today()
+    y = _safe_int(request.GET.get('year'), today.year, 1990, 2100)
+    m = _safe_int(request.GET.get('month'), today.month, 1, 12)
+    payments = list(
+        SalesOrderPayment.objects.filter(paid_on__year=y, paid_on__month=m)
+        .select_related('order', 'order__customer')
+        .order_by('paid_on', 'fiscal_receipt', 'id')
+    )
+    rows = []
+    total_amount = Decimal('0')
+    total_vat = Decimal('0')
+    total_net = Decimal('0')
+    refunds_total = Decimal('0')
+    receipts_count = 0
+    # Reconciliation buckets (all VAT-inclusive ₾):
+    #   received for orders dated in *other* months (prepayments / balances)
+    other_month_orders_received = Decimal('0')
+    for p in payments:
+        vat, net = p.vat_net_split()
+        o = p.order
+        same_month = o.order_date.year == y and o.order_date.month == m
+        rows.append(
+            {
+                'p': p,
+                'order': o,
+                'vat': vat,
+                'net': net,
+                'same_month': same_month,
+                'order_paid_total': o.paid_total(),
+            }
+        )
+        total_amount += p.amount_gross
+        total_vat += vat
+        total_net += net
+        if p.amount_gross < 0:
+            refunds_total += p.amount_gross
+        else:
+            receipts_count += 1
+        if not same_month:
+            other_month_orders_received += p.amount_gross
+
+    # Orders dated this month (revenue statuses) and how much of them was paid
+    # in this month vs elsewhere / not at all.
+    month_orders = list(
+        SalesOrder.objects.filter(order_date__year=y, order_date__month=m)
+        .exclude(status__in=_REVENUE_EXCLUDED_STATUSES)
+        .prefetch_related('payments')
+    )
+    orders_gross = Decimal('0')
+    orders_paid_this_month = Decimal('0')
+    orders_paid_other_months = Decimal('0')
+    orders_unpaid = Decimal('0')
+    for o in month_orders:
+        orders_gross += o.gross_total
+        for p in o.payments.all():
+            if p.paid_on.year == y and p.paid_on.month == m:
+                orders_paid_this_month += p.amount_gross
+            else:
+                orders_paid_other_months += p.amount_gross
+        orders_unpaid += o.balance_due()
+    # Receipts this month that belong to cancelled/refunded orders of this month
+    # (excluded from the orders report totals but real cash movements).
+    excluded_orders_received = Decimal('0')
+    for r in rows:
+        if r['same_month'] and r['order'].status in _REVENUE_EXCLUDED_STATUSES:
+            excluded_orders_received += r['p'].amount_gross
+
+    return render(
+        request,
+        'shop/staff/sales_payments_month_report.html',
+        {
+            'report_year': y,
+            'report_month': m,
+            'month_title': calendar.month_name[m],
+            'rows': rows,
+            'receipts_count': receipts_count,
+            'total_amount': _q2(total_amount),
+            'total_vat': _q2(total_vat),
+            'total_net': _q2(total_net),
+            'refunds_total': _q2(refunds_total),
+            'orders_gross': _q2(orders_gross),
+            'orders_count': len(month_orders),
+            'orders_paid_this_month': _q2(orders_paid_this_month),
+            'orders_paid_other_months': _q2(orders_paid_other_months),
+            'orders_unpaid': _q2(orders_unpaid),
+            'other_month_orders_received': _q2(other_month_orders_received),
+            'excluded_orders_received': _q2(excluded_orders_received),
+            'delta': _q2(total_amount - orders_gross),
+            'invoice_logo_abs_url': _report_logo_abs_url(request),
         },
     )
 
@@ -749,14 +889,16 @@ def staff_sales_order_edit(request, pk=None):
         services_raw = request.POST.get('services_json', '[]')
         if form.is_valid():
             parent = form.save(commit=False)
-            formset = SalesOrderLineFormSet(request.POST, instance=parent)
         else:
             parent = instance or SalesOrder()
-            formset = SalesOrderLineFormSet(request.POST, instance=parent)
+        formset = SalesOrderLineFormSet(request.POST, instance=parent)
+        payments_formset = SalesOrderPaymentFormSet(
+            request.POST, instance=parent, prefix='payments'
+        )
         for f in formset.forms:
             if hasattr(f, 'fields') and 'product' in f.fields:
                 f.fields['product'].queryset = stock_qs
-        if form.is_valid() and formset.is_valid():
+        if form.is_valid() and formset.is_valid() and payments_formset.is_valid():
             gross, vat, net, ser_out, line_specs = _rebuild_order_from_formset(
                 form, formset, services_raw
             )
@@ -842,6 +984,11 @@ def staff_sales_order_edit(request, pk=None):
                                 ).all()
                             )
                             take_lines_from_stock(new_lines)
+                        # Payments (fiscal receipts) — inline rows; the parent
+                        # object is the same instance, so the FK resolves.
+                        payments_formset.instance = order
+                        payments_formset.save()
+                        order.sync_payment_summary()
                     if invoice_reassigned:
                         messages.warning(
                             request,
@@ -864,6 +1011,11 @@ def staff_sales_order_edit(request, pk=None):
             for i, lf in enumerate(formset.forms, start=1):
                 if lf.errors:
                     bits.append(f'Line {i}: {lf.errors.as_text().strip()}')
+            if payments_formset.non_form_errors():
+                bits.append(payments_formset.non_form_errors().as_text().strip())
+            for i, pf in enumerate(payments_formset.forms, start=1):
+                if pf.errors:
+                    bits.append(f'Payment {i}: {pf.errors.as_text().strip()}')
             if bits:
                 messages.error(
                     request,
@@ -886,11 +1038,30 @@ def staff_sales_order_edit(request, pk=None):
                     initial['customer'] = cust_pk
         form = SalesOrderForm(instance=instance, initial=initial)
         formset = SalesOrderLineFormSet(instance=instance or SalesOrder())
+        if instance is None:
+            # Common case = paid in full on the spot: pre-fill one payment row;
+            # JS keeps its amount in sync with the order total until edited.
+            payments_formset = NewSalesOrderPaymentFormSet(
+                instance=SalesOrder(),
+                prefix='payments',
+                initial=[{'paid_on': initial['order_date']}],
+            )
+        else:
+            payments_formset = SalesOrderPaymentFormSet(
+                instance=instance, prefix='payments'
+            )
 
     if request.method == 'POST':
         services_for_js = request.POST.get('services_json', '[]')
     else:
         services_for_js = json.dumps(instance.services or []) if instance else '[]'
+
+    payment_methods = list(
+        SalesOrderPayment.objects.exclude(payment_method='')
+        .order_by('payment_method')
+        .values_list('payment_method', flat=True)
+        .distinct()
+    )
 
     for f in formset.forms:
         if hasattr(f, 'fields') and 'product' in f.fields:
@@ -925,6 +1096,8 @@ def staff_sales_order_edit(request, pk=None):
         {
             'form': form,
             'formset': formset,
+            'payments_formset': payments_formset,
+            'payment_methods': payment_methods,
             'order': instance,
             'product_prices': product_prices,
             'product_landed_costs': product_landed_costs,
@@ -1017,7 +1190,7 @@ def staff_sales_order_set_status(request, pk):
 def staff_sales_order_invoice(request, pk):
     order = get_object_or_404(
         SalesOrder.objects.select_related('customer').prefetch_related(
-            _sales_order_lines_prefetch()
+            _sales_order_lines_prefetch(), 'payments'
         ),
         pk=pk,
     )

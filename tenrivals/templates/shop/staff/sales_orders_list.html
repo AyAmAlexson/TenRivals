@@ -89,6 +89,14 @@
   .cogs-light{
     flex-shrink:0;font-size:9px;line-height:1;cursor:help;
   }
+  .pay-badge{
+    display:inline-block;font-size:9px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+    padding:1px 5px;border:1px solid currentColor;line-height:1.4;margin-right:5px;vertical-align:middle;
+  }
+  .pay-badge--paid{color:#15803d}
+  .pay-badge--partial{color:#b45309}
+  .pay-badge--unpaid{color:#b91c1c}
+  .pay-badge--overpaid{color:#6d28d9}
 
   .order-status-form{margin:0}
   .order-status-form select{
@@ -222,9 +230,9 @@
   </div>
   <span class="staff-toolbar__sep" aria-hidden="true"></span>
   <div class="staff-toolbar__group">
-    <button type="button" class="staff-toolbar-help" aria-label="Help: monthly report"
-      title="Opens an HTML page with all orders in the selected calendar month (by order date). Columns match the list below except Customer and Items. Gross, VAT, and net totals are shown at the bottom. Use print to save as PDF.">?</button>
-    <form method="get" action="{% url 'administration:staff_sales_orders_month_report' %}" style="display:inline-flex;gap:8px;align-items:center;margin:0;flex-wrap:wrap">
+    <button type="button" class="staff-toolbar-help" aria-label="Help: monthly reports"
+      title="ORDERS: all orders of the selected calendar month by order date (sales view; cancelled/refunded listed but excluded from totals). FISCAL: all payments / fiscal receipts by payment date (cash basis) with a reconciliation block against the orders total. Use print to save as PDF.">?</button>
+    <form method="get" action="{% url 'administration:staff_sales_orders_month_report' %}" id="month-report-form" style="display:inline-flex;gap:8px;align-items:center;margin:0;flex-wrap:wrap">
       <label class="visually-hidden" for="id_report_month">Report month</label>
       <select id="id_report_month" name="month" aria-label="Report month">
         {% for mn, ml in month_choices %}
@@ -237,7 +245,8 @@
         <option value="{{ y }}" {% if y == report_year %}selected{% endif %}>{{ y }}</option>
         {% endfor %}
       </select>
-      <button type="submit" class="btn btn--sm">REPORT</button>
+      <button type="submit" class="btn btn--sm">ORDERS</button>
+      <button type="submit" class="btn btn--sm btn--outline" formaction="{% url 'administration:staff_sales_payments_month_report' %}">FISCAL</button>
     </form>
   </div>
 </div>
@@ -266,8 +275,13 @@
         <div class="order-cell__meta">{{ o.order_date|date:"Y-m-d" }}</div>
       </div>
       <div class="order-cell" role="cell">
-        <div class="order-cell__main mono">{% if o.fiscal_receipt %}{{ o.fiscal_receipt }}{% else %}—{% endif %}</div>
-        <div class="order-cell__meta">{% if o.payment_method %}{{ o.payment_method }}{% else %}No payment method{% endif %}</div>
+        <div class="order-cell__main mono" title="{% if o.fiscal_receipt %}{{ o.fiscal_receipt }}{% else %}No fiscal receipt yet{% endif %}">{% if o.fiscal_receipt %}{{ o.fiscal_receipt }}{% else %}—{% endif %}</div>
+        {% with st=o.payment_state %}
+        <div class="order-cell__meta" title="Paid {{ o.paid_total }} of {{ o.gross_total }} ₾ ({{ o.payments.all|length }} payment{{ o.payments.all|length|pluralize }})">
+          {% if st == 'PAID' %}<span class="pay-badge pay-badge--paid">Paid</span>{% elif st == 'PARTIAL' %}<span class="pay-badge pay-badge--partial">Due {{ o.balance_due }}</span>{% elif st == 'OVERPAID' %}<span class="pay-badge pay-badge--overpaid">Overpaid</span>{% else %}<span class="pay-badge pay-badge--unpaid">Unpaid</span>{% endif %}
+          {% if o.payment_method %}{{ o.payment_method }}{% else %}No payment method{% endif %}
+        </div>
+        {% endwith %}
       </div>
       <div role="cell">
         <form method="post" action="{% url 'administration:staff_sales_order_set_status' o.pk %}" class="order-status-form">

@@ -307,6 +307,18 @@
         <div class="line"><span>დღგ 18% / VAT 18%</span><span id="vat" class="mono">{{ order.vat_total|floatformat:2 }}&nbsp;₾</span></div>
         <div class="line grand"><span>საბოლოო თანხა / Total (VAT incl.)</span><span id="gross" class="mono">{{ order.gross_total|floatformat:2 }}&nbsp;₾</span></div>
         {% endif %}
+        {% if show_payment_schedule %}
+        <div class="line muted" style="margin-top:8px;font-size:10px"><span>გადახდები / Payments</span><span></span></div>
+        {% for p in payments %}
+        <div class="line"><span>{{ p.paid_on|date:"d.m.Y" }}{% if p.fiscal_receipt %} · <span class="mono">#{{ p.fiscal_receipt }}</span>{% endif %}{% if p.is_refund %} · დაბრუნება / refund{% endif %}</span><span class="mono">{{ p.amount_gross|floatformat:2 }}&nbsp;₾</span></div>
+        {% endfor %}
+        <div class="line"><span>გადახდილია / Paid</span><span class="mono">{{ paid_total|floatformat:2 }}&nbsp;₾</span></div>
+        {% if balance_due > 0 %}
+        <div class="line grand"><span>დარჩენილი თანხა / Balance due</span><span class="mono">{% if invoice_use_fx %}{{ balance_due_fx|floatformat:2 }}&nbsp;{{ invoice_currency_symbol }} ({{ balance_due|floatformat:2 }}&nbsp;₾){% else %}{{ balance_due|floatformat:2 }}&nbsp;₾{% endif %}</span></div>
+        {% elif balance_due < 0 %}
+        <div class="line"><span>ზედმეტად გადახდილი / Overpaid</span><span class="mono">{{ balance_due|floatformat:2 }}&nbsp;₾</span></div>
+        {% endif %}
+        {% endif %}
       </div>
     </div>
 

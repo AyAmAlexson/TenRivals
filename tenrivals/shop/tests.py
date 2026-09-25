@@ -713,8 +713,6 @@ class LegacySalesImportHelpersTests(TestCase):
                 'status': SalesOrder.Status.COMPLETED,
                 'delivery_gross': '0',
                 'delivery_cost_gel': '0',
-                'fiscal_receipt': '',
-                'payment_method': 'Cash',
                 'payment_currency': 'GEL',
                 'exchange_rate': '1',
                 'notes': '',
@@ -732,8 +730,6 @@ class LegacySalesImportHelpersTests(TestCase):
                 'status': SalesOrder.Status.COMPLETED,
                 'delivery_gross': '0',
                 'delivery_cost_gel': '0',
-                'fiscal_receipt': '',
-                'payment_method': 'Cash',
                 'payment_currency': 'GEL',
                 'exchange_rate': '1',
                 'notes': '',
@@ -845,3 +841,297 @@ class StorefrontCheckoutTests(TestCase):
         )
         self.assertEqual(response.status_code, 302)
         self.assertIn(f'/checkout/success/{order.pk}/', response['Location'])
+
+
+@override_settings(SECURE_SSL_REDIRECT=False)
+class SalesOrderPaymentTests(TestCase):
+    """Order = sale (order_date); payments = cash received (paid_on)."""
+
+    def setUp(self):
+        from datetime import date
+
+        from shop.models import SalesOrderPayment
+
+        self.SalesOrderPayment = SalesOrderPayment
+        User = get_user_model()
+        self.staff = User.objects.create_superuser(
+            email='staff-pay@test.com',
+            password='secret-secret',
+        )
+        self.client.force_login(self.staff)
+        self.cust = Customer.objects.create(first_name='Pre', last_name='Payer')
+        # 670 ₾ order in September, 335 prepaid in September, 335 in October.
+        self.order = SalesOrder.objects.create(
+            invoice_number='2026-000900',
+            customer=self.cust,
+            order_date=date(2026, 9, 20),
+            gross_total=Decimal('670.00'),
+            vat_total=Decimal('102.20'),
+            net_total=Decimal('567.80'),
+            status=SalesOrder.Status.CONFIRMED,
+        )
+        self.p1 = SalesOrderPayment.objects.create(
+            order=self.order,
+            paid_on=date(2026, 9, 20),
+            amount_gross=Decimal('335.00'),
+            payment_method='Card',
+            fiscal_receipt='R-1001',
+        )
+
+    def test_paid_total_balance_and_state(self):
+        from datetime import date
+
+        o = self.order
+        self.assertEqual(o.paid_total(), Decimal('335.00'))
+        self.assertEqual(o.balance_due(), Decimal('335.00'))
+        self.assertEqual(o.payment_state(), SalesOrder.PaymentState.PARTIAL)
+        self.SalesOrderPayment.objects.create(
+            order=o,
+            paid_on=date(2026, 10, 3),
+            amount_gross=Decimal('335.00'),
+            payment_method='Cash',
+            fiscal_receipt='R-1002',
+        )
+        self.assertEqual(o.paid_total(), Decimal('670.00'))
+        self.assertEqual(o.balance_due(), Decimal('0.00'))
+        self.assertEqual(o.payment_state(), SalesOrder.PaymentState.PAID)
+        # Refund → negative payment.
+        self.SalesOrderPayment.objects.create(
+            order=o,
+            paid_on=date(2026, 10, 10),
+            amount_gross=Decimal('-100.00'),
+            fiscal_receipt='RF-7',
+        )
+        self.assertEqual(o.paid_total(), Decimal('570.00'))
+        self.assertEqual(o.payment_state(), SalesOrder.PaymentState.PARTIAL)
+
+    def test_sync_payment_summary_joins_receipts_and_methods(self):
+        from datetime import date
+
+        o = self.order
+        o.payment_method = 'Bank transfer (intended)'
+        o.save(update_fields=['payment_method'])
+        self.SalesOrderPayment.objects.create(
+            order=o,
+            paid_on=date(2026, 10, 3),
+            amount_gross=Decimal('335.00'),
+            payment_method='Cash',
+            fiscal_receipt='R-1002',
+        )
+        o.sync_payment_summary()
+        o.refresh_from_db()
+        self.assertEqual(o.fiscal_receipt, 'R-1001, R-1002')
+        self.assertEqual(o.payment_method, 'Card / Cash')
+        # No payments: receipts cleared, intended method kept.
+        o.payments.all().delete()
+        o.payment_method = 'Bank transfer (intended)'
+        o.save(update_fields=['payment_method'])
+        o.sync_payment_summary()
+        o.refresh_from_db()
+        self.assertEqual(o.fiscal_receipt, '')
+        self.assertEqual(o.payment_method, 'Bank transfer (intended)')
+
+    def test_payment_vat_split_handles_refund(self):
+        p = self.SalesOrderPayment(amount_gross=Decimal('-118.00'))
+        vat, net = p.vat_net_split()
+        self.assertEqual(net, Decimal('-100.00'))
+        self.assertEqual(vat, Decimal('-18.00'))
+        self.assertTrue(p.is_refund)
+
+    def test_fiscal_month_report_groups_by_paid_on_and_reconciles(self):
+        from datetime import date
+
+        self.SalesOrderPayment.objects.create(
+            order=self.order,
+            paid_on=date(2026, 10, 3),
+            amount_gross=Decimal('335.00'),
+            payment_method='Cash',
+            fiscal_receipt='R-1002',
+        )
+        # Fully paid October order, so October fiscal total = 335 + 100.
+        o2 = SalesOrder.objects.create(
+            invoice_number='2026-000901',
+            customer=self.cust,
+            order_date=date(2026, 10, 5),
+            gross_total=Decimal('100.00'),
+            vat_total=Decimal('15.25'),
+            net_total=Decimal('84.75'),
+            status=SalesOrder.Status.COMPLETED,
+        )
+        self.SalesOrderPayment.objects.create(
+            order=o2,
+            paid_on=date(2026, 10, 5),
+            amount_gross=Decimal('100.00'),
+            fiscal_receipt='R-1003',
+        )
+        url = reverse('administration:staff_sales_payments_month_report')
+
+        sep = self.client.get(url, {'year': 2026, 'month': 9})
+        self.assertEqual(sep.status_code, 200)
+        self.assertEqual(sep.context['total_amount'], Decimal('335.00'))
+        self.assertEqual(sep.context['orders_gross'], Decimal('670.00'))
+        self.assertEqual(sep.context['orders_paid_this_month'], Decimal('335.00'))
+        self.assertEqual(sep.context['orders_paid_other_months'], Decimal('335.00'))
+        self.assertEqual(sep.context['delta'], Decimal('-335.00'))
+
+        octo = self.client.get(url, {'year': 2026, 'month': 10})
+        self.assertEqual(octo.status_code, 200)
+        self.assertEqual(octo.context['total_amount'], Decimal('435.00'))
+        self.assertEqual(octo.context['orders_gross'], Decimal('100.00'))
+        self.assertEqual(
+            octo.context['other_month_orders_received'], Decimal('335.00')
+        )
+        self.assertEqual(octo.context['delta'], Decimal('335.00'))
+        self.assertContains(octo, 'R-1002')
+        self.assertContains(octo, 'R-1003')
+        self.assertNotContains(octo, 'R-1001')
+
+    def test_orders_month_report_excludes_cancelled_from_totals(self):
+        from datetime import date
+
+        SalesOrder.objects.create(
+            invoice_number='2026-000902',
+            customer=self.cust,
+            order_date=date(2026, 9, 21),
+            gross_total=Decimal('50.00'),
+            vat_total=Decimal('7.63'),
+            net_total=Decimal('42.37'),
+            status=SalesOrder.Status.CANCELLED,
+        )
+        url = reverse('administration:staff_sales_orders_month_report')
+        resp = self.client.get(url, {'year': 2026, 'month': 9})
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.context['total_gross'], Decimal('670.00'))
+        self.assertEqual(resp.context['excluded_count'], 1)
+        self.assertEqual(resp.context['excluded_gross'], Decimal('50.00'))
+        self.assertEqual(resp.context['paid_in_month'], Decimal('335.00'))
+        self.assertContains(resp, '2026-000902')
+
+    def _order_post_data(self, product, **overrides):
+        data = {
+            'invoice_number': '',
+            'customer': self.cust.pk,
+            'order_date': '2026-09-22',
+            'status': SalesOrder.Status.CONFIRMED,
+            'delivery_gross': '0',
+            'delivery_cost_gel': '0',
+            'payment_currency': 'GEL',
+            'exchange_rate': '1',
+            'notes': '',
+            'services_json': '[]',
+            'lines-TOTAL_FORMS': '1',
+            'lines-INITIAL_FORMS': '0',
+            'lines-MIN_NUM_FORMS': '1',
+            'lines-MAX_NUM_FORMS': '1000',
+            'lines-0-from_stock': 'on',
+            'lines-0-product': product.pk,
+            'lines-0-custom_label': '',
+            'lines-0-product_type': '',
+            'lines-0-variant_label': '',
+            'lines-0-quantity': '1',
+            'lines-0-unit_price_gross': '670.00',
+            'lines-0-discount_percent': '0',
+            'lines-0-landed_cost_gel': '',
+            'lines-0-sale_channel': 'PREORDER',
+            'payments-TOTAL_FORMS': '1',
+            'payments-INITIAL_FORMS': '0',
+            'payments-MIN_NUM_FORMS': '0',
+            'payments-MAX_NUM_FORMS': '1000',
+            'payments-0-paid_on': '2026-09-22',
+            'payments-0-amount_gross': '335.00',
+            'payments-0-payment_method': 'Card',
+            'payments-0-fiscal_receipt': 'R-2001',
+            'payments-0-note': 'prepayment',
+        }
+        data.update(overrides)
+        return data
+
+    def _product(self):
+        product = Product.objects.create(
+            type=ProductType.ACCESSORIES,
+            name='Prepaid Racket Bag',
+            initial_price=Decimal('670.00'),
+            actual_price=Decimal('670.00'),
+            in_stock=True,
+            is_active=True,
+        )
+        ProductListing.objects.create(
+            product=product,
+            channel=ProductListingChannel.STOCK,
+            quantity=3,
+        )
+        return product
+
+    def test_staff_form_saves_partial_payment_and_summary(self):
+        product = self._product()
+        url = reverse('administration:staff_sales_order_new')
+        resp = self.client.post(url, self._order_post_data(product))
+        self.assertEqual(resp.status_code, 302, getattr(resp, 'content', b'')[:500])
+        order = SalesOrder.objects.exclude(pk=self.order.pk).get(customer=self.cust)
+        self.assertEqual(order.gross_total, Decimal('670.00'))
+        self.assertEqual(order.payments.count(), 1)
+        self.assertEqual(order.paid_total(), Decimal('335.00'))
+        self.assertEqual(order.payment_state(), SalesOrder.PaymentState.PARTIAL)
+        self.assertEqual(order.fiscal_receipt, 'R-2001')
+        self.assertEqual(order.payment_method, 'Card')
+
+        # Add the balance payment via edit; existing row keeps its pk.
+        p = order.payments.get()
+        edit_url = reverse('administration:staff_sales_order_edit', kwargs={'pk': order.pk})
+        data = self._order_post_data(
+            product,
+            invoice_number=order.invoice_number,
+            **{
+                'payments-TOTAL_FORMS': '2',
+                'payments-INITIAL_FORMS': '1',
+                'payments-0-id': p.pk,
+                'payments-0-order': order.pk,
+                'payments-1-paid_on': '2026-10-03',
+                'payments-1-amount_gross': '335.00',
+                'payments-1-payment_method': 'Cash',
+                'payments-1-fiscal_receipt': 'R-2002',
+                'payments-1-note': 'balance',
+            },
+        )
+        resp = self.client.post(edit_url, data)
+        self.assertEqual(resp.status_code, 302)
+        order.refresh_from_db()
+        self.assertEqual(order.payments.count(), 2)
+        self.assertEqual(order.payment_state(), SalesOrder.PaymentState.PAID)
+        self.assertEqual(order.fiscal_receipt, 'R-2001, R-2002')
+        self.assertEqual(order.payment_method, 'Card / Cash')
+
+    def test_staff_form_rejects_zero_amount_payment(self):
+        product = self._product()
+        url = reverse('administration:staff_sales_order_new')
+        resp = self.client.post(
+            url, self._order_post_data(product, **{'payments-0-amount_gross': '0'})
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertFalse(
+            SalesOrder.objects.exclude(pk=self.order.pk).filter(customer=self.cust).exists()
+        )
+        self.assertContains(resp, 'Amount cannot be zero')
+
+    def test_new_order_form_prefills_one_payment_row(self):
+        url = reverse('administration:staff_sales_order_new')
+        resp = self.client.get(url)
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.context['payments_formset'].total_form_count(), 1)
+        self.assertContains(resp, 'is-auto-amount')
+
+    def test_invoice_shows_balance_due_when_partially_paid(self):
+        url = reverse('administration:staff_sales_order_invoice', kwargs={'pk': self.order.pk})
+        resp = self.client.get(url)
+        self.assertEqual(resp.status_code, 200)
+        self.assertTrue(resp.context['show_payment_schedule'])
+        self.assertContains(resp, 'Balance due')
+        self.assertContains(resp, 'R-1001')
+
+    def test_orders_list_shows_payment_badge_and_searches_receipts(self):
+        url = reverse('administration:staff_sales_orders')
+        resp = self.client.get(url)
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'Due 335.00')
+        resp = self.client.get(url, {'q': 'R-1001'})
+        self.assertContains(resp, '2026-000900')

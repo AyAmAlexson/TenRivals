@@ -1355,7 +1355,11 @@ class SalesOrder(models.Model):
             'Counts toward order COGS with product landed costs. Never shown to customers.'
         ),
     )
-    fiscal_receipt = models.CharField(max_length=64, blank=True)
+    # Denormalised summary of `payments` (all receipt numbers / methods joined).
+    # Kept for search, CSV export and the printed invoice; rebuilt by
+    # `sync_payment_summary()` whenever payments change. For orders without
+    # payments `payment_method` may hold the intended method from checkout.
+    fiscal_receipt = models.CharField(max_length=200, blank=True)
     payment_method = models.CharField(max_length=200, blank=True)
     services = models.JSONField(
         default=list,
@@ -1442,6 +1446,118 @@ class SalesOrder(models.Model):
         if any(filled):
             return 'yellow'
         return 'red'
+
+    # ---- Payments (cash basis) -------------------------------------------
+    # The order is the *sale* (analytics, order_date, gross_total); payments are
+    # the *money received* (fiscal receipts, paid_on). One order may be settled
+    # by several payments across months (prepayment + balance) or refunded.
+
+    class PaymentState(models.TextChoices):
+        UNPAID = 'UNPAID', _('Unpaid')
+        PARTIAL = 'PARTIAL', _('Partially paid')
+        PAID = 'PAID', _('Paid')
+        OVERPAID = 'OVERPAID', _('Overpaid')
+
+    def paid_total(self) -> Decimal:
+        """Σ payments (refunds are negative). Uses prefetched `payments` when present."""
+        total = Decimal('0.00')
+        for p in self.payments.all():
+            total += p.amount_gross or Decimal('0.00')
+        return total.quantize(Decimal('0.01'))
+
+    def balance_due(self) -> Decimal:
+        gross = self.gross_total or Decimal('0.00')
+        return (gross - self.paid_total()).quantize(Decimal('0.01'))
+
+    def payment_state(self) -> str:
+        paid = self.paid_total()
+        gross = (self.gross_total or Decimal('0.00')).quantize(Decimal('0.01'))
+        if paid <= 0:
+            return self.PaymentState.UNPAID
+        if paid < gross:
+            return self.PaymentState.PARTIAL
+        if paid == gross:
+            return self.PaymentState.PAID
+        return self.PaymentState.OVERPAID
+
+    def payment_state_display(self) -> str:
+        return str(dict(self.PaymentState.choices).get(self.payment_state(), ''))
+
+    def sync_payment_summary(self, save: bool = True) -> None:
+        """Rebuild `fiscal_receipt` / `payment_method` from the payments list.
+
+        Receipt numbers and methods are de-duplicated and joined in payment
+        order. When there are no payments the receipt summary is cleared but
+        `payment_method` is left untouched (checkout stores the intended method
+        there before any money arrives).
+        """
+        payments = list(self.payments.order_by('paid_on', 'id'))
+        receipts: list[str] = []
+        methods: list[str] = []
+        for p in payments:
+            r = (p.fiscal_receipt or '').strip()
+            if r and r not in receipts:
+                receipts.append(r)
+            m = (p.payment_method or '').strip()
+            if m and m not in methods:
+                methods.append(m)
+        self.fiscal_receipt = ', '.join(receipts)[:200]
+        if methods:
+            self.payment_method = ' / '.join(methods)[:200]
+        if save:
+            self.save(update_fields=['fiscal_receipt', 'payment_method', 'updated_at'])
+
+
+class SalesOrderPayment(models.Model):
+    """Money actually received for a SalesOrder — one row per fiscal receipt.
+
+    Amounts are VAT-inclusive GEL. A negative amount is a refund (with the
+    refund receipt number). Monthly tax reporting groups these rows by
+    `paid_on`, independent of the order's `order_date`.
+    """
+
+    order = models.ForeignKey(
+        SalesOrder,
+        on_delete=models.CASCADE,
+        related_name='payments',
+    )
+    paid_on = models.DateField(db_index=True)
+    amount_gross = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        help_text=_('Amount received, VAT-inclusive (₾). Negative for refunds.'),
+    )
+    payment_method = models.CharField(max_length=200, blank=True)
+    fiscal_receipt = models.CharField(max_length=64, blank=True)
+    note = models.CharField(max_length=200, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['paid_on', 'id']
+        indexes = [models.Index(fields=['paid_on', 'order'])]
+
+    def __str__(self):
+        return f'{self.order_id}: {self.amount_gross} ₾ on {self.paid_on}'
+
+    @property
+    def is_refund(self) -> bool:
+        return (self.amount_gross or Decimal('0')) < 0
+
+    def vat_net_split(self) -> tuple[Decimal, Decimal]:
+        """(vat, net) share of this payment at 18% VAT-inclusive."""
+        from .sales_order_utils import gross_split_vat_net
+
+        net, vat = gross_split_vat_net(self.amount_gross or Decimal('0.00'))
+        return vat, net
+
+    @property
+    def vat_amount(self) -> Decimal:
+        return self.vat_net_split()[0]
+
+    @property
+    def net_amount(self) -> Decimal:
+        return self.vat_net_split()[1]
 
 
 class SalesOrderLine(models.Model):

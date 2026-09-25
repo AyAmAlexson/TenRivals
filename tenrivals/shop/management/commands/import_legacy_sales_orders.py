@@ -25,6 +25,7 @@ from shop.models import (
     SalesInvoiceYearSequence,
     SalesOrder,
     SalesOrderLine,
+    SalesOrderPayment,
 )
 from shop.sales_order_currency import apply_payment_currency_fields
 from shop.sales_order_utils import compute_order_totals, line_amounts
@@ -460,6 +461,15 @@ class Command(BaseCommand):
                         line_gross=s['lg'],
                         line_vat=s['lv'],
                         line_net=s['ln'],
+                    )
+                # Legacy rows carry no payment detail: assume paid in full on
+                # the order date (same convention as the 0047 backfill).
+                if gross != 0:
+                    SalesOrderPayment.objects.create(
+                        order=order,
+                        paid_on=order_date,
+                        amount_gross=gross,
+                        note='Legacy import: assumed paid on order date',
                     )
                 created_orders += 1
                 created_lines += len(line_specs)

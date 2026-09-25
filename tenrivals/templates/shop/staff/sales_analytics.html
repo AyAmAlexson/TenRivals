@@ -1,7 +1,7 @@
 {% extends 'persons/staff_base.html' %}
 {% block title %}Sales analytics — Staff | Tenrivals{% endblock %}
 {% block page_heading %}{{ page_heading }}{% endblock %}
-{% block page_note %}<p class="page-note">Staff-only economics. Cancelled / refunded orders excluded. Revenue is the customer payment. Net Proceeds = Revenue − VAT − TAX − Acquiring. Gross Profit = Revenue − VAT − COGS. Profit = Net Proceeds − COGS. TAX = {{ tax_rate_pct|floatformat:0 }}% turnover on gross; acquiring = {{ acquiring_rate_pct|floatformat:0 }}% of gross for card payments (payment method mentions card / terminal / POS). Lines without landed cost count in revenue but not in COGS — watch cost coverage.</p>{% endblock %}
+{% block page_note %}<p class="page-note">Staff-only economics. Cancelled / refunded orders excluded. Revenue is the customer payment. Net Proceeds = Revenue − VAT − TAX − Acquiring. Gross Profit = Revenue − VAT − COGS. Profit = Net Proceeds − COGS. TAX = {{ tax_rate_pct|floatformat:0 }}% turnover on gross; acquiring = {{ acquiring_rate_pct|floatformat:0 }}% of the amount actually received by card, summed over the order's payments (a payment counts as card when its method mentions card / terminal / POS; unpaid orders carry no acquiring). Lines without landed cost count in revenue but not in COGS — watch cost coverage.</p>{% endblock %}
 {% block extra_head %}
 {{ chart|json_script:"analytics-chart-data" }}
 {{ stock_value_chart|json_script:"stock-value-chart-data" }}
@@ -385,7 +385,7 @@
         </tbody>
       </table>
     </div>
-    <p class="page-meta" style="margin-top:10px;font-size:12px">Only lines with a known landed cost. Gross Profit = Revenue − VAT − COGS. Profit = Gross Profit − TAX (1% of line gross) − acquiring (2% if the order was card).</p>
+    <p class="page-meta" style="margin-top:10px;font-size:12px">Only lines with a known landed cost. Gross Profit = Revenue − VAT − COGS. Profit = Gross Profit − TAX (1% of line gross) − acquiring (2% of line gross × the order's card-paid share).</p>
     {% else %}
     <p style="font-size:14px;color:var(--muted)">No lines with landed cost yet — record costs to unlock this table.</p>
     {% endif %}

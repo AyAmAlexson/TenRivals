@@ -309,7 +309,8 @@ def _sales_orders_for_export(*, start: date | None = None, end: date | None = No
             Prefetch(
                 'lines',
                 queryset=SalesOrderLine.objects.select_related('product').order_by('id'),
-            )
+            ),
+            'payments',
         )
         .order_by('order_date', 'invoice_number')
     )
@@ -397,7 +398,23 @@ def _serialize_order_for_ai(order: SalesOrder, *, detail: bool = False) -> dict:
         'customer_id': order.customer_id,
         'customer': cust.display_name() if cust else '',
         'payment_method': order.payment_method or '',
-        'card_payment': is_card_payment(order.payment_method),
+        # Cash basis: what was actually received, per fiscal receipt.
+        'payments': [
+            {
+                'paid_on': p.paid_on.isoformat() if p.paid_on else None,
+                'amount_gross': _n(p.amount_gross),
+                'method': p.payment_method or '',
+                'card': is_card_payment(p.payment_method),
+                'fiscal_receipt': p.fiscal_receipt or '',
+                'refund': p.is_refund,
+                'note': p.note or '',
+            }
+            for p in order.payments.all()
+        ],
+        'paid_total': _n(order.paid_total()),
+        'balance_due': _n(order.balance_due()),
+        'payment_state': order.payment_state(),
+        'card_revenue': _n(raw.get('card_revenue')),
         'payment_currency': order.payment_currency_display(),
         'exchange_rate': _n(order.exchange_rate),
         'amount_in_payment_currency': _n(order.amount_in_payment_currency),
@@ -531,7 +548,11 @@ ORDERS_CSV_COLUMNS = (
     ('customer_source', 'customer_source'),
     ('customer_newsletter', 'customer_newsletter'),
     ('payment_method', 'payment_method'),
-    ('card_payment', 'card_payment'),
+    ('payments_json', 'payments_json'),
+    ('paid_total', 'paid_total'),
+    ('balance_due', 'balance_due'),
+    ('payment_state', 'payment_state'),
+    ('card_revenue', 'card_revenue'),
     ('payment_currency', 'payment_currency'),
     ('exchange_rate', 'exchange_rate'),
     ('amount_in_payment_currency', 'amount_in_payment_currency'),
@@ -636,7 +657,11 @@ def build_orders_csv(
             'customer_source': packed.get('customer_source'),
             'customer_newsletter': packed.get('customer_newsletter'),
             'payment_method': packed.get('payment_method'),
-            'card_payment': packed.get('card_payment'),
+            'payments_json': json.dumps(packed.get('payments') or [], ensure_ascii=False),
+            'paid_total': packed.get('paid_total'),
+            'balance_due': packed.get('balance_due'),
+            'payment_state': packed.get('payment_state'),
+            'card_revenue': packed.get('card_revenue'),
             'payment_currency': packed.get('payment_currency'),
             'exchange_rate': packed.get('exchange_rate'),
             'amount_in_payment_currency': packed.get('amount_in_payment_currency'),

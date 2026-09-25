@@ -1,0 +1,144 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Fiscal receipts {{ month_title }} {{ report_year }} — Tennis Rivals</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root{
+    --border:#111;
+    --muted:#555;
+    --pad:22px;
+    --w:190mm;
+    --fs:12px;
+    --lh:1.45;
+    --th-fs:11px;
+    --th-help-fs:9.5px;
+    --cell-pad:10px 8px;
+    --section-gap:18px;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    font-family:Arial,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,sans-serif;
+    font-size:var(--fs);
+    line-height:var(--lh);
+    color:#000;
+    -webkit-print-color-adjust:exact;
+    print-color-adjust:exact;
+    font-variant-numeric:tabular-nums;
+    background:#fff;
+  }
+  .wrap{
+    width:var(--w);
+    margin:20px auto;
+    border:1px solid var(--border);
+    padding:var(--pad);
+    padding-bottom:28px;
+    background:#fff;
+  }
+  .muted{ color:var(--muted); }
+  .mono{ font-variant-numeric:tabular-nums; }
+  .controls{ display:flex; gap:8px; margin:16px auto; width:var(--w); flex-wrap:wrap; align-items:center; }
+  .btn{ padding:8px 12px; border:1px solid #333; background:#f7f7f7; cursor:pointer; font-size:12px; text-decoration:none; color:#111; display:inline-block; font-family:inherit; }
+  .btn:hover{ background:#eaeaea; }
+  @media print{ .controls{ display:none!important; } .wrap{ margin:0; border:0; width:auto; padding:12mm 14mm; } }
+  .header .header-row--primary{ display:flex; align-items:center; gap:20px; flex-wrap:wrap; margin-bottom:16px; }
+  .header .logo .logo-img{ height:72px; width:auto; max-width:360px; display:block; object-fit:contain; }
+  .header h1{ margin:0; font-size:20px; line-height:1.2; font-weight:700; }
+  table{ width:100%; border-collapse:collapse; margin-top:var(--section-gap); table-layout:fixed; }
+  th,td{ padding:var(--cell-pad); border-bottom:1px dashed var(--border); vertical-align:top; }
+  th{ border-bottom:1px solid var(--border); text-align:left; font-size:var(--th-fs); padding-bottom:10px; }
+  .th-help{ display:block; color:var(--muted); font-size:var(--th-help-fs); line-height:1.15; margin-top:2px; }
+  td.num,th.num{ text-align:right; white-space:nowrap; }
+  th.col-invoice,td.col-invoice{ white-space:nowrap; width:9.5em; min-width:9.5em; }
+  tr.row-refund td{ color:#7f1d1d; }
+  .tag{ display:inline-block; font-size:9.5px; padding:1px 5px; border:1px solid #999; color:var(--muted); margin-left:4px; vertical-align:middle; }
+  .totals{ margin-top:var(--section-gap); padding-top:var(--section-gap); border-top:1px solid var(--border); display:flex; gap:18px; flex-wrap:wrap; align-items:flex-start; }
+  .totals .box{ background:#f7f7f7; padding:14px 16px; border:1px solid var(--border); flex:1 1 300px; }
+  .totals .box h2{ margin:0 0 8px; font-size:12px; text-transform:uppercase; letter-spacing:.04em; }
+  .totals .line{ display:flex; justify-content:space-between; margin:6px 0; gap:16px; }
+  .totals .grand{ font-weight:700; border-top:1px dashed var(--border); padding-top:8px; margin-top:8px; }
+  .totals .sub{ padding-left:14px; font-size:11px; }
+</style>
+</head>
+<body>
+  <div class="controls">
+    <a class="btn" href="{% url 'administration:staff_sales_orders' %}">Back to orders</a>
+    <a class="btn" href="{% url 'administration:staff_sales_orders_month_report' %}?year={{ report_year }}&amp;month={{ report_month }}">Orders report</a>
+    <button type="button" class="btn" onclick="window.print()">Print / Save as PDF</button>
+  </div>
+
+  <div class="wrap">
+    <div class="header">
+      <div class="header-row header-row--primary">
+        <div class="logo">
+          <img src="{% if invoice_logo_abs_url %}{{ invoice_logo_abs_url }}{% else %}{% static 'assets/img/invoice_logo_frame114.svg' %}{% endif %}" alt="Tennis Rivals" class="logo-img">
+        </div>
+        <div>
+          <h1>Fiscal receipts — {{ month_title }} {{ report_year }}</h1>
+          <p class="muted" style="margin:8px 0 0;font-size:13px">Money received by payment date (cash basis, VAT-inclusive ₾). The total must match the cash register for the month. Refunds are negative.</p>
+        </div>
+      </div>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th><div>Date</div></th>
+          <th><div>Fiscal receipt #</div></th>
+          <th class="col-invoice"><div>Invoice #</div><div class="th-help">order date</div></th>
+          <th><div>Customer</div></th>
+          <th class="num"><div>Amount</div><div class="th-help">₾ inc. VAT</div></th>
+          <th class="num"><div>VAT</div><div class="th-help">18%</div></th>
+          <th class="num"><div>Net</div></th>
+          <th><div>Method</div></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in rows %}
+        <tr class="{% if r.p.is_refund %}row-refund{% endif %}">
+          <td class="mono">{{ r.p.paid_on|date:"Y-m-d" }}</td>
+          <td class="mono">{{ r.p.fiscal_receipt|default:"—" }}{% if r.p.note %}<div class="muted" style="font-size:10px">{{ r.p.note|truncatechars:40 }}</div>{% endif %}</td>
+          <td class="mono col-invoice">{{ r.order.invoice_number }}<div class="muted" style="font-size:10px">{{ r.order.order_date|date:"Y-m-d" }}{% if not r.same_month %} <span class="tag">other month</span>{% endif %}</div></td>
+          <td>{{ r.order.customer.display_name|truncatechars:28 }}{% if r.order_paid_total != r.order.gross_total %}<div class="muted" style="font-size:10px">order {{ r.order.gross_total }} · paid {{ r.order_paid_total }}</div>{% endif %}</td>
+          <td class="mono num">{{ r.p.amount_gross }}</td>
+          <td class="mono num">{{ r.vat }}</td>
+          <td class="mono num">{{ r.net }}</td>
+          <td>{{ r.p.payment_method|default:"—"|truncatechars:24 }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="8" class="muted">No payments in this month.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <div class="totals">
+      <div class="box">
+        <h2>Fiscal total</h2>
+        <div class="line"><span>Receipts ({{ receipts_count }})</span><span></span></div>
+        <div class="line"><span>Total received (₾)</span><span class="mono">{{ total_amount }}</span></div>
+        <div class="line"><span>Total VAT (₾)</span><span class="mono">{{ total_vat }}</span></div>
+        <div class="line grand"><span>Total net (₾)</span><span class="mono">{{ total_net }}</span></div>
+        {% if refunds_total != 0 %}
+        <div class="line muted"><span>incl. refunds (₾)</span><span class="mono">{{ refunds_total }}</span></div>
+        {% endif %}
+      </div>
+      <div class="box">
+        <h2>Reconciliation with orders report</h2>
+        <div class="line"><span>Orders dated {{ month_title }} ({{ orders_count }}), gross (₾)</span><span class="mono">{{ orders_gross }}</span></div>
+        <div class="line sub muted"><span>paid in {{ month_title }}</span><span class="mono">{{ orders_paid_this_month }}</span></div>
+        <div class="line sub muted"><span>paid in other months</span><span class="mono">{{ orders_paid_other_months }}</span></div>
+        <div class="line sub muted"><span>not yet paid</span><span class="mono">{{ orders_unpaid }}</span></div>
+        <div class="line" style="margin-top:8px"><span>Received in {{ month_title }} for orders of other months (₾)</span><span class="mono">{{ other_month_orders_received }}</span></div>
+        {% if excluded_orders_received != 0 %}
+        <div class="line"><span>Received for cancelled / refunded orders of {{ month_title }} (₾)</span><span class="mono">{{ excluded_orders_received }}</span></div>
+        {% endif %}
+        <div class="line grand"><span>Fiscal total − orders total (₾)</span><span class="mono">{{ delta }}</span></div>
+        <div class="muted" style="font-size:10px;margin-top:6px">= received for other-month orders + received for excluded orders − this month's orders paid in other months − not yet paid.</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

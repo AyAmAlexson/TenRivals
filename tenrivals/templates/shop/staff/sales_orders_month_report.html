@@ -57,11 +57,14 @@
   .totals .box{ background:#f7f7f7; padding:14px 16px; border:1px solid var(--border); max-width:420px; margin-left:auto; }
   .totals .line{ display:flex; justify-content:space-between; margin:6px 0; gap:16px; }
   .totals .grand{ font-weight:700; border-top:1px dashed var(--border); padding-top:8px; margin-top:8px; }
+  tr.row-excluded td{ color:var(--muted); text-decoration:line-through; }
+  tr.row-excluded td .muted{ text-decoration:none; }
 </style>
 </head>
 <body>
   <div class="controls">
     <a class="btn" href="{% url 'administration:staff_sales_orders' %}">Back to orders</a>
+    <a class="btn" href="{% url 'administration:staff_sales_payments_month_report' %}?year={{ report_year }}&amp;month={{ report_month }}">Fiscal receipts report</a>
     <button type="button" class="btn" onclick="window.print()">Print / Save as PDF</button>
   </div>
 
@@ -73,7 +76,7 @@
         </div>
         <div>
           <h1>Orders — {{ month_title }} {{ report_year }}</h1>
-          <p class="muted" style="margin:8px 0 0;font-size:13px">Retail invoices (VAT-inclusive ₾).</p>
+          <p class="muted" style="margin:8px 0 0;font-size:13px">Retail invoices by order date (VAT-inclusive ₾). Sales view — for cash received and fiscal receipts see the Fiscal receipts report.</p>
         </div>
       </div>
     </div>
@@ -88,23 +91,27 @@
           <th class="num"><div>Gross</div><div class="th-help">₾ inc. VAT</div></th>
           <th class="num"><div>VAT</div><div class="th-help">18%</div></th>
           <th class="num"><div>Net</div></th>
+          <th class="num"><div>Paid</div><div class="th-help">all months</div></th>
           <th><div>Payment</div></th>
         </tr>
       </thead>
       <tbody>
         {% for o in orders %}
-        <tr>
+        {% with excluded=o.report_excluded %}
+        <tr class="{% if excluded %}row-excluded{% endif %}">
           <td class="mono col-invoice">{{ o.invoice_number }}</td>
           <td class="mono">{{ o.fiscal_receipt|default:"—" }}</td>
           <td class="mono">{{ o.order_date|date:"Y-m-d" }}</td>
-          <td>{{ o.get_status_display }}</td>
+          <td>{{ o.get_status_display }}{% if excluded %} <span class="muted">(excluded)</span>{% endif %}</td>
           <td class="mono num">{{ o.gross_total }}</td>
           <td class="mono num">{{ o.vat_total }}</td>
           <td class="mono num">{{ o.net_total }}</td>
+          <td class="mono num">{{ o.paid_total }}{% with st=o.payment_state %}{% if st != 'PAID' %} <span class="muted" title="{{ o.payment_state_display }}">{% if st == 'UNPAID' %}(unpaid){% elif st == 'PARTIAL' %}(due {{ o.balance_due }}){% else %}(over){% endif %}</span>{% endif %}{% endwith %}</td>
           <td>{{ o.payment_method|default:"—"|truncatechars:32 }}</td>
         </tr>
+        {% endwith %}
         {% empty %}
-        <tr><td colspan="8" class="muted">No orders in this month.</td></tr>
+        <tr><td colspan="9" class="muted">No orders in this month.</td></tr>
         {% endfor %}
       </tbody>
     </table>
@@ -114,6 +121,10 @@
         <div class="line"><span>Total gross (₾)</span><span class="mono">{{ total_gross }}</span></div>
         <div class="line"><span>Total VAT (₾)</span><span class="mono">{{ total_vat }}</span></div>
         <div class="line grand"><span>Total net (₾)</span><span class="mono">{{ total_net }}</span></div>
+        {% if excluded_count %}
+        <div class="line muted" style="margin-top:10px"><span>Cancelled / refunded — not in totals ({{ excluded_count }})</span><span class="mono">{{ excluded_gross }}</span></div>
+        {% endif %}
+        <div class="line muted"><span>Received in {{ month_title }} for these orders (₾)</span><span class="mono">{{ paid_in_month }}</span></div>
       </div>
     </div>
   </div>

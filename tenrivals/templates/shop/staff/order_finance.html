@@ -1,7 +1,7 @@
 {% extends 'persons/staff_base.html' %}
 {% block title %}Orders finance — Staff | Tenrivals{% endblock %}
 {% block page_heading %}{{ page_heading }}{% endblock %}
-{% block page_note %}<p class="page-note">Per-order economics (same formulas as Analytics). Cancelled / refunded rows are shown dimmed and excluded from footer totals. Click a row to open the order. Revenue is the customer payment. Net Proceeds = Revenue − VAT − TAX − Acquiring. Gross Profit = Revenue − VAT − COGS. Profit = Net Proceeds − COGS. TAX = {{ tax_rate_pct|floatformat:0 }}% of gross; acquiring = {{ acquiring_rate_pct|floatformat:0 }}% of gross for card payments.</p>{% endblock %}
+{% block page_note %}<p class="page-note">Per-order economics (same formulas as Analytics). Cancelled / refunded rows are shown dimmed and excluded from footer totals. Click a row to open the order. Revenue is the customer payment. Net Proceeds = Revenue − VAT − TAX − Acquiring. Gross Profit = Revenue − VAT − COGS. Profit = Net Proceeds − COGS. TAX = {{ tax_rate_pct|floatformat:0 }}% of gross; acquiring = {{ acquiring_rate_pct|floatformat:0 }}% of the amount actually received by card (per payment / fiscal receipt; unpaid orders carry no acquiring).</p>{% endblock %}
 {% block extra_head %}
 <style>
   .of-filters{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:flex-end;margin-bottom:18px}

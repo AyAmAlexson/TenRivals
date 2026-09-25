@@ -8,7 +8,13 @@ from django.forms import BaseInlineFormSet, inlineformset_factory
 from persons.account_display import normalize_telegram_username
 
 from .customer_sync import sync_customer_to_user
-from .models import Customer, ProductType, SalesOrder, SalesOrderLine
+from .models import (
+    Customer,
+    ProductType,
+    SalesOrder,
+    SalesOrderLine,
+    SalesOrderPayment,
+)
 from .sales_order_currency import normalize_payment_currency
 from .sales_order_stock import (
     product_requires_variant,
@@ -130,8 +136,6 @@ class SalesOrderForm(forms.ModelForm):
             'status',
             'delivery_gross',
             'delivery_cost_gel',
-            'fiscal_receipt',
-            'payment_method',
             'payment_currency',
             'exchange_rate',
             'notes',
@@ -432,4 +436,91 @@ SalesOrderLineFormSet = inlineformset_factory(
     can_delete=True,
     min_num=1,
     validate_min=True,
+)
+
+
+class SalesOrderPaymentForm(forms.ModelForm):
+    """One received payment / fiscal receipt. Negative amount = refund."""
+
+    class Meta:
+        model = SalesOrderPayment
+        fields = ['paid_on', 'amount_gross', 'payment_method', 'fiscal_receipt', 'note']
+        widgets = {
+            'paid_on': forms.DateInput(
+                attrs={'type': 'date', 'class': 'pay-date'},
+            ),
+            'amount_gross': forms.NumberInput(
+                attrs={
+                    'class': 'pay-amount',
+                    'step': '0.01',
+                    'inputmode': 'decimal',
+                    'placeholder': '0.00',
+                }
+            ),
+            'payment_method': forms.TextInput(
+                attrs={
+                    'class': 'pay-method',
+                    'placeholder': 'Cash / Card / Transfer',
+                    'maxlength': '200',
+                    'autocomplete': 'off',
+                    'list': 'payment-method-list',
+                }
+            ),
+            'fiscal_receipt': forms.TextInput(
+                attrs={
+                    'class': 'pay-receipt',
+                    'placeholder': 'Receipt #',
+                    'maxlength': '64',
+                    'autocomplete': 'off',
+                    'spellcheck': 'false',
+                }
+            ),
+            'note': forms.TextInput(
+                attrs={
+                    'class': 'pay-note',
+                    'placeholder': 'e.g. prepayment / balance / refund',
+                    'maxlength': '200',
+                    'autocomplete': 'off',
+                }
+            ),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['paid_on'].label = 'Paid on'
+        self.fields['amount_gross'].label = 'Amount ₾'
+        self.fields['payment_method'].label = 'Method'
+        self.fields['fiscal_receipt'].label = 'Fiscal receipt #'
+        self.fields['note'].label = 'Note'
+
+    def clean(self):
+        cd = super().clean()
+        if cd.get('DELETE'):
+            return cd
+        amount = cd.get('amount_gross')
+        if amount is not None and Decimal(amount).quantize(Decimal('0.01')) == 0:
+            self.add_error('amount_gross', 'Amount cannot be zero (use a negative amount for refunds).')
+        return cd
+
+
+# No formset-wide rule: partial payments, overpayments and refunds are all
+# legitimate states — the order shows Paid / Balance due instead.
+SalesOrderPaymentFormSet = inlineformset_factory(
+    SalesOrder,
+    SalesOrderPayment,
+    form=SalesOrderPaymentForm,
+    extra=0,
+    can_delete=True,
+    min_num=0,
+)
+
+# New-order variant: one pre-filled row (paid in full today) so the common
+# case stays a single click; staff can clear it for unpaid / prepaid orders.
+NewSalesOrderPaymentFormSet = inlineformset_factory(
+    SalesOrder,
+    SalesOrderPayment,
+    form=SalesOrderPaymentForm,
+    extra=1,
+    can_delete=True,
+    min_num=0,
 )

@@ -51,14 +51,6 @@
         {% if form.invoice_number.help_text %}<p class="page-meta" style="margin:6px 0 0;font-size:12px">{{ form.invoice_number.help_text }}</p>{% endif %}
         {% if form.invoice_number.errors %}<div class="field-errors">{{ form.invoice_number.errors }}</div>{% endif %}
       </div>
-      <div class="form-group">
-        <label for="{{ form.fiscal_receipt.id_for_label }}">Fiscal receipt #</label>
-        {{ form.fiscal_receipt }}
-      </div>
-      <div class="form-group">
-        <label for="{{ form.payment_method.id_for_label }}">Payment method</label>
-        {{ form.payment_method }}
-      </div>
     </div>
     <div class="form-row sales-order-currency-row">
       <div class="form-group">
@@ -184,6 +176,46 @@
         <div class="page-meta" style="margin:6px 0 0;font-size:12px">What we pay the courier / contractor. Counts in total landed cost.</div>
       </div>
     </div>
+    <h3 class="card-title" style="font-size:14px">Payments / fiscal receipts</h3>
+    <p class="page-meta" style="margin-bottom:10px;font-size:12px">One row per fiscal receipt — money actually received. Amounts are ₾ incl. VAT; use a <strong>negative</strong> amount for a refund. Prepayment now + balance later = two rows with different dates; the monthly fiscal report groups rows by <strong>Paid on</strong>, while sales analytics keeps using the order date. Leave empty for an order that has not been paid yet.</p>
+    {% if payments_formset.non_form_errors %}<div class="field-errors" style="margin-bottom:8px">{{ payments_formset.non_form_errors }}</div>{% endif %}
+    {{ payments_formset.management_form }}
+    <datalist id="payment-method-list">
+      {% for pm in payment_methods %}<option value="{{ pm }}"></option>{% endfor %}
+    </datalist>
+    <div class="table-wrap order-payments-wrap" style="margin-bottom:12px;width:100%">
+      <table id="payments-table" style="width:100%;table-layout:fixed">
+        <thead>
+          <tr>
+            <th style="width:15%">Paid on</th>
+            <th class="num" style="width:14%">Amount ₾</th>
+            <th style="width:20%">Method</th>
+            <th style="width:19%">Fiscal receipt #</th>
+            <th style="width:24%">Note</th>
+            <th style="width:8%"></th>
+          </tr>
+        </thead>
+        <tbody id="payments-tbody">
+          {% for pf in payments_formset %}
+          <tr class="payment-row{% if not pf.instance.pk and not pf.is_bound %} is-auto-amount{% endif %}" data-form-index="{{ forloop.counter0 }}">
+            {% for hidden in pf.hidden_fields %}{{ hidden }}{% endfor %}
+            <td>{{ pf.paid_on.errors }}{{ pf.paid_on }}</td>
+            <td class="num">{{ pf.amount_gross.errors }}{{ pf.amount_gross }}</td>
+            <td>{{ pf.payment_method.errors }}{{ pf.payment_method }}</td>
+            <td>{{ pf.fiscal_receipt.errors }}{{ pf.fiscal_receipt }}</td>
+            <td>{{ pf.note.errors }}{{ pf.note }}</td>
+            <td>
+              <label class="sales-line-check sales-line-check--remove" title="Remove this payment when you save the order">
+                {% if pf.DELETE %}{{ pf.DELETE }} <span>Remove</span>{% endif %}
+              </label>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <button type="button" class="btn btn--sm btn--outline" id="btn-add-payment" style="margin-bottom:20px">+ Add payment</button>
+
     <div class="form-group">
       <label for="{{ form.notes.id_for_label }}">Notes</label>
       {{ form.notes }}
@@ -193,6 +225,8 @@
       <div class="form-group" style="margin:0;display:flex;justify-content:space-between;gap:12px"><span>Total gross</span><span class="mono" id="sum-gross">0.00</span></div>
       <div class="form-group" style="margin:0;display:flex;justify-content:space-between;gap:12px"><span>Total VAT</span><span class="mono" id="sum-vat">0.00</span></div>
       <div class="form-group" style="margin:0;display:flex;justify-content:space-between;gap:12px;font-weight:700"><span>Total net</span><span class="mono" id="sum-net">0.00</span></div>
+      <div class="form-group" style="margin:8px 0 0;padding-top:8px;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:12px"><span>Paid</span><span class="mono" id="sum-paid">0.00</span></div>
+      <div class="form-group" style="margin:0;display:flex;justify-content:space-between;gap:12px"><span>Balance due</span><span class="mono" id="sum-due">0.00</span></div>
       <div class="form-group" style="margin:8px 0 0;padding-top:8px;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:12px;color:var(--muted)" title="Staff-only: product landed costs + service costs + delivery cost. Not shown to the customer."><span>Total landed cost</span><span class="mono" id="sum-landed">0.00</span></div>
     </div>
 
@@ -264,8 +298,33 @@
 </div>
 </div>
 
+<table id="empty-payment-template" hidden>
+  <tbody>
+  {% with pf=payments_formset.empty_form %}
+  <tr class="payment-row">
+    {% for hidden in pf.hidden_fields %}{{ hidden }}{% endfor %}
+    <td>{{ pf.paid_on }}</td>
+    <td class="num">{{ pf.amount_gross }}</td>
+    <td>{{ pf.payment_method }}</td>
+    <td>{{ pf.fiscal_receipt }}</td>
+    <td>{{ pf.note }}</td>
+    <td>
+      <label class="sales-line-check sales-line-check--remove" title="Remove this payment when you save the order">
+        {{ pf.DELETE }} <span>Remove</span>
+      </label>
+    </td>
+  </tr>
+  {% endwith %}
+  </tbody>
+</table>
+
 <style>
   .num{text-align:right}
+  .order-payments-wrap table input{width:100%;box-sizing:border-box;font-size:13px;padding:6px 8px;border:1px solid var(--line);font-family:inherit}
+  .order-payments-wrap table input.pay-amount{text-align:right}
+  .order-payments-wrap table td{vertical-align:middle}
+  .order-payments-wrap .payment-row.is-marked-remove input{opacity:.45}
+  .order-payments-wrap .payment-row.is-auto-amount input.pay-amount{background:#f9fafb}
   .sales-lines{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
   .sales-line-card{
     border:1px solid var(--line);
@@ -466,6 +525,77 @@
       }
     }
   }
+  // ---- Payments -----------------------------------------------------------
+  // A row flagged .is-auto-amount (the pre-filled row on a new order) mirrors
+  // the order total until staff types an amount by hand.
+  const paymentsBody = document.getElementById('payments-tbody');
+  const paymentsTotalInput = document.getElementById('id_payments-TOTAL_FORMS');
+  function paymentRowActive(tr){
+    const del = tr.querySelector('input[name$="-DELETE"]');
+    const marked = !!(del && del.checked);
+    tr.classList.toggle('is-marked-remove', marked);
+    return !marked;
+  }
+  function syncPayments(totalGross){
+    let paid = 0;
+    if(!paymentsBody) return;
+    paymentsBody.querySelectorAll('tr.payment-row').forEach(function(tr){
+      const amt = tr.querySelector('input.pay-amount');
+      if(tr.classList.contains('is-auto-amount') && amt){
+        amt.value = totalGross > 0 ? fmt(totalGross) : '';
+      }
+      if(!paymentRowActive(tr)) return;
+      paid += parseNum(amt && amt.value);
+    });
+    const paidEl = document.getElementById('sum-paid');
+    const dueEl = document.getElementById('sum-due');
+    if(paidEl) paidEl.textContent = fmt(paid);
+    if(dueEl){
+      const due = totalGross - paid;
+      dueEl.textContent = fmt(due);
+      dueEl.style.color = Math.abs(due) < 0.005 ? '' : (due > 0 ? '#b45309' : '#b91c1c');
+    }
+  }
+  function bindPaymentRow(tr){
+    const amt = tr.querySelector('input.pay-amount');
+    if(amt){
+      // Manual edit → stop mirroring the order total.
+      ['input','change','keydown','paste'].forEach(function(ev){
+        amt.addEventListener(ev, function(){ tr.classList.remove('is-auto-amount'); recalcTotals(); });
+      });
+    }
+    tr.querySelectorAll('input').forEach(function(el){
+      if(el === amt) return;
+      el.addEventListener('change', recalcTotals);
+    });
+  }
+  if(paymentsBody){
+    paymentsBody.querySelectorAll('tr.payment-row').forEach(bindPaymentRow);
+    const addPayBtn = document.getElementById('btn-add-payment');
+    if(addPayBtn && paymentsTotalInput){
+      addPayBtn.addEventListener('click', function(){
+        const idx = parseInt(paymentsTotalInput.value, 10);
+        const tmpl = document.getElementById('empty-payment-template').querySelector('tr.payment-row');
+        const clone = tmpl.cloneNode(true);
+        clone.querySelectorAll('[name]').forEach(function(el){
+          el.name = (el.name||'').replace('__prefix__', String(idx));
+          if(el.id) el.id = el.id.replace('__prefix__', String(idx));
+        });
+        const dateEl = clone.querySelector('input.pay-date');
+        if(dateEl && !dateEl.value){
+          const od = document.getElementById('id_order_date');
+          dateEl.value = (od && od.value) || new Date().toISOString().slice(0,10);
+        }
+        paymentsBody.appendChild(clone);
+        paymentsTotalInput.value = String(idx+1);
+        bindPaymentRow(clone);
+        recalcTotals();
+        const amt = clone.querySelector('input.pay-amount');
+        if(amt) amt.focus();
+      });
+    }
+  }
+
   function recalcTotals(){
     let sumG = 0;
     let sumLanded = 0;
@@ -496,6 +626,7 @@
     document.getElementById('sum-gross').textContent = fmt(t.gross);
     document.getElementById('sum-vat').textContent = fmt(t.vat);
     document.getElementById('sum-net').textContent = fmt(t.net);
+    syncPayments(t.gross);
     syncServicesJson();
     syncCurrencyUi();
     const cur = (currencyEl && currencyEl.value || 'GEL').toUpperCase();

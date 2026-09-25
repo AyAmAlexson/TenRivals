@@ -119,6 +119,11 @@ urlpatterns = [
         name="staff_sales_orders_month_report",
     ),
     path(
+        "orders/report/fiscal/",
+        staff_sales_views.staff_sales_payments_month_report,
+        name="staff_sales_payments_month_report",
+    ),
+    path(
         "orders/sequence/",
         staff_sales_views.staff_sales_invoice_sequence_set,
         name="staff_sales_invoice_sequence_set",

@@ -4,7 +4,9 @@ Canonical product/order metrics:
     Revenue        = customer payment (VAT-inclusive gross_total)
     VAT            = included 18% (stored vat_total)
     TAX            = 1% turnover tax on gross
-    Acquiring      = 2% of gross for card payments (payment_method heuristic)
+    Acquiring      = 2% of the money actually received by card — summed over
+                     the order's payments (each payment's method decides;
+                     refunds are negative). Unpaid orders carry no acquiring.
     COGS           = Σ qty × landed_cost_gel over lines with a known cost
                    + Σ service contractor costs + delivery_cost_gel
     Net Revenue    = Revenue − VAT
@@ -64,6 +66,34 @@ def _q2(x: Decimal) -> Decimal:
 def is_card_payment(payment_method: str) -> bool:
     pm = (payment_method or '').lower()
     return any(m in pm for m in _CARD_MARKERS)
+
+
+def order_card_revenue(order: SalesOrder) -> Decimal:
+    """Σ payments whose method looks like a card (refunds subtract).
+
+    `order.payments` should be prefetched by callers iterating many orders.
+    """
+    total = Decimal('0.00')
+    for p in order.payments.all():
+        if is_card_payment(p.payment_method):
+            total += p.amount_gross or Decimal('0.00')
+    return _q2(total)
+
+
+def order_acquiring(order: SalesOrder) -> tuple[Decimal, Decimal]:
+    """(acquiring fee, card revenue) for one order, from its payments."""
+    card_revenue = order_card_revenue(order)
+    return _q2(card_revenue * ACQUIRING_RATE), card_revenue
+
+
+def order_card_ratio(raw: dict) -> Decimal:
+    """Share of order revenue collected by card — used to spread acquiring
+    over line items when an order mixes card and cash."""
+    revenue = raw.get('revenue') or Decimal('0')
+    if revenue <= 0:
+        return Decimal('0')
+    ratio = (raw.get('card_revenue') or Decimal('0')) / revenue
+    return min(max(ratio, Decimal('0')), Decimal('1'))
 
 
 def _bucket_start(d: date, granularity: str) -> date:
@@ -171,8 +201,7 @@ def compute_order_economics(order: SalesOrder) -> dict:
     # Contractor costs for services + delivery (stored on the order only).
     cogs += order_services_and_delivery_cogs(order)
     tax = _q2(gross * TURNOVER_TAX_RATE)
-    card = is_card_payment(order.payment_method)
-    acquiring = _q2(gross * ACQUIRING_RATE) if card else Decimal('0.00')
+    acquiring, card_revenue = order_acquiring(order)
     raw = {
         'orders': 1,
         'revenue': gross,
@@ -182,7 +211,7 @@ def compute_order_economics(order: SalesOrder) -> dict:
         'cogs': _q2(cogs),
         'covered_gross': covered_gross,
         'product_gross': product_gross,
-        'card_revenue': gross if card else Decimal('0.00'),
+        'card_revenue': card_revenue,
         'items': items,
     }
     raw.update(_derived_money(raw))
@@ -321,7 +350,8 @@ def build_sales_analytics(
             Prefetch(
                 'lines',
                 queryset=SalesOrderLine.objects.select_related('product').order_by('id'),
-            )
+            ),
+            'payments',
         )
         .order_by('order_date', 'id')
     )
@@ -351,6 +381,7 @@ def build_sales_analytics(
     for o in orders:
         raw = compute_order_economics(o)
         m = _finalize_metrics(dict(raw))
+        card_ratio = order_card_ratio(raw)
         _add_metrics(totals, raw)
         b = _bucket_start(o.order_date, granularity)
         if b not in buckets:
@@ -422,11 +453,8 @@ def build_sales_analytics(
                 plabel = line.display_title()
                 line_gross_profit = line_net - line_cogs
                 line_tax = _q2(line_gross * TURNOVER_TAX_RATE)
-                line_acq = (
-                    _q2(line_gross * ACQUIRING_RATE)
-                    if is_card_payment(o.payment_method)
-                    else Decimal('0.00')
-                )
+                # Mixed card/cash orders: spread acquiring by the card share.
+                line_acq = _q2(line_gross * ACQUIRING_RATE * card_ratio)
                 line_profit = _q2(line_gross_profit - line_tax - line_acq)
                 prow = product_rows.setdefault(
                     plabel,
@@ -677,7 +705,8 @@ def build_current_month_metrics(today: date | None = None) -> dict:
                     'line_gross',
                     'landed_cost_gel',
                 ),
-            )
+            ),
+            'payments',
         )
     )
     totals = _zero_metrics()
@@ -781,7 +810,8 @@ def build_order_finance_table(
                     'line_gross',
                     'landed_cost_gel',
                 ),
-            )
+            ),
+            'payments',
         )
     )
     q = (invoice_q or '').strip()

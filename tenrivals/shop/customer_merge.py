@@ -258,8 +258,12 @@ def merge_customers(
     if survivor.pk == donor.pk:
         raise ValueError('Survivor and donor must be different customers.')
 
-    survivor = Customer.objects.select_related('user').select_for_update().get(pk=survivor.pk)
-    donor = Customer.objects.select_related('user').select_for_update().get(pk=donor.pk)
+    # Lock only the customer rows: `user` is a nullable OneToOne joined via
+    # LEFT OUTER JOIN, and PostgreSQL rejects FOR UPDATE on the nullable side
+    # of an outer join unless the locked tables are restricted with `of`.
+    locked = Customer.objects.select_related('user').select_for_update(of=('self',))
+    survivor = locked.get(pk=survivor.pk)
+    donor = locked.get(pk=donor.pk)
 
     conflicts = {c.field: c for c in find_field_conflicts(survivor, donor)}
     note_lines: list[str] = [
