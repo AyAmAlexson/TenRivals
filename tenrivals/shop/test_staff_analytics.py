@@ -1,10 +1,15 @@
 from datetime import date
 from decimal import Decimal
 
-from django.test import TestCase
+from django.contrib.auth import get_user_model
+from django.test import TestCase, override_settings
+from django.urls import reverse
 
 from shop.models import (
     Customer,
+    Product,
+    ProductListing,
+    ProductListingChannel,
     ProductType,
     SalesOrder,
     SalesOrderLine,
@@ -14,8 +19,71 @@ from shop.staff_analytics import (
     _finalize_metrics,
     build_sales_analytics,
     compute_order_economics,
+    expected_unit_economics,
     order_card_ratio,
 )
+
+
+class ExpectedUnitEconomicsTests(TestCase):
+    def test_spec_example(self):
+        # 700 ₾ shelf price, 450 ₾ landed: net 593.22, tax 7, profit 136.22
+        eco = expected_unit_economics(Decimal('700.00'), Decimal('450.00'))
+        self.assertEqual(eco['net'], Decimal('593.22'))
+        self.assertEqual(eco['tax'], Decimal('7.00'))
+        self.assertEqual(eco['profit'], Decimal('136.22'))
+        self.assertEqual(eco['roi_pct'], Decimal('30.27'))
+        self.assertEqual(eco['margin_pct'], Decimal('19.46'))
+
+    def test_unknown_or_zero_cost_gives_none(self):
+        self.assertIsNone(expected_unit_economics(Decimal('100'), None)['roi_pct'])
+        self.assertIsNone(expected_unit_economics(Decimal('100'), Decimal('0'))['roi_pct'])
+        self.assertIsNone(expected_unit_economics(None, Decimal('10'))['roi_pct'])
+
+    def test_negative_roi_when_price_below_cost(self):
+        eco = expected_unit_economics(Decimal('118.00'), Decimal('120.00'))
+        self.assertEqual(eco['profit'], Decimal('-21.18'))
+        self.assertLess(eco['roi_pct'], 0)
+
+
+@override_settings(SECURE_SSL_REDIRECT=False)
+class StaffStockListEconomicsTests(TestCase):
+    def setUp(self):
+        User = get_user_model()
+        staff = User.objects.create_superuser(email='stock-eco@test.com', password='x-secret-1')
+        self.client.force_login(staff)
+        self.product = Product.objects.create(
+            type=ProductType.ACCESSORIES,
+            name='ROI Grip',
+            initial_price=Decimal('100.00'),
+            actual_price=Decimal('80.00'),
+            landed_cost_gel=Decimal('40.00'),
+            in_stock=True,
+            is_active=True,
+        )
+        ProductListing.objects.create(
+            product=self.product, channel=ProductListingChannel.STOCK, quantity=3
+        )
+
+    def test_stock_rows_show_cost_prices_and_roi(self):
+        resp = self.client.get(reverse('administration:staff_stock'))
+        self.assertEqual(resp.status_code, 200)
+        row = resp.context['listings'][0]
+        # Sells at the discounted 80: net 67.80 − tax 0.80 − cost 40 = 27.00 → 67.5%
+        self.assertEqual(row.sell_price, Decimal('80.00'))
+        self.assertTrue(row.has_discount)
+        self.assertEqual(row.expected_profit, Decimal('27.00'))
+        self.assertEqual(row.expected_roi_pct, Decimal('67.50'))
+        self.assertContains(resp, '67.50%')
+        self.assertContains(resp, 'price-struck')
+        self.assertContains(resp, 'Initial ₾')
+
+    def test_preorder_page_has_no_economics_columns(self):
+        ProductListing.objects.create(
+            product=self.product, channel=ProductListingChannel.PREORDER, quantity=1
+        )
+        resp = self.client.get(reverse('administration:staff_preorder'))
+        self.assertEqual(resp.status_code, 200)
+        self.assertNotContains(resp, 'Initial ₾')
 
 
 class FinancialMetricsTests(TestCase):

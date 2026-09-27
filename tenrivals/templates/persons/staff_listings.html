@@ -6,7 +6,13 @@
 {% block extra_head %}
 <style>
   .staff-listings .col-sizes{max-width:220px;font-size:12px;line-height:1.35;color:var(--muted);word-break:break-word}
-  .staff-listings .num{text-align:right}
+  .staff-listings .num{text-align:right;white-space:nowrap}
+  .staff-listings .muted{color:var(--muted)}
+  .staff-listings .price-struck{color:var(--muted);text-decoration:line-through}
+  .staff-listings .roi{font-weight:700;cursor:help}
+  .staff-listings .roi--ok{color:#15803d}
+  .staff-listings .roi--low{color:#b45309}
+  .staff-listings .roi--neg{color:#b91c1c}
   .bulk-toolbar{display:inline-flex;align-items:center;gap:8px}
   .confirm-overlay{
     position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;
@@ -99,7 +105,12 @@
             <th>SKU</th>
             <th>Type</th>
             <th title="Sorted by quantity, high to low">Qty</th>
-            {% if listing_channel == 'STOCK' %}<th class="num" title="Weighted-average landed cost per unit (staff-only)">Cost ₾</th>{% endif %}
+            {% if listing_channel == 'STOCK' %}
+            <th class="num" title="Weighted-average landed cost per unit (staff-only)">Cost ₾</th>
+            <th class="num" title="Initial (list) price, VAT incl.">Initial ₾</th>
+            <th class="num" title="Discounted price, VAT incl. — empty when the product has no discount">Disc. ₾</th>
+            <th class="num" title="Expected ROI per unit at the current selling price: (price ÷ 1.18 − 1% tax − cost) ÷ cost. Before acquiring. Hover a value for profit / margin.">ROI %</th>
+            {% endif %}
             <th>Actions</th>
           </tr>
         </thead>
@@ -119,7 +130,18 @@
             <td class="mono">{{ row.product.sku|default:"—" }}</td>
             <td>{{ row.product.get_type_display }}</td>
             <td>{{ row.quantity }}</td>
-            {% if listing_channel == 'STOCK' %}<td class="mono num">{{ row.product.landed_cost_gel|default:"—" }}</td>{% endif %}
+            {% if listing_channel == 'STOCK' %}
+            <td class="mono num">{{ row.product.landed_cost_gel|default:"—" }}</td>
+            <td class="mono num{% if row.has_discount %} price-struck{% endif %}">{{ row.product.initial_price }}</td>
+            <td class="mono num">{% if row.product.actual_price is not None %}{{ row.product.actual_price }}{% else %}<span class="muted">—</span>{% endif %}</td>
+            <td class="mono num">
+              {% if row.expected_roi_pct is not None %}
+              <span class="roi {% if row.expected_roi_pct < 0 %}roi--neg{% elif row.expected_roi_pct < 20 %}roi--low{% else %}roi--ok{% endif %}" title="Sell {{ row.sell_price }} ₾ → profit {{ row.expected_profit }} ₾ / unit (margin {{ row.expected_margin_pct }}%), before acquiring">{{ row.expected_roi_pct }}%</span>
+              {% else %}
+              <span class="muted" title="No landed cost yet — receive a batch to set it">—</span>
+              {% endif %}
+            </td>
+            {% endif %}
             <td>
               <div class="action-icons">
                 {% if listing_channel == 'STOCK' %}
@@ -154,7 +176,7 @@
             </td>
           </tr>
           {% empty %}
-          <tr><td colspan="{% if listing_channel == 'STOCK' %}11{% else %}10{% endif %}">{% if search_q or type_filter %}No rows match this filter. <a href="{{ request.path }}">Show all</a>{% else %}No listings yet. Add a product with this channel, or import from shop admin.{% endif %}</td></tr>
+          <tr><td colspan="{% if listing_channel == 'STOCK' %}14{% else %}10{% endif %}">{% if search_q or type_filter %}No rows match this filter. <a href="{{ request.path }}">Show all</a>{% else %}No listings yet. Add a product with this channel, or import from shop admin.{% endif %}</td></tr>
           {% endfor %}
         </tbody>
       </table>

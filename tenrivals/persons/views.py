@@ -1145,6 +1145,21 @@ def _staff_listings_page(request, channel: str, nav_key: str):
             | Q(product__type__icontains=search_q)
         )
     listings = listings.order_by("-quantity", "product__name", "product__id")
+    if channel == ProductListingChannel.STOCK:
+        # Staff-only unit economics per row: avg landed cost vs shelf price.
+        from shop.sales_order_utils import product_unit_gross_price
+        from shop.staff_analytics import expected_unit_economics
+
+        listings = list(listings)
+        for row in listings:
+            p = row.product
+            sell = product_unit_gross_price(p)
+            eco = expected_unit_economics(sell, p.landed_cost_gel)
+            row.sell_price = sell
+            row.has_discount = p.actual_price is not None and p.actual_price < p.initial_price
+            row.expected_profit = eco["profit"]
+            row.expected_roi_pct = eco["roi_pct"]
+            row.expected_margin_pct = eco["margin_pct"]
 
     type_counts = {
         row["product__type"]: row["n"]

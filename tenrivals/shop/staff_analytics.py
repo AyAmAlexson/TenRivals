@@ -86,6 +86,35 @@ def order_acquiring(order: SalesOrder) -> tuple[Decimal, Decimal]:
     return _q2(card_revenue * ACQUIRING_RATE), card_revenue
 
 
+def expected_unit_economics(price_gross: Decimal | None, landed_cost: Decimal | None) -> dict:
+    """Forecast for one unit sitting in stock, using the same formulas as the
+    sales dashboard but *before* acquiring (payment method unknown yet):
+
+        net    = price ÷ 1.18
+        tax    = price × 1%
+        profit = net − tax − cost
+        roi    = profit ÷ cost
+
+    Returns Decimals (or None where cost / price is unknown or zero).
+    """
+    from .sales_order_utils import gross_split_vat_net
+
+    if price_gross is None or landed_cost is None or landed_cost <= 0:
+        return {'net': None, 'tax': None, 'profit': None, 'roi_pct': None, 'margin_pct': None}
+    price = Decimal(price_gross)
+    cost = Decimal(landed_cost)
+    net, _vat = gross_split_vat_net(price)
+    tax = _q2(price * TURNOVER_TAX_RATE)
+    profit = _q2(net - tax - cost)
+    return {
+        'net': net,
+        'tax': tax,
+        'profit': profit,
+        'roi_pct': (profit / cost * 100).quantize(_Q2),
+        'margin_pct': (profit / price * 100).quantize(_Q2) if price else None,
+    }
+
+
 def order_card_ratio(raw: dict) -> Decimal:
     """Share of order revenue collected by card — used to spread acquiring
     over line items when an order mixes card and cash."""
