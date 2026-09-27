@@ -5,14 +5,42 @@
 {% block page_note %}<p class="page-note">{{ page_note }}</p>{% endblock %}
 {% block extra_head %}
 <style>
-  .staff-listings .col-sizes{max-width:220px;font-size:12px;line-height:1.35;color:var(--muted);word-break:break-word}
+  .staff-listings .table-wrap{overflow:hidden;border:1px solid var(--line)}
+  .staff-listings table{min-width:0;width:100%;table-layout:fixed}
+  .staff-listings th,.staff-listings td{padding:7px 6px;vertical-align:top;overflow-wrap:anywhere}
+  .staff-listings .col-check{width:28px}
+  .staff-listings .col-type{width:78px;font-size:12px;line-height:1.3}
+  .staff-listings .col-id{width:40px}
+  .staff-listings .col-brand{width:72px}
+  .staff-listings .col-product{width:22%}
+  .staff-listings .col-color{width:68px}
+  .staff-listings .col-sizes{width:88px;font-size:11px;line-height:1.3;color:var(--muted)}
+  .staff-listings .col-qty{width:40px}
+  .staff-listings .col-cost,.staff-listings .col-price{width:58px}
+  .staff-listings .col-roi{width:46px}
+  .staff-listings .col-actions{width:92px}
+  .staff-listings .item-sku{display:block;font-size:10px;line-height:1.2;color:var(--muted);letter-spacing:.02em;margin-bottom:2px;word-break:break-all}
+  .staff-listings .item-name{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden;line-height:1.3}
   .staff-listings .num{text-align:right;white-space:nowrap}
   .staff-listings .muted{color:var(--muted)}
-  .staff-listings .price-struck{color:var(--muted);text-decoration:line-through}
+  .staff-listings .price-stack{display:flex;flex-direction:column;align-items:flex-end;gap:1px;line-height:1.25}
+  .staff-listings .price-struck{color:var(--muted);text-decoration:line-through;font-size:11px}
   .staff-listings .roi{font-weight:700;cursor:help}
   .staff-listings .roi--ok{color:#15803d}
   .staff-listings .roi--low{color:#b45309}
   .staff-listings .roi--neg{color:#b91c1c}
+  .staff-listings th.sortable a{color:inherit;text-decoration:none;display:inline-flex;align-items:center;gap:3px}
+  .staff-listings th.sortable a:hover{color:var(--ink)}
+  .staff-listings th.is-sorted a{color:var(--ink)}
+  .staff-listings .sort-mark{font-size:9px;opacity:.7}
+  .staff-listings .action-icons{flex-wrap:nowrap;gap:2px}
+  .staff-listings .icon-btn{width:22px;height:22px;border:none;background:transparent;color:#64748b}
+  .staff-listings .icon-btn svg{width:15px;height:15px;stroke-width:1.5}
+  .staff-listings .icon-btn:hover{background:transparent;border:none;color:var(--ink)}
+  .staff-listings .icon-btn--accent{background:transparent;border:none;color:var(--accent)}
+  .staff-listings .icon-btn--accent:hover{background:transparent;border:none;color:var(--accent-dark)}
+  .staff-listings .icon-btn--danger{border:none;color:#b91c1c}
+  .staff-listings .icon-btn--danger:hover{background:transparent;color:#991b1b}
   .bulk-toolbar{display:inline-flex;align-items:center;gap:8px}
   .confirm-overlay{
     position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;
@@ -65,6 +93,8 @@
       <input type="hidden" name="action" value="backfill_listings">
       <input type="hidden" name="return_q" value="{{ search_q }}">
       {% if type_filter %}<input type="hidden" name="return_type" value="{{ type_filter }}">{% endif %}
+      <input type="hidden" name="return_sort" value="{{ sort }}">
+      <input type="hidden" name="return_dir" value="{{ direction }}">
       <button type="submit" class="btn btn--sm btn--outline">Add all active products</button>
     </form>
     <div class="bulk-toolbar">
@@ -73,19 +103,21 @@
     </div>
     <form method="get" action="" style="display:inline-flex;gap:8px;align-items:center;margin-left:auto">
       {% if type_filter %}<input type="hidden" name="type" value="{{ type_filter }}">{% endif %}
+      <input type="hidden" name="sort" value="{{ sort }}">
+      <input type="hidden" name="dir" value="{{ direction }}">
       <input type="search" name="q" value="{{ search_q }}" placeholder="Brand, name, SKU, type, color…" aria-label="Filter listings" style="min-width:200px;max-width:320px;padding:8px 10px;border:1px solid var(--line);font-family:inherit;font-size:14px">
       <button type="submit" class="btn btn--sm">Search</button>
       {% if search_q %}
-      <a href="{% if type_filter %}?type={{ type_filter|urlencode }}{% else %}{{ request.path }}{% endif %}" class="btn btn--sm btn--outline">Clear</a>
+      <a href="{{ clear_search_href }}" class="btn btn--sm btn--outline">Clear</a>
       {% endif %}
     </form>
   </div>
 
   {% if product_type_filters %}
   <div class="type-switch" role="group" aria-label="Product category">
-    <a href="{% if search_q %}?q={{ search_q|urlencode }}{% else %}{{ request.path }}{% endif %}" class="{% if not type_filter %}is-active{% endif %}">All</a>
+    <a href="{{ type_all_href }}" class="{% if not type_filter %}is-active{% endif %}">All</a>
     {% for t in product_type_filters %}
-    <a href="?type={{ t.value|urlencode }}{% if search_q %}&amp;q={{ search_q|urlencode }}{% endif %}" class="{% if type_filter == t.value %}is-active{% endif %}">{{ t.label }} <span class="count">{{ t.count }}</span></a>
+    <a href="{{ t.href }}" class="{% if type_filter == t.value %}is-active{% endif %}">{{ t.label }} <span class="count">{{ t.count }}</span></a>
     {% endfor %}
   </div>
   {% endif %}
@@ -96,61 +128,61 @@
       <table>
         <thead>
           <tr>
-            <th style="width:1%;white-space:nowrap"><input type="checkbox" id="select-all-listings" aria-label="Select all listings"></th>
-            <th>ID</th>
-            <th>Brand</th>
-            <th>Product</th>
-            <th>Color</th>
-            <th class="col-sizes">Sizes</th>
-            <th>SKU</th>
-            <th>Type</th>
-            <th title="Sorted by quantity, high to low">Qty</th>
+            <th class="col-check"><input type="checkbox" id="select-all-listings" aria-label="Select all listings"></th>
+            <th class="col-type sortable{% if sort == 'type' %} is-sorted{% endif %}"><a href="{{ sort_hrefs.type }}">Type{% if sort == 'type' %}<span class="sort-mark">{% if direction == 'asc' %}▲{% else %}▼{% endif %}</span>{% endif %}</a></th>
+            <th class="col-id sortable{% if sort == 'id' %} is-sorted{% endif %}"><a href="{{ sort_hrefs.id }}">ID{% if sort == 'id' %}<span class="sort-mark">{% if direction == 'asc' %}▲{% else %}▼{% endif %}</span>{% endif %}</a></th>
+            <th class="col-brand sortable{% if sort == 'brand' %} is-sorted{% endif %}"><a href="{{ sort_hrefs.brand }}">Brand{% if sort == 'brand' %}<span class="sort-mark">{% if direction == 'asc' %}▲{% else %}▼{% endif %}</span>{% endif %}</a></th>
+            <th class="col-product sortable{% if sort == 'product' %} is-sorted{% endif %}"><a href="{{ sort_hrefs.product }}">Product{% if sort == 'product' %}<span class="sort-mark">{% if direction == 'asc' %}▲{% else %}▼{% endif %}</span>{% endif %}</a></th>
+            <th class="col-color sortable{% if sort == 'color' %} is-sorted{% endif %}"><a href="{{ sort_hrefs.color }}">Color{% if sort == 'color' %}<span class="sort-mark">{% if direction == 'asc' %}▲{% else %}▼{% endif %}</span>{% endif %}</a></th>
+            <th class="col-sizes sortable{% if sort == 'sizes' %} is-sorted{% endif %}"><a href="{{ sort_hrefs.sizes }}">Sizes{% if sort == 'sizes' %}<span class="sort-mark">{% if direction == 'asc' %}▲{% else %}▼{% endif %}</span>{% endif %}</a></th>
+            <th class="col-qty num sortable{% if sort == 'qty' %} is-sorted{% endif %}"><a href="{{ sort_hrefs.qty }}">Qty{% if sort == 'qty' %}<span class="sort-mark">{% if direction == 'asc' %}▲{% else %}▼{% endif %}</span>{% endif %}</a></th>
             {% if listing_channel == 'STOCK' %}
-            <th class="num" title="Weighted-average landed cost per unit (staff-only)">Cost ₾</th>
-            <th class="num" title="Initial (list) price, VAT incl.">Initial ₾</th>
-            <th class="num" title="Discounted price, VAT incl. — empty when the product has no discount">Disc. ₾</th>
-            <th class="num" title="Expected ROI per unit at the current selling price: (price ÷ 1.18 − 1% tax − cost) ÷ cost. Before acquiring. Hover a value for profit / margin.">ROI %</th>
+            <th class="col-cost num sortable{% if sort == 'cost' %} is-sorted{% endif %}" title="Weighted-average landed cost per unit (staff-only)"><a href="{{ sort_hrefs.cost }}">Cost ₾{% if sort == 'cost' %}<span class="sort-mark">{% if direction == 'asc' %}▲{% else %}▼{% endif %}</span>{% endif %}</a></th>
+            <th class="col-price num sortable{% if sort == 'price' %} is-sorted{% endif %}" title="Initial list price, VAT incl. Discounted price is shown underneath when set."><a href="{{ sort_hrefs.price }}">Price ₾{% if sort == 'price' %}<span class="sort-mark">{% if direction == 'asc' %}▲{% else %}▼{% endif %}</span>{% endif %}</a></th>
+            <th class="col-roi num sortable{% if sort == 'roi' %} is-sorted{% endif %}" title="Expected ROI per unit at the current selling price: (price ÷ 1.18 − 1% tax − cost) ÷ cost. Before acquiring. Hover a value for profit / margin."><a href="{{ sort_hrefs.roi }}">ROI{% if sort == 'roi' %}<span class="sort-mark">{% if direction == 'asc' %}▲{% else %}▼{% endif %}</span>{% endif %}</a></th>
             {% endif %}
-            <th>Actions</th>
+            <th class="col-actions">Actions</th>
           </tr>
         </thead>
         <tbody>
           {% for row in listings %}
           <tr>
-            <td><input type="checkbox" class="listing-select" value="{{ row.pk }}" aria-label="Select listing {{ row.pk }}"></td>
-            <td class="mono">{{ row.pk }}</td>
-            <td>{{ row.product.brand|default:"—" }}</td>
-            <td>
-              <div class="cell-inline">
-                <span class="cell-text">{{ row.product.name }}</span>
-              </div>
+            <td class="col-check"><input type="checkbox" class="listing-select" value="{{ row.pk }}" aria-label="Select listing {{ row.pk }}"></td>
+            <td class="col-type">{{ row.product.get_type_display }}</td>
+            <td class="mono col-id">{{ row.pk }}</td>
+            <td class="col-brand">{{ row.product.brand|default:"—" }}</td>
+            <td class="col-product">
+              {% if row.product.sku %}<span class="item-sku">{{ row.product.sku }}</span>{% endif %}
+              <span class="item-name">{{ row.product.name }}</span>
             </td>
-            <td>{{ row.product.color|default:"—" }}</td>
+            <td class="col-color">{{ row.product.color|default:"—" }}</td>
             <td class="col-sizes mono">{{ row.product.staff_listing_size_summary|default:"—" }}</td>
-            <td class="mono">{{ row.product.sku|default:"—" }}</td>
-            <td>{{ row.product.get_type_display }}</td>
-            <td>{{ row.quantity }}</td>
+            <td class="col-qty num">{{ row.quantity }}</td>
             {% if listing_channel == 'STOCK' %}
-            <td class="mono num">{{ row.product.landed_cost_gel|default:"—" }}</td>
-            <td class="mono num{% if row.has_discount %} price-struck{% endif %}">{{ row.product.initial_price }}</td>
-            <td class="mono num">{% if row.product.actual_price is not None %}{{ row.product.actual_price }}{% else %}<span class="muted">—</span>{% endif %}</td>
-            <td class="mono num">
-              {% if row.expected_roi_pct is not None %}
-              <span class="roi {% if row.expected_roi_pct < 0 %}roi--neg{% elif row.expected_roi_pct < 20 %}roi--low{% else %}roi--ok{% endif %}" title="Sell {{ row.sell_price }} ₾ → profit {{ row.expected_profit }} ₾ / unit (margin {{ row.expected_margin_pct }}%), before acquiring">{{ row.expected_roi_pct }}%</span>
+            <td class="mono num col-cost">{{ row.product.landed_cost_gel|default:"—" }}</td>
+            <td class="mono num col-price">
+              <span class="price-stack">
+                <span{% if row.has_discount %} class="price-struck"{% endif %}>{{ row.product.initial_price }}</span>
+                {% if row.has_discount %}<span>{{ row.product.actual_price }}</span>{% endif %}
+              </span>
+            </td>
+            <td class="mono num col-roi">
+              {% if row.expected_roi_int is not None %}
+              <span class="roi {% if row.expected_roi_pct < 0 %}roi--neg{% elif row.expected_roi_pct < 20 %}roi--low{% else %}roi--ok{% endif %}" title="Sell {{ row.sell_price }} ₾ → profit {{ row.expected_profit }} ₾ / unit (margin {{ row.expected_margin_pct }}%), before acquiring">{{ row.expected_roi_int }}%</span>
               {% else %}
               <span class="muted" title="No landed cost yet — receive a batch to set it">—</span>
               {% endif %}
             </td>
             {% endif %}
-            <td>
+            <td class="col-actions">
               <div class="action-icons">
                 {% if listing_channel == 'STOCK' %}
                 <a class="icon-btn" href="{% url 'administration:staff_stock_receive' %}?product={{ row.product.pk }}" title="Receive batch (landed cost)" aria-label="Receive batch">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                 </a>
                 {% endif %}
                 <a class="icon-btn" href="{% shop_url 'shop:product_detail' row.product.pk %}?channel={{ listing_channel }}" target="_blank" rel="noopener noreferrer" title="Open product in shop" aria-label="Open product in shop">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M14 3h7v7"></path>
                     <path d="M10 14 21 3"></path>
                     <path d="M21 14v7h-7"></path>
@@ -160,23 +192,25 @@
                   </svg>
                 </a>
                 <a class="icon-btn icon-btn--accent" href="{% shop_url 'shop:product_edit' row.product.pk %}?channel={{ listing_channel }}&next={{ request.get_full_path|urlencode }}" title="Edit product" aria-label="Edit product">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
                 </a>
                 <form id="remove-listing-{{ row.pk }}" method="post" action="" style="display:inline">
                   {% csrf_token %}
                   <input type="hidden" name="action" value="remove_listing">
                   <input type="hidden" name="return_q" value="{{ search_q }}">
                   {% if type_filter %}<input type="hidden" name="return_type" value="{{ type_filter }}">{% endif %}
+                  <input type="hidden" name="return_sort" value="{{ sort }}">
+                  <input type="hidden" name="return_dir" value="{{ direction }}">
                   <input type="hidden" name="listing_id" value="{{ row.pk }}">
                   <button type="button" class="icon-btn icon-btn--danger js-remove-listing" data-form-id="remove-listing-{{ row.pk }}" title="Remove listing" aria-label="Remove listing">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                   </button>
                 </form>
               </div>
             </td>
           </tr>
           {% empty %}
-          <tr><td colspan="{% if listing_channel == 'STOCK' %}14{% else %}10{% endif %}">{% if search_q or type_filter %}No rows match this filter. <a href="{{ request.path }}">Show all</a>{% else %}No listings yet. Add a product with this channel, or import from shop admin.{% endif %}</td></tr>
+          <tr><td colspan="{% if listing_channel == 'STOCK' %}12{% else %}9{% endif %}">{% if search_q or type_filter %}No rows match this filter. <a href="{{ request.path }}">Show all</a>{% else %}No listings yet. Add a product with this channel, or import from shop admin.{% endif %}</td></tr>
           {% endfor %}
         </tbody>
       </table>
@@ -187,6 +221,8 @@
     <input type="hidden" name="action" value="bulk_remove_listings">
     <input type="hidden" name="return_q" value="{{ search_q }}">
     {% if type_filter %}<input type="hidden" name="return_type" value="{{ type_filter }}">{% endif %}
+    <input type="hidden" name="return_sort" value="{{ sort }}">
+    <input type="hidden" name="return_dir" value="{{ direction }}">
     <div id="bulk-delete-inputs"></div>
   </form>
   <div class="confirm-overlay" id="listing-delete-confirm" aria-hidden="true">

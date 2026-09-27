@@ -71,7 +71,7 @@ from django.db.models import Count, Max, Q
 import qrcode
 import base64
 from io import BytesIO
-from decimal import Decimal, InvalidOperation
+from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 
 logger = logging.getLogger(__name__)
 _ORDER_FOR_ME_EMAILS = [
@@ -1056,14 +1056,111 @@ def superuser_user_edit(request, user_id):
     )
 
 
+_LISTING_SORT_KEYS = frozenset({
+    "type",
+    "id",
+    "brand",
+    "product",
+    "color",
+    "sizes",
+    "qty",
+    "cost",
+    "price",
+    "roi",
+})
+_LISTING_SORT_STOCK_ONLY = frozenset({"cost", "price", "roi"})
+_LISTING_SORT_DEFAULT = "qty"
+_LISTING_DIR_DEFAULT = "desc"
+
+
+def _listings_encode(params: dict) -> str:
+    return urlencode({k: v for k, v in params.items() if v not in (None, "")})
+
+
+def _staff_listings_sort_state(request, channel: str) -> tuple[str, str]:
+    sort = (request.GET.get("sort") or "").strip()
+    direction = (request.GET.get("dir") or "").strip().lower()
+    if sort not in _LISTING_SORT_KEYS:
+        sort = _LISTING_SORT_DEFAULT
+    if sort in _LISTING_SORT_STOCK_ONLY and channel != ProductListingChannel.STOCK:
+        sort = _LISTING_SORT_DEFAULT
+    if direction not in ("asc", "desc"):
+        direction = _LISTING_DIR_DEFAULT
+    return sort, direction
+
+
+def _staff_listings_keep_params(search_q: str, type_filter: str, sort: str, direction: str) -> dict:
+    params = {}
+    if search_q:
+        params["q"] = search_q
+    if type_filter:
+        params["type"] = type_filter
+    params["sort"] = sort
+    params["dir"] = direction
+    return params
+
+
+def _listings_sort_href(keep: dict, key: str, current_sort: str, current_dir: str) -> str:
+    params = {k: v for k, v in keep.items() if k not in ("sort", "dir")}
+    params["sort"] = key
+    params["dir"] = "asc" if current_sort == key and current_dir == "desc" else "desc"
+    return "?" + _listings_encode(params)
+
+
+def _listing_row_sort_value(row, sort: str):
+    p = row.product
+    if sort == "id":
+        return row.pk
+    if sort == "type":
+        return (p.get_type_display() or "").lower()
+    if sort == "brand":
+        return (p.brand or "").lower()
+    if sort == "product":
+        return (p.name or "").lower()
+    if sort == "color":
+        return (p.color or "").lower()
+    if sort == "sizes":
+        return (p.staff_listing_size_summary or "").lower()
+    if sort == "qty":
+        return row.quantity
+    if sort == "cost":
+        return p.landed_cost_gel
+    if sort == "price":
+        return getattr(row, "sell_price", None)
+    if sort == "roi":
+        return getattr(row, "expected_roi_pct", None)
+    return row.quantity
+
+
+def _sort_listing_rows(rows, sort: str, direction: str):
+    reverse = direction == "desc"
+    numeric = sort in ("id", "qty", "cost", "price", "roi")
+
+    def key(row):
+        value = _listing_row_sort_value(row, sort)
+        if value is None or value == "":
+            if numeric:
+                return Decimal("-Infinity") if reverse else Decimal("Infinity")
+            return "" if reverse else "\uffff"
+        return value
+
+    return sorted(rows, key=key, reverse=reverse)
+
+
 def _staff_listings_redirect(request, redirect_name: str):
     params = {}
     rq = (request.POST.get("return_q") or "").strip()
     rt = (request.POST.get("return_type") or "").strip()
+    rs = (request.POST.get("return_sort") or "").strip()
+    rd = (request.POST.get("return_dir") or "").strip().lower()
     if rq:
         params["q"] = rq
     if rt in dict(ProductType.choices):
         params["type"] = rt
+    if rs in _LISTING_SORT_KEYS:
+        params["sort"] = rs
+        if rd in ("asc", "desc"):
+            params["dir"] = rd
     base = reverse(redirect_name)
     if params:
         return redirect(f"{base}?{urlencode(params)}")
@@ -1076,6 +1173,7 @@ def _staff_listings_page(request, channel: str, nav_key: str):
     type_filter = (request.GET.get("type") or "").strip()
     if type_filter not in dict(ProductType.choices):
         type_filter = ""
+    sort, direction = _staff_listings_sort_state(request, channel)
     if request.method == "POST":
         action = request.POST.get("action")
         if action == "remove_listing":
@@ -1144,13 +1242,12 @@ def _staff_listings_page(request, channel: str, nav_key: str):
             | Q(product__color__icontains=search_q)
             | Q(product__type__icontains=search_q)
         )
-    listings = listings.order_by("-quantity", "product__name", "product__id")
+    listings = list(listings)
     if channel == ProductListingChannel.STOCK:
         # Staff-only unit economics per row: avg landed cost vs shelf price.
         from shop.sales_order_utils import product_unit_gross_price
         from shop.staff_analytics import expected_unit_economics
 
-        listings = list(listings)
         for row in listings:
             p = row.product
             sell = product_unit_gross_price(p)
@@ -1160,6 +1257,26 @@ def _staff_listings_page(request, channel: str, nav_key: str):
             row.expected_profit = eco["profit"]
             row.expected_roi_pct = eco["roi_pct"]
             row.expected_margin_pct = eco["margin_pct"]
+            if eco["roi_pct"] is not None:
+                row.expected_roi_int = int(
+                    eco["roi_pct"].quantize(Decimal("1"), rounding=ROUND_HALF_UP)
+                )
+            else:
+                row.expected_roi_int = None
+    listings = _sort_listing_rows(listings, sort, direction)
+
+    keep = _staff_listings_keep_params(search_q, type_filter, sort, direction)
+    sort_keys = ["type", "id", "brand", "product", "color", "sizes", "qty"]
+    if channel == ProductListingChannel.STOCK:
+        sort_keys += ["cost", "price", "roi"]
+    sort_hrefs = {key: _listings_sort_href(keep, key, sort, direction) for key in sort_keys}
+    filter_base = {k: v for k, v in keep.items() if k != "type"}
+    type_all_href = ("?" + _listings_encode(filter_base)) if filter_base else request.path
+    clear_search_href = (
+        "?" + _listings_encode({k: v for k, v in keep.items() if k != "q"})
+        if any(k != "q" for k in keep)
+        else request.path
+    )
 
     type_counts = {
         row["product__type"]: row["n"]
@@ -1172,7 +1289,12 @@ def _staff_listings_page(request, channel: str, nav_key: str):
     }
     type_labels = dict(ProductType.choices)
     product_type_filters = [
-        {"value": value, "label": label, "count": type_counts.get(value, 0)}
+        {
+            "value": value,
+            "label": label,
+            "count": type_counts.get(value, 0),
+            "href": "?" + _listings_encode({**filter_base, "type": value}),
+        }
         for value, label in ProductType.choices
         if type_counts.get(value)
     ]
@@ -1182,6 +1304,7 @@ def _staff_listings_page(request, channel: str, nav_key: str):
                 "value": type_filter,
                 "label": type_labels.get(type_filter, type_filter),
                 "count": 0,
+                "href": "?" + _listings_encode({**filter_base, "type": type_filter}),
             }
         )
     heading = (
@@ -1213,6 +1336,11 @@ def _staff_listings_page(request, channel: str, nav_key: str):
             "search_q": search_q,
             "type_filter": type_filter,
             "product_type_filters": product_type_filters,
+            "sort": sort,
+            "direction": direction,
+            "sort_hrefs": sort_hrefs,
+            "type_all_href": type_all_href,
+            "clear_search_href": clear_search_href,
         },
     )
 

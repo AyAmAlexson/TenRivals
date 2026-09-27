@@ -54,6 +54,7 @@ class StaffStockListEconomicsTests(TestCase):
         self.product = Product.objects.create(
             type=ProductType.ACCESSORIES,
             name='ROI Grip',
+            sku='GRIP-ROI',
             initial_price=Decimal('100.00'),
             actual_price=Decimal('80.00'),
             landed_cost_gel=Decimal('40.00'),
@@ -68,14 +69,22 @@ class StaffStockListEconomicsTests(TestCase):
         resp = self.client.get(reverse('administration:staff_stock'))
         self.assertEqual(resp.status_code, 200)
         row = resp.context['listings'][0]
-        # Sells at the discounted 80: net 67.80 − tax 0.80 − cost 40 = 27.00 → 67.5%
+        # Sells at the discounted 80: net 67.80 − tax 0.80 − cost 40 = 27.00 → 67.5% → 68
         self.assertEqual(row.sell_price, Decimal('80.00'))
         self.assertTrue(row.has_discount)
         self.assertEqual(row.expected_profit, Decimal('27.00'))
         self.assertEqual(row.expected_roi_pct, Decimal('67.50'))
-        self.assertContains(resp, '67.50%')
+        self.assertEqual(row.expected_roi_int, 68)
+        self.assertContains(resp, '68%')
+        self.assertNotContains(resp, '67.50%')
         self.assertContains(resp, 'price-struck')
-        self.assertContains(resp, 'Initial ₾')
+        self.assertContains(resp, 'Price ₾')
+        self.assertContains(resp, 'item-sku')
+        self.assertContains(resp, 'GRIP-ROI')
+        html = resp.content.decode()
+        thead = html[html.index('<thead>') : html.index('</thead>')]
+        self.assertLess(thead.index('Type'), thead.index('Brand'))
+        self.assertNotIn('>SKU<', thead)
 
     def test_preorder_page_has_no_economics_columns(self):
         ProductListing.objects.create(
@@ -83,7 +92,53 @@ class StaffStockListEconomicsTests(TestCase):
         )
         resp = self.client.get(reverse('administration:staff_preorder'))
         self.assertEqual(resp.status_code, 200)
-        self.assertNotContains(resp, 'Initial ₾')
+        self.assertNotContains(resp, 'Price ₾')
+
+    def test_default_sort_qty_desc_and_header_toggles_to_asc(self):
+        other = Product.objects.create(
+            type=ProductType.BALLS,
+            name='Alpha Balls',
+            initial_price=Decimal('20.00'),
+            landed_cost_gel=Decimal('10.00'),
+            in_stock=True,
+            is_active=True,
+        )
+        ProductListing.objects.create(
+            product=other, channel=ProductListingChannel.STOCK, quantity=1
+        )
+        url = reverse('administration:staff_stock')
+        default = self.client.get(url)
+        self.assertEqual(default.context['sort'], 'qty')
+        self.assertEqual(default.context['direction'], 'desc')
+        self.assertEqual(
+            [row.quantity for row in default.context['listings']],
+            [3, 1],
+        )
+        self.assertIn('dir=asc', default.context['sort_hrefs']['qty'])
+
+        asc = self.client.get(url, {'sort': 'qty', 'dir': 'asc'})
+        self.assertEqual(
+            [row.quantity for row in asc.context['listings']],
+            [1, 3],
+        )
+        self.assertIn('dir=desc', asc.context['sort_hrefs']['qty'])
+
+    def test_first_click_on_product_sorts_desc(self):
+        other = Product.objects.create(
+            type=ProductType.BALLS,
+            name='Alpha Balls',
+            initial_price=Decimal('20.00'),
+            landed_cost_gel=Decimal('10.00'),
+            in_stock=True,
+            is_active=True,
+        )
+        ProductListing.objects.create(
+            product=other, channel=ProductListingChannel.STOCK, quantity=1
+        )
+        resp = self.client.get(reverse('administration:staff_stock'), {'sort': 'product'})
+        names = [row.product.name for row in resp.context['listings']]
+        self.assertEqual(names, ['ROI Grip', 'Alpha Balls'])
+        self.assertEqual(resp.context['direction'], 'desc')
 
 
 class FinancialMetricsTests(TestCase):
