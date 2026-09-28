@@ -259,3 +259,57 @@ class FinancialMetricsTests(TestCase):
         prow = next(r for r in data['top_products'] if r['label'] == 'Yonex EZONE 100')
         # gross profit 143 − tax 7 − acquiring 700×2%×50% = 7 → 129
         self.assertEqual(prow['profit'], Decimal('129.00'))
+
+
+class StockValueChartTests(TestCase):
+    def test_avg_expected_roi_matches_profit_over_cogs(self):
+        from shop.stock_value_history import compute_stock_values_now
+
+        p = Product.objects.create(
+            type=ProductType.ACCESSORIES,
+            name='ROI Stock',
+            initial_price=Decimal('700.00'),
+            landed_cost_gel=Decimal('450.00'),
+            in_stock=True,
+            is_active=True,
+        )
+        ProductListing.objects.create(
+            product=p, channel=ProductListingChannel.STOCK, quantity=2
+        )
+        now = compute_stock_values_now()
+        self.assertEqual(now['shelf_value_gel'], Decimal('1400.00'))
+        self.assertEqual(now['landed_value_gel'], Decimal('900.00'))
+        # Same as 700/450 unit: net 593.22, tax 7, profit 136.22 → 30.27%
+        self.assertEqual(now['avg_expected_roi_pct'], Decimal('30.27'))
+
+    def test_series_starts_1_sep_2026_and_includes_roi_points(self):
+        from django.utils import timezone
+
+        from shop.stock_value_history import STOCK_VALUE_CHART_EARLIEST, build_stock_value_series
+
+        p = Product.objects.create(
+            type=ProductType.ACCESSORIES,
+            name='ROI Stock',
+            initial_price=Decimal('700.00'),
+            landed_cost_gel=Decimal('450.00'),
+            in_stock=True,
+            is_active=True,
+        )
+        ProductListing.objects.create(
+            product=p, channel=ProductListingChannel.STOCK, quantity=2
+        )
+        today = timezone.localdate()
+        series = build_stock_value_series(date(2026, 1, 1), today)
+        self.assertEqual(series['earliest'], STOCK_VALUE_CHART_EARLIEST)
+        self.assertEqual(series['labels'][0], '2026-09-01')
+        self.assertTrue(all(lab >= '2026-09-01' for lab in series['labels']))
+        self.assertEqual(len(series['roi']), len(series['labels']))
+        self.assertEqual(series['roi'][-1], 30.27)
+
+    def test_range_before_earliest_has_empty_chart_but_today_totals(self):
+        from shop.stock_value_history import build_stock_value_series
+
+        series = build_stock_value_series(date(2026, 1, 1), date(2026, 8, 31))
+        self.assertEqual(series['labels'], [])
+        self.assertEqual(series['roi'], [])
+        self.assertIn('avg_expected_roi_pct', series['today'])

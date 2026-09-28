@@ -158,10 +158,20 @@
       <div class="stat-card__value">{{ stock_value_chart.today.units }}</div>
       <div class="stat-card__hint">STOCK listing qty &gt; 0</div>
     </div>
+    <div class="stat-card">
+      <div class="stat-card__label">Avg expected ROI</div>
+      <div class="stat-card__value">{% if stock_value_chart.today.avg_expected_roi_pct is not None %}{{ stock_value_chart.today.avg_expected_roi_pct|floatformat:0 }}%{% else %}—{% endif %}</div>
+      <div class="stat-card__hint">Σ expected profit ÷ landed COGS, before acquiring</div>
+    </div>
   </div>
+  {% if stock_value_chart.labels %}
   <div class="chart-box chart-box--tall"><canvas id="chart-stock-value"></canvas></div>
+  {% else %}
+  <p class="page-meta" style="margin:0">No stock-volume series in this range — the chart starts {{ stock_value_chart.earliest|date:'j M Y' }}.</p>
+  {% endif %}
   <p class="page-meta" style="margin:10px 0 0;font-size:12px">
-    Two smooth daily lines for the selected period: shelf value (min of actual/initial price × qty) and landed cost value.
+    Daily shelf value (min of actual/initial price × qty) and landed cost value, plus average expected ROI as dots on the right axis.
+    Series starts {{ stock_value_chart.earliest|date:'j M Y' }} (earlier days are not representative).
     Today is always measured from live stock.
     {% if stock_value_chart.estimated_days %}
     {{ stock_value_chart.estimated_days }} day{{ stock_value_chart.estimated_days|pluralize }} in this range are <strong style="font-weight:600">estimated</strong>
@@ -681,7 +691,8 @@
               tension: .35,
               fill: false,
               pointRadius: 0,
-              borderWidth: 2
+              borderWidth: 2,
+              yAxisID: 'y'
             },
             {
               label: 'Landed value ₾ (COGS of stock)',
@@ -691,7 +702,21 @@
               tension: .35,
               fill: true,
               pointRadius: 0,
-              borderWidth: 2
+              borderWidth: 2,
+              yAxisID: 'y'
+            },
+            {
+              label: 'Avg expected ROI %',
+              data: sd.roi || [],
+              yAxisID: 'yRoi',
+              showLine: false,
+              fill: false,
+              pointRadius: 3,
+              pointHoverRadius: 5,
+              pointStyle: 'circle',
+              borderWidth: 0,
+              backgroundColor: '#0f766e',
+              borderColor: '#0f766e'
             }
           ]
         },
@@ -699,7 +724,16 @@
           responsive: true, maintainAspectRatio: false,
           interaction: { mode: 'index', intersect: false },
           scales: {
-            y: { grid: { color: gridColor }, ticks: { callback: function(v){ return v + ' ₾'; } } },
+            y: {
+              position: 'left',
+              grid: { color: gridColor },
+              ticks: { callback: function(v){ return v + ' ₾'; } }
+            },
+            yRoi: {
+              position: 'right',
+              grid: { drawOnChartArea: false },
+              ticks: { callback: function(v){ return v + '%'; } }
+            },
             x: {
               grid: { display: false },
               ticks: {

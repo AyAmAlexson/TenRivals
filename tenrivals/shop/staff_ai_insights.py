@@ -210,6 +210,7 @@ def _compact_analytics(label: str, start: date, end: date, ctx: dict) -> dict:
             'shelf_value_gel': _n(stock_today.get('shelf_value_gel')),
             'landed_value_gel': _n(stock_today.get('landed_value_gel')),
             'units': stock_today.get('units'),
+            'avg_expected_roi_pct': _n(stock_today.get('avg_expected_roi_pct')),
         }
         if stock_today
         else None,

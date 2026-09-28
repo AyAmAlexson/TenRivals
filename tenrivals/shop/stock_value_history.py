@@ -32,9 +32,44 @@ from .sales_order_utils import product_unit_gross_price
 
 _Q2 = Decimal('0.01')
 
+# Daily stock chart is not representative before this date (costs/qty were
+# not entered yet). Analytics date filters earlier than this are clamped.
+STOCK_VALUE_CHART_EARLIEST = date(2026, 9, 1)
+
 
 def _q2(x: Decimal) -> Decimal:
     return Decimal(x).quantize(_Q2)
+
+
+def avg_expected_roi_pct(shelf_value, landed_value) -> Decimal | None:
+    """Σ expected profit ÷ Σ landed COGS for the whole stock, before acquiring.
+
+    The unit formula is linear, so applying it to totals equals the
+    quantity-weighted average of per-SKU expected ROI.
+    """
+    from .staff_analytics import expected_unit_economics
+
+    return expected_unit_economics(shelf_value, landed_value)['roi_pct']
+
+
+def _roi_point(shelf_value, landed_value) -> float | None:
+    pct = avg_expected_roi_pct(shelf_value, landed_value)
+    return float(pct) if pct is not None else None
+
+
+def _empty_stock_chart(today: dict | None = None) -> dict:
+    return {
+        'labels': [],
+        'shelf': [],
+        'landed': [],
+        'units': [],
+        'roi': [],
+        'sources': [],
+        'today': today or compute_stock_values_now(),
+        'estimated_days': 0,
+        'measured_days': 0,
+        'earliest': STOCK_VALUE_CHART_EARLIEST,
+    }
 
 
 def compute_stock_values_now() -> dict:
@@ -57,10 +92,13 @@ def compute_stock_values_now() -> dict:
         shelf += product_unit_gross_price(p) * q
         if p.landed_cost_gel is not None:
             landed += p.landed_cost_gel * q
+    shelf_q = _q2(shelf)
+    landed_q = _q2(landed)
     return {
         'units': units,
-        'shelf_value_gel': _q2(shelf),
-        'landed_value_gel': _q2(landed),
+        'shelf_value_gel': shelf_q,
+        'landed_value_gel': landed_q,
+        'avg_expected_roi_pct': avg_expected_roi_pct(shelf_q, landed_q),
     }
 
 
@@ -182,10 +220,13 @@ def _values_from_qty(
         lc = landed.get(pid)
         if lc is not None:
             landed_v += lc * q
+    shelf_q = _q2(shelf_v)
+    landed_q = _q2(landed_v)
     return {
         'units': units,
-        'shelf_value_gel': _q2(shelf_v),
-        'landed_value_gel': _q2(landed_v),
+        'shelf_value_gel': shelf_q,
+        'landed_value_gel': landed_q,
+        'avg_expected_roi_pct': avg_expected_roi_pct(shelf_q, landed_q),
     }
 
 
@@ -234,6 +275,7 @@ def estimate_stock_value_series(start: date, end: date) -> list[dict]:
                 'units': vals['units'],
                 'shelf_value_gel': vals['shelf_value_gel'],
                 'landed_value_gel': vals['landed_value_gel'],
+                'avg_expected_roi_pct': vals.get('avg_expected_roi_pct'),
                 'source': 'estimated',
             }
         )
@@ -248,18 +290,9 @@ def build_stock_value_series(start: date, end: date) -> dict:
     """
     today = timezone.localdate()
     chart_end = min(end, today)
-    chart_start = start
+    chart_start = max(start, STOCK_VALUE_CHART_EARLIEST)
     if chart_start > chart_end:
-        return {
-            'labels': [],
-            'shelf': [],
-            'landed': [],
-            'units': [],
-            'sources': [],
-            'today': compute_stock_values_now(),
-            'estimated_days': 0,
-            'measured_days': 0,
-        }
+        return _empty_stock_chart()
 
     upsert_stock_snapshot(snapshot_date=today, source=StockValueSnapshot.Source.MEASURED)
 
@@ -297,6 +330,7 @@ def build_stock_value_series(start: date, end: date) -> dict:
     shelf = []
     landed_vals = []
     units = []
+    roi = []
     sources = []
     measured_days = 0
     estimated_days = 0
@@ -309,12 +343,14 @@ def build_stock_value_series(start: date, end: date) -> dict:
             shelf.append(float(e['shelf_value_gel']))
             landed_vals.append(float(e['landed_value_gel']))
             units.append(int(e['units']))
+            roi.append(_roi_point(e['shelf_value_gel'], e['landed_value_gel']))
             sources.append('estimated')
             estimated_days += 1
         elif row is not None:
             shelf.append(float(row.shelf_value_gel))
             landed_vals.append(float(row.landed_value_gel))
             units.append(int(row.units))
+            roi.append(_roi_point(row.shelf_value_gel, row.landed_value_gel))
             sources.append(row.source)
             if row.source == StockValueSnapshot.Source.MEASURED:
                 measured_days += 1
@@ -324,6 +360,7 @@ def build_stock_value_series(start: date, end: date) -> dict:
             shelf.append(0.0)
             landed_vals.append(0.0)
             units.append(0)
+            roi.append(None)
             sources.append('estimated')
             estimated_days += 1
         cur += timedelta(days=1)
@@ -333,8 +370,10 @@ def build_stock_value_series(start: date, end: date) -> dict:
         'shelf': shelf,
         'landed': landed_vals,
         'units': units,
+        'roi': roi,
         'sources': sources,
         'today': compute_stock_values_now(),
         'estimated_days': estimated_days,
         'measured_days': measured_days,
+        'earliest': STOCK_VALUE_CHART_EARLIEST,
     }
