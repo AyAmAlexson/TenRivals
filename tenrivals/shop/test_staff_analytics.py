@@ -301,15 +301,15 @@ class StockValueChartTests(TestCase):
         today = timezone.localdate()
         series = build_stock_value_series(date(2026, 1, 1), today)
         self.assertEqual(series['earliest'], STOCK_VALUE_CHART_EARLIEST)
-        self.assertEqual(series['labels'][0], '2026-09-01')
-        self.assertTrue(all(lab >= '2026-09-01' for lab in series['labels']))
+        self.assertEqual(series['labels'][0], '2026-09-21')
+        self.assertTrue(all(lab >= '2026-09-21' for lab in series['labels']))
         self.assertEqual(len(series['roi']), len(series['labels']))
         self.assertEqual(series['roi'][-1], 30.27)
 
     def test_range_before_earliest_has_empty_chart_but_today_totals(self):
         from shop.stock_value_history import build_stock_value_series
 
-        series = build_stock_value_series(date(2026, 1, 1), date(2026, 8, 31))
+        series = build_stock_value_series(date(2026, 1, 1), date(2026, 9, 20))
         self.assertEqual(series['labels'], [])
         self.assertEqual(series['roi'], [])
         self.assertIn('avg_expected_roi_pct', series['today'])

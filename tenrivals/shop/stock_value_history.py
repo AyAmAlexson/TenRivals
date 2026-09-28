@@ -34,7 +34,7 @@ _Q2 = Decimal('0.01')
 
 # Daily stock chart is not representative before this date (costs/qty were
 # not entered yet). Analytics date filters earlier than this are clamped.
-STOCK_VALUE_CHART_EARLIEST = date(2026, 9, 1)
+STOCK_VALUE_CHART_EARLIEST = date(2026, 9, 21)
 
 
 def _q2(x: Decimal) -> Decimal:
