@@ -40,6 +40,7 @@ from django.urls import reverse
 from .models import SalesOrder, SalesOrderLine
 from .sales_order_utils import order_services_and_delivery_cogs
 from .stock_value_history import build_stock_value_series
+from .stock_units import build_shelf_age_report
 
 _CHANNEL_ORDER = (
     SalesOrderLine.SaleChannel.STOCK,
@@ -712,6 +713,7 @@ def staff_sales_analytics(request):
             'month_metrics': month_metrics,
             'ai_insights_url': reverse('administration:staff_sales_analytics_insights'),
             'ai_insight_kind': 'analytics',
+            'shelf_age': build_shelf_age_report(start, end, today=today),
         }
     )
     return render(request, 'shop/staff/sales_analytics.html', ctx)

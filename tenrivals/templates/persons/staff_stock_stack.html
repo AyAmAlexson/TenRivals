@@ -1,0 +1,85 @@
+{% extends 'persons/staff_base.html' %}
+{% block title %}Shelf stack — Staff | Tenrivals{% endblock %}
+{% block page_heading %}{{ page_heading }}{% endblock %}
+{% block page_note %}<p class="page-note">{{ page_note }}</p>{% endblock %}
+{% block extra_head %}
+<style>
+  .stack-age--ok{color:#15803d}
+  .stack-age--mid{color:#b45309}
+  .stack-age--old{color:#b91c1c}
+  .stack-filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:14px}
+  .stack-filters select,.stack-filters input[type="search"]{
+    padding:8px 10px;border:1px solid var(--line);font-family:inherit;font-size:14px;background:#fff
+  }
+</style>
+{% endblock %}
+{% block content %}
+<div class="staff-toolbar" style="margin-bottom:14px">
+  <a class="btn btn--sm" href="{% url 'administration:staff_stock_arrival_dates' %}">Set arrival dates</a>
+  <a class="btn btn--sm btn--outline" href="{% url 'administration:staff_write_off_new' %}">New write-off</a>
+</div>
+{% if drift %}
+<div class="alert alert-info">
+  Stack has more on-hand units than the listing for
+  {% for row in drift %}{{ row.product.name }}{% if row.variant %} ({{ row.variant }}){% endif %} +{{ row.extra }}{% if not forloop.last %}, {% endif %}{% endfor %}.
+  Extra rows are kept so a dated piece is not deleted by accident.
+</div>
+{% endif %}
+<div class="card">
+  <h2 class="card-title">Units ({{ page_obj.paginator.count }})</h2>
+  <form method="get" class="stack-filters">
+    <select name="status" aria-label="Status">
+      {% for value, label in status_choices %}
+      <option value="{{ value }}" {% if status == value %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    <input type="search" name="q" value="{{ search_q }}" placeholder="Brand, name, SKU, size" aria-label="Search stack">
+    <button type="submit" class="btn btn--sm">Filter</button>
+  </form>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Product</th>
+          <th>Size</th>
+          <th>Arrived</th>
+          <th class="num">Days</th>
+          <th class="num">Cost ₾</th>
+          <th>Status</th>
+          <th>Left via</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+        <tr>
+          <td>{{ row.label }}</td>
+          <td class="mono">{{ row.unit.variant_label|default:"—" }}</td>
+          <td class="mono">{% if row.received_on %}{{ row.received_on|date:"Y-m-d" }}{% else %}<span style="color:var(--muted)">undated</span>{% endif %}</td>
+          <td class="mono num">
+            {% if row.age_days is not None %}
+            <span class="{% if row.age_days >= 90 %}stack-age--old{% elif row.age_days >= 30 %}stack-age--mid{% else %}stack-age--ok{% endif %}">{{ row.age_days }}</span>
+            {% else %}—{% endif %}
+          </td>
+          <td class="mono num">{{ row.unit.unit_landed_cost_gel|default:"—" }}</td>
+          <td>{{ row.unit.get_status_display }}</td>
+          <td class="mono">{{ row.left_via|default:"—" }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7">No units. Receive stock or open Arrival dates to build the stack from what is on the shelf now.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if page_obj.paginator.num_pages > 1 %}
+  <p class="page-meta" style="margin-top:12px">
+    {% if page_obj.has_previous %}
+    <a href="?status={{ status }}&amp;q={{ search_q|urlencode }}&amp;page={{ page_obj.previous_page_number }}">Previous</a>
+    {% endif %}
+    Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+    {% if page_obj.has_next %}
+    <a href="?status={{ status }}&amp;q={{ search_q|urlencode }}&amp;page={{ page_obj.next_page_number }}">Next</a>
+    {% endif %}
+  </p>
+  {% endif %}
+</div>
+{% endblock %}

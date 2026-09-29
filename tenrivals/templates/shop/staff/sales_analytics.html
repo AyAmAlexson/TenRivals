@@ -184,6 +184,117 @@
 </div>
 
 <div class="card">
+  <h2 class="card-title">Shelf age</h2>
+  <div class="an-stats" style="margin-bottom:16px">
+    <div class="stat-card">
+      <div class="stat-card__label">On hand in stack</div>
+      <div class="stat-card__value">{{ shelf_age.on_hand_units }}</div>
+      <div class="stat-card__hint">{{ shelf_age.dated_units }} dated · {{ shelf_age.undated_units }} undated</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card__label">Write-offs in range</div>
+      <div class="stat-card__value">{{ shelf_age.write_off_landed }} ₾</div>
+      <div class="stat-card__hint">{{ shelf_age.write_off_units }} unit{{ shelf_age.write_off_units|pluralize }} at landed cost · not in revenue</div>
+    </div>
+  </div>
+  <div class="table-wrap" style="margin-bottom:16px">
+    <table class="an-table">
+      <thead>
+        <tr>
+          <th>Category</th>
+          <th class="num">On hand</th>
+          <th class="num">Avg age</th>
+          <th class="num">Median age</th>
+          <th class="num">Landed ₾</th>
+          <th class="num">Undated</th>
+          <th class="num">Sold in range</th>
+          <th class="num">Avg days to sell</th>
+          <th class="num">Median days to sell</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in shelf_age.categories %}
+        <tr>
+          <td>{{ r.label }}</td>
+          <td class="mono num">{{ r.on_hand }}</td>
+          <td class="mono num">{% if r.avg_age is not None %}{{ r.avg_age }} d{% else %}—{% endif %}</td>
+          <td class="mono num">{% if r.median_age is not None %}{{ r.median_age }} d{% else %}—{% endif %}</td>
+          <td class="mono num">{{ r.landed }}</td>
+          <td class="mono num">{{ r.undated }}</td>
+          <td class="mono num">{{ r.sold_units }}</td>
+          <td class="mono num">{% if r.sold_avg_days is not None %}{{ r.sold_avg_days }} d{% else %}—{% endif %}</td>
+          <td class="mono num">{% if r.sold_median_days is not None %}{{ r.sold_median_days }} d{% else %}—{% endif %}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="9">No units in the shelf stack yet. Open Arrival dates to build it from current stock.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="an-grid">
+    <div>
+      <h3 class="card-title" style="font-size:13px">Aging of current stock</h3>
+      <div class="table-wrap">
+        <table class="an-table">
+          <thead><tr><th>Bucket</th><th class="num">Units</th><th class="num">Landed ₾</th></tr></thead>
+          <tbody>
+            {% for b in shelf_age.aging %}
+            <tr>
+              <td>{{ b.label }}</td>
+              <td class="mono num">{{ b.units }}</td>
+              <td class="mono num">{{ b.landed }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div>
+      <h3 class="card-title" style="font-size:13px">Oldest on hand</h3>
+      <div class="table-wrap">
+        <table class="an-table">
+          <thead><tr><th>Product</th><th class="num">Age</th><th class="num">Cost ₾</th></tr></thead>
+          <tbody>
+            {% for r in shelf_age.oldest %}
+            <tr>
+              <td>{{ r.product.brand|default:"" }} {{ r.product.name }}{% if r.variant %} ({{ r.variant }}){% endif %}</td>
+              <td class="mono num">{{ r.age_days }} d</td>
+              <td class="mono num">{{ r.cost }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="3">No dated units on hand.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  {% if shelf_age.write_off_reasons %}
+  <h3 class="card-title" style="font-size:13px;margin-top:16px">Write-offs by reason</h3>
+  <div class="table-wrap">
+    <table class="an-table">
+      <thead><tr><th>Reason</th><th class="num">Docs</th><th class="num">Units</th><th class="num">Landed ₾</th></tr></thead>
+      <tbody>
+        {% for r in shelf_age.write_off_reasons %}
+        <tr>
+          <td>{{ r.label }}</td>
+          <td class="mono num">{{ r.docs }}</td>
+          <td class="mono num">{{ r.units }}</td>
+          <td class="mono num">{{ r.landed }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+  <p class="page-meta" style="margin:10px 0 0;font-size:12px">
+    Age is days since arrival for pieces still on the shelf. Days to sell is arrival → sale for units sold in the selected range (undated pieces are excluded from averages).
+    Write-offs leave stock and the stack but stay out of revenue, profit, VAT, tax, and acquiring.
+    <a href="{% url 'administration:staff_stock_stack' %}">Open the shelf stack</a>
+  </p>
+</div>
+
+<div class="card">
   <h2 class="card-title">By period</h2>
   <div class="table-wrap">
     <table class="an-table">

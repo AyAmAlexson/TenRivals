@@ -71,7 +71,7 @@ def _receive_one(
             defaults={'quantity': 0},
         )
         adjust_product_variant_stock(locked, variant_key, quantity)
-    return StockReceipt.objects.create(
+    receipt = StockReceipt.objects.create(
         product=locked,
         quantity=quantity,
         unit_landed_cost_gel=unit_landed_cost_gel,
@@ -83,6 +83,20 @@ def _receive_one(
         note=(note or '').strip()[:200],
         created_by=created_by,
     )
+    if add_to_stock:
+        from django.utils import timezone
+
+        from .stock_units import mint_units
+
+        mint_units(
+            product=locked,
+            quantity=quantity,
+            variant_label=variant_key,
+            received_at=timezone.now(),
+            unit_landed_cost_gel=unit_landed_cost_gel,
+            receipt=receipt,
+        )
+    return receipt
 
 
 def receive_stock_batch(
@@ -212,6 +226,9 @@ def undo_stock_receipt(receipt: StockReceipt | int) -> dict:
                     f'Reduce sales reservations or fix listing qty first.'
                 ) from exc
             stock_reversed = True
+            from .stock_units import reverse_receipt_units
+
+            reverse_receipt_units(locked_receipt)
 
         before = locked_receipt.landed_cost_before
         product.landed_cost_gel = before

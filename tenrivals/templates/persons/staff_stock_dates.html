@@ -1,0 +1,62 @@
+{% extends 'persons/staff_base.html' %}
+{% block title %}Arrival dates — Staff | Tenrivals{% endblock %}
+{% block page_heading %}{{ page_heading }}{% endblock %}
+{% block page_note %}<p class="page-note">{{ page_note }}</p>{% endblock %}
+{% block extra_head %}
+<style>
+  .date-batch{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 8px}
+  .date-batch input[type="date"],.date-batch input[type="number"]{
+    padding:7px 8px;border:1px solid var(--line);font-family:inherit;font-size:13px;background:#fff
+  }
+  .date-batch input[type="number"]{width:72px}
+  .date-group{padding:12px 0;border-bottom:1px solid var(--line)}
+  .date-group:last-child{border-bottom:none}
+  .date-group h3{margin:0 0 8px;font-size:14px;font-weight:600}
+</style>
+{% endblock %}
+{% block content %}
+{% if drift %}
+<div class="alert alert-info">
+  Some products have more stack units than listing quantity. Those extras are not removed here.
+</div>
+{% endif %}
+<div class="card">
+  <h2 class="card-title">On-hand pieces</h2>
+  <form method="post" style="margin-bottom:16px">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="sync">
+    <button type="submit" class="btn btn--sm btn--outline">Rebuild missing units from current stock</button>
+  </form>
+  {% for group in groups %}
+  <div class="date-group">
+    <h3>{{ group.label }}{% if group.variant %} · {{ group.variant }}{% endif %}</h3>
+    <p class="page-meta" style="margin:0 0 8px">{{ group.undated }} undated · {{ group.batch_rows|length }} dated batch{{ group.batch_rows|length|pluralize }}</p>
+    {% if group.undated %}
+    <form method="post" class="date-batch">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="assign">
+      <input type="hidden" name="product_id" value="{{ group.product.pk }}">
+      <input type="hidden" name="variant" value="{{ group.variant }}">
+      <label>Qty <input type="number" name="quantity" min="1" max="{{ group.undated }}" value="{{ group.undated }}" required></label>
+      <label>Arrived <input type="date" name="received_on" required></label>
+      <button type="submit" class="btn btn--sm">Set date</button>
+    </form>
+    {% endif %}
+    {% for batch in group.batch_rows %}
+    <form method="post" class="date-batch">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="redate">
+      <input type="hidden" name="product_id" value="{{ group.product.pk }}">
+      <input type="hidden" name="variant" value="{{ group.variant }}">
+      <input type="hidden" name="from_day" value="{{ batch.date|date:'Y-m-d' }}">
+      <span class="mono">{{ batch.qty }}×</span>
+      <label>Arrived <input type="date" name="received_on" value="{{ batch.date|date:'Y-m-d' }}" required></label>
+      <button type="submit" class="btn btn--sm btn--outline">Update</button>
+    </form>
+    {% endfor %}
+  </div>
+  {% empty %}
+  <p class="page-meta">Nothing on hand in the stack. Receive stock, or rebuild from the current listing.</p>
+  {% endfor %}
+</div>
+{% endblock %}

@@ -2,7 +2,7 @@ from django.urls import include, path
 
 from . import views
 from . import staff_promo_views
-from shop import staff_ai_insights, staff_analytics, staff_sales_views, staff_stock_stats
+from shop import staff_ai_insights, staff_analytics, staff_sales_views, staff_stock_stats, staff_stock_units_views
 
 app_name = "administration"
 
@@ -37,6 +37,12 @@ urlpatterns = [
         "stock/receive/<int:receipt_id>/undo/",
         views.staff_stock_receipt_undo,
         name="staff_stock_receipt_undo",
+    ),
+    path("stock/stack/", staff_stock_units_views.staff_stock_stack, name="staff_stock_stack"),
+    path(
+        "stock/stack/dates/",
+        staff_stock_units_views.staff_stock_arrival_dates,
+        name="staff_stock_arrival_dates",
     ),
     path("preorder/", views.staff_preorder_list, name="staff_preorder"),
     path("blog/", views.staff_blog_posts, name="staff_blog_posts"),
@@ -134,6 +140,13 @@ urlpatterns = [
         name="staff_sales_order_edit",
     ),
     path("orders/", staff_sales_views.staff_sales_orders, name="staff_sales_orders"),
+    path("write-offs/", staff_stock_units_views.staff_write_offs, name="staff_write_offs"),
+    path("write-offs/new/", staff_stock_units_views.staff_write_off_new, name="staff_write_off_new"),
+    path(
+        "write-offs/<int:pk>/undo/",
+        staff_stock_units_views.staff_write_off_undo,
+        name="staff_write_off_undo",
+    ),
     path(
         "orders/insights/",
         staff_ai_insights.staff_ai_insights,

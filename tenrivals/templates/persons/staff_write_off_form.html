@@ -1,0 +1,108 @@
+{% extends 'persons/staff_base.html' %}
+{% block title %}New write-off — Staff | Tenrivals{% endblock %}
+{% block page_heading %}{{ page_heading }}{% endblock %}
+{% block page_note %}<p class="page-note">{{ page_note }}</p>{% endblock %}
+{% block extra_head %}
+{{ variant_map|json_script:"variant-data" }}
+<style>
+  .wo-lines select,.wo-lines input{width:100%;padding:7px 8px;border:1px solid var(--line);font-family:inherit;font-size:13px;background:#fff}
+  .wo-lines th,.wo-lines td{padding:8px;vertical-align:top}
+  .wo-head{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:16px}
+  .wo-head label{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+  .wo-head input,.wo-head select,.wo-head textarea{padding:8px 10px;border:1px solid var(--line);font-family:inherit;font-size:14px;text-transform:none;letter-spacing:0;font-weight:400;color:var(--ink)}
+</style>
+{% endblock %}
+{% block content %}
+<div class="card">
+  <h2 class="card-title">Write-off</h2>
+  <form method="post" id="wo-form">
+    {% csrf_token %}
+    <input type="hidden" name="lines-TOTAL_FORMS" id="id_lines-TOTAL_FORMS" value="1">
+    <div class="wo-head">
+      <label>Date <input type="date" name="written_on" value="{{ today }}" required></label>
+      <label>Reason
+        <select name="reason" required>
+          {% for value, label in reasons %}
+          <option value="{{ value }}">{{ label }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>Note <input type="text" name="note" maxlength="200" placeholder="Optional"></label>
+    </div>
+    <div class="table-wrap">
+      <table class="wo-lines">
+        <thead>
+          <tr><th>Product</th><th>Variant</th><th>Qty</th><th></th></tr>
+        </thead>
+        <tbody id="wo-tbody">
+          <tr class="wo-row">
+            <td>
+              <select name="lines-0-product" class="js-product">
+                <option value="">Select…</option>
+                {% for p in products %}
+                <option value="{{ p.pk }}">{{ p.brand|default:"" }} {{ p.name }}{% if p.color %} — {{ p.color }}{% endif %}</option>
+                {% endfor %}
+              </select>
+            </td>
+            <td><input type="text" name="lines-0-variant" class="js-variant" list="wo-variants-0" maxlength="48" placeholder="size / grip" autocomplete="off"><datalist id="wo-variants-0"></datalist></td>
+            <td style="width:90px"><input type="number" name="lines-0-quantity" min="1" step="1" value="1"></td>
+            <td style="width:40px"><button type="button" class="icon-btn js-del" aria-label="Remove line">×</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="margin-top:12px">
+      <button type="button" class="btn btn--sm btn--outline" id="wo-add">Add line</button>
+      <button type="submit" class="btn btn--sm">Save write-off</button>
+      <a class="btn btn--sm btn--outline" href="{% url 'administration:staff_write_offs' %}">Cancel</a>
+    </p>
+  </form>
+</div>
+<script>
+(function(){
+  const variants = JSON.parse(document.getElementById('variant-data').textContent || '{}');
+  const tbody = document.getElementById('wo-tbody');
+  const total = document.getElementById('id_lines-TOTAL_FORMS');
+  function bind(row){
+    const sel = row.querySelector('.js-product');
+    const input = row.querySelector('.js-variant');
+    const list = row.querySelector('datalist');
+    function fill(){
+      const keys = variants[sel.value] || [];
+      list.innerHTML = keys.map(function(k){ return '<option value="'+k.replace(/"/g,'&quot;')+'"></option>'; }).join('');
+      input.disabled = keys.length === 0 && !!sel.value === false ? false : false;
+      input.placeholder = keys.length ? 'required' : '—';
+    }
+    sel.addEventListener('change', fill);
+    fill();
+    row.querySelector('.js-del').addEventListener('click', function(){
+      if(tbody.querySelectorAll('.wo-row').length < 2){
+        sel.value = '';
+        input.value = '';
+        return;
+      }
+      row.remove();
+    });
+  }
+  tbody.querySelectorAll('.wo-row').forEach(bind);
+  document.getElementById('wo-add').addEventListener('click', function(){
+    const i = tbody.querySelectorAll('.wo-row').length;
+    const first = tbody.querySelector('.wo-row');
+    const row = first.cloneNode(true);
+    row.querySelectorAll('input,select').forEach(function(el){
+      if(el.name) el.name = el.name.replace(/lines-\d+-/, 'lines-'+i+'-');
+      if(el.tagName === 'SELECT') el.selectedIndex = 0;
+      else if(el.type === 'number') el.value = '1';
+      else el.value = '';
+    });
+    const list = row.querySelector('datalist');
+    list.id = 'wo-variants-'+i;
+    list.innerHTML = '';
+    row.querySelector('.js-variant').setAttribute('list', list.id);
+    tbody.appendChild(row);
+    total.value = String(i+1);
+    bind(row);
+  });
+})();
+</script>
+{% endblock %}

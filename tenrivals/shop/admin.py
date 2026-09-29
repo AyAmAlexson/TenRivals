@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import (
+from shop.models import (
     BlogPost,
     HomeHeroContent,
     HomeHeroSlide,
@@ -17,7 +17,9 @@ from .models import (
     ShopOrderItem,
     ProductListing,
     StockReceipt,
+    StockUnit,
     StockValueSnapshot,
+    StockWriteOff,
 )
 
 
@@ -118,6 +120,31 @@ class StockValueSnapshotAdmin(admin.ModelAdmin):
     list_filter = ("source",)
     ordering = ("-snapshot_date",)
     readonly_fields = ("created_at", "updated_at")
+
+
+@admin.register(StockUnit)
+class StockUnitAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "product",
+        "variant_label",
+        "status",
+        "received_at",
+        "unit_landed_cost_gel",
+        "sold_at",
+        "written_off_at",
+    )
+    list_filter = ("status",)
+    search_fields = ("product__name", "product__sku", "variant_label")
+    raw_id_fields = ("product", "receipt", "sales_order_line", "write_off_line")
+    readonly_fields = ("created_at",)
+
+
+@admin.register(StockWriteOff)
+class StockWriteOffAdmin(admin.ModelAdmin):
+    list_display = ("id", "written_on", "reason", "note", "created_at")
+    list_filter = ("reason",)
+    raw_id_fields = ("created_by",)
 
 
 @admin.register(HomePromoStripSettings)

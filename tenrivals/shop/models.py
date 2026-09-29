@@ -942,6 +942,132 @@ class StockReceipt(models.Model):
         return f'Receipt #{self.pk}: {self.product_id} ×{self.quantity} @ {self.unit_landed_cost_gel} ₾'
 
 
+class StockWriteOff(models.Model):
+    """Staff removal of shelf stock that is not a sale.
+
+    Personal use, ads, demos, barter, blogger mailers. Touches listing qty and
+    the unit stack only — never revenue, profit, or tax reports.
+    """
+
+    class Reason(models.TextChoices):
+        PERSONAL = 'personal', _('Personal')
+        ADVERTISING = 'advertising', _('Advertising')
+        DEMO = 'demo', _('Demo')
+        BARTER = 'barter', _('Barter')
+        BLOGGER = 'blogger', _('Blogger')
+        OTHER = 'other', _('Other')
+
+    written_on = models.DateField(db_index=True)
+    reason = models.CharField(max_length=24, choices=Reason.choices, db_index=True)
+    note = models.CharField(max_length=200, blank=True, default='')
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='stock_write_offs',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-written_on', '-id']
+
+    def __str__(self):
+        return f'Write-off #{self.pk} {self.written_on} ({self.get_reason_display()})'
+
+
+class StockWriteOffLine(models.Model):
+    write_off = models.ForeignKey(
+        StockWriteOff,
+        on_delete=models.CASCADE,
+        related_name='lines',
+    )
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.PROTECT,
+        related_name='stock_write_off_lines',
+    )
+    variant_label = models.CharField(max_length=48, blank=True, default='')
+    quantity = models.PositiveIntegerField()
+    landed_cost_total = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        help_text=_('Sum of the written-off units’ batch costs (₾). Not revenue.'),
+    )
+
+    class Meta:
+        ordering = ['id']
+
+    def __str__(self):
+        return f'{self.product_id} ×{self.quantity}'
+
+
+class StockUnit(models.Model):
+    """One physical piece on the FIFO shelf stack (staff-only).
+
+    Catalog price stays on Product. This row only records when the piece
+    arrived, when it left, and the landed cost of its own batch.
+    """
+
+    class Status(models.TextChoices):
+        ON_HAND = 'on_hand', _('On hand')
+        SOLD = 'sold', _('Sold')
+        WRITTEN_OFF = 'written_off', _('Written off')
+
+    product = models.ForeignKey(Product, on_delete=models.PROTECT, related_name='stock_units')
+    variant_label = models.CharField(max_length=48, blank=True, default='')
+    unit_landed_cost_gel = models.DecimalField(
+        max_digits=10, decimal_places=2, null=True, blank=True
+    )
+    received_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        db_index=True,
+        help_text=_('Empty until staff dates a past batch, or a new receipt stamps it.'),
+    )
+    receipt = models.ForeignKey(
+        StockReceipt,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='units',
+    )
+    status = models.CharField(
+        max_length=16,
+        choices=Status.choices,
+        default=Status.ON_HAND,
+        db_index=True,
+    )
+    sold_at = models.DateTimeField(null=True, blank=True)
+    written_off_at = models.DateTimeField(null=True, blank=True)
+    sales_order_line = models.ForeignKey(
+        'SalesOrderLine',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='stock_units',
+    )
+    write_off_line = models.ForeignKey(
+        StockWriteOffLine,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='units',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['received_at', 'id']
+        indexes = [
+            models.Index(fields=['product', 'status', 'received_at']),
+            models.Index(fields=['status', 'variant_label']),
+        ]
+
+    def __str__(self):
+        return f'Unit #{self.pk} {self.product_id} {self.status}'
+
+
 class StockValueSnapshot(models.Model):
     """Daily on-hand stock value for the analytics chart (staff-only).
 

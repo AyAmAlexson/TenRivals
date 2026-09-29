@@ -249,6 +249,8 @@ def adjust_product_variant_stock(product: Product, variant_key: str, delta: int)
 
 def release_lines_to_stock(lines: list) -> None:
     """Return reserved units to listing / variant JSON. Best-effort if legacy lines lack variant."""
+    from .stock_units import restore_sold_units
+
     for line in lines:
         if line.product_id is None:
             # Free-text (non-stock) line: never reserved, nothing to return.
@@ -268,14 +270,32 @@ def release_lines_to_stock(lines: list) -> None:
                 _apply_listing_delta(line.product.pk, int(line.quantity))
             else:
                 raise
+        restore_sold_units(line)
 
 
 def take_lines_from_stock(lines: list) -> None:
+    from django.utils import timezone
+
+    from .models import StockUnit
+    from .stock_units import at_noon, consume_on_hand
+
     for line in lines:
         if line.product_id is None:
             # Free-text (non-stock) line: does not touch warehouse.
             continue
         adjust_product_variant_stock(line.product, line.variant_label or '', -int(line.quantity))
+        sold_at = timezone.now()
+        order = getattr(line, 'order', None)
+        if order is not None and getattr(order, 'order_date', None):
+            sold_at = at_noon(order.order_date)
+        consume_on_hand(
+            product=line.product,
+            variant_label=line.variant_label or '',
+            quantity=int(line.quantity),
+            status=StockUnit.Status.SOLD,
+            at=sold_at,
+            sales_order_line=line,
+        )
 
 
 def snapshot_old_lines(order: SalesOrder) -> list:
