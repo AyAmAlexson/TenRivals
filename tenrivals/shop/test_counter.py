@@ -215,6 +215,8 @@ class CounterSaleTests(TestCase):
         self.assertContains(section, 'ctr-brands')
         self.assertContains(section, 'Asics')
         self.assertContains(section, 'ctr-size-filters')
+        self.assertContains(section, 'data-hold="?type=M_SHOES&amp;pick=')
+        self.assertNotContains(section, 'data-detail=')
         self.assertContains(section, 'US 10')
         self.assertNotContains(section, 'US 11')
         sized = self.client.get(sale, {'type': ProductType.MENS_SHOES, 'brand': 'Asics', 'size': 'US 10'})

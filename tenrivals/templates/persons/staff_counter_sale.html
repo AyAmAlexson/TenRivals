@@ -147,12 +147,12 @@
         <input type="hidden" name="type" value="{{ type_filter }}">
         <input type="hidden" name="brand" value="{{ brand_filter }}">
         <input type="hidden" name="size" value="{{ size_filter }}">
-        <button class="ctr-card" type="submit" data-detail="{{ card.detail_url }}">
+        <button class="ctr-card" type="submit" data-hold="{{ card.pick_href }}">
           {% include "persons/staff_counter_card_face.html" %}
         </button>
       </form>
       {% elif card.needs_variant %}
-      <a class="ctr-card" href="{{ card.pick_href }}" data-detail="{{ card.detail_url }}">
+      <a class="ctr-card" href="{{ card.pick_href }}" data-hold="{{ card.pick_href }}">
         {% include "persons/staff_counter_card_face.html" %}
       </a>
       {% else %}
@@ -163,7 +163,7 @@
         <input type="hidden" name="type" value="{{ type_filter }}">
         <input type="hidden" name="brand" value="{{ brand_filter }}">
         <input type="hidden" name="size" value="{{ size_filter }}">
-        <button class="ctr-card" type="submit" data-hold="{{ card.pick_href }}" data-detail="{{ card.detail_url }}">
+        <button class="ctr-card" type="submit" data-hold="{{ card.pick_href }}">
           {% include "persons/staff_counter_card_face.html" %}
         </button>
       </form>
@@ -285,10 +285,13 @@
       });
     });
   }
-  document.querySelectorAll('[data-detail]').forEach(function (el) {
+  document.querySelectorAll('[data-hold]').forEach(function (el) {
     var timer = null;
     var startX = 0;
     var startY = 0;
+    function openPanel() {
+      window.location.href = el.getAttribute('data-hold');
+    }
     function clearTimer() {
       if (timer) {
         clearTimeout(timer);
@@ -303,7 +306,7 @@
       clearTimer();
       timer = setTimeout(function () {
         el.dataset.held = '1';
-        window.location.href = el.getAttribute('data-hold') || el.getAttribute('data-detail');
+        openPanel();
       }, 550);
     });
     el.addEventListener('pointermove', function (event) {
@@ -321,7 +324,7 @@
     }, true);
     el.addEventListener('contextmenu', function (event) {
       event.preventDefault();
-      window.location.href = el.getAttribute('data-hold') || el.getAttribute('data-detail');
+      openPanel();
     });
   });
 })();
