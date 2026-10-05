@@ -6,6 +6,7 @@ from decimal import Decimal, InvalidOperation
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.db import IntegrityError
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -39,7 +40,7 @@ def _store(request) -> CounterStore | None:
     raw = request.session.get(SESSION_STORE)
     if not raw:
         return None
-    return CounterStore.objects.filter(pk=raw).first()
+    return CounterStore.objects.filter(pk=raw, is_active=True).first()
 
 
 def _need_store(request):
@@ -220,11 +221,11 @@ def staff_barcode_lookup(request):
 @user_passes_test(_staff_ok)
 def staff_counter(request):
     if request.method == 'POST':
-        name = (request.POST.get('store_name') or '').strip()
-        if not name:
-            messages.error(request, 'Enter the shop name.')
+        raw_id = (request.POST.get('store_id') or '').strip()
+        store = CounterStore.objects.filter(pk=raw_id, is_active=True).first() if raw_id.isdigit() else None
+        if store is None:
+            messages.error(request, 'Choose a shop.')
         else:
-            store, _created = CounterStore.objects.get_or_create(name=name[:80])
             request.session[SESSION_STORE] = store.pk
             return redirect('administration:staff_counter')
     store = _store(request)
@@ -242,7 +243,7 @@ def staff_counter(request):
         'persons/staff_counter_home.html',
         {
             'store': store,
-            'stores': CounterStore.objects.all(),
+            'stores': CounterStore.objects.filter(is_active=True),
             'open_sales': open_sales,
             'staff_nav_active': 'counter',
             'page_heading': 'Counter',
@@ -257,6 +258,66 @@ def staff_counter(request):
 def staff_counter_clear_store(request):
     request.session.pop(SESSION_STORE, None)
     return redirect('administration:staff_counter')
+
+
+def _clean_store_name(raw: str) -> str:
+    return ' '.join((raw or '').split())[:80]
+
+
+@login_required
+@user_passes_test(_staff_ok)
+def staff_counter_stores(request):
+    """Shop list for the counter. Superuser-only so cashier access can stay wider."""
+    if request.method == 'POST':
+        action = (request.POST.get('action') or '').strip()
+        if action == 'create':
+            name = _clean_store_name(request.POST.get('name') or '')
+            if not name:
+                messages.error(request, 'Enter a shop name.')
+            else:
+                last = CounterStore.objects.order_by('-sort_order').values_list('sort_order', flat=True).first() or 0
+                try:
+                    CounterStore.objects.create(name=name, sort_order=last + 1)
+                except IntegrityError:
+                    messages.error(request, 'A shop with this name already exists.')
+                else:
+                    messages.success(request, f'{name} added.')
+        elif action == 'rename':
+            store = get_object_or_404(CounterStore, pk=request.POST.get('store_id') or 0)
+            name = _clean_store_name(request.POST.get('name') or '')
+            if not name:
+                messages.error(request, 'Enter a shop name.')
+            else:
+                store.name = name
+                try:
+                    store.save(update_fields=['name'])
+                except IntegrityError:
+                    messages.error(request, 'A shop with this name already exists.')
+                else:
+                    messages.success(request, 'Shop renamed.')
+        elif action == 'toggle':
+            store = get_object_or_404(CounterStore, pk=request.POST.get('store_id') or 0)
+            store.is_active = not store.is_active
+            store.save(update_fields=['is_active'])
+            messages.success(request, f'{store.name} is {"shown" if store.is_active else "hidden"} on the counter.')
+        elif action == 'delete':
+            store = get_object_or_404(CounterStore, pk=request.POST.get('store_id') or 0)
+            label = store.name
+            store.delete()
+            messages.success(request, f'{label} removed. Past orders keep the shop name in their notes.')
+        else:
+            messages.error(request, 'Unknown action.')
+        return redirect('administration:staff_counter_stores')
+    return render(
+        request,
+        'persons/staff_counter_stores.html',
+        {
+            'stores': CounterStore.objects.all(),
+            'staff_nav_active': 'counter_stores',
+            'page_heading': 'Shops',
+            'page_note': '',
+        },
+    )
 
 
 @login_required

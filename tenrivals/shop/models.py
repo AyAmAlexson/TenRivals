@@ -915,13 +915,15 @@ class ProductBarcode(models.Model):
 
 
 class CounterStore(models.Model):
-    """Shop name chosen on the counter. Remembered so the next shift is one tap."""
+    """Offline shop the cashier picks on the counter. Managed from staff Administration."""
 
     name = models.CharField(max_length=80, unique=True)
+    is_active = models.BooleanField(default=True)
+    sort_order = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ['name']
+        ordering = ['sort_order', 'name']
 
     def __str__(self):
         return self.name

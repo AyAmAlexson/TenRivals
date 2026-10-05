@@ -133,7 +133,9 @@ class ProductBarcodeAdmin(admin.ModelAdmin):
 
 @admin.register(CounterStore)
 class CounterStoreAdmin(admin.ModelAdmin):
-    list_display = ("name", "created_at")
+    list_display = ("name", "is_active", "sort_order", "created_at")
+    list_editable = ("is_active", "sort_order")
+    ordering = ("sort_order", "name")
 
 
 @admin.register(StockUnit)

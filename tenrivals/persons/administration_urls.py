@@ -140,6 +140,7 @@ urlpatterns = [
         name="staff_sales_order_edit",
     ),
     path("orders/", staff_sales_views.staff_sales_orders, name="staff_sales_orders"),
+    path("shops/", staff_counter_views.staff_counter_stores, name="staff_counter_stores"),
     path("counter/", staff_counter_views.staff_counter, name="staff_counter"),
     path(
         "counter/store/clear/",

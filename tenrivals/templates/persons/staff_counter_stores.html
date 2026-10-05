@@ -1,0 +1,50 @@
+{% extends 'persons/staff_base.html' %}
+{% block title %}Shops — Staff | Tenrivals{% endblock %}
+{% block page_heading %}Shops{% endblock %}
+{% block page_note %}<p class="page-note">These names appear as buttons on the counter. Hiding a shop keeps it on past orders.</p>{% endblock %}
+{% block content %}
+<div class="card">
+  <h2 class="card-title">Add shop</h2>
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="create">
+    <div class="form-group">
+      <label for="id_name">Name</label>
+      <input id="id_name" type="text" name="name" maxlength="80" required>
+    </div>
+    <button class="btn" type="submit">Add shop</button>
+  </form>
+</div>
+<div class="card">
+  <h2 class="card-title">Shops</h2>
+  {% for store in stores %}
+  <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:end;padding:12px 0;border-bottom:1px solid var(--line)">
+    <form method="post" style="flex:1;min-width:220px">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="rename">
+      <input type="hidden" name="store_id" value="{{ store.pk }}">
+      <div class="form-group" style="margin:0">
+        <label for="shop-{{ store.pk }}">Name</label>
+        <input id="shop-{{ store.pk }}" type="text" name="name" maxlength="80" value="{{ store.name }}" required>
+      </div>
+      <button class="btn" type="submit" style="margin-top:8px">Save</button>
+    </form>
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="toggle">
+      <input type="hidden" name="store_id" value="{{ store.pk }}">
+      <button class="btn" type="submit" style="background:#fff;color:var(--ink);border:1px solid var(--line)">{% if store.is_active %}Hide{% else %}Show{% endif %}</button>
+    </form>
+    <form method="post" onsubmit="return confirm('Remove this shop from the counter?');">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="delete">
+      <input type="hidden" name="store_id" value="{{ store.pk }}">
+      <button class="btn" type="submit" style="background:#fff;color:#991b1b;border:1px solid #fecaca">Remove</button>
+    </form>
+    {% if not store.is_active %}<span style="font-size:13px;color:var(--muted)">Hidden</span>{% endif %}
+  </div>
+  {% empty %}
+  <p>No shops yet.</p>
+  {% endfor %}
+</div>
+{% endblock %}

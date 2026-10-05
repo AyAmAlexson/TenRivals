@@ -44,8 +44,9 @@ class CounterSaleTests(TestCase):
             is_active=True,
         )
 
-    def _open_counter(self):
-        self.client.post(reverse('administration:staff_counter'), {'store_name': 'Saburtalo'})
+    def _open_counter(self, name='HQ Warehouse'):
+        store = CounterStore.objects.get(name=name)
+        self.client.post(reverse('administration:staff_counter'), {'store_id': store.pk})
 
     def test_barcode_is_per_variant_and_unique(self):
         pairs = pairs_from_post({'bc-0': '111', 'bc-1': '222'}, [('L2', 1), ('L3', 0)])
@@ -65,7 +66,7 @@ class CounterSaleTests(TestCase):
         self.assertEqual(checked.status_code, 302)
         self.assertIn(f'/review/', checked['Location'])
         self.assertEqual(order.status, SalesOrder.Status.AWAITING_PAYMENT)
-        self.assertIn('Saburtalo', order.notes)
+        self.assertIn('HQ Warehouse', order.notes)
         self.assertEqual(order.customer.email, 'walk-in@counter.tenrivals')
         self.assertEqual(stock_listing_quantity(self.product.pk), 2)
 
@@ -137,7 +138,31 @@ class CounterSaleTests(TestCase):
         order.refresh_from_db()
         self.assertEqual(order.status, SalesOrder.Status.COMPLETED)
         self.assertEqual(order.payments.count(), 2)
-        self.assertEqual(CounterStore.objects.get().name, 'Saburtalo')
+
+    def test_shop_is_a_button_and_managed_in_admin(self):
+        home = self.client.get(reverse('administration:staff_counter'))
+        self.assertContains(home, 'HQ Warehouse')
+        self.assertContains(home, 'City Sport Store')
+        self.assertNotContains(home, 'name="store_name"')
+        typed = self.client.post(reverse('administration:staff_counter'), {'store_name': 'Saburtalo'})
+        self.assertEqual(typed.status_code, 200)
+        self.assertFalse(CounterStore.objects.filter(name='Saburtalo').exists())
+
+        hidden = CounterStore.objects.get(name='City Sport Store')
+        hidden.is_active = False
+        hidden.save(update_fields=['is_active'])
+        refused = self.client.post(reverse('administration:staff_counter'), {'store_id': hidden.pk})
+        self.assertEqual(refused.status_code, 200)
+        self.assertNotContains(refused, 'name="store_id" value="{}"'.format(hidden.pk))
+
+        page = self.client.get(reverse('administration:staff_counter_stores'))
+        self.assertContains(page, 'HQ Warehouse')
+        added = self.client.post(
+            reverse('administration:staff_counter_stores'),
+            {'action': 'create', 'name': 'Pop-up'},
+        )
+        self.assertEqual(added.status_code, 302)
+        self.assertTrue(CounterStore.objects.filter(name='Pop-up', is_active=True).exists())
 
     def test_lookup_endpoint(self):
         self._open_counter()
