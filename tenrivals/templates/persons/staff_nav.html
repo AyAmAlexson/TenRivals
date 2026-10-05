@@ -10,6 +10,7 @@
   </div>
   <div class="staff-nav__group">
     <div class="staff-nav__label">Sales</div>
+    <a href="{% url 'administration:staff_counter' %}" class="staff-nav__link {% if staff_nav_active == 'counter' %}is-active{% endif %}">Counter</a>
     <a href="{% url 'administration:staff_sales_orders' %}" class="staff-nav__link {% if staff_nav_active == 'sales_orders' %}is-active{% endif %}">Orders</a>
     <a href="{% url 'administration:staff_write_offs' %}" class="staff-nav__link {% if staff_nav_active == 'write_offs' %}is-active{% endif %}">Write-offs</a>
     <a href="{% url 'administration:staff_customers' %}" class="staff-nav__link {% if staff_nav_active == 'customers' %}is-active{% endif %}">Customers</a>

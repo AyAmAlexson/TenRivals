@@ -2,7 +2,7 @@ from django.urls import include, path
 
 from . import views
 from . import staff_promo_views
-from shop import staff_ai_insights, staff_analytics, staff_sales_views, staff_stock_stats, staff_stock_units_views
+from shop import staff_ai_insights, staff_analytics, staff_counter_views, staff_sales_views, staff_stock_stats, staff_stock_units_views
 
 app_name = "administration"
 
@@ -140,6 +140,28 @@ urlpatterns = [
         name="staff_sales_order_edit",
     ),
     path("orders/", staff_sales_views.staff_sales_orders, name="staff_sales_orders"),
+    path("counter/", staff_counter_views.staff_counter, name="staff_counter"),
+    path(
+        "counter/store/clear/",
+        staff_counter_views.staff_counter_clear_store,
+        name="staff_counter_clear_store",
+    ),
+    path("counter/sale/", staff_counter_views.staff_counter_sale, name="staff_counter_sale"),
+    path(
+        "counter/sale/<int:order_id>/",
+        staff_counter_views.staff_counter_sale,
+        name="staff_counter_sale_edit",
+    ),
+    path(
+        "counter/sale/<int:order_id>/review/",
+        staff_counter_views.staff_counter_review,
+        name="staff_counter_review",
+    ),
+    path(
+        "barcode-lookup/",
+        staff_counter_views.staff_barcode_lookup,
+        name="staff_barcode_lookup",
+    ),
     path("write-offs/", staff_stock_units_views.staff_write_offs, name="staff_write_offs"),
     path("write-offs/new/", staff_stock_units_views.staff_write_off_new, name="staff_write_off_new"),
     path(

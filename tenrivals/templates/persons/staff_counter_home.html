@@ -1,0 +1,62 @@
+{% extends 'persons/staff_base.html' %}
+{% block title %}Counter — Staff | Tenrivals{% endblock %}
+{% block page_heading %}Counter{% endblock %}
+{% block extra_head %}
+<style>
+  .ctr{max-width:880px;margin:0 auto}
+  .ctr-store{font-size:18px;margin:0 0 18px;color:var(--muted)}
+  .ctr-btn{
+    display:flex;align-items:center;justify-content:center;width:100%;
+    min-height:88px;margin:0 0 14px;padding:18px 20px;
+    font-size:22px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;
+    border:none;background:var(--accent);color:#fff;cursor:pointer;text-decoration:none;text-align:center
+  }
+  .ctr-btn--ghost{background:#fff;color:var(--ink);border:2px solid var(--line)}
+  .ctr-shops{display:grid;grid-template-columns:1fr;gap:12px}
+  @media(min-width:700px){.ctr-shops{grid-template-columns:1fr 1fr}}
+  .ctr-field{display:flex;flex-direction:column;gap:8px;margin:18px 0}
+  .ctr-field span{font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+  .ctr-field input{font-size:22px;padding:16px 14px;border:2px solid var(--line);width:100%}
+  .ctr-open a{display:block;padding:16px;border:1px solid var(--line);margin:0 0 10px;font-size:18px;background:#fff;color:var(--ink);text-decoration:none}
+</style>
+{% endblock %}
+{% block content %}
+<div class="ctr">
+  {% if not store %}
+  <form method="post">
+    {% csrf_token %}
+    <div class="ctr-field">
+      <span>Shop</span>
+      <input type="text" name="store_name" placeholder="Shop name" required autofocus>
+    </div>
+    <button class="ctr-btn" type="submit">Continue</button>
+  </form>
+  {% if stores %}
+  <div class="ctr-shops">
+    {% for s in stores %}
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="store_name" value="{{ s.name }}">
+      <button class="ctr-btn ctr-btn--ghost" type="submit">{{ s.name }}</button>
+    </form>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% else %}
+  <p class="ctr-store">Shop: <strong style="color:var(--ink)">{{ store.name }}</strong></p>
+  <a class="ctr-btn" href="{% url 'administration:staff_counter_sale' %}">New sale</a>
+  {% if open_sales %}
+  <h2 class="card-title" style="margin:22px 0 12px">Waiting for payment</h2>
+  <div class="ctr-open">
+    {% for sale in open_sales %}
+    <a href="{% url 'administration:staff_counter_review' sale.pk %}">{{ sale.invoice_number }} · {{ sale.gross_total }} ₾</a>
+    {% endfor %}
+  </div>
+  {% endif %}
+  <form method="post" action="{% url 'administration:staff_counter_clear_store' %}">
+    {% csrf_token %}
+    <button class="ctr-btn ctr-btn--ghost" type="submit">Change shop</button>
+  </form>
+  {% endif %}
+</div>
+{% endblock %}

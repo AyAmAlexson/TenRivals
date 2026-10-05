@@ -888,6 +888,45 @@ class ProductListing(models.Model):
         return f'{self.product_id} {self.channel} ×{self.quantity}'
 
 
+class ProductBarcode(models.Model):
+    """Manufacturer barcode for one sellable variant of a catalog product.
+
+    Shoes, apparel, rackets and strings keep quantities in a size JSON on the
+    product. The barcode lives here so each size can carry the code printed
+    on its box. ``variant_label`` is empty when the product has no size grid.
+    """
+
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='barcodes')
+    variant_label = models.CharField(max_length=48, blank=True, default='')
+    barcode = models.CharField(max_length=64, unique=True, db_index=True)
+
+    class Meta:
+        ordering = ['product_id', 'variant_label', 'id']
+        constraints = [
+            models.UniqueConstraint(
+                fields=('product', 'variant_label'),
+                name='shop_product_barcode_unique_variant',
+            ),
+        ]
+
+    def __str__(self):
+        variant = f' {self.variant_label}' if self.variant_label else ''
+        return f'{self.barcode}{variant}'
+
+
+class CounterStore(models.Model):
+    """Shop name chosen on the counter. Remembered so the next shift is one tap."""
+
+    name = models.CharField(max_length=80, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
+
 class StockReceipt(models.Model):
     """Staff-only journal of incoming batches.
 

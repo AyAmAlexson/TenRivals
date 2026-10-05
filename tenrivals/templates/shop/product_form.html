@@ -215,6 +215,9 @@
           </div></div>
           {% endif %}
           <div class="col"><div class="field">{{ form.sku.label_tag }}{{ form.sku }}{% if form.sku.errors %}<ul class="errorlist">{% for e in form.sku.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}</div></div>
+          {% if not form.size_inventory_rows %}
+          <div class="col"><div class="field"><label for="id_barcode">Barcode</label><input id="id_barcode" type="text" name="barcode" value="{{ simple_barcode }}" autocomplete="off" inputmode="text" placeholder="Manufacturer barcode"><p class="hint">One code for this product. Sized products get a code on each size below.</p></div></div>
+          {% endif %}
         </div>
       <div class="row">
           <div class="col"><div class="field">{{ form.listing_channel.label_tag }}{{ form.listing_channel }}{% if form.listing_channel.help_text %}<p class="hint">{{ form.listing_channel.help_text }}</p>{% endif %}{% if form.listing_channel.errors %}<ul class="errorlist">{% for e in form.listing_channel.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}</div></div>
@@ -251,10 +254,11 @@
           <span class="size-inv-heading" id="label-shoe-sizes" style="display:block;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px">Stock by shoe size (US)</span>
           <p class="hint">Quantity on hand per US size (half sizes through 16). Saved as JSON; total quantity is the sum of these cells.</p>
           <div class="size-inv-board js-size-inventory-grid" role="group" aria-labelledby="label-shoe-sizes" data-json-input-id="id_sizes">
-            {% for label, qty in form.size_inventory_rows %}
+            {% for label, qty, code in form.size_inventory_rows %}
             <div class="size-inv-row">
               <span class="size-inv-label">{{ label }}</span>
               <input type="number" min="0" step="1" class="size-inv-qty" data-size-label="{{ label }}" value="{{ qty }}" aria-label="Quantity {{ label }}">
+              <input type="text" class="size-inv-qty" name="bc-{{ forloop.counter0 }}" value="{{ code }}" placeholder="Barcode" aria-label="Barcode {{ label }}" autocomplete="off" inputmode="text">
             </div>
             {% endfor %}
           </div>
@@ -280,10 +284,11 @@
           <span id="label-grip-sizes" style="display:block;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px">Stock by grip size</span>
           <p class="hint">Quantity per grip (L0–L5). Saved as JSON; total quantity sums these cells.</p>
           <div class="size-inv-board js-size-inventory-grid" role="group" aria-labelledby="label-grip-sizes" data-json-input-id="id_grip_sizes">
-            {% for label, qty in form.size_inventory_rows %}
+            {% for label, qty, code in form.size_inventory_rows %}
             <div class="size-inv-row">
               <span class="size-inv-label">{{ label }}</span>
               <input type="number" min="0" step="1" class="size-inv-qty" data-size-label="{{ label }}" value="{{ qty }}" aria-label="Quantity grip {{ label }}">
+              <input type="text" class="size-inv-qty" name="bc-{{ forloop.counter0 }}" value="{{ code }}" placeholder="Barcode" aria-label="Barcode {{ label }}" autocomplete="off">
             </div>
             {% endfor %}
           </div>
@@ -302,10 +307,11 @@
           <span class="size-inv-heading" id="label-string-gauges" style="display:block;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px">Stock by gauge (mm)</span>
           <p class="hint">Quantity on hand per string diameter. Saved as JSON; total in-stock quantity is the sum of these cells (same as rackets / shoes).</p>
           <div class="size-inv-board js-size-inventory-grid" role="group" aria-labelledby="label-string-gauges" data-json-input-id="id_gauges">
-            {% for label, qty in form.size_inventory_rows %}
+            {% for label, qty, code in form.size_inventory_rows %}
             <div class="size-inv-row">
               <span class="size-inv-label">{{ label }}</span>
               <input type="number" min="0" step="1" class="size-inv-qty" data-size-label="{{ label }}" value="{{ qty }}" aria-label="Quantity {{ label }}">
+              <input type="text" class="size-inv-qty" name="bc-{{ forloop.counter0 }}" value="{{ code }}" placeholder="Barcode" aria-label="Barcode {{ label }}" autocomplete="off" inputmode="text">
             </div>
             {% endfor %}
           </div>
@@ -324,10 +330,11 @@
           <span id="label-apparel-sizes" style="display:block;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px">Stock by apparel size</span>
           <p class="hint">Quantity per size. Saved as JSON; total quantity sums these cells.</p>
           <div class="size-inv-board js-size-inventory-grid" role="group" aria-labelledby="label-apparel-sizes" data-json-input-id="id_sizes">
-            {% for label, qty in form.size_inventory_rows %}
+            {% for label, qty, code in form.size_inventory_rows %}
             <div class="size-inv-row">
               <span class="size-inv-label">{{ label }}</span>
               <input type="number" min="0" step="1" class="size-inv-qty" data-size-label="{{ label }}" value="{{ qty }}" aria-label="Quantity size {{ label }}">
+              <input type="text" class="size-inv-qty" name="bc-{{ forloop.counter0 }}" value="{{ code }}" placeholder="Barcode" aria-label="Barcode {{ label }}" autocomplete="off">
             </div>
             {% endfor %}
           </div>

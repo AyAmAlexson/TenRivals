@@ -1,0 +1,69 @@
+{% extends 'persons/staff_base.html' %}
+{% block title %}{{ order.invoice_number }} — Counter{% endblock %}
+{% block page_heading %}{{ order.invoice_number }}{% endblock %}
+{% block extra_head %}
+<style>
+  .ctr{max-width:720px;margin:0 auto}
+  .ctr-total{font-size:40px;font-weight:800;margin:0 0 8px}
+  .ctr-line{display:flex;justify-content:space-between;gap:12px;font-size:18px;padding:10px 0;border-bottom:1px solid var(--line)}
+  .ctr-btn{
+    display:flex;align-items:center;justify-content:center;width:100%;min-height:76px;margin:0 0 12px;
+    font-size:20px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;text-decoration:none;
+    border:none;background:var(--accent);color:#fff;cursor:pointer
+  }
+  .ctr-btn--ghost{background:#fff;color:var(--ink);border:2px solid var(--line)}
+  .ctr-btn--danger{background:#fff;color:#991b1b;border:2px solid #fecaca}
+  .ctr-pay{display:grid;gap:10px;margin-top:8px}
+  .ctr-pay label{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+  .ctr-pay input,.ctr-pay select{font-size:20px;padding:14px;border:2px solid var(--line);font-weight:600;text-transform:none;letter-spacing:0;color:var(--ink)}
+  .ctr-methods{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .ctr-methods label{min-height:64px;border:2px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:16px;background:#fff}
+  .ctr-methods input{position:absolute;opacity:0}
+  .ctr-methods input:checked + span{outline:3px solid var(--accent)}
+  .ctr-methods span{display:flex;width:100%;min-height:64px;align-items:center;justify-content:center}
+</style>
+{% endblock %}
+{% block content %}
+<div class="ctr">
+  <p style="color:var(--muted);margin:0 0 8px">{{ store.name }} · Walk-in customer</p>
+  <div class="ctr-total">{{ order.gross_total }} ₾</div>
+  {% for line in lines %}
+  <div class="ctr-line"><span>{{ line.qty }}× {{ line.title }}</span><span>{{ line.total }} ₾</span></div>
+  {% endfor %}
+
+  <form method="post" class="ctr-pay" id="pay-form">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="pay">
+    <div class="ctr-methods" role="radiogroup" aria-label="Payment method">
+      {% for value, label in methods %}
+      <label><input type="radio" name="method" value="{{ value }}" {% if forloop.first %}checked{% endif %}><span>{{ label }}</span></label>
+      {% endfor %}
+    </div>
+    <label>Fiscal receipt<input type="text" name="fiscal_receipt" required autocomplete="off" inputmode="text"></label>
+    <div id="split-amounts" style="display:none;gap:10px">
+      <label>Cash ₾<input type="number" name="cash_amount" min="0" step="0.01" value="0"></label>
+      <label>Card ₾<input type="number" name="card_amount" min="0" step="0.01" value="0"></label>
+    </div>
+    <button class="ctr-btn" type="submit">Paid</button>
+  </form>
+
+  <a class="ctr-btn ctr-btn--ghost" href="{% url 'administration:staff_counter_sale_edit' order.pk %}">Correct cart</a>
+  <form method="post" onsubmit="return confirm('Cancel this sale and return the items to stock?');">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="cancel">
+    <button class="ctr-btn ctr-btn--danger" type="submit">Cancel</button>
+  </form>
+</div>
+<script>
+(function(){
+  const box = document.getElementById('split-amounts');
+  function sync(){
+    const method = document.querySelector('input[name="method"]:checked');
+    const split = method && method.value === 'split';
+    box.style.display = split ? 'grid' : 'none';
+  }
+  document.querySelectorAll('input[name="method"]').forEach(function(el){ el.addEventListener('change', sync); });
+  sync();
+})();
+</script>
+{% endblock %}

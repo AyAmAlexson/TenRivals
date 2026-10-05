@@ -39,6 +39,7 @@ from .cart_session import (
     set_line_qty,
     try_add_to_cart,
 )
+from .barcodes import attach_barcode_inputs, pairs_from_post, validate_barcode_pairs, write_barcode_pairs
 from .catalog_utils import (
     FEATURED_STOCK_BRANDS,
     annotate_preorder_listing_quantity,
@@ -1430,6 +1431,18 @@ def robots_txt(request):
     return HttpResponse('\n'.join(lines), content_type='text/plain; charset=utf-8')
 
 
+def _save_product_barcodes(product, form, post) -> str | None:
+    pairs = pairs_from_post(post, form.size_inventory_rows)
+    error = validate_barcode_pairs(pairs, product.pk if getattr(product, 'pk', None) else None)
+    if error:
+        return error
+    return None
+
+
+def _write_product_barcodes(product, form, post) -> None:
+    write_barcode_pairs(product, pairs_from_post(post, list(form.size_inventory_rows)))
+
+
 def _product_create_pick_type_qs(return_next: str, channel_raw: str) -> str:
     parts = []
     if return_next:
@@ -1475,9 +1488,14 @@ def product_create(request):
         FormClass = _form_class_for_product_type(request.POST.get('type'))
         form = FormClass(request.POST, request.FILES)
         if form.is_valid():
-            obj = form.save()
-            _save_listing_from_form(obj, form)
-            return _redirect_after_product_form_save(request, obj, form)
+            barcode_error = _save_product_barcodes(form.instance, form, request.POST)
+            if barcode_error:
+                messages.error(request, barcode_error)
+            else:
+                obj = form.save()
+                _write_product_barcodes(obj, form, request.POST)
+                _save_listing_from_form(obj, form)
+                return _redirect_after_product_form_save(request, obj, form)
     else:
         FormClass = _form_class_for_product_type(type_code)
         form = FormClass(
@@ -1506,6 +1524,11 @@ def product_create(request):
                 'shop:product_ai_fill',
                 site_locale=getattr(request, 'site_locale', None),
             ),
+            'simple_barcode': attach_barcode_inputs(
+                form,
+                None,
+                request.POST if request.method == 'POST' else None,
+            ),
         },
     )
 
@@ -1532,9 +1555,14 @@ def product_edit(request, pk):
             return redirect(shop_reverse('shop:stock', site_locale=request.site_locale))
         form = FormClass(request.POST, request.FILES, instance=instance)
         if form.is_valid():
-            obj = form.save()
-            _save_listing_from_form(obj, form)
-            return _redirect_after_product_form_save(request, obj, form)
+            barcode_error = _save_product_barcodes(form.instance, form, request.POST)
+            if barcode_error:
+                messages.error(request, barcode_error)
+            else:
+                obj = form.save()
+                _write_product_barcodes(obj, form, request.POST)
+                _save_listing_from_form(obj, form)
+                return _redirect_after_product_form_save(request, obj, form)
     else:
         form = FormClass(
             instance=instance,
@@ -1559,6 +1587,11 @@ def product_edit(request, pk):
             'ai_fill_url': shop_reverse(
                 'shop:product_ai_fill',
                 site_locale=getattr(request, 'site_locale', None),
+            ),
+            'simple_barcode': attach_barcode_inputs(
+                form,
+                instance,
+                request.POST if request.method == 'POST' else None,
             ),
         },
     )

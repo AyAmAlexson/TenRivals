@@ -1,0 +1,155 @@
+{% extends 'persons/staff_base.html' %}
+{% block title %}{{ page_heading }} — Counter{% endblock %}
+{% block page_heading %}{{ page_heading }}{% endblock %}
+{% block extra_head %}
+<style>
+  .ctr{display:flex;flex-direction:column;gap:16px}
+  .ctr-top{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
+  .ctr-shop{font-size:16px;font-weight:600}
+  .ctr-scan{display:flex;gap:8px}
+  .ctr-scan input{flex:1;font-size:22px;padding:16px 14px;border:2px solid var(--line);min-width:0}
+  .ctr-scan button,.ctr-pay,.ctr-mini{
+    min-height:64px;padding:12px 18px;font-size:16px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;
+    border:none;background:var(--accent);color:#fff;cursor:pointer
+  }
+  .ctr-types{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch}
+  .ctr-types a{
+    flex:0 0 auto;min-height:52px;display:flex;align-items:center;padding:14px 16px;border:2px solid var(--line);background:#fff;color:var(--ink);
+    font-size:15px;font-weight:600;text-decoration:none
+  }
+  .ctr-types a.is-on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .ctr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+  .ctr-card{
+    display:flex;flex-direction:column;gap:8px;padding:10px;border:1px solid var(--line);background:#fff;
+    text-decoration:none;color:var(--ink);min-height:180px
+  }
+  .ctr-card img,.ctr-ph{width:100%;height:120px;object-fit:cover;background:#f3f4f6}
+  .ctr-ph{display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:#94a3b8}
+  .ctr-card strong{font-size:15px;line-height:1.25;font-weight:600}
+  .ctr-card span{font-size:14px;color:var(--muted)}
+  button.ctr-card{width:100%;font:inherit;text-align:left;cursor:pointer}
+  .ctr-sizes{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px}
+  .ctr-sizes button{
+    min-height:72px;font-size:20px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;
+    border:2px solid var(--line);background:#fff;cursor:pointer
+  }
+  .ctr-line{
+    display:grid;grid-template-columns:64px 1fr auto;gap:10px;align-items:center;
+    padding:12px 0;border-bottom:1px solid var(--line)
+  }
+  .ctr-line img,.ctr-line .ctr-ph{width:64px;height:64px}
+  .ctr-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .ctr-actions input[type="number"]{width:88px;font-size:18px;padding:10px;border:2px solid var(--line)}
+  .ctr-mini{min-height:48px;background:#fff;color:var(--ink);border:2px solid var(--line)}
+  .ctr-pay{width:100%;min-height:72px;font-size:20px;margin-top:8px}
+  .ctr-total{font-size:28px;font-weight:800;text-align:right}
+  @media(max-width:640px){
+    .ctr-line{grid-template-columns:72px 1fr}
+    .ctr-line-side{grid-column:1 / -1;display:flex;justify-content:space-between;align-items:center;text-align:left}
+  }
+</style>
+{% endblock %}
+{% block content %}
+<div class="ctr">
+  <div class="ctr-top">
+    <div class="ctr-shop">{{ store.name }}</div>
+    <a href="{% url 'administration:staff_counter' %}">Counter home</a>
+  </div>
+
+  <form class="ctr-scan" method="post">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="add_barcode">
+    {% if type_filter %}<input type="hidden" name="type" value="{{ type_filter }}">{% endif %}
+    <input type="text" name="barcode" placeholder="Scan barcode" autofocus autocomplete="off" inputmode="text" aria-label="Barcode">
+    <button type="submit">Add</button>
+  </form>
+
+  <div class="ctr-types">
+    <a href="?" class="{% if not type_filter %}is-on{% endif %}">All</a>
+    {% for t in types %}
+    <a href="?type={{ t.value }}" class="{% if type_filter == t.value %}is-on{% endif %}">{{ t.label }}</a>
+    {% endfor %}
+  </div>
+
+  {% if pick %}
+  <div class="card">
+    <h2 class="card-title">{{ pick.brand }} {{ pick.name }}</h2>
+    {% if pick.variants %}
+    <div class="ctr-sizes">
+      {% for v in pick.variants %}
+      <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="add_product">
+        <input type="hidden" name="product_id" value="{{ pick.id }}">
+        <input type="hidden" name="variant" value="{{ v.label }}">
+        <button type="submit">{{ v.label }}<br><span style="font-weight:600;font-size:14px">×{{ v.qty }}</span></button>
+      </form>
+      {% endfor %}
+    </div>
+    {% else %}
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="add_product">
+      <input type="hidden" name="product_id" value="{{ pick.id }}">
+      <button class="ctr-pay" type="submit">Add · {{ pick.price }} ₾</button>
+    </form>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <div class="ctr-grid">
+    {% for card in cards %}
+      {% if card.needs_variant %}
+      <a class="ctr-card" href="?{% if type_filter %}type={{ type_filter }}&amp;{% endif %}pick={{ card.id }}">
+        {% if card.image %}<img src="{{ card.image }}" alt="">{% else %}<div class="ctr-ph">{{ card.name|slice:":1" }}</div>{% endif %}
+        <strong>{{ card.brand }} {{ card.name }}</strong>
+        <span>{{ card.price }} ₾</span>
+      </a>
+      {% else %}
+      <form method="post" style="margin:0">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="add_product">
+        <input type="hidden" name="product_id" value="{{ card.id }}">
+        <button class="ctr-card" type="submit">
+          {% if card.image %}<img src="{{ card.image }}" alt="">{% else %}<div class="ctr-ph">{{ card.name|slice:":1" }}</div>{% endif %}
+          <strong>{{ card.brand }} {{ card.name }}</strong>
+          <span>{{ card.price }} ₾</span>
+        </button>
+      </form>
+      {% endif %}
+    {% empty %}
+    <p>Nothing in stock in this category.</p>
+    {% endfor %}
+  </div>
+
+  <div class="card">
+    <h2 class="card-title">Cart · {{ total }} ₾</h2>
+    {% for line in lines %}
+    <div class="ctr-line">
+      {% if line.image %}<img src="{{ line.image }}" alt="">{% else %}<div class="ctr-ph">{{ line.product.name|slice:":1" }}</div>{% endif %}
+      <div>
+        <strong>{{ line.label }}{% if line.variant %} · {{ line.variant }}{% endif %}</strong>
+        <div class="ctr-actions">
+          <form method="post">{% csrf_token %}<input type="hidden" name="action" value="set_qty"><input type="hidden" name="index" value="{{ forloop.counter0 }}"><input type="hidden" name="qty" value="{{ line.qty|add:'-1' }}"><button class="ctr-mini" type="submit">−</button></form>
+          <span style="font-size:20px;font-weight:800">{{ line.qty }}</span>
+          <form method="post">{% csrf_token %}<input type="hidden" name="action" value="set_qty"><input type="hidden" name="index" value="{{ forloop.counter0 }}"><input type="hidden" name="qty" value="{{ line.qty|add:'1' }}"><button class="ctr-mini" type="submit">+</button></form>
+          <form method="post" class="ctr-actions">{% csrf_token %}<input type="hidden" name="action" value="set_price"><input type="hidden" name="index" value="{{ forloop.counter0 }}"><input type="number" name="unit_price" min="0" step="0.01" value="{{ line.unit_price }}" aria-label="Unit price"><button class="ctr-mini" type="submit">Price</button></form>
+        </div>
+      </div>
+      <div class="ctr-line-side" style="text-align:right">
+        <div style="font-size:18px;font-weight:800">{{ line.line_total }} ₾</div>
+        <form method="post">{% csrf_token %}<input type="hidden" name="action" value="remove"><input type="hidden" name="index" value="{{ forloop.counter0 }}"><button class="ctr-mini" type="submit">Remove</button></form>
+      </div>
+    </div>
+    {% empty %}
+    <p>Scan a barcode or tap a product.</p>
+    {% endfor %}
+    <div class="ctr-total">{{ total }} ₾</div>
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="checkout">
+      <button class="ctr-pay" type="submit">Take payment</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -20,6 +20,8 @@ from shop.models import (
     StockUnit,
     StockValueSnapshot,
     StockWriteOff,
+    ProductBarcode,
+    CounterStore,
 )
 
 
@@ -120,6 +122,18 @@ class StockValueSnapshotAdmin(admin.ModelAdmin):
     list_filter = ("source",)
     ordering = ("-snapshot_date",)
     readonly_fields = ("created_at", "updated_at")
+
+
+@admin.register(ProductBarcode)
+class ProductBarcodeAdmin(admin.ModelAdmin):
+    list_display = ("barcode", "product", "variant_label")
+    search_fields = ("barcode", "product__name", "product__sku", "variant_label")
+    raw_id_fields = ("product",)
+
+
+@admin.register(CounterStore)
+class CounterStoreAdmin(admin.ModelAdmin):
+    list_display = ("name", "created_at")
 
 
 @admin.register(StockUnit)

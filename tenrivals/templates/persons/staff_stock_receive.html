@@ -28,7 +28,7 @@
 {% block content %}
 <div class="card">
   <h2 class="card-title">New batch</h2>
-  <form method="post" id="receive-form">
+  <form method="post" id="receive-form" data-lookup-url="{% url 'administration:staff_barcode_lookup' %}">
     {% csrf_token %}
     <input type="hidden" name="receive_token" value="{{ receive_token }}">
     <input type="hidden" name="lines-TOTAL_FORMS" id="id_lines-TOTAL_FORMS" value="{{ initial_rows|length }}">
@@ -50,6 +50,7 @@
           {% for row in initial_rows %}
           <tr class="receive-row" data-index="{{ forloop.counter0 }}">
             <td class="col-product">
+              <input type="text" class="js-barcode" placeholder="Barcode" autocomplete="off" inputmode="text" aria-label="Barcode" style="margin-bottom:6px">
               <select name="lines-{{ forloop.counter0 }}-product" class="js-product">
                 <option value="">Select…</option>
                 {% for p in products %}
@@ -167,8 +168,9 @@
 
 <template id="receive-row-template">
   <tr class="receive-row" data-index="__INDEX__">
-    <td class="col-product">
-      <select name="lines-__INDEX__-product" class="js-product">
+            <td class="col-product">
+              <input type="text" class="js-barcode" placeholder="Barcode" autocomplete="off" inputmode="text" aria-label="Barcode" style="margin-bottom:6px">
+              <select name="lines-__INDEX__-product" class="js-product">
         <option value="">Select…</option>
         {% for p in products %}
         <option value="{{ p.pk }}">{{ p.brand|default:"" }} {{ p.name }}{% if p.color %} — {{ p.color }}{% endif %}</option>
@@ -311,6 +313,33 @@
     const onhand = row.querySelector('.js-onhand');
     const add = row.querySelector('.js-add');
     const delBtn = row.querySelector('.js-del-row');
+    const barcode = row.querySelector('.js-barcode');
+    const lookupUrl = document.getElementById('receive-form').getAttribute('data-lookup-url');
+    if(barcode){
+      barcode.addEventListener('keydown', function(e){
+        if(e.key !== 'Enter') return;
+        e.preventDefault();
+        const code = barcode.value.trim();
+        if(!code) return;
+        fetch(lookupUrl + '?barcode=' + encodeURIComponent(code), {headers: {'Accept': 'application/json'}})
+          .then(function(r){ return r.json(); })
+          .then(function(data){
+            if(!data.ok){
+              barcode.setCustomValidity(data.error || 'Barcode not found.');
+              barcode.reportValidity();
+              return;
+            }
+            barcode.setCustomValidity('');
+            product.value = String(data.product_id);
+            product.dispatchEvent(new Event('change'));
+            const variant = row.querySelector('.js-variant');
+            if(variant) variant.value = data.variant || '';
+            if(!qty.value) qty.value = '1';
+            qty.focus();
+          })
+          .catch(function(){ barcode.setCustomValidity('Could not look up barcode.'); barcode.reportValidity(); });
+      });
+    }
     product.addEventListener('change', function(){
       syncProduct(row, true);
       refreshDownstreamOnHand(row);
