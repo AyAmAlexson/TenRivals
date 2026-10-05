@@ -7,12 +7,15 @@ from django.urls import reverse
 from shop.barcodes import lookup_barcode, pairs_from_post, write_barcode_pairs
 from shop.models import (
     CounterStore,
+    CourtSurface,
+    Gender,
     Product,
     ProductBarcode,
     ProductListing,
     ProductListingChannel,
     ProductType,
     SalesOrder,
+    Shoe,
 )
 from shop.sales_order_utils import stock_listing_quantity
 
@@ -182,3 +185,36 @@ class CounterSaleTests(TestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, 'Overgrip')
         self.assertContains(resp, 'Scan barcode')
+        self.assertContains(resp, '1234567890123')
+        self.assertContains(resp, '3 in stock')
+        self.assertContains(resp, 'object-fit:contain')
+        self.assertContains(resp, 'width:140px')
+
+    def test_category_filters_brand_and_size(self):
+        self._open_counter()
+        shoe = Shoe.objects.create(
+            type=ProductType.MENS_SHOES,
+            name='Gel Resolution',
+            brand='Asics',
+            initial_price=Decimal('200.00'),
+            gender=Gender.MEN,
+            surface=CourtSurface.CLAY,
+            sizes={'US 10': 2, 'US 9.5': 1, 'US 11': 0},
+        )
+        ProductListing.objects.create(product=shoe, channel=ProductListingChannel.STOCK, quantity=3)
+        ProductBarcode.objects.create(product=shoe, variant_label='US 10', barcode='SHOE10')
+        sale = reverse('administration:staff_counter_sale')
+        section = self.client.get(sale, {'type': ProductType.MENS_SHOES})
+        self.assertContains(section, 'ctr-brands')
+        self.assertContains(section, 'Asics')
+        self.assertContains(section, 'ctr-size-filters')
+        self.assertContains(section, 'US 10')
+        self.assertNotContains(section, 'US 11')
+        sized = self.client.get(sale, {'type': ProductType.MENS_SHOES, 'brand': 'Asics', 'size': 'US 10'})
+        self.assertContains(sized, 'Gel Resolution')
+        self.assertContains(sized, 'SHOE10')
+        self.assertContains(sized, '2 in stock')
+        self.assertNotContains(sized, 'Overgrip')
+        picked = self.client.get(sale, {'type': ProductType.MENS_SHOES, 'pick': shoe.pk})
+        self.assertContains(picked, 'class="ctr-sizes"')
+        self.assertContains(picked, 'US 9.5')

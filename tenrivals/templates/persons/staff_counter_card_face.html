@@ -1,0 +1,7 @@
+{% if card.image %}<img src="{{ card.image }}" alt="">{% else %}<div class="ctr-ph">{{ card.name|slice:":1" }}</div>{% endif %}
+<strong>{{ card.brand }} {{ card.name }}</strong>
+<div class="ctr-card__foot">
+  {% if card.barcode %}<span class="ctr-code">{{ card.barcode }}</span>{% endif %}
+  <span class="ctr-qty">{{ card.stock_qty }} in stock</span>
+  <span class="ctr-price">{{ card.price }} ₾</span>
+</div>

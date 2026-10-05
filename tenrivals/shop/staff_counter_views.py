@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+import re
 from decimal import Decimal, InvalidOperation
+from urllib.parse import urlencode
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.db import IntegrityError
+from django.db.models import Prefetch
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -24,9 +27,10 @@ from .counter import (
     replace_counter_lines,
     shelf_price,
 )
-from .models import CounterStore, Product, ProductListingChannel, ProductType, SalesOrder
+from .models import CounterStore, Product, ProductListing, ProductListingChannel, ProductType, SalesOrder
 from .sales_order_stock import get_variant_qty_map, product_requires_variant
 from .sales_order_utils import stock_listing_quantity
+from .site_locale import shop_reverse
 
 SESSION_STORE = 'counter_store_id'
 SESSION_CART = 'counter_cart'
@@ -73,9 +77,19 @@ def _product_card(product: Product) -> dict:
     if product_requires_variant(product):
         variants = [
             {'label': key, 'qty': int(qty)}
-            for key, qty in sorted(get_variant_qty_map(product).items())
+            for key, qty in get_variant_qty_map(product).items()
             if int(qty or 0) > 0
         ]
+        variants.sort(key=lambda row: _size_sort_key(row['label']))
+    codes = {row.variant_label: row.barcode for row in product.barcodes.all()}
+    listings = getattr(product, 'stock_listings', None) or []
+    listing_qty = int(listings[0].quantity) if listings else 0
+    if variants:
+        stock_qty = sum(row['qty'] for row in variants)
+        barcode = ', '.join(codes[row['label']] for row in variants if codes.get(row['label']))
+    else:
+        stock_qty = listing_qty
+        barcode = codes.get('', '')
     return {
         'id': product.pk,
         'name': product.name,
@@ -84,11 +98,40 @@ def _product_card(product: Product) -> dict:
         'image': image.url if image else '',
         'variants': variants,
         'needs_variant': bool(variants),
+        'stock_qty': stock_qty,
+        'barcode': barcode,
+        'codes': codes,
+        'detail_url': shop_reverse('shop:product_detail', product.pk),
     }
 
 
-def _catalog(type_filter: str):
-    products = (
+def _size_sort_key(label: str):
+    parts = re.split(r'(\d+(?:\.\d+)?)', label or '')
+    key = []
+    for part in parts:
+        if re.fullmatch(r'\d+(?:\.\d+)?', part or ''):
+            key.append((0, float(part)))
+        elif part:
+            key.append((1, part.lower()))
+    return key
+
+
+def _href(**params) -> str:
+    pairs = [(key, value) for key, value in params.items() if value]
+    return ('?' + urlencode(pairs)) if pairs else '?'
+
+
+def _kept_query(request) -> str:
+    pairs = []
+    for key in ('type', 'brand', 'size'):
+        value = (request.POST.get(key) or '').strip()
+        if value:
+            pairs.append((key, value))
+    return ('?' + urlencode(pairs)) if pairs else ''
+
+
+def _stock_products():
+    return (
         Product.objects.filter(
             is_active=True,
             listings__channel=ProductListingChannel.STOCK,
@@ -96,25 +139,65 @@ def _catalog(type_filter: str):
         )
         .distinct()
         .select_related('racket', 'shoe', 'apparel', 'string')
+        .prefetch_related(
+            'barcodes',
+            Prefetch(
+                'listings',
+                queryset=ProductListing.objects.filter(channel=ProductListingChannel.STOCK),
+                to_attr='stock_listings',
+            ),
+        )
         .order_by('brand', 'name', 'id')
     )
-    if type_filter in dict(ProductType.choices):
-        products = products.filter(type=type_filter)
-    else:
-        type_filter = ''
-    present = set(
-        Product.objects.filter(
-            is_active=True,
-            listings__channel=ProductListingChannel.STOCK,
-            listings__quantity__gt=0,
-        ).values_list('type', flat=True)
-    )
+
+
+def _catalog(type_filter: str, brand_filter: str = '', size_filter: str = ''):
+    products = list(_stock_products())
+    present = {product.type for product in products}
     types = [
         {'value': value, 'label': label}
         for value, label in ProductType.choices
         if value in present
     ]
-    return type_filter, types, [_product_card(p) for p in products]
+    if type_filter not in dict(ProductType.choices):
+        type_filter = ''
+        brand_filter = ''
+        size_filter = ''
+    else:
+        products = [product for product in products if product.type == type_filter]
+    cards = [_product_card(product) for product in products]
+    brands = sorted({card['brand'] for card in cards if card['brand']})
+    sizes = sorted(
+        {variant['label'] for card in cards for variant in card['variants']},
+        key=_size_sort_key,
+    )
+    if brand_filter not in brands:
+        brand_filter = ''
+    if size_filter not in sizes:
+        size_filter = ''
+    if brand_filter:
+        cards = [card for card in cards if card['brand'] == brand_filter]
+    if size_filter:
+        narrowed = []
+        for card in cards:
+            hit = next((row for row in card['variants'] if row['label'] == size_filter), None)
+            if hit is None:
+                continue
+            shown = dict(card)
+            shown['stock_qty'] = hit['qty']
+            shown['barcode'] = card['codes'].get(size_filter, '')
+            shown['add_variant'] = size_filter
+            narrowed.append(shown)
+        cards = narrowed
+    for card in cards:
+        card.setdefault('add_variant', '')
+        card['pick_href'] = _href(
+            type=type_filter,
+            brand=brand_filter,
+            size=size_filter,
+            pick=card['id'],
+        )
+    return type_filter, brand_filter, size_filter, types, brands, sizes, cards
 
 
 def _cart_rows_resolved(rows: list[dict]) -> list[dict]:
@@ -388,23 +471,37 @@ def staff_counter_sale(request, order_id: int | None = None):
             elif order is None:
                 _save_cart(request, rows)
         if order is not None:
-            return redirect('administration:staff_counter_sale_edit', order_id=order.pk)
-        return redirect(
-            reverse('administration:staff_counter_sale')
-            + (('?type=' + request.POST.get('type', '')) if request.POST.get('type') else '')
-        )
+            return redirect(
+                reverse('administration:staff_counter_sale_edit', args=[order.pk]) + _kept_query(request)
+            )
+        return redirect(reverse('administration:staff_counter_sale') + _kept_query(request))
 
-    type_filter, types, cards = _catalog((request.GET.get('type') or '').strip())
+    type_filter, brand_filter, size_filter, types, brands, sizes, cards = _catalog(
+        (request.GET.get('type') or '').strip(),
+        (request.GET.get('brand') or '').strip(),
+        (request.GET.get('size') or '').strip(),
+    )
     pick = None
     pick_id = (request.GET.get('pick') or '').strip()
     if pick_id.isdigit():
         pick = next((card for card in cards if card['id'] == int(pick_id)), None)
         if pick is None:
-            product = Product.objects.filter(pk=int(pick_id)).select_related(
-                'racket', 'shoe', 'apparel', 'string'
-            ).first()
+            product = (
+                Product.objects.filter(pk=int(pick_id))
+                .select_related('racket', 'shoe', 'apparel', 'string')
+                .prefetch_related(
+                    'barcodes',
+                    Prefetch(
+                        'listings',
+                        queryset=ProductListing.objects.filter(channel=ProductListingChannel.STOCK),
+                        to_attr='stock_listings',
+                    ),
+                )
+                .first()
+            )
             if product is not None:
                 pick = _product_card(product)
+                pick.setdefault('add_variant', '')
     resolved, total = _cart_rows_resolved(rows if order is None else _order_to_cart(order))
     return render(
         request,
@@ -413,7 +510,11 @@ def staff_counter_sale(request, order_id: int | None = None):
             'store': store,
             'order': order,
             'types': types,
+            'brands': brands,
+            'sizes': sizes,
             'type_filter': type_filter,
+            'brand_filter': brand_filter,
+            'size_filter': size_filter,
             'cards': cards,
             'pick': pick,
             'lines': resolved,
