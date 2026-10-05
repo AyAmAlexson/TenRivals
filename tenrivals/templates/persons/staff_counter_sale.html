@@ -53,6 +53,37 @@
   .ctr-mini{min-height:48px;background:#fff;color:var(--ink);border:2px solid var(--line)}
   .ctr-pay{width:100%;min-height:72px;font-size:20px;margin-top:8px}
   .ctr-total{font-size:28px;font-weight:800;text-align:right}
+  .ctr-scrim{position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:40000;opacity:0;pointer-events:none;transition:opacity .22s}
+  .ctr-scrim.is-open{opacity:1;pointer-events:auto}
+  .ctr-drawer{
+    position:fixed;top:0;right:0;z-index:40001;height:100%;width:min(480px,100%);
+    background:#fff;box-shadow:-12px 0 32px rgba(0,0,0,.16);
+    transform:translateX(100%);transition:transform .24s ease;display:flex;flex-direction:column
+  }
+  .ctr-drawer.is-open{transform:translateX(0)}
+  .ctr-drawer__bar{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:14px 16px;border-bottom:1px solid var(--line);background:#fff
+  }
+  .ctr-drawer__close{
+    min-height:56px;min-width:112px;padding:12px 16px;border:2px solid var(--line);background:#fff;color:var(--ink);
+    font-size:16px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;text-decoration:none;
+    display:inline-flex;align-items:center;justify-content:center
+  }
+  .ctr-drawer__scroll{overflow:auto;-webkit-overflow-scrolling:touch;padding:16px 16px 32px}
+  .ctr-drawer__photo{width:100%;height:260px;object-fit:contain;object-position:center;background:#f3f4f6}
+  .ctr-drawer__thumbs{display:flex;gap:8px;margin-top:8px;overflow-x:auto}
+  .ctr-drawer__thumbs button{width:72px;height:72px;padding:0;border:2px solid var(--line);background:#fff;flex:0 0 72px}
+  .ctr-drawer__thumbs img{width:100%;height:100%;object-fit:contain}
+  .ctr-drawer__name{margin:14px 0 4px;font-size:22px;font-weight:600;line-height:1.25}
+  .ctr-drawer__price{font-size:28px;font-weight:800;margin:0 0 16px}
+  .ctr-drawer__lead,.ctr-drawer__copy{font-size:16px;font-weight:400;line-height:1.45;margin:0 0 14px}
+  .ctr-drawer__copy{white-space:pre-wrap}
+  .ctr-drawer h3{margin:8px 0 10px;font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+  .ctr-spec{display:grid;grid-template-columns:38% 1fr;gap:8px;padding:10px 0;border-bottom:1px solid var(--line);font-size:15px}
+  .ctr-spec dt{font-weight:600;color:var(--muted)}
+  .ctr-spec dd{margin:0;font-weight:400}
+  .ctr-drawer .ctr-code{display:block;font-size:12px;font-weight:400;letter-spacing:0;text-transform:none}
   @media(max-width:640px){
     .ctr-line{grid-template-columns:72px 1fr}
     .ctr-line-side{grid-column:1 / -1;display:flex;justify-content:space-between;align-items:center;text-align:left}
@@ -100,38 +131,6 @@
     {% for size in sizes %}
     <a href="?type={{ type_filter }}{% if brand_filter %}&amp;brand={{ brand_filter|urlencode }}{% endif %}&amp;size={{ size|urlencode }}" class="{% if size_filter == size %}is-on{% endif %}">{{ size }}</a>
     {% endfor %}
-  </div>
-  {% endif %}
-
-  {% if pick %}
-  <div class="card">
-    <h2 class="card-title">{{ pick.brand }} {{ pick.name }}</h2>
-    {% if pick.variants %}
-    <div class="ctr-sizes">
-      {% for v in pick.variants %}
-      <form method="post">
-        {% csrf_token %}
-        <input type="hidden" name="action" value="add_product">
-        <input type="hidden" name="product_id" value="{{ pick.id }}">
-        <input type="hidden" name="variant" value="{{ v.label }}">
-        <input type="hidden" name="type" value="{{ type_filter }}">
-        <input type="hidden" name="brand" value="{{ brand_filter }}">
-        <input type="hidden" name="size" value="{{ size_filter }}">
-        <button type="submit">{{ v.label }}<span>×{{ v.qty }}</span></button>
-      </form>
-      {% endfor %}
-    </div>
-    {% else %}
-    <form method="post">
-      {% csrf_token %}
-      <input type="hidden" name="action" value="add_product">
-      <input type="hidden" name="product_id" value="{{ pick.id }}">
-      <input type="hidden" name="type" value="{{ type_filter }}">
-      <input type="hidden" name="brand" value="{{ brand_filter }}">
-      <input type="hidden" name="size" value="{{ size_filter }}">
-      <button class="ctr-pay" type="submit">Add · {{ pick.price }} ₾</button>
-    </form>
-    {% endif %}
   </div>
   {% endif %}
 
@@ -202,8 +201,87 @@
     </form>
   </div>
 </div>
+{% if panel %}
+<a class="ctr-scrim" id="ctr-scrim" href="{{ close_href }}" aria-label="Close product"></a>
+<aside class="ctr-drawer" id="ctr-drawer" role="dialog" aria-modal="true" aria-label="{{ panel.brand }} {{ panel.name }}">
+  <div class="ctr-drawer__bar">
+    <strong style="font-weight:600">{{ panel.brand }}</strong>
+    <a class="ctr-drawer__close" href="{{ close_href }}">Close</a>
+  </div>
+  <div class="ctr-drawer__scroll">
+    {% if panel.images %}
+    <img class="ctr-drawer__photo" id="ctr-drawer-photo" src="{{ panel.images.0 }}" alt="">
+    {% if panel.images|length > 1 %}
+    <div class="ctr-drawer__thumbs">
+      {% for src in panel.images %}
+      <button type="button" data-photo="{{ src }}" aria-label="Photo {{ forloop.counter }}"><img src="{{ src }}" alt=""></button>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% else %}
+    <div class="ctr-ph ctr-drawer__photo">{{ panel.name|slice:":1" }}</div>
+    {% endif %}
+    <h2 class="ctr-drawer__name">{{ panel.name }}</h2>
+    <p class="ctr-drawer__price">{{ panel.price }} ₾</p>
+    {% if panel.variants %}
+    <h3>Size</h3>
+    <div class="ctr-sizes">
+      {% for v in panel.variants %}
+      <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="add_product">
+        <input type="hidden" name="product_id" value="{{ panel.id }}">
+        <input type="hidden" name="variant" value="{{ v.label }}">
+        <input type="hidden" name="type" value="{{ type_filter }}">
+        <input type="hidden" name="brand" value="{{ brand_filter }}">
+        <input type="hidden" name="size" value="{{ size_filter }}">
+        <button type="submit">{{ v.label }}<span>×{{ v.qty }}</span>{% if v.barcode %}<span class="ctr-code">{{ v.barcode }}</span>{% endif %}</button>
+      </form>
+      {% endfor %}
+    </div>
+    {% else %}
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="add_product">
+      <input type="hidden" name="product_id" value="{{ panel.id }}">
+      <input type="hidden" name="type" value="{{ type_filter }}">
+      <input type="hidden" name="brand" value="{{ brand_filter }}">
+      <input type="hidden" name="size" value="{{ size_filter }}">
+      <button class="ctr-pay" type="submit">Add</button>
+    </form>
+    {% endif %}
+    {% if panel.short_description %}<p class="ctr-drawer__lead">{{ panel.short_description }}</p>{% endif %}
+    {% if panel.description %}<p class="ctr-drawer__copy">{{ panel.description }}</p>{% endif %}
+    {% if panel.specs %}
+    <h3>Details</h3>
+    <dl>
+      {% for label, value in panel.specs %}
+      <div class="ctr-spec"><dt>{{ label }}</dt><dd>{{ value }}</dd></div>
+      {% endfor %}
+    </dl>
+    {% endif %}
+  </div>
+</aside>
+{% endif %}
 <script>
 (function () {
+  var drawer = document.getElementById('ctr-drawer');
+  var scrim = document.getElementById('ctr-scrim');
+  if (drawer) {
+    requestAnimationFrame(function () {
+      drawer.classList.add('is-open');
+      if (scrim) scrim.classList.add('is-open');
+    });
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape') window.location.href = '{{ close_href|escapejs }}';
+    });
+    var photo = document.getElementById('ctr-drawer-photo');
+    document.querySelectorAll('[data-photo]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        if (photo) photo.src = button.getAttribute('data-photo');
+      });
+    });
+  }
   document.querySelectorAll('[data-detail]').forEach(function (el) {
     var timer = null;
     var startX = 0;

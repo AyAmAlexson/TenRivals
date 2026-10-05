@@ -8,6 +8,7 @@ from urllib.parse import urlencode
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError
 from django.db.models import Prefetch
 from django.http import JsonResponse
@@ -73,15 +74,15 @@ def _save_cart(request, rows: list[dict]) -> None:
 
 def _product_card(product: Product) -> dict:
     image = product.main_image
+    codes = {row.variant_label: row.barcode for row in product.barcodes.all()}
     variants = []
     if product_requires_variant(product):
         variants = [
-            {'label': key, 'qty': int(qty)}
+            {'label': key, 'qty': int(qty), 'barcode': codes.get(key, '')}
             for key, qty in get_variant_qty_map(product).items()
             if int(qty or 0) > 0
         ]
         variants.sort(key=lambda row: _size_sort_key(row['label']))
-    codes = {row.variant_label: row.barcode for row in product.barcodes.all()}
     listings = getattr(product, 'stock_listings', None) or []
     listing_qty = int(listings[0].quantity) if listings else 0
     if variants:
@@ -103,6 +104,103 @@ def _product_card(product: Product) -> dict:
         'codes': codes,
         'detail_url': shop_reverse('shop:product_detail', product.pk),
     }
+
+
+def _spec_rows(product: Product) -> list[tuple[str, str]]:
+    rows: list[tuple[str, str]] = []
+
+    def add(label: str, value) -> None:
+        text = '' if value is None else str(value).strip()
+        if text:
+            rows.append((label, text))
+
+    add('SKU', product.sku)
+    add('Type', product.get_type_display())
+    add('Color', product.color)
+    if product.category_id:
+        add('Category', product.category.name)
+    if product.type == ProductType.RACKET:
+        try:
+            racket = product.racket
+        except ObjectDoesNotExist:
+            racket = None
+        if racket is not None:
+            if racket.weight_grams:
+                state = 'strung' if racket.is_strung else 'unstrung'
+                add('Weight', f'{racket.weight_grams} g, {state}')
+            if racket.head_size_sq_in:
+                add('Head size', f'{racket.head_size_sq_in} sq in')
+            add('String pattern', racket.string_pattern)
+            if racket.length_in:
+                add('Length', f'{racket.length_in} in')
+            if racket.balance_mm:
+                add('Balance', f'{racket.balance_mm} mm')
+            add('Swingweight', racket.swingweight)
+    elif product.type in {
+        ProductType.MENS_SHOES,
+        ProductType.WOMENS_SHOES,
+        ProductType.JUNIOR_SHOES,
+    }:
+        try:
+            shoe = product.shoe
+        except ObjectDoesNotExist:
+            shoe = None
+        if shoe is not None:
+            add('Surface', shoe.get_surface_display())
+            add('Gender', shoe.get_gender_display())
+            add('Width', shoe.width)
+    elif product.type in {
+        ProductType.MENS_APPAREL,
+        ProductType.WOMENS_APPAREL,
+        ProductType.JUNIOR_APPAREL,
+    }:
+        try:
+            apparel = product.apparel
+        except ObjectDoesNotExist:
+            apparel = None
+        if apparel is not None:
+            add('Gender', apparel.get_gender_display())
+            add('Material', apparel.material)
+    elif product.type == ProductType.STRINGS:
+        try:
+            string = product.string
+        except ObjectDoesNotExist:
+            string = None
+        if string is not None:
+            add('Material', string.material)
+            if string.length_m:
+                add('Length', f'{string.length_m} m')
+    elif product.type == ProductType.BAGS:
+        try:
+            bag = product.bag
+        except ObjectDoesNotExist:
+            bag = None
+        if bag is not None and bag.capacity_rackets:
+            add('Racket capacity', bag.capacity_rackets)
+    elif product.type == ProductType.BALLS:
+        try:
+            balls = product.balls
+        except ObjectDoesNotExist:
+            balls = None
+        if balls is not None:
+            if balls.balls_per_can:
+                add('Balls per can', balls.balls_per_can)
+            add('Court surface', balls.get_surface_display())
+    attrs = product.attributes if isinstance(product.attributes, dict) else {}
+    for key, value in attrs.items():
+        if key in {'source_images', 'source_url'} or isinstance(value, (list, dict)):
+            continue
+        add(str(key), value)
+    return rows
+
+
+def _panel_images(product: Product) -> list[str]:
+    urls = []
+    for field in ('image_1', 'image_2', 'image_3', 'image_4', 'image_5'):
+        image = getattr(product, field, None)
+        if image:
+            urls.append(image.url)
+    return urls
 
 
 def _size_sort_key(label: str):
@@ -481,27 +579,30 @@ def staff_counter_sale(request, order_id: int | None = None):
         (request.GET.get('brand') or '').strip(),
         (request.GET.get('size') or '').strip(),
     )
-    pick = None
+    panel = None
+    close_href = _href(type=type_filter, brand=brand_filter, size=size_filter)
     pick_id = (request.GET.get('pick') or '').strip()
     if pick_id.isdigit():
-        pick = next((card for card in cards if card['id'] == int(pick_id)), None)
-        if pick is None:
-            product = (
-                Product.objects.filter(pk=int(pick_id))
-                .select_related('racket', 'shoe', 'apparel', 'string')
-                .prefetch_related(
-                    'barcodes',
-                    Prefetch(
-                        'listings',
-                        queryset=ProductListing.objects.filter(channel=ProductListingChannel.STOCK),
-                        to_attr='stock_listings',
-                    ),
-                )
-                .first()
+        product = (
+            Product.objects.filter(pk=int(pick_id))
+            .select_related('category', 'racket', 'shoe', 'apparel', 'string', 'bag', 'balls', 'accessory')
+            .prefetch_related(
+                'barcodes',
+                Prefetch(
+                    'listings',
+                    queryset=ProductListing.objects.filter(channel=ProductListingChannel.STOCK),
+                    to_attr='stock_listings',
+                ),
             )
-            if product is not None:
-                pick = _product_card(product)
-                pick.setdefault('add_variant', '')
+            .first()
+        )
+        if product is not None:
+            panel = _product_card(product)
+            panel.setdefault('add_variant', '')
+            panel['short_description'] = product.short_description or ''
+            panel['description'] = product.description or ''
+            panel['specs'] = _spec_rows(product)
+            panel['images'] = _panel_images(product)
     resolved, total = _cart_rows_resolved(rows if order is None else _order_to_cart(order))
     return render(
         request,
@@ -516,7 +617,8 @@ def staff_counter_sale(request, order_id: int | None = None):
             'brand_filter': brand_filter,
             'size_filter': size_filter,
             'cards': cards,
-            'pick': pick,
+            'panel': panel,
+            'close_href': close_href,
             'lines': resolved,
             'total': total,
             'staff_nav_active': 'counter',

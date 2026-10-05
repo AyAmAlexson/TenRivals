@@ -200,6 +200,8 @@ class CounterSaleTests(TestCase):
             gender=Gender.MEN,
             surface=CourtSurface.CLAY,
             sizes={'US 10': 2, 'US 9.5': 1, 'US 11': 0},
+            short_description='Stable clay-court shoe.',
+            description='Extra cushioning in the heel.',
         )
         ProductListing.objects.create(product=shoe, channel=ProductListingChannel.STOCK, quantity=3)
         ProductBarcode.objects.create(product=shoe, variant_label='US 10', barcode='SHOE10')
@@ -216,5 +218,9 @@ class CounterSaleTests(TestCase):
         self.assertContains(sized, '2 in stock')
         self.assertNotContains(sized, 'Overgrip')
         picked = self.client.get(sale, {'type': ProductType.MENS_SHOES, 'pick': shoe.pk})
-        self.assertContains(picked, 'class="ctr-sizes"')
+        self.assertContains(picked, 'id="ctr-drawer"')
+        self.assertContains(picked, 'Stable clay-court shoe.')
+        self.assertContains(picked, 'Extra cushioning in the heel.')
+        self.assertContains(picked, 'Clay')
         self.assertContains(picked, 'US 9.5')
+        self.assertContains(picked, 'SHOE10')
