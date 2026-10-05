@@ -70,7 +70,9 @@
     font-size:16px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;text-decoration:none;
     display:inline-flex;align-items:center;justify-content:center
   }
-  .ctr-drawer__scroll{overflow:auto;-webkit-overflow-scrolling:touch;padding:16px 16px 32px}
+  .ctr-drawer__scroll{overflow:auto;-webkit-overflow-scrolling:touch;padding:16px 16px 32px;flex:1}
+  .ctr-drawer__foot{padding:12px 16px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--line);background:#fff}
+  .ctr-drawer__foot .ctr-pay{margin-top:0}
   .ctr-drawer__photo{width:100%;height:260px;object-fit:contain;object-position:center;background:#f3f4f6}
   .ctr-drawer__thumbs{display:flex;gap:8px;margin-top:8px;overflow-x:auto}
   .ctr-drawer__thumbs button{width:72px;height:72px;padding:0;border:2px solid var(--line);background:#fff;flex:0 0 72px}
@@ -161,7 +163,7 @@
         <input type="hidden" name="type" value="{{ type_filter }}">
         <input type="hidden" name="brand" value="{{ brand_filter }}">
         <input type="hidden" name="size" value="{{ size_filter }}">
-        <button class="ctr-card" type="submit" data-detail="{{ card.detail_url }}">
+        <button class="ctr-card" type="submit" data-hold="{{ card.pick_href }}" data-detail="{{ card.detail_url }}">
           {% include "persons/staff_counter_card_face.html" %}
         </button>
       </form>
@@ -239,16 +241,6 @@
       </form>
       {% endfor %}
     </div>
-    {% else %}
-    <form method="post">
-      {% csrf_token %}
-      <input type="hidden" name="action" value="add_product">
-      <input type="hidden" name="product_id" value="{{ panel.id }}">
-      <input type="hidden" name="type" value="{{ type_filter }}">
-      <input type="hidden" name="brand" value="{{ brand_filter }}">
-      <input type="hidden" name="size" value="{{ size_filter }}">
-      <button class="ctr-pay" type="submit">Add</button>
-    </form>
     {% endif %}
     {% if panel.short_description %}<p class="ctr-drawer__lead">{{ panel.short_description }}</p>{% endif %}
     {% if panel.description %}<p class="ctr-drawer__copy">{{ panel.description }}</p>{% endif %}
@@ -261,6 +253,17 @@
     </dl>
     {% endif %}
   </div>
+  {% if not panel.variants %}
+  <form class="ctr-drawer__foot" method="post">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="add_product">
+    <input type="hidden" name="product_id" value="{{ panel.id }}">
+    <input type="hidden" name="type" value="{{ type_filter }}">
+    <input type="hidden" name="brand" value="{{ brand_filter }}">
+    <input type="hidden" name="size" value="{{ size_filter }}">
+    <button class="ctr-pay" type="submit">Add to cart</button>
+  </form>
+  {% endif %}
 </aside>
 {% endif %}
 <script>
@@ -300,7 +303,7 @@
       clearTimer();
       timer = setTimeout(function () {
         el.dataset.held = '1';
-        window.location.href = el.getAttribute('data-detail');
+        window.location.href = el.getAttribute('data-hold') || el.getAttribute('data-detail');
       }, 550);
     });
     el.addEventListener('pointermove', function (event) {
@@ -318,7 +321,7 @@
     }, true);
     el.addEventListener('contextmenu', function (event) {
       event.preventDefault();
-      window.location.href = el.getAttribute('data-detail');
+      window.location.href = el.getAttribute('data-hold') || el.getAttribute('data-detail');
     });
   });
 })();
