@@ -1,6 +1,7 @@
 <!doctype html>
 {% load static %}
 {% load catalog_tags %}
+{% load l10n %}
 <html lang="en">
 <head>
   {% include 'includes/google_tag_gtag.html' %}
@@ -158,6 +159,47 @@
     .collection-card__body{padding:14px 14px 16px}
     .collection-card__title{font-size:13px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;margin:0 0 6px}
     .collection-card__meta{font-size:12px;color:var(--muted);line-height:1.5}
+
+    .catalog-brand-row,
+    .catalog-size-row{
+      display:flex; flex-wrap:wrap; align-items:center; gap:8px;
+      margin:0 0 22px;
+    }
+    .catalog-brand-chip,
+    .catalog-size-chip{
+      display:inline-flex; align-items:center; justify-content:center;
+      box-sizing:border-box;
+      border:1px solid var(--line); background:#fff; color:var(--ink);
+      text-decoration:none !important;
+      transition:border-color .15s, background .15s, color .15s;
+    }
+    .catalog-brand-chip{height:58px; min-width:58px; padding:8px 12px}
+    .catalog-brand-chip:hover,
+    .catalog-size-chip:hover{border-color:#94a3b8; text-decoration:none !important}
+    .catalog-brand-chip.is-active,
+    .catalog-size-chip.is-active{
+      border-color:var(--accent);
+      box-shadow:inset 0 0 0 1px var(--accent);
+    }
+    .catalog-size-chip.is-active{background:var(--accent); color:#fff}
+    .catalog-brand-chip img{
+      display:block; height:30px; width:auto; max-width:112px;
+      object-fit:contain; object-position:center;
+      transform:scale(var(--brand-optical-scale, 1));
+    }
+    .catalog-brand-chip--text{
+      height:58px; padding:0 14px;
+      font-size:13px; font-weight:600; letter-spacing:0; text-transform:none;
+    }
+    .catalog-size-chip{
+      height:36px; min-width:44px; padding:0 12px;
+      font-size:13px; font-weight:600; letter-spacing:0; text-transform:none;
+    }
+    .catalog-brand-chip--all,
+    .catalog-size-chip--all{
+      padding:0 16px;
+      font-size:12px; font-weight:800; letter-spacing:.1em; text-transform:uppercase;
+    }
 
     @media(max-width:1024px){
       .container{padding:0 24px}
@@ -335,6 +377,30 @@
             <a href="{% shop_url 'shop:order_for_me' %}" class="btn">Order for me</a>
           </div>
         </div>
+        {% endif %}
+
+        {% if stock_brand_chips %}
+        <nav class="catalog-brand-row" aria-label="Filter by brand">
+          <a class="catalog-brand-chip catalog-brand-chip--all {% if not catalog_brand %}is-active{% endif %}" href="{{ stock_brand_all_href }}">All</a>
+          {% for chip in stock_brand_chips %}
+          <a class="catalog-brand-chip {% if chip.is_active %}is-active{% endif %}{% if not chip.logo %} catalog-brand-chip--text{% endif %}" href="{{ chip.href }}" title="{{ chip.label }}"{% if chip.logo %} style="--brand-optical-scale: {{ chip.logo_optical_scale|unlocalize }}"{% endif %}>
+            {% if chip.logo %}
+            <img src="{% static chip.logo %}" alt="{{ chip.label }}">
+            {% else %}
+            <span>{{ chip.label }}</span>
+            {% endif %}
+          </a>
+          {% endfor %}
+        </nav>
+        {% endif %}
+
+        {% if shoe_size_chips %}
+        <nav class="catalog-size-row" aria-label="Filter by shoe size">
+          <a class="catalog-size-chip catalog-size-chip--all {% if not shoe_size %}is-active{% endif %}" href="{{ shoe_size_all_href }}">All</a>
+          {% for chip in shoe_size_chips %}
+          <a class="catalog-size-chip {% if chip.is_active %}is-active{% endif %}" href="{{ chip.href }}">{{ chip.label }}</a>
+          {% endfor %}
+        </nav>
         {% endif %}
 
         <div class="product-grid">

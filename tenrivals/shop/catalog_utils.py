@@ -1,5 +1,6 @@
 """Shared catalog queries for shop (stock/preorder lists and nav)."""
 
+import re
 from typing import NotRequired, TypedDict
 
 from django.db import models
@@ -60,6 +61,13 @@ FEATURED_STOCK_BRANDS: list[FeaturedStockBrand] = [
         'label': 'Prince',
         # Tight wordmark viewBox — closer to neutral than old padded Illustrator export
         'logo_optical_scale': 1.02,
+    },
+    {
+        'stock_brand': 'Tourna',
+        'logo': 'assets/img/brand-logos/tourna.png',
+        'label': 'Tourna',
+        # Solid badge reads heavier than the line wordmarks beside it
+        'logo_optical_scale': 0.92,
     },
 ]
 
@@ -168,5 +176,65 @@ def distinct_brands_for_type(stock_qs, type_code: str):
         .distinct()
         .order_by('brand')
     )
+
+
+def brand_logo_lookup() -> dict[str, FeaturedStockBrand]:
+    """Case-insensitive map of Product.brand -> marquee logo row."""
+    return {row['stock_brand'].casefold(): row for row in FEATURED_STOCK_BRANDS}
+
+
+def order_brands_for_logo_strip(names: list[str]) -> list[str]:
+    """Known logo brands first (marquee order), then the rest A–Z."""
+    by_fold: dict[str, str] = {}
+    for name in names:
+        cleaned = (name or '').strip()
+        if cleaned:
+            by_fold.setdefault(cleaned.casefold(), cleaned)
+    ordered: list[str] = []
+    used: set[str] = set()
+    for row in FEATURED_STOCK_BRANDS:
+        key = row['stock_brand'].casefold()
+        if key in by_fold and key not in used:
+            ordered.append(by_fold[key])
+            used.add(key)
+    rest = sorted(
+        (name for key, name in by_fold.items() if key not in used),
+        key=str.casefold,
+    )
+    return ordered + rest
+
+
+def distinct_brand_names(qs) -> list[str]:
+    names = qs.exclude(brand__isnull=True).exclude(brand__exact='').values_list(
+        'brand', flat=True
+    )
+    return order_brands_for_logo_strip(list(names.distinct()))
+
+
+_SHOE_SIZE_NUMBER = re.compile(r'(\d+(?:[.,]\d+)?)')
+
+
+def shoe_size_sort_key(label: str) -> tuple:
+    match = _SHOE_SIZE_NUMBER.search(label or '')
+    if match:
+        return (0, float(match.group(1).replace(',', '.')), label.casefold())
+    return (1, 0.0, (label or '').casefold())
+
+
+def positive_shoe_size_labels(raw_sizes) -> list[str]:
+    """In-stock size labels from a Shoe.sizes JSON list or {label: qty} dict."""
+    found: set[str] = set()
+    for raw in raw_sizes:
+        if isinstance(raw, dict):
+            for key, qty in raw.items():
+                label = str(key).strip()
+                if label and int(qty or 0) > 0:
+                    found.add(label)
+        elif isinstance(raw, list):
+            for key in raw:
+                label = str(key).strip()
+                if label:
+                    found.add(label)
+    return sorted(found, key=shoe_size_sort_key)
 
 

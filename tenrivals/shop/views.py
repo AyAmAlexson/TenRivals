@@ -45,9 +45,13 @@ from .catalog_utils import (
     annotate_preorder_listing_quantity,
     annotate_stock_listing_quantity,
     annotate_stock_shelf_priority,
+    brand_logo_lookup,
+    distinct_brand_names,
     distinct_brands_for_type,
     filter_products_by_listing_channel,
     order_products_by_effective_price,
+    positive_shoe_size_labels,
+    shoe_size_sort_key,
     stock_catalog_storefront_queryset,
 )
 from .forms import (
@@ -580,6 +584,7 @@ def _catalog_browse_context(
     racket_head = request.GET.get('head', 'all')
     racket_pattern = request.GET.get('pat', 'all')
     catalog_brand = (request.GET.get('cbrand') or '').strip()
+    shoe_size = (request.GET.get('ssize') or '').strip()
 
     categories = Category.objects.all().order_by('name')
     products = Product.objects.filter(is_active=True)
@@ -636,9 +641,6 @@ def _catalog_browse_context(
                 .distinct()
                 .order_by('brand')
             )
-        if shoe_brand != 'all':
-            products = products.filter(brand=shoe_brand)
-
     if show_racket_filters:
         if browse_mode == 'stock':
             racket_brands = distinct_brands_for_type(
@@ -662,8 +664,6 @@ def _catalog_browse_context(
             .order_by('string_pattern')
         )
 
-        if racket_brand != 'all':
-            products = products.filter(brand=racket_brand)
         if racket_weight == 'lt280':
             products = products.filter(racket__weight_grams__lt=280)
         elif racket_weight == '280_299':
@@ -685,11 +685,6 @@ def _catalog_browse_context(
         if racket_pattern != 'all':
             products = products.filter(racket__string_pattern=racket_pattern)
 
-    if catalog_brand:
-        products = products.filter(brand__iexact=catalog_brand)
-        if not category_slug and not type_code:
-            active_tab = f'cbrand:{catalog_brand}'
-
     products = filter_products_by_listing_channel(products, channel)
     products = products.select_related(*_PRODUCT_SUBCLASS_SELECT, 'category')
     if browse_mode == 'stock':
@@ -700,6 +695,64 @@ def _catalog_browse_context(
     else:
         products = annotate_preorder_listing_quantity(products)
         products = annotate_stock_listing_quantity(products)
+
+    def _catalog_href(**changes: str | None) -> str:
+        query = request.GET.copy()
+        for key, val in changes.items():
+            if val is None or val == '' or val == 'all':
+                query.pop(key, None)
+            else:
+                query[key] = val
+        encoded = query.urlencode()
+        return f'{request.path}?{encoded}' if encoded else request.path
+
+    stock_brand_chips: list[dict[str, object]] = []
+    stock_brand_all_href = ''
+    shoe_size_chips: list[dict[str, object]] = []
+    shoe_size_all_href = ''
+    if browse_mode == 'stock':
+        logos = brand_logo_lookup()
+        active_fold = catalog_brand.casefold()
+        for name in distinct_brand_names(products):
+            row = logos.get(name.casefold())
+            stock_brand_chips.append(
+                {
+                    'label': name,
+                    'logo': row['logo'] if row else '',
+                    'logo_optical_scale': (row or {}).get('logo_optical_scale', 1),
+                    'href': _catalog_href(cbrand=name),
+                    'is_active': bool(active_fold) and active_fold == name.casefold(),
+                }
+            )
+        stock_brand_all_href = _catalog_href(cbrand=None)
+
+    if show_shoe_filters and shoe_brand != 'all':
+        products = products.filter(brand=shoe_brand)
+    if show_racket_filters and racket_brand != 'all':
+        products = products.filter(brand=racket_brand)
+    if catalog_brand:
+        products = products.filter(brand__iexact=catalog_brand)
+        if not category_slug and not type_code:
+            active_tab = f'cbrand:{catalog_brand}'
+
+    if browse_mode == 'stock' and show_shoe_filters:
+        size_labels = positive_shoe_size_labels(
+            products.values_list('shoe__sizes', flat=True)
+        )
+        if shoe_size and shoe_size not in size_labels:
+            size_labels = sorted([*size_labels, shoe_size], key=shoe_size_sort_key)
+        shoe_size_all_href = _catalog_href(ssize=None)
+        for label in size_labels:
+            shoe_size_chips.append(
+                {
+                    'label': label,
+                    'href': _catalog_href(ssize=label),
+                    'is_active': shoe_size == label,
+                }
+            )
+        if shoe_size:
+            products = products.filter(shoe__sizes__has_key=shoe_size)
+
     products = order_products_by_effective_price(products)
     if browse_mode == 'stock':
         products = annotate_stock_shelf_priority(products)
@@ -846,6 +899,11 @@ def _catalog_browse_context(
         'racket_pattern_active': racket_pattern,
         'catalog_brand': catalog_brand,
         'cbrand_qs': f'&cbrand={quote(catalog_brand)}' if catalog_brand else '',
+        'stock_brand_chips': stock_brand_chips,
+        'stock_brand_all_href': stock_brand_all_href,
+        'shoe_size': shoe_size,
+        'shoe_size_chips': shoe_size_chips,
+        'shoe_size_all_href': shoe_size_all_href,
         'storefront_collections': storefront_collections,
         'seo_canonical_url': seo_canonical_url,
         'schema_org_json': schema_org_json,
