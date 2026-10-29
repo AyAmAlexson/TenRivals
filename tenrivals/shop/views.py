@@ -341,6 +341,10 @@ def _safe_internal_redirect(request, url: str | None):
     return None
 
 _MAX_HOME_FEATURED_BLOG = 12
+_HOME_FEATURED_PRODUCTS = 10
+_HOME_NEW_RACKETS = 4
+_HOME_NEW_MENS_SHOES = 4
+_HOME_NEW_WOMENS_SHOES = 2
 
 
 def index(request):
@@ -373,15 +377,19 @@ def index(request):
     featured_products = list(
         annotate_stock_listing_quantity(
             active_products.filter(featured_product=True).order_by('-created_at')
-        )[:5]
+        )[:_HOME_FEATURED_PRODUCTS]
     )
     new_arrivals = list(
         chain(
-            stock_products.filter(type=ProductType.RACKET).order_by('-created_at')[:2],
-            stock_products.filter(type=ProductType.MENS_SHOES).order_by('-created_at')[:2],
+            stock_products.filter(type=ProductType.RACKET).order_by('-created_at')[
+                :_HOME_NEW_RACKETS
+            ],
+            stock_products.filter(type=ProductType.MENS_SHOES).order_by('-created_at')[
+                :_HOME_NEW_MENS_SHOES
+            ],
             stock_products.filter(type=ProductType.WOMENS_SHOES).order_by(
                 '-created_at'
-            )[:1],
+            )[:_HOME_NEW_WOMENS_SHOES],
         )
     )
     from .seo_catalog import site_organization_json_ld
