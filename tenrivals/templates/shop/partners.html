@@ -145,8 +145,27 @@
       color:var(--muted);
     }
     .legend span{display:inline-flex;align-items:center;gap:6px}
-    .swatch{width:18px;height:3px;background:#1a1a1a}
-    .swatch--roi{background:var(--accent)}
+    .swatch{width:10px;height:10px;background:#1a1a1a}
+    .swatch--roi{width:18px;height:3px;background:var(--accent)}
+    .cover-logo{width:min(240px,64vw);height:auto;margin:0 auto 18px}
+    .mix{margin:22px auto 0;max-width:420px;text-align:left}
+    .mix__row{
+      display:grid;
+      grid-template-columns:minmax(0,9.5em) 1fr auto;
+      gap:10px;
+      align-items:center;
+      margin-top:12px;
+    }
+    .mix__label{font-size:13px;font-weight:400;text-align:right;line-height:1.2}
+    .mix__track{height:10px;background:#e5e7eb}
+    .mix__bar{height:10px;background:#1a1a1a;min-width:2px}
+    .mix__share{
+      font-size:13px;
+      font-weight:800;
+      font-variant-numeric:tabular-nums;
+      min-width:3.2ch;
+      text-align:right;
+    }
     .logo-grid{
       display:flex;
       flex-wrap:wrap;
@@ -165,14 +184,9 @@
       justify-content:center;
       padding:16px;
     }
-    .logo-tile img{max-height:42px;width:auto;max-width:100%;margin:0 auto;object-fit:contain}
-    .wordmark{
-      margin:0;
-      font-size:22px;
-      font-weight:800;
-      letter-spacing:.16em;
-      text-transform:uppercase;
-    }
+    .logo-tile img{max-height:48px;width:auto;max-width:100%;margin:0 auto;object-fit:contain}
+    .logo-tile--tall{min-height:120px;max-width:220px}
+    .logo-tile--tall img{max-height:88px}
     .actions{
       display:flex;
       flex-wrap:wrap;
@@ -207,6 +221,7 @@
   <section class="slide">
     <a class="deck-mark" href="{% shop_url 'shop:index' %}">Tennis Rivals</a>
     <div class="slide__inner">
+      <img class="cover-logo" src="{% static 'assets/img/TR Logo 25/TR 25 LOGO HOR RED.svg' %}" alt="Tennis Rivals">
       <p class="kicker">For partners</p>
       <h1>Tennis Rivals</h1>
       <p class="lead">A tennis shop in Tbilisi. Equipment on the shelf, service for players, and a business that is still growing.</p>
@@ -267,16 +282,39 @@
     </div>
   </section>
 
-  {% if facts.revenue_points %}
+  {% if facts.category_mix %}
+  <section class="slide">
+    <a class="deck-mark" href="{% shop_url 'shop:index' %}">Tennis Rivals</a>
+    <div class="slide__inner">
+      <p class="kicker">Assortment</p>
+      <h2>Where the units sit</h2>
+      <p class="lead">Share of pieces currently in stock, by category. Useful if you want to see what the shelf can carry.</p>
+      <div class="mix">
+        {% for row in facts.category_mix %}
+        <div class="mix__row">
+          <div class="mix__label">{{ row.label }}</div>
+          <div class="mix__track"><div class="mix__bar" style="width:{{ row.share }}%"></div></div>
+          <div class="mix__share">{{ row.share }}%</div>
+        </div>
+        {% endfor %}
+      </div>
+      <p class="fine">Units on the shelf only. This is not sales, revenue, or profit.</p>
+    </div>
+  </section>
+  {% endif %}
+
+  {% if facts.revenue_bars %}
   <section class="slide">
     <a class="deck-mark" href="{% shop_url 'shop:index' %}">Tennis Rivals</a>
     <div class="slide__inner">
       <p class="kicker">Trajectory</p>
-      <h2>How the lines move</h2>
-      <p class="lead">Revenue and ROI, month by month, through October 2026. No scale and no amounts. The shape is the point.</p>
+      <h2>How the business moves</h2>
+      <p class="lead">Revenue as columns, ROI as a line, month by month through October 2026. No scale and no amounts. Each shape is drawn on its own.</p>
       <div class="chart-card">
-        <svg viewBox="0 0 320 140" role="img" aria-label="Revenue and ROI trend through October 2026, without a scale">
-          <polyline points="{{ facts.revenue_points }}" fill="none" stroke="#1a1a1a" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"></polyline>
+        <svg viewBox="0 0 320 140" role="img" aria-label="Revenue columns and an ROI line through October 2026, without a scale">
+          {% for bar in facts.revenue_bars %}
+          <rect x="{{ bar.x }}" y="{{ bar.y }}" width="{{ bar.w }}" height="{{ bar.h }}" fill="#1a1a1a"></rect>
+          {% endfor %}
           {% if facts.roi_points %}
           <polyline points="{{ facts.roi_points }}" fill="none" stroke="#B20009" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"></polyline>
           {% endif %}
@@ -312,11 +350,11 @@
       <h2>Official for Tourna and Diadem</h2>
       <p class="lead">We are the official representative of Tourna and Diadem.</p>
       <div class="logo-grid">
-        <div class="logo-tile">
+        <div class="logo-tile logo-tile--tall">
           <img src="{% static 'assets/img/brand-logos/tourna.png' %}" alt="Tourna">
         </div>
-        <div class="logo-tile">
-          <p class="wordmark">Diadem</p>
+        <div class="logo-tile logo-tile--tall">
+          <img src="{% static 'assets/img/brand-logos/diadem.png' %}" alt="Diadem">
         </div>
       </div>
     </div>

@@ -69,6 +69,13 @@ FEATURED_STOCK_BRANDS: list[FeaturedStockBrand] = [
         # Solid badge reads heavier than the line wordmarks beside it
         'logo_optical_scale': 0.92,
     },
+    {
+        'stock_brand': 'Diadem',
+        'logo': 'assets/img/brand-logos/diadem.png',
+        'label': 'Diadem',
+        # Stacked mark plus wordmark; keep it close to the wide wordmarks in the row
+        'logo_optical_scale': 1.05,
+    },
 ]
 
 

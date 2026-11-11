@@ -5,3 +5,6 @@
 <a href="{% shop_url 'shop:info_returns' %}">{% trans "Returns & exchanges" %}</a>
 <a href="{% shop_url 'shop:info_size_guide' %}">{% trans "Size guide" %}</a>
 <a href="{% shop_url 'shop:info_contacts' %}">{% trans "Contacts" %}</a>
+{% if not omit_partnership %}
+<a href="{% shop_url 'shop:partners' %}">{% trans "Partnership" %}</a>
+{% endif %}

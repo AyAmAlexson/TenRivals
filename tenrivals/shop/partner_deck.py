@@ -1,8 +1,8 @@
 """Public partner briefing. Counts and a scale-free trend only.
 
-Revenue, profit, ROI, and margins are never sent to the page. The chart is a
-pair of normalized polylines (pixel coordinates), so the shape is visible and
-the amounts are not.
+Revenue, profit, ROI, and margins are never sent to the page. Revenue is a
+set of bar rectangles and ROI is a polyline. Both are normalized on their own,
+so the shape is visible and the amounts are not.
 """
 
 from __future__ import annotations
@@ -17,7 +17,7 @@ from django.db.models import Count, Sum
 from django.shortcuts import render
 
 from .catalog_utils import FEATURED_STOCK_BRANDS
-from .models import Product, ProductListing, ProductListingChannel, SalesOrder
+from .models import Product, ProductListing, ProductListingChannel, ProductType, SalesOrder
 from .seo_catalog import absolute_public_shop_url
 from .site_locale import DEFAULT_SHOP_SITE_LOCALE, shop_reverse
 from .staff_analytics import _EXCLUDED_STATUSES, build_sales_analytics
@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 
 # The briefing stops at October 2026. Later months stay off the chart.
 CHART_END = date(2026, 10, 31)
-CACHE_KEY = 'partner_deck_public_v1'
+CACHE_KEY = 'partner_deck_public_v2'
 CACHE_SECONDS = 60 * 60 * 6
 
 _CHART_W = 320
@@ -92,7 +92,7 @@ def _compute_public_facts() -> dict:
         orders.order_by('order_date').values_list('order_date', flat=True).first()
     )
 
-    revenue_points = ''
+    revenue_bars: list[dict] = []
     roi_points = ''
     growth_pct = None
     months_active = 0
@@ -104,7 +104,7 @@ def _compute_public_facts() -> dict:
             + (CHART_END.month - first_on.month)
             + 1
         )
-        revenue_points, roi_points, growth_pct = _trend(first_on, CHART_END)
+        revenue_bars, roi_points, growth_pct = _trend(first_on, CHART_END)
 
     return {
         'clients': clients,
@@ -117,28 +117,62 @@ def _compute_public_facts() -> dict:
         'since_year': since_year,
         'months_active': months_active,
         'growth_pct': growth_pct,
-        'revenue_points': revenue_points,
+        'revenue_bars': revenue_bars,
         'roi_points': roi_points,
+        'category_mix': _category_mix(),
     }
 
 
-def _trend(start: date, end: date) -> tuple[str, str, int | None]:
-    """Normalized chart geometry and a compound monthly growth percent.
+def _trend(start: date, end: date) -> tuple[list[dict], str, int | None]:
+    """Bar and line geometry plus a compound monthly growth percent.
 
-    Raw revenue and ROI never leave this function.
+    Raw revenue and ROI never leave this function. Revenue bars are scaled
+    from zero to the peak. The ROI line is scaled on its own min and max.
     """
     try:
         chart = build_sales_analytics(start, end, 'month')['chart']
     except Exception:
         logger.exception('Partner deck trend failed')
-        return '', '', None
+        return [], '', None
     revenue = [float(v or 0) for v in chart.get('revenue') or []]
-    roi_raw = list(chart.get('roi') or [])
-    roi = _carry(roi_raw)
+    roi = _carry(list(chart.get('roi') or []))
     growth = _compound_monthly_growth_pct(revenue)
     if len(revenue) < 2:
-        return '', '', growth
-    return _polyline(revenue), _polyline(roi), growth
+        return [], '', growth
+    return _bars(revenue), _polyline(roi), growth
+
+
+def _category_mix() -> list[dict]:
+    """Share of units in stock by category. Percents only, no money."""
+    rows = list(
+        ProductListing.objects.filter(
+            channel=ProductListingChannel.STOCK,
+            product__is_active=True,
+            quantity__gt=0,
+        )
+        .values('product__type')
+        .annotate(units=Sum('quantity'))
+        .order_by('-units', 'product__type')
+    )
+    total = sum(int(row['units'] or 0) for row in rows)
+    if total <= 0:
+        return []
+    labels = dict(ProductType.choices)
+    top = rows[:5]
+    items = []
+    for row in top:
+        units = int(row['units'] or 0)
+        code = row['product__type']
+        items.append(
+            {
+                'label': labels.get(code, code),
+                'share': int(round(100 * units / total)),
+            }
+        )
+    rest = total - sum(int(row['units'] or 0) for row in top)
+    if rest > 0:
+        items.append({'label': 'Other', 'share': int(round(100 * rest / total))})
+    return items
 
 
 def _carry(values: list) -> list[float]:
@@ -168,6 +202,32 @@ def _compound_monthly_growth_pct(revenue: list[float]) -> int | None:
         return None
     rate = (revenue[end_i] / base) ** (1 / steps) - 1
     return int(round(rate * 100))
+
+
+def _bars(values: list[float]) -> list[dict]:
+    """Column geometry scaled from zero to the peak. No raw amounts."""
+    peak = max(values) if values else 0
+    if peak <= 0:
+        return []
+    n = len(values)
+    inner_w = _CHART_W - 2 * _CHART_PAD
+    slot = inner_w / n
+    bar_w = slot * 0.62
+    baseline = _CHART_H - _CHART_PAD
+    usable = _CHART_H - 2 * _CHART_PAD
+    bars = []
+    for i, value in enumerate(values):
+        height = usable * (max(value, 0) / peak)
+        x = _CHART_PAD + slot * i + (slot - bar_w) / 2
+        bars.append(
+            {
+                'x': f'{x:.1f}',
+                'y': f'{baseline - height:.1f}',
+                'w': f'{bar_w:.1f}',
+                'h': f'{height:.1f}',
+            }
+        )
+    return bars
 
 
 def _polyline(values: list[float]) -> str:
