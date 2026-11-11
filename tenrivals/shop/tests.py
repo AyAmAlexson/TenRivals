@@ -985,6 +985,11 @@ class SalesOrderPaymentTests(TestCase):
         self.assertContains(octo, 'R-1002')
         self.assertContains(octo, 'R-1003')
         self.assertNotContains(octo, 'R-1001')
+        self.assertNotContains(octo, 'Customer')
+        self.assertNotContains(octo, 'Payer')
+        self.assertNotContains(octo, 'Reconciliation with orders report')
+        self.assertContains(octo, 'Reconciliation (internal)')
+        self.assertNotContains(octo, '—')
 
     def test_orders_month_report_excludes_cancelled_from_totals(self):
         from datetime import date

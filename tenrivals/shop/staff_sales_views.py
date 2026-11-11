@@ -777,14 +777,17 @@ def _report_logo_abs_url(request) -> str:
 @login_required
 @user_passes_test(_staff_ok)
 def staff_sales_payments_month_report(request):
-    """Fiscal receipts for a calendar month (cash basis) + reconciliation
-    against the orders report, so the accountant sees why the two differ."""
+    """Fiscal receipts for a calendar month (cash basis).
+
+    Reconciliation against the orders report is computed for an internal
+    footnote only; the printed report does not show customer names.
+    """
     today = date.today()
     y = _safe_int(request.GET.get('year'), today.year, 1990, 2100)
     m = _safe_int(request.GET.get('month'), today.month, 1, 12)
     payments = list(
         SalesOrderPayment.objects.filter(paid_on__year=y, paid_on__month=m)
-        .select_related('order', 'order__customer')
+        .select_related('order')
         .order_by('paid_on', 'fiscal_receipt', 'id')
     )
     rows = []
@@ -807,7 +810,6 @@ def staff_sales_payments_month_report(request):
                 'vat': vat,
                 'net': net,
                 'same_month': same_month,
-                'order_paid_total': o.paid_total(),
             }
         )
         total_amount += p.amount_gross

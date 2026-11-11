@@ -231,7 +231,7 @@
   <span class="staff-toolbar__sep" aria-hidden="true"></span>
   <div class="staff-toolbar__group">
     <button type="button" class="staff-toolbar-help" aria-label="Help: monthly reports"
-      title="ORDERS: all orders of the selected calendar month by order date (sales view; cancelled/refunded listed but excluded from totals). FISCAL: all payments / fiscal receipts by payment date (cash basis) with a reconciliation block against the orders total. Use print to save as PDF.">?</button>
+      title="ORDERS: all orders of the selected calendar month by order date (sales view; cancelled/refunded listed but excluded from totals). FISCAL: all payments / fiscal receipts by payment date (cash basis). A small footnote reconciles the fiscal total with the orders total. Use print to save as PDF.">?</button>
     <form method="get" action="{% url 'administration:staff_sales_orders_month_report' %}" id="month-report-form" style="display:inline-flex;gap:8px;align-items:center;margin:0;flex-wrap:wrap">
       <label class="visually-hidden" for="id_report_month">Report month</label>
       <select id="id_report_month" name="month" aria-label="Report month">
