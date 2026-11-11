@@ -18,6 +18,10 @@
     <a href="{% url 'administration:staff_order_finance' %}" class="staff-nav__link {% if staff_nav_active == 'order_finance' %}is-active{% endif %}">Orders finance</a>
     <a href="{% url 'administration:staff_order_for_me_list' %}" class="staff-nav__link {% if staff_nav_active == 'order_for_me' %}is-active{% endif %}">Order for me</a>
   </div>
+  <div class="staff-nav__group">
+    <div class="staff-nav__label">Shipping</div>
+    <a href="{% url 'administration:staff_shipping_addresses' %}" class="staff-nav__link {% if staff_nav_active == 'shipping' %}is-active{% endif %}">Current addresses</a>
+  </div>
   {% if perms.buying.view %}
   <div class="staff-nav__group">
     <div class="staff-nav__label">Buying</div>

@@ -1,0 +1,116 @@
+{% extends 'persons/staff_base.html' %}
+{% block title %}Shipping | Staff | Tenrivals{% endblock %}
+{% block page_heading %}{{ page_heading }}{% endblock %}
+{% block page_note %}<p class="page-note">Open orders that still need delivery.</p>{% endblock %}
+{% block extra_head %}
+<style>
+  .ship-tabs{display:flex;gap:0;margin:0 0 16px;border-bottom:1px solid var(--line)}
+  .ship-tabs__tab{
+    display:inline-block;
+    padding:10px 2px 8px;
+    font-size:13px;
+    font-weight:600;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+    color:var(--accent);
+    border-bottom:2px solid var(--accent);
+  }
+  .ship-table{min-width:760px}
+  .ship-address{display:flex;flex-wrap:wrap;align-items:flex-start;gap:8px}
+  .ship-address__text{flex:1 1 200px;min-width:0;overflow-wrap:anywhere;line-height:1.4}
+  .ship-address__actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .ship-address__actions .btn{margin-right:0}
+  .ship-address__actions .btn.is-disabled{opacity:.45;pointer-events:none}
+  .ship-dialog{margin:auto;border:1px solid var(--line);padding:24px;max-width:440px;width:calc(100% - 32px);background:#fff;color:var(--ink)}
+  .ship-dialog::backdrop{background:rgba(0,0,0,.45)}
+  .ship-dialog h2{margin:0 0 12px;font-size:15px;font-weight:800;letter-spacing:.5px;text-transform:uppercase}
+  .ship-dialog p{margin:0 0 18px;font-size:14px;font-weight:400;line-height:1.45}
+  .ship-dialog__actions{display:flex;flex-wrap:wrap;gap:8px}
+  .ship-dialog__actions .btn{margin-right:0}
+</style>
+{% endblock %}
+{% block content %}
+<nav class="ship-tabs" aria-label="Shipping">
+  <span class="ship-tabs__tab" aria-current="page">Current addresses</span>
+</nav>
+<div class="card">
+  <h2 class="card-title">Current addresses ({{ rows|length }})</h2>
+  <div class="table-wrap">
+    <table class="ship-table">
+      <thead>
+        <tr>
+          <th>Order</th>
+          <th>Customer</th>
+          <th>Total</th>
+          <th>Delivery address</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+        <tr>
+          <td class="mono"><a href="{% url 'administration:staff_sales_order_edit' row.order.pk %}">{{ row.order.invoice_number }}</a></td>
+          <td>{{ row.order.customer.display_name }}</td>
+          <td class="mono">{{ row.order.gross_total }} ₾</td>
+          <td>
+            <div class="ship-address">
+              <div class="ship-address__text">{% if row.address %}{{ row.address }}{% else %}No address{% endif %}</div>
+              <div class="ship-address__actions">
+                {% if row.google_maps_url %}
+                <a class="btn btn--sm btn--outline" href="{{ row.google_maps_url }}" target="_blank" rel="noopener">Google Maps</a>
+                <a class="btn btn--sm btn--outline" href="{{ row.yandex_maps_url }}" target="_blank" rel="noopener">Yandex Maps</a>
+                {% else %}
+                <span class="btn btn--sm btn--outline is-disabled">Google Maps</span>
+                <span class="btn btn--sm btn--outline is-disabled">Yandex Maps</span>
+                {% endif %}
+                <button
+                  type="button"
+                  class="btn btn--sm"
+                  data-confirm-delivery
+                  data-confirm-url="{% url 'administration:staff_shipping_confirm_delivery' row.order.pk %}"
+                  data-invoice="{{ row.order.invoice_number }}"
+                >Confirm delivery</button>
+              </div>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4">No open orders.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<dialog id="confirm-delivery" class="ship-dialog" aria-labelledby="confirm-delivery-title">
+  <form method="post" action="" id="confirm-delivery-form">
+    {% csrf_token %}
+    <h2 id="confirm-delivery-title">Confirm delivery</h2>
+    <p>Mark order <strong id="confirm-delivery-invoice"></strong> as completed?</p>
+    <div class="ship-dialog__actions">
+      <button type="submit" class="btn btn--sm">Confirm delivery</button>
+      <button type="button" class="btn btn--sm btn--outline" id="confirm-delivery-cancel">Cancel</button>
+    </div>
+  </form>
+</dialog>
+<script>
+(function () {
+  var dialog = document.getElementById('confirm-delivery');
+  var form = document.getElementById('confirm-delivery-form');
+  var invoiceEl = document.getElementById('confirm-delivery-invoice');
+  var cancelBtn = document.getElementById('confirm-delivery-cancel');
+  if (!dialog || !form || !invoiceEl) return;
+  document.querySelectorAll('[data-confirm-delivery]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      form.action = btn.getAttribute('data-confirm-url') || '';
+      invoiceEl.textContent = btn.getAttribute('data-invoice') || '';
+      dialog.showModal();
+    });
+  });
+  if (cancelBtn) {
+    cancelBtn.addEventListener('click', function () {
+      dialog.close();
+    });
+  }
+})();
+</script>
+{% endblock %}

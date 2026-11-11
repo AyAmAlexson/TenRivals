@@ -2,7 +2,7 @@ from django.urls import include, path
 
 from . import views
 from . import staff_promo_views
-from shop import staff_ai_insights, staff_analytics, staff_counter_views, staff_sales_views, staff_stock_stats, staff_stock_units_views
+from shop import staff_ai_insights, staff_analytics, staff_counter_views, staff_sales_views, staff_shipping_views, staff_stock_stats, staff_stock_units_views
 
 app_name = "administration"
 
@@ -140,6 +140,16 @@ urlpatterns = [
         name="staff_sales_order_edit",
     ),
     path("orders/", staff_sales_views.staff_sales_orders, name="staff_sales_orders"),
+    path(
+        "shipping/",
+        staff_shipping_views.staff_shipping_addresses,
+        name="staff_shipping_addresses",
+    ),
+    path(
+        "shipping/<int:pk>/confirm/",
+        staff_shipping_views.staff_shipping_confirm_delivery,
+        name="staff_shipping_confirm_delivery",
+    ),
     path("shops/", staff_counter_views.staff_counter_stores, name="staff_counter_stores"),
     path("counter/", staff_counter_views.staff_counter, name="staff_counter"),
     path(
