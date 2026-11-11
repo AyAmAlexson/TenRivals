@@ -16,6 +16,7 @@ class ShopStaticSitemap(Sitemap):
             'shop:index',
             'shop:stock',
             'shop:brands',
+            'shop:partners',
             'shop:order_for_me',
             'shop:blog_index',
             'shop:guide_racket_weight',

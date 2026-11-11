@@ -3,7 +3,7 @@ from functools import wraps
 from django.urls import path, re_path
 from django.views.generic import RedirectView
 
-from . import views
+from . import partner_deck, views
 
 
 def strip_site_locale(view_func):
@@ -56,6 +56,7 @@ urlpatterns = [
     ),
     path('preorder/<slug:type_slug>/', _v(views.preorder), name='preorder_catalog_type'),
     path('brands/', _v(views.brands), name='brands'),
+    path('partners/', _v(partner_deck.partner_deck), name='partners'),
     path('order-for-me/', _v(views.order_for_me_create), name='order_for_me'),
     path('collections/<slug:slug>/', _v(views.collection_detail), name='collection_detail'),
     path('blog/', _v(views.blog_index), name='blog_index'),

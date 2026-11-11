@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'django.contrib.sites',
     'allauth_ui',
     'django.contrib.staticfiles',
+    'django.contrib.humanize',
     'django.contrib.sitemaps',
     'django_filters',
     'django.contrib.flatpages',

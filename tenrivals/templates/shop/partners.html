@@ -1,0 +1,351 @@
+{% load static %}
+{% load humanize %}
+{% load catalog_tags %}
+<!doctype html>
+<html lang="en">
+<head>
+  {% include 'includes/google_tag_gtag.html' %}
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tennis Rivals for partners</title>
+  <meta name="description" content="Tennis Rivals partner briefing. A tennis shop in Tbilisi, and the official representative of Tourna and Diadem.">
+  <link rel="canonical" href="{{ seo_canonical_url }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Saira:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="icon" href="{% static 'assets/img/favicon.png' %}">
+  <style>
+    :root{
+      --accent:#B20009;
+      --ink:#1a1a1a;
+      --muted:#64748b;
+      --line:#e5e7eb;
+      --bg:#f4f4f5;
+    }
+    *{box-sizing:border-box}
+    html{scroll-snap-type:y mandatory;scroll-behavior:smooth}
+    body{
+      margin:0;
+      font-family:'Saira',system-ui,sans-serif;
+      font-weight:400;
+      color:var(--ink);
+      background:var(--bg);
+      text-align:center;
+    }
+    a{color:inherit}
+    img{display:block;max-width:100%;height:auto}
+    .slide{
+      min-height:100vh;
+      min-height:100svh;
+      scroll-snap-align:start;
+      scroll-snap-stop:always;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:72px 20px 36px;
+      position:relative;
+    }
+    .slide__inner{width:min(640px,100%)}
+    .deck-mark{
+      position:absolute;
+      top:18px;
+      left:0;
+      right:0;
+      font-size:12px;
+      font-weight:800;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      text-decoration:none;
+    }
+    .kicker{
+      margin:0 0 10px;
+      font-size:12px;
+      font-weight:600;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      color:var(--accent);
+    }
+    h1,h2{
+      margin:0;
+      font-weight:800;
+      letter-spacing:.04em;
+      text-transform:uppercase;
+      line-height:1.05;
+    }
+    h1{font-size:clamp(36px,10vw,64px)}
+    h2{font-size:clamp(28px,8vw,44px)}
+    .lead{
+      margin:16px auto 0;
+      max-width:28em;
+      font-size:17px;
+      line-height:1.5;
+      font-weight:400;
+      color:#334155;
+    }
+    .hero-num{
+      margin:18px 0 0;
+      font-size:clamp(64px,18vw,112px);
+      font-weight:800;
+      line-height:.9;
+      letter-spacing:-.03em;
+      font-variant-numeric:tabular-nums;
+    }
+    .hero-caption{
+      margin:8px 0 0;
+      font-size:13px;
+      font-weight:600;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      color:var(--muted);
+    }
+    .stats{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:18px 12px;
+      margin-top:28px;
+    }
+    .stat__num{
+      font-size:clamp(28px,8vw,40px);
+      font-weight:800;
+      line-height:1;
+      font-variant-numeric:tabular-nums;
+    }
+    .stat__label{
+      margin-top:4px;
+      font-size:11px;
+      font-weight:600;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      color:var(--muted);
+    }
+    .fine{
+      margin:22px auto 0;
+      max-width:34em;
+      font-size:13px;
+      line-height:1.45;
+      font-weight:400;
+      color:var(--muted);
+    }
+    .chart-card{
+      margin:22px auto 0;
+      padding:18px 12px 14px;
+      background:#fff;
+      border:1px solid var(--line);
+    }
+    .chart-card svg{width:100%;height:auto;display:block}
+    .legend{
+      display:flex;
+      justify-content:center;
+      gap:18px;
+      margin-top:12px;
+      font-size:11px;
+      font-weight:600;
+      letter-spacing:.1em;
+      text-transform:uppercase;
+      color:var(--muted);
+    }
+    .legend span{display:inline-flex;align-items:center;gap:6px}
+    .swatch{width:18px;height:3px;background:#1a1a1a}
+    .swatch--roi{background:var(--accent)}
+    .logo-grid{
+      display:flex;
+      flex-wrap:wrap;
+      justify-content:center;
+      gap:12px;
+      margin-top:22px;
+    }
+    .logo-tile{
+      background:#fff;
+      border:1px solid var(--line);
+      min-height:92px;
+      width:calc(50% - 6px);
+      max-width:200px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:16px;
+    }
+    .logo-tile img{max-height:42px;width:auto;max-width:100%;margin:0 auto;object-fit:contain}
+    .wordmark{
+      margin:0;
+      font-size:22px;
+      font-weight:800;
+      letter-spacing:.16em;
+      text-transform:uppercase;
+    }
+    .actions{
+      display:flex;
+      flex-wrap:wrap;
+      justify-content:center;
+      gap:10px;
+      margin-top:22px;
+    }
+    .actions a{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:44px;
+      padding:0 16px;
+      background:var(--accent);
+      color:#fff;
+      text-decoration:none;
+      font-size:12px;
+      font-weight:800;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+    }
+    .qr{margin:18px auto 0;width:min(220px,70vw);background:#fff;padding:12px;border:1px solid var(--line)}
+    .qr svg{width:100%;height:auto}
+    .qr-url{margin:12px 0 0;font-size:13px;font-weight:400;color:var(--muted);word-break:break-all}
+    @media(min-width:720px){
+      .stats{grid-template-columns:repeat(3,1fr);gap:28px 16px}
+      .logo-tile{width:180px}
+    }
+  </style>
+</head>
+<body>
+  <section class="slide">
+    <a class="deck-mark" href="{% shop_url 'shop:index' %}">Tennis Rivals</a>
+    <div class="slide__inner">
+      <p class="kicker">For partners</p>
+      <h1>Tennis Rivals</h1>
+      <p class="lead">A tennis shop in Tbilisi. Equipment on the shelf, service for players, and a business that is still growing.</p>
+    </div>
+  </section>
+
+  <section class="slide">
+    <a class="deck-mark" href="{% shop_url 'shop:index' %}">Tennis Rivals</a>
+    <div class="slide__inner">
+      <p class="kicker">We are</p>
+      <h2>A shop players come back to</h2>
+      <p class="lead">We stock rackets, shoes, apparel, strings, and court equipment in Tbilisi. Players buy from us in the shop and online. We are the team behind the counter, not a catalogue without a store.</p>
+      {% if facts.since_year %}
+      <p class="fine">Selling since {{ facts.since_year }}. {{ facts.months_active }} months counted through October 2026.</p>
+      {% endif %}
+    </div>
+  </section>
+
+  <section class="slide">
+    <a class="deck-mark" href="{% shop_url 'shop:index' %}">Tennis Rivals</a>
+    <div class="slide__inner">
+      <p class="kicker">We work with</p>
+      <p class="hero-num">{{ facts.clients|intcomma }}</p>
+      <p class="hero-caption">Clients</p>
+      <div class="stats">
+        <div>
+          <div class="stat__num">{{ facts.orders|intcomma }}</div>
+          <div class="stat__label">Orders</div>
+        </div>
+        <div>
+          <div class="stat__num">{{ facts.repeat_clients|intcomma }}</div>
+          <div class="stat__label">Came back</div>
+        </div>
+        <div>
+          <div class="stat__num">{{ facts.units_in_stock|intcomma }}</div>
+          <div class="stat__label">Units in stock</div>
+        </div>
+        <div>
+          <div class="stat__num">{{ facts.skus|intcomma }}</div>
+          <div class="stat__label">SKUs</div>
+        </div>
+        <div>
+          <div class="stat__num">{{ facts.brands|intcomma }}</div>
+          <div class="stat__label">Brands</div>
+        </div>
+        <div>
+          <div class="stat__num">{{ facts.categories|intcomma }}</div>
+          <div class="stat__label">Categories</div>
+        </div>
+        {% if facts.growth_pct != None %}
+        <div>
+          <div class="stat__num">{% if facts.growth_pct > 0 %}+{% endif %}{{ facts.growth_pct }}%</div>
+          <div class="stat__label">Avg. monthly growth</div>
+        </div>
+        {% endif %}
+      </div>
+      <p class="fine">Counts only. No revenue, profit, or return figures on this page. Growth is the compound monthly pace of sales from the first month with orders to the latest, through October 2026.</p>
+    </div>
+  </section>
+
+  {% if facts.revenue_points %}
+  <section class="slide">
+    <a class="deck-mark" href="{% shop_url 'shop:index' %}">Tennis Rivals</a>
+    <div class="slide__inner">
+      <p class="kicker">Trajectory</p>
+      <h2>How the lines move</h2>
+      <p class="lead">Revenue and ROI, month by month, through October 2026. No scale and no amounts. The shape is the point.</p>
+      <div class="chart-card">
+        <svg viewBox="0 0 320 140" role="img" aria-label="Revenue and ROI trend through October 2026, without a scale">
+          <polyline points="{{ facts.revenue_points }}" fill="none" stroke="#1a1a1a" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"></polyline>
+          {% if facts.roi_points %}
+          <polyline points="{{ facts.roi_points }}" fill="none" stroke="#B20009" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"></polyline>
+          {% endif %}
+        </svg>
+        <div class="legend">
+          <span><i class="swatch"></i> Revenue</span>
+          {% if facts.roi_points %}<span><i class="swatch swatch--roi"></i> ROI</span>{% endif %}
+        </div>
+      </div>
+    </div>
+  </section>
+  {% endif %}
+
+  <section class="slide">
+    <a class="deck-mark" href="{% shop_url 'shop:index' %}">Tennis Rivals</a>
+    <div class="slide__inner">
+      <p class="kicker">Brands</p>
+      <h2>Names on the shelf</h2>
+      <div class="logo-grid">
+        {% for brand in brands %}
+        <div class="logo-tile">
+          <img src="{% static brand.logo %}" alt="{{ brand.label }}">
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <a class="deck-mark" href="{% shop_url 'shop:index' %}">Tennis Rivals</a>
+    <div class="slide__inner">
+      <p class="kicker">Representation</p>
+      <h2>Official for Tourna and Diadem</h2>
+      <p class="lead">We are the official representative of Tourna and Diadem.</p>
+      <div class="logo-grid">
+        <div class="logo-tile">
+          <img src="{% static 'assets/img/brand-logos/tourna.png' %}" alt="Tourna">
+        </div>
+        <div class="logo-tile">
+          <p class="wordmark">Diadem</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <a class="deck-mark" href="{% shop_url 'shop:index' %}">Tennis Rivals</a>
+    <div class="slide__inner">
+      <p class="kicker">Next</p>
+      <h2>Open to collaboration</h2>
+      <p class="lead">Distribution, wholesale, and brand projects in Georgia. If you want to work together, write or call.</p>
+      <div class="actions">
+        <a href="mailto:andy.rivals@tenrivals.com">Email</a>
+        <a href="https://wa.me/995591288967" target="_blank" rel="noopener">WhatsApp</a>
+        <a href="https://t.me/tennis_rivals_shop_tbilisi" target="_blank" rel="noopener">Telegram</a>
+        <a href="tel:+995591288967">Call</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <a class="deck-mark" href="{% shop_url 'shop:index' %}">Tennis Rivals</a>
+    <div class="slide__inner">
+      <p class="kicker">Share</p>
+      <h2>This page</h2>
+      <p class="lead">The code opens the same briefing.</p>
+      <div class="qr">{{ qr_svg|safe }}</div>
+      <p class="qr-url">{{ page_url }}</p>
+    </div>
+  </section>
+</body>
+</html>
