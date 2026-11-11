@@ -278,7 +278,7 @@
         </div>
         {% endif %}
       </div>
-      <p class="fine">Counts only. No revenue, profit, or return figures on this page. Growth is the compound monthly pace of sales from the first month with orders to the latest, through October 2026.</p>
+      <p class="fine">Counts only. No revenue, profit, or return amounts. Growth is the compound monthly pace of sales from the first month with orders to the latest, through October 2026.</p>
     </div>
   </section>
 
@@ -287,8 +287,8 @@
     <a class="deck-mark" href="{% shop_url 'shop:index' %}">Tennis Rivals</a>
     <div class="slide__inner">
       <p class="kicker">Assortment</p>
-      <h2>Where the units sit</h2>
-      <p class="lead">Share of pieces currently in stock, by category. Useful if you want to see what the shelf can carry.</p>
+      <h2>Where the sales sit</h2>
+      <p class="lead">Share of sales by category, through October 2026. Each bar is that group's money, not the number of pieces.</p>
       <div class="mix">
         {% for row in facts.category_mix %}
         <div class="mix__row">
@@ -298,7 +298,7 @@
         </div>
         {% endfor %}
       </div>
-      <p class="fine">Units on the shelf only. This is not sales, revenue, or profit.</p>
+      <p class="fine">Shares only. Cancelled orders are left out. No amounts on this slide.</p>
     </div>
   </section>
   {% endif %}

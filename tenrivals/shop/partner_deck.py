@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import logging
 from datetime import date
+from decimal import Decimal
 
 import qrcode
 import qrcode.image.svg
@@ -17,7 +18,14 @@ from django.db.models import Count, Sum
 from django.shortcuts import render
 
 from .catalog_utils import FEATURED_STOCK_BRANDS
-from .models import Product, ProductListing, ProductListingChannel, ProductType, SalesOrder
+from .models import (
+    Product,
+    ProductListing,
+    ProductListingChannel,
+    ProductType,
+    SalesOrder,
+    SalesOrderLine,
+)
 from .seo_catalog import absolute_public_shop_url
 from .site_locale import DEFAULT_SHOP_SITE_LOCALE, shop_reverse
 from .staff_analytics import _EXCLUDED_STATUSES, build_sales_analytics
@@ -26,7 +34,7 @@ logger = logging.getLogger(__name__)
 
 # The briefing stops at October 2026. Later months stay off the chart.
 CHART_END = date(2026, 10, 31)
-CACHE_KEY = 'partner_deck_public_v2'
+CACHE_KEY = 'partner_deck_public_v3'
 CACHE_SECONDS = 60 * 60 * 6
 
 _CHART_W = 320
@@ -143,35 +151,39 @@ def _trend(start: date, end: date) -> tuple[list[dict], str, int | None]:
 
 
 def _category_mix() -> list[dict]:
-    """Share of units in stock by category. Percents only, no money."""
-    rows = list(
-        ProductListing.objects.filter(
-            channel=ProductListingChannel.STOCK,
-            product__is_active=True,
-            quantity__gt=0,
-        )
-        .values('product__type')
-        .annotate(units=Sum('quantity'))
-        .order_by('-units', 'product__type')
+    """Share of sales by category. Percents only, never the amounts."""
+    rows = (
+        SalesOrderLine.objects.filter(order__order_date__lte=CHART_END)
+        .exclude(order__status__in=_EXCLUDED_STATUSES)
+        .values('product_type')
+        .annotate(money=Sum('line_gross'))
+        .order_by('-money', 'product_type')
     )
-    total = sum(int(row['units'] or 0) for row in rows)
+    grouped: dict[str, Decimal] = {}
+    labels = dict(ProductType.choices)
+    for row in rows:
+        money = row['money'] or Decimal('0')
+        if money <= 0:
+            continue
+        code = row['product_type'] or ''
+        label = labels.get(code, 'Other')
+        grouped[label] = grouped.get(label, Decimal('0')) + money
+    total = sum(grouped.values(), Decimal('0'))
     if total <= 0:
         return []
-    labels = dict(ProductType.choices)
-    top = rows[:5]
-    items = []
-    for row in top:
-        units = int(row['units'] or 0)
-        code = row['product__type']
-        items.append(
-            {
-                'label': labels.get(code, code),
-                'share': int(round(100 * units / total)),
-            }
-        )
-    rest = total - sum(int(row['units'] or 0) for row in top)
+    ranked = sorted(grouped.items(), key=lambda item: (-item[1], item[0]))
+    top = ranked[:5]
+    items = [
+        {'label': label, 'share': int(round(100 * money / total))}
+        for label, money in top
+    ]
+    rest = total - sum((money for _, money in top), Decimal('0'))
     if rest > 0:
-        items.append({'label': 'Other', 'share': int(round(100 * rest / total))})
+        other = int(round(100 * rest / total))
+        if items and items[-1]['label'] == 'Other':
+            items[-1]['share'] += other
+        else:
+            items.append({'label': 'Other', 'share': other})
     return items
 
 

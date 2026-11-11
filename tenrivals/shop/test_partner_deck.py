@@ -6,7 +6,15 @@ from django.core.cache import cache
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
-from shop.models import Customer, Product, ProductListing, ProductListingChannel, ProductType, SalesOrder
+from shop.models import (
+    Customer,
+    Product,
+    ProductListing,
+    ProductListingChannel,
+    ProductType,
+    SalesOrder,
+    SalesOrderLine,
+)
 from shop.partner_deck import partner_public_facts
 
 
@@ -31,7 +39,7 @@ class PartnerDeckTests(TestCase):
             net_total=Decimal('169.49'),
             status=SalesOrder.Status.COMPLETED,
         )
-        SalesOrder.objects.create(
+        second = SalesOrder.objects.create(
             invoice_number='2026-000812',
             customer=self.customer,
             order_date=date(2026, 9, 2),
@@ -40,12 +48,26 @@ class PartnerDeckTests(TestCase):
             net_total=Decimal('220.34'),
             status=SalesOrder.Status.COMPLETED,
         )
+        SalesOrderLine.objects.create(
+            order=self.order,
+            product_type=ProductType.RACKET,
+            quantity=1,
+            unit_price_gross=Decimal('150.00'),
+            line_gross=Decimal('150.00'),
+        )
+        SalesOrderLine.objects.create(
+            order=second,
+            product_type=ProductType.ACCESSORIES,
+            quantity=4,
+            unit_price_gross=Decimal('12.50'),
+            line_gross=Decimal('50.00'),
+        )
         cancelled_customer = Customer.objects.create(
             first_name='Hidden',
             last_name='Cancelled',
             email='hidden-cancelled@test.com',
         )
-        SalesOrder.objects.create(
+        cancelled = SalesOrder.objects.create(
             invoice_number='2026-000810',
             customer=cancelled_customer,
             order_date=date(2026, 8, 2),
@@ -53,6 +75,13 @@ class PartnerDeckTests(TestCase):
             vat_total=Decimal('12.20'),
             net_total=Decimal('67.80'),
             status=SalesOrder.Status.CANCELLED,
+        )
+        SalesOrderLine.objects.create(
+            order=cancelled,
+            product_type=ProductType.BALLS,
+            quantity=9,
+            unit_price_gross=Decimal('111.00'),
+            line_gross=Decimal('999.00'),
         )
         product = Product.objects.create(
             type=ProductType.ACCESSORIES,
@@ -76,7 +105,8 @@ class PartnerDeckTests(TestCase):
         self.assertContains(resp, 'Official for Tourna and Diadem')
         self.assertContains(resp, 'For partners')
         self.assertContains(resp, 'Open to collaboration')
-        self.assertContains(resp, 'Where the units sit')
+        self.assertContains(resp, 'Where the sales sit')
+        self.assertContains(resp, 'Tennis Racket')
         self.assertContains(resp, 'brand-logos/diadem.png')
         self.assertContains(resp, 'cover-logo')
         self.assertContains(resp, 'HOR%20RED.svg')
@@ -88,6 +118,9 @@ class PartnerDeckTests(TestCase):
         self.assertNotContains(resp, '₾')
         self.assertNotContains(resp, '200.00')
         self.assertNotContains(resp, '260.00')
+        self.assertNotContains(resp, '150.00')
+        self.assertNotContains(resp, '50.00')
+        self.assertNotContains(resp, '999.00')
         self.assertNotContains(resp, '—')
 
     def test_facts_count_clients_stock_and_skip_cancelled(self):
@@ -103,7 +136,14 @@ class PartnerDeckTests(TestCase):
         self.assertNotIn('revenue', facts)
         self.assertNotIn('roi', facts)
         self.assertIsInstance(facts['growth_pct'], int)
-        self.assertEqual(facts['category_mix'], [{'label': 'Accessories', 'share': 100}])
+        self.assertEqual(
+            facts['category_mix'],
+            [
+                {'label': 'Tennis Racket', 'share': 75},
+                {'label': 'Accessories', 'share': 25},
+            ],
+        )
+        self.assertNotIn('money', facts['category_mix'][0])
 
     def test_footer_links_to_the_deck(self):
         url = reverse('shop:brands', kwargs={'site_locale': 'ge_en'})
