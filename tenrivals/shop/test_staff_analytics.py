@@ -381,7 +381,7 @@ class MonthLedgerTests(TestCase):
             'end': '2026-10-31',
         }
         payload.update(extra)
-        return self.client.post(reverse('administration:staff_order_finance'), payload)
+        return self.client.post(reverse('administration:staff_accounting'), payload)
 
     def test_statement_adds_credit_and_subtracts_expenses_from_profit_only(self):
         self._october_order()
@@ -397,28 +397,34 @@ class MonthLedgerTests(TestCase):
         self.assertEqual(metrics['profit'], Decimal('142.00'))
         self.assertEqual(metrics['roi_pct'], Decimal('38.22'))
         self.assertEqual(metrics['margin_pct'], Decimal('20.29'))
+        self.assertEqual(statement['plus'], Decimal('172.00'))
+        self.assertEqual(statement['minus'], Decimal('30.00'))
         labels = [line['label'] for line in statement['expense_lines']]
         self.assertEqual(
             labels,
             ['Rent', 'Communications', 'Services', 'Accounting', 'Staff payroll'],
         )
 
-    def test_finance_page_keeps_order_profit_and_collapses_expenses(self):
+    def test_accounting_page_saves_the_close_and_lists_the_month(self):
         self._october_order()
         saved = self._save(tax_credit='50,5', rent='30')
         self.assertEqual(saved.status_code, 302)
+        self.assertIn('/analytics/accounting/', saved['Location'])
         resp = self.client.get(saved['Location'])
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, '142.50')
         self.assertContains(resp, 'Order profit 122.00')
         self.assertContains(resp, '38.33')
+        self.assertContains(resp, 'October 2026')
         html = resp.content.decode()
         self.assertIn('<details class="mf-expenses">', html)
         self.assertNotIn('<details class="mf-expenses" open>', html)
         for label in ('Rent', 'Communications', 'Services', 'Accounting', 'Staff payroll'):
             self.assertContains(resp, label)
-        # The order row still shows merchandise profit, not the month close.
-        self.assertContains(resp, '>122.00<')
+        finance = self.client.get(reverse('administration:staff_order_finance'))
+        self.assertEqual(finance.status_code, 200)
+        self.assertNotContains(finance, 'id_tax_credit')
+        self.assertContains(finance, '>122.00<')
 
     def test_later_edit_recalculates_profit(self):
         self._october_order()

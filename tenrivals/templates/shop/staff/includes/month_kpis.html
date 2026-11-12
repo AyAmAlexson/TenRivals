@@ -1,4 +1,4 @@
-{# Requires: month_metrics. Optional: extra styles already on the page. #}
+{# Requires: month_metrics. Optional: month_kpis_title. #}
 <style>
   .an-month{margin:0 0 26px;padding:18px 20px 20px;background:#fff;border:1px solid var(--line)}
   .an-month__head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px}
@@ -14,38 +14,13 @@
   .an-kpi--profit .an-kpi__value{color:var(--accent);font-size:40px}
   .an-kpi__value.neg{color:#b91c1c}
   .an-kpi__hint{font-size:12px;color:var(--muted);margin-top:6px;font-weight:400}
-  .mf-nav{display:flex;gap:8px;flex-wrap:wrap}
   .mf-bridge{margin:14px 0 0;font-size:13px;font-weight:400;color:var(--muted)}
-  .mf-form{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
-  .mf-line{display:grid;grid-template-columns:minmax(140px,220px) 140px;gap:12px;align-items:center;margin:0 0 8px;font-size:14px;font-weight:400}
-  .mf-line input{width:140px;padding:8px 10px;border:1px solid var(--line);font-family:inherit;font-size:14px;font-weight:400;text-align:right;font-variant-numeric:tabular-nums}
-  .mf-hint{margin:0 0 12px;font-size:12px;font-weight:400;color:var(--muted)}
-  .mf-error{margin:0 0 10px;font-size:13px;font-weight:400;color:#b91c1c}
-  .mf-expenses{margin-top:8px}
-  .mf-expenses summary{cursor:pointer;list-style:none;display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:8px 0}
-  .mf-expenses summary::-webkit-details-marker{display:none}
-  .mf-exp-label{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
-  .mf-exp-total{font-size:14px;font-weight:400;font-variant-numeric:tabular-nums}
-  .mf-expenses summary::after{content:'Edit';font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
-  .mf-expenses[open] summary::after{content:'Close'}
-  .mf-lines{padding:4px 0 8px}
-  .mf-save{margin-top:8px}
 </style>
 {% with mm=month_metrics.metrics %}
 <section class="an-month" aria-label="Monthly financial report">
   <div class="an-month__head">
-    <h2 class="an-month__title">{% if month_editable %}Monthly report{% else %}This month{% endif %} · {{ month_metrics.label }}</h2>
+    <h2 class="an-month__title">{{ month_kpis_title|default:"This month" }} · {{ month_metrics.label }}</h2>
     <span class="an-month__range">{{ month_metrics.start|date:'Y-m-d' }} → {{ month_metrics.end|date:'Y-m-d' }}</span>
-    {% if month_editable %}
-    <div class="mf-nav">
-      {% if month_metrics.prev %}
-      <a class="btn btn--sm btn--outline" href="?month={{ month_metrics.prev }}&amp;start={{ start|date:'Y-m-d' }}&amp;end={{ end|date:'Y-m-d' }}&amp;q={{ invoice_q|urlencode }}&amp;sort={{ sort }}&amp;dir={{ direction }}">Previous</a>
-      {% endif %}
-      {% if month_metrics.next %}
-      <a class="btn btn--sm btn--outline" href="?month={{ month_metrics.next }}&amp;start={{ start|date:'Y-m-d' }}&amp;end={{ end|date:'Y-m-d' }}&amp;q={{ invoice_q|urlencode }}&amp;sort={{ sort }}&amp;dir={{ direction }}">Next</a>
-      {% endif %}
-    </div>
-    {% endif %}
   </div>
   <div class="an-month__grid">
     <div class="an-kpi an-kpi--profit">
@@ -75,38 +50,5 @@
     </div>
   </div>
   <p class="mf-bridge">Order profit {{ mm.order_profit }} ₾ · Tax credit {{ mm.tax_credit }} ₾ · Operating expenses {{ mm.operating_expenses }} ₾</p>
-  {% if month_editable %}
-  <form method="post" class="mf-form" action="{% url 'administration:staff_order_finance' %}">
-    {% csrf_token %}
-    <input type="hidden" name="year" value="{{ month_metrics.year }}">
-    <input type="hidden" name="month" value="{{ month_metrics.month }}">
-    <input type="hidden" name="start" value="{{ start|date:'Y-m-d' }}">
-    <input type="hidden" name="end" value="{{ end|date:'Y-m-d' }}">
-    <input type="hidden" name="q" value="{{ invoice_q }}">
-    <input type="hidden" name="sort" value="{{ sort }}">
-    <input type="hidden" name="dir" value="{{ direction }}">
-    {% if ledger_error %}<p class="mf-error">{{ ledger_error }}</p>{% endif %}
-    <label class="mf-line" for="id_tax_credit">
-      <span>Tax credit</span>
-      <input id="id_tax_credit" name="tax_credit" value="{{ month_metrics.tax_credit_input }}" inputmode="decimal" autocomplete="off">
-    </label>
-    <p class="mf-hint">VAT and 1% offset for this month. Saving it again corrects profit and ROI.</p>
-    <details class="mf-expenses"{% if ledger_error %} open{% endif %}>
-      <summary>
-        <span class="mf-exp-label">Operating expenses</span>
-        <span class="mf-exp-total">{{ mm.operating_expenses }} ₾</span>
-      </summary>
-      <div class="mf-lines">
-        {% for line in month_metrics.expense_lines %}
-        <label class="mf-line" for="id_mf_{{ line.key }}">
-          <span>{{ line.label }}</span>
-          <input id="id_mf_{{ line.key }}" name="{{ line.key }}" value="{{ line.amount }}" inputmode="decimal" autocomplete="off">
-        </label>
-        {% endfor %}
-      </div>
-    </details>
-    <button type="submit" class="btn btn--sm mf-save">Save month</button>
-  </form>
-  {% endif %}
 </section>
 {% endwith %}

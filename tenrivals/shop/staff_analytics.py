@@ -891,6 +891,8 @@ def build_month_statement(year: int, month: int, *, today: date | None = None) -
         'metrics': metrics,
         'expense_lines': ledger.expense_lines() if ledger else MonthLedger.empty_lines(),
         'tax_credit_input': credit,
+        'plus': _q2(metrics['order_profit'] + metrics['tax_credit']),
+        'minus': metrics['operating_expenses'],
     }
 
 
@@ -900,13 +902,62 @@ def build_current_month_metrics(today: date | None = None) -> dict:
     return build_month_statement(today.year, today.month, today=today)
 
 
-def _finance_redirect(request, year: int, month: int):
-    params = {'month': f'{year:04d}-{month:02d}'}
-    for key in ('start', 'end', 'q', 'sort', 'dir'):
-        value = (request.POST.get(key) or '').strip()
-        if value:
-            params[key] = value
-    return f"{reverse('administration:staff_order_finance')}?{urlencode(params)}"
+def _month_span(start: date, end: date):
+    year, month = start.year, start.month
+    last = (end.year, end.month)
+    while (year, month) <= last:
+        yield year, month
+        year, month = shift_month(year, month, 1)
+
+
+def build_accounting_months(today: date | None = None) -> list[dict]:
+    """One company statement per month, from the first order or close through today."""
+    today = today or date.today()
+    start = date(today.year, today.month, 1)
+    first_order = (
+        SalesOrder.objects.exclude(status__in=_EXCLUDED_STATUSES)
+        .order_by('order_date')
+        .values_list('order_date', flat=True)
+        .first()
+    )
+    if first_order:
+        start = min(start, first_order.replace(day=1))
+    first_close = MonthLedger.objects.order_by('year', 'month').first()
+    if first_close:
+        start = min(start, date(first_close.year, first_close.month, 1))
+    rows = [
+        build_month_statement(year, month, today=today)
+        for year, month in _month_span(start, today)
+    ]
+    rows.reverse()
+    return rows
+
+
+def accounting_month_totals(rows: list[dict]) -> dict:
+    plus = minus = revenue = cogs = order_profit = credit = Decimal('0.00')
+    orders = 0
+    for row in rows:
+        metrics = row['metrics']
+        plus += row['plus']
+        minus += row['minus']
+        revenue += metrics['revenue']
+        cogs += metrics['cogs']
+        order_profit += metrics['order_profit']
+        credit += metrics['tax_credit']
+        orders += metrics['orders']
+    base = order_profit + credit
+    return {
+        'orders': orders,
+        'revenue': _q2(revenue),
+        'plus': _q2(plus),
+        'minus': _q2(minus),
+        'profit': _q2(plus - minus),
+        'roi_pct': (base / cogs * 100).quantize(_Q2) if cogs else None,
+    }
+
+
+def _accounting_redirect(year: int, month: int) -> str:
+    return f"{reverse('administration:staff_accounting')}?{urlencode({'month': f'{year:04d}-{month:02d}'})}"
 
 
 _ORDER_SORT_KEYS = frozenset(
@@ -1045,73 +1096,52 @@ def build_order_finance_table(
         'direction': 'asc' if not reverse else 'desc',
     }
 
+
+def _save_month_ledger(request, today: date):
+    """Persist a manual close. Returns (year, month, error). Error is empty on success."""
+    year_raw = request.POST.get('year')
+    month_raw = request.POST.get('month')
+    if not period_is_open(year_raw, month_raw, today):
+        return today.year, today.month, 'Choose a month that is already open.'
+    year, month = int(year_raw), int(month_raw)
+    try:
+        defaults = {'tax_credit': parse_money(request.POST.get('tax_credit'))}
+        for key, _label in MonthLedger.EXPENSE_FIELDS:
+            defaults[key] = parse_money(request.POST.get(key))
+    except (InvalidOperation, ValueError):
+        return year, month, 'Enter amounts as numbers, zero or greater.'
+    MonthLedger.objects.update_or_create(year=year, month=month, defaults=defaults)
+    return year, month, ''
+
+
 @login_required
 @user_passes_test(_staff_ok)
-@require_http_methods(['GET', 'HEAD', 'POST'])
 def staff_order_finance(request):
-    """Per-order table plus the company month report (tax credit and expenses)."""
+    """Per-order financial breakdown. Company month close lives on Accounting."""
     today = date.today()
-    source = request.POST if request.method == 'POST' else request.GET
     default_start = today - timedelta(days=365)
-    start = _parse_date(source.get('start'), default_start)
-    end = _parse_date(source.get('end'), today)
+    start = _parse_date(request.GET.get('start'), default_start)
+    end = _parse_date(request.GET.get('end'), today)
     if start > end:
         start, end = end, start
-    invoice_q = (source.get('q') or '').strip()
-    sort = (source.get('sort') or 'date').strip()
-    direction = (source.get('dir') or 'desc').strip().lower()
+    invoice_q = (request.GET.get('q') or '').strip()
+    sort = (request.GET.get('sort') or 'date').strip()
+    direction = (request.GET.get('dir') or 'desc').strip().lower()
     if direction not in ('asc', 'desc'):
         direction = 'desc'
-
-    ledger_error = ''
-    if request.method == 'POST':
-        year_raw = request.POST.get('year')
-        month_raw = request.POST.get('month')
-        if not period_is_open(year_raw, month_raw, today):
-            ledger_error = 'Choose a month that is already open.'
-            year, month = today.year, today.month
-        else:
-            year, month = int(year_raw), int(month_raw)
-            try:
-                defaults = {'tax_credit': parse_money(request.POST.get('tax_credit'))}
-                for key, _label in MonthLedger.EXPENSE_FIELDS:
-                    defaults[key] = parse_money(request.POST.get(key))
-            except (InvalidOperation, ValueError):
-                ledger_error = 'Enter amounts as numbers, zero or greater.'
-            else:
-                MonthLedger.objects.update_or_create(
-                    year=year, month=month, defaults=defaults
-                )
-                return redirect(_finance_redirect(request, year, month))
-    else:
-        year, month = parse_year_month(request.GET.get('month'), today)
 
     table = build_order_finance_table(
         start, end, invoice_q=invoice_q, sort=sort, direction=direction
     )
-    month_metrics = build_month_statement(year, month, today=today)
-    if ledger_error:
-        month_metrics['tax_credit_input'] = request.POST.get('tax_credit', '')
-        month_metrics['expense_lines'] = [
-            {
-                'key': key,
-                'label': label,
-                'amount': request.POST.get(key, ''),
-            }
-            for key, label in MonthLedger.EXPENSE_FIELDS
-        ]
     ctx = {
         **table,
         'start': start,
         'end': end,
         'invoice_q': invoice_q,
-        'month_editable': True,
-        'ledger_error': ledger_error,
         'tax_rate_pct': TURNOVER_TAX_RATE * 100,
         'acquiring_rate_pct': ACQUIRING_RATE * 100,
         'staff_nav_active': 'order_finance',
         'page_heading': 'Orders finance',
-        'month_metrics': month_metrics,
         'sort_columns': [
             {'key': 'invoice', 'label': 'Invoice', 'num': False},
             {'key': 'date', 'label': 'Date', 'num': False},
@@ -1134,3 +1164,40 @@ def staff_order_finance(request):
         'csv_export_url': reverse('administration:staff_order_finance_csv'),
     }
     return render(request, 'shop/staff/order_finance.html', ctx)
+
+
+@login_required
+@user_passes_test(_staff_ok)
+@require_http_methods(['GET', 'HEAD', 'POST'])
+def staff_accounting(request):
+    """Company month close: selected month plus a plus/minus table of every month."""
+    today = date.today()
+    ledger_error = ''
+    if request.method == 'POST':
+        year, month, ledger_error = _save_month_ledger(request, today)
+        if not ledger_error:
+            return redirect(_accounting_redirect(year, month))
+    else:
+        year, month = parse_year_month(request.GET.get('month'), today)
+
+    month_metrics = build_month_statement(year, month, today=today)
+    if ledger_error and request.method == 'POST':
+        month_metrics['tax_credit_input'] = request.POST.get('tax_credit', '')
+        month_metrics['expense_lines'] = [
+            {'key': key, 'label': label, 'amount': request.POST.get(key, '')}
+            for key, label in MonthLedger.EXPENSE_FIELDS
+        ]
+    months = build_accounting_months(today)
+    return render(
+        request,
+        'shop/staff/accounting.html',
+        {
+            'staff_nav_active': 'accounting',
+            'page_heading': 'Accounting',
+            'month_kpis_title': 'Month',
+            'month_metrics': month_metrics,
+            'ledger_error': ledger_error,
+            'months': months,
+            'month_totals': accounting_month_totals(months),
+        },
+    )

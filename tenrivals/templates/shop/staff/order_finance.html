@@ -1,7 +1,7 @@
 {% extends 'persons/staff_base.html' %}
 {% block title %}Orders finance — Staff | Tenrivals{% endblock %}
 {% block page_heading %}{{ page_heading }}{% endblock %}
-{% block page_note %}<p class="page-note">Per-order economics (same formulas as Analytics). Cancelled / refunded rows are shown dimmed and excluded from footer totals. Click a row to open the order. Revenue is the customer payment. Net Proceeds = Revenue − VAT − TAX − Acquiring. Gross Profit = Revenue − VAT − COGS. Profit = Net Proceeds − COGS. TAX = {{ tax_rate_pct|floatformat:0 }}% of gross; acquiring = {{ acquiring_rate_pct|floatformat:0 }}% of the amount actually received by card (per payment / fiscal receipt; unpaid orders carry no acquiring).</p>{% endblock %}
+{% block page_note %}<p class="page-note">Per-order economics (same formulas as Analytics). Cancelled / refunded rows are shown dimmed and excluded from footer totals. Click a row to open the order. Revenue is the customer payment. Net Proceeds = Revenue − VAT − TAX − Acquiring. Gross Profit = Revenue − VAT − COGS. Profit = Net Proceeds − COGS. TAX = {{ tax_rate_pct|floatformat:0 }}% of gross; acquiring = {{ acquiring_rate_pct|floatformat:0 }}% of the amount actually received by card (per payment / fiscal receipt; unpaid orders carry no acquiring). Company month profit, tax credit, and operating expenses are on Accounting.</p>{% endblock %}
 {% block extra_head %}
 <style>
   .of-filters{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:flex-end;margin-bottom:18px}
@@ -32,7 +32,7 @@
 </style>
 {% endblock %}
 {% block content %}
-{% include 'shop/staff/includes/month_kpis.html' %}
+{% include 'shop/staff/includes/analytics_sections.html' %}
 <form method="get" class="of-filters">
   <div class="form-group">
     <label for="id_of_start">From</label>
@@ -48,7 +48,6 @@
   </div>
   <input type="hidden" name="sort" value="{{ sort }}">
   <input type="hidden" name="dir" value="{{ direction }}">
-  <input type="hidden" name="month" value="{{ month_metrics.query }}">
   <button type="submit" class="btn btn--sm">Apply</button>
 </form>
 
@@ -62,7 +61,7 @@
       <tr>
         {% for col in sort_columns %}
         <th class="{% if col.num %}num {% endif %}{% if sort == col.key %}is-sorted{% endif %}">
-          <a href="?start={{ start|date:'Y-m-d' }}&end={{ end|date:'Y-m-d' }}&q={{ invoice_q|urlencode }}&month={{ month_metrics.query }}&sort={{ col.key }}&dir={% if sort == col.key and direction == 'desc' %}asc{% else %}desc{% endif %}">
+          <a href="?start={{ start|date:'Y-m-d' }}&end={{ end|date:'Y-m-d' }}&q={{ invoice_q|urlencode }}&sort={{ col.key }}&dir={% if sort == col.key and direction == 'desc' %}asc{% else %}desc{% endif %}">
             {{ col.label }}{% if sort == col.key %}<span class="of-sort">{% if direction == 'asc' %}▲{% else %}▼{% endif %}</span>{% endif %}
           </a>
         </th>

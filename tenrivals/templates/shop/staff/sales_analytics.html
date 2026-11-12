@@ -1,7 +1,7 @@
 {% extends 'persons/staff_base.html' %}
 {% block title %}Sales analytics — Staff | Tenrivals{% endblock %}
 {% block page_heading %}{{ page_heading }}{% endblock %}
-{% block page_note %}<p class="page-note">Staff-only economics. Cancelled / refunded orders excluded. Revenue is the customer payment. Net Proceeds = Revenue − VAT − TAX − Acquiring. Gross Profit = Revenue − VAT − COGS. Order profit = Net Proceeds − COGS. By month, Profit = order profit + tax credit − operating expenses, and ROI = (order profit + tax credit) / COGS. Tax credit and operating expenses are edited on Orders finance and apply to each full month in the range. TAX = {{ tax_rate_pct|floatformat:0 }}% turnover on gross; acquiring = {{ acquiring_rate_pct|floatformat:0 }}% of the amount actually received by card, summed over the order's payments (a payment counts as card when its method mentions card / terminal / POS; unpaid orders carry no acquiring). Lines without landed cost count in revenue but not in COGS — watch cost coverage.</p>{% endblock %}
+{% block page_note %}<p class="page-note">Staff-only economics. Cancelled / refunded orders excluded. Revenue is the customer payment. Net Proceeds = Revenue − VAT − TAX − Acquiring. Gross Profit = Revenue − VAT − COGS. Order profit = Net Proceeds − COGS. By month, Profit = order profit + tax credit − operating expenses, and ROI = (order profit + tax credit) / COGS. Tax credit and operating expenses are edited on Accounting and apply to each full month in the range. TAX = {{ tax_rate_pct|floatformat:0 }}% turnover on gross; acquiring = {{ acquiring_rate_pct|floatformat:0 }}% of the amount actually received by card, summed over the order's payments (a payment counts as card when its method mentions card / terminal / POS; unpaid orders carry no acquiring). Lines without landed cost count in revenue but not in COGS — watch cost coverage.</p>{% endblock %}
 {% block extra_head %}
 {{ chart|json_script:"analytics-chart-data" }}
 {{ stock_value_chart|json_script:"stock-value-chart-data" }}
@@ -40,6 +40,7 @@
 </style>
 {% endblock %}
 {% block content %}
+{% include 'shop/staff/includes/analytics_sections.html' %}
 {% include 'shop/staff/includes/month_kpis.html' %}
 
 <form method="get" class="an-filters">

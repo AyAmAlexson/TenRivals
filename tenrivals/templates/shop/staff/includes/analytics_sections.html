@@ -1,0 +1,11 @@
+<nav class="an-sections" aria-label="Analytics sections">
+  <a href="{% url 'administration:staff_sales_analytics' %}" class="{% if staff_nav_active == 'sales_analytics' %}is-active{% endif %}">Analytics</a>
+  <a href="{% url 'administration:staff_order_finance' %}" class="{% if staff_nav_active == 'order_finance' %}is-active{% endif %}">Orders finance</a>
+  <a href="{% url 'administration:staff_accounting' %}" class="{% if staff_nav_active == 'accounting' %}is-active{% endif %}">Accounting</a>
+</nav>
+<style>
+  .an-sections{display:flex;flex-wrap:wrap;margin:0 0 18px}
+  .an-sections a{padding:8px 14px;border:1px solid var(--line);font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;background:#fff;color:var(--ink)}
+  .an-sections a + a{margin-left:-1px}
+  .an-sections a.is-active{background:var(--accent);border-color:var(--accent);color:#fff;position:relative;z-index:1}
+</style>

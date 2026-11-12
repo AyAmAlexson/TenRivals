@@ -1,0 +1,119 @@
+{% extends 'persons/staff_base.html' %}
+{% block title %}Accounting — Staff | Tenrivals{% endblock %}
+{% block page_heading %}{{ page_heading }}{% endblock %}
+{% block page_note %}<p class="page-note">Company result by calendar month. Plus = order profit + tax credit. Minus = operating expenses. Profit = plus − minus. ROI = (order profit + tax credit) / COGS. Click a month to edit its tax credit and expenses. Saving again corrects that month.</p>{% endblock %}
+{% block extra_head %}
+<style>
+  .mf-form{margin:-8px 0 26px;padding:16px 20px 18px;background:#fff;border:1px solid var(--line);border-top:none}
+  .mf-line{display:grid;grid-template-columns:minmax(140px,220px) 140px;gap:12px;align-items:center;margin:0 0 8px;font-size:14px;font-weight:400}
+  .mf-line input{width:140px;padding:8px 10px;border:1px solid var(--line);font-family:inherit;font-size:14px;font-weight:400;text-align:right;font-variant-numeric:tabular-nums}
+  .mf-hint{margin:0 0 12px;font-size:12px;font-weight:400;color:var(--muted)}
+  .mf-error{margin:0 0 10px;font-size:13px;font-weight:400;color:#b91c1c}
+  .mf-expenses{margin-top:8px}
+  .mf-expenses summary{cursor:pointer;list-style:none;display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:8px 0}
+  .mf-expenses summary::-webkit-details-marker{display:none}
+  .mf-exp-label{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+  .mf-exp-total{font-size:14px;font-weight:400;font-variant-numeric:tabular-nums}
+  .mf-expenses summary::after{content:'Edit';font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
+  .mf-expenses[open] summary::after{content:'Close'}
+  .mf-lines{padding:4px 0 8px}
+  .mf-save{margin-top:8px}
+  .ac-table-wrap{overflow:auto;border:1px solid var(--line);background:#fff}
+  .ac-table{width:100%;border-collapse:collapse;font-size:13px;min-width:760px}
+  .ac-table th,.ac-table td{padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+  .ac-table thead th{background:#f9fafb;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);text-align:left}
+  .ac-table .num{text-align:right;font-variant-numeric:tabular-nums}
+  .ac-table tbody tr{cursor:pointer}
+  .ac-table tbody tr:hover{background:#f8fafc}
+  .ac-table tbody tr.is-selected{background:#fdf2f2}
+  .ac-table tbody tr.is-selected:hover{background:#fce8e9}
+  .ac-table tfoot td{background:#f9fafb;font-weight:600;border-top:2px solid var(--line)}
+  .ac-month{font-weight:600;color:var(--accent)}
+  .neg{color:#b91c1c}
+  .ac-note{margin:0 0 10px;font-size:12px;font-weight:400;color:var(--muted)}
+</style>
+{% endblock %}
+{% block content %}
+{% include 'shop/staff/includes/analytics_sections.html' %}
+{% include 'shop/staff/includes/month_kpis.html' %}
+<form method="post" class="mf-form" action="{% url 'administration:staff_accounting' %}">
+  {% csrf_token %}
+  <input type="hidden" name="year" value="{{ month_metrics.year }}">
+  <input type="hidden" name="month" value="{{ month_metrics.month }}">
+  {% if ledger_error %}<p class="mf-error">{{ ledger_error }}</p>{% endif %}
+  <label class="mf-line" for="id_tax_credit">
+    <span>Tax credit</span>
+    <input id="id_tax_credit" name="tax_credit" value="{{ month_metrics.tax_credit_input }}" inputmode="decimal" autocomplete="off">
+  </label>
+  <p class="mf-hint">VAT and 1% offset for this month. Saving it again corrects profit and ROI.</p>
+  <details class="mf-expenses"{% if ledger_error %} open{% endif %}>
+    <summary>
+      <span class="mf-exp-label">Operating expenses</span>
+      <span class="mf-exp-total">{{ month_metrics.minus }} ₾</span>
+    </summary>
+    <div class="mf-lines">
+      {% for line in month_metrics.expense_lines %}
+      <label class="mf-line" for="id_mf_{{ line.key }}">
+        <span>{{ line.label }}</span>
+        <input id="id_mf_{{ line.key }}" name="{{ line.key }}" value="{{ line.amount }}" inputmode="decimal" autocomplete="off">
+      </label>
+      {% endfor %}
+    </div>
+  </details>
+  <button type="submit" class="btn btn--sm mf-save">Save month</button>
+</form>
+
+<p class="ac-note">Click a month to load it above. Plus is what the month keeps before operating expenses. Minus is those expenses.</p>
+<div class="ac-table-wrap">
+  <table class="ac-table">
+    <thead>
+      <tr>
+        <th>Month</th>
+        <th class="num">Orders</th>
+        <th class="num">Revenue</th>
+        <th class="num">Plus</th>
+        <th class="num">Minus</th>
+        <th class="num">Profit</th>
+        <th class="num">ROI</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in months %}
+      {% with m=row.metrics %}
+      <tr class="{% if row.query == month_metrics.query %}is-selected{% endif %}" data-href="?month={{ row.query }}">
+        <td><a class="ac-month" href="?month={{ row.query }}">{{ row.label }}</a></td>
+        <td class="num">{{ m.orders }}</td>
+        <td class="num">{{ m.revenue }}</td>
+        <td class="num">{{ row.plus }}</td>
+        <td class="num">{{ row.minus }}</td>
+        <td class="num {% if m.profit < 0 %}neg{% endif %}">{{ m.profit }}</td>
+        <td class="num">{% if m.roi_pct is not None %}{{ m.roi_pct }}%{% else %}—{% endif %}</td>
+      </tr>
+      {% endwith %}
+      {% endfor %}
+    </tbody>
+    <tfoot>
+      <tr>
+        <td>Total</td>
+        <td class="num">{{ month_totals.orders }}</td>
+        <td class="num">{{ month_totals.revenue }}</td>
+        <td class="num">{{ month_totals.plus }}</td>
+        <td class="num">{{ month_totals.minus }}</td>
+        <td class="num {% if month_totals.profit < 0 %}neg{% endif %}">{{ month_totals.profit }}</td>
+        <td class="num">{% if month_totals.roi_pct is not None %}{{ month_totals.roi_pct }}%{% else %}—{% endif %}</td>
+      </tr>
+    </tfoot>
+  </table>
+</div>
+<script>
+(function(){
+  document.querySelectorAll('.ac-table tbody tr[data-href]').forEach(function(tr){
+    tr.addEventListener('click', function(e){
+      if(e.target.closest('a')) return;
+      var href = tr.getAttribute('data-href');
+      if(href) window.location.href = href;
+    });
+  });
+})();
+</script>
+{% endblock %}
