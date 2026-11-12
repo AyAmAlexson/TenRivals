@@ -15,7 +15,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Saira:wght@400;600;800&family=Saira+Condensed:wght@400&display=swap" rel="stylesheet">
   <link rel="icon" href="{% static 'assets/img/favicon.png' %}">
   {% if hero_slides %}{% with hero_slides|first as hero_pre %}
-  <link rel="preload" as="image" href="{{ hero_pre.image.url }}" fetchpriority="high">
+  {% image_rendition hero_pre.image 1600 as pic %}
+  {% if pic.src %}
+  <link rel="preload" as="image" href="{{ pic.src }}"{% if pic.srcset %} imagesrcset="{{ pic.srcset }}" imagesizes="100vw"{% endif %} fetchpriority="high">
+  {% endif %}
   {% endwith %}{% endif %}
   <link href="{% static 'css/styles.css' %}" rel="stylesheet">
   {% include 'shop/includes/product_tile_styles.html' %}
@@ -551,12 +554,21 @@
     <div class="hero-carousel" aria-hidden="true">
       {% for slide in hero_slides %}
       <div class="hero-slide{% if forloop.first %} is-active{% endif %}" data-hero-slide>
+        {% image_rendition slide.image 1600 as pic %}
         {% if slide.image_link_url %}
         <a href="{{ slide.image_link_url|abs_site_href }}"{% if slide.image_link_url|slice:":4" == "http" %} target="_blank" rel="noopener"{% endif %}>
-          <img src="{{ slide.image.url }}" alt="" decoding="async" sizes="100vw"{% if slide.image.width and slide.image.height %} width="{{ slide.image.width }}" height="{{ slide.image.height }}"{% endif %}{% if forloop.first %} fetchpriority="high"{% else %} loading="lazy" fetchpriority="low"{% endif %}>
+          {% if forloop.first %}
+          {% include 'shop/includes/responsive_img.html' with sizes="100vw" alt="" fetchpriority="high" %}
+          {% else %}
+          {% include 'shop/includes/responsive_img.html' with sizes="100vw" alt="" loading="lazy" fetchpriority="low" %}
+          {% endif %}
         </a>
         {% else %}
-        <img src="{{ slide.image.url }}" alt="" decoding="async" sizes="100vw"{% if slide.image.width and slide.image.height %} width="{{ slide.image.width }}" height="{{ slide.image.height }}"{% endif %}{% if forloop.first %} fetchpriority="high"{% else %} loading="lazy" fetchpriority="low"{% endif %}>
+          {% if forloop.first %}
+          {% include 'shop/includes/responsive_img.html' with sizes="100vw" alt="" fetchpriority="high" %}
+          {% else %}
+          {% include 'shop/includes/responsive_img.html' with sizes="100vw" alt="" loading="lazy" fetchpriority="low" %}
+          {% endif %}
         {% endif %}
       </div>
       {% empty %}
@@ -630,12 +642,21 @@
         <div class="promo-carousel__viewport">
           {% for banner in promo_banners %}
           <div class="promo-carousel__slide{% if forloop.first %} is-active{% endif %}" data-promo-slide>
+            {% image_rendition banner.image 1280 as pic %}
             {% if banner.image_link_url %}
             <a href="{{ banner.image_link_url|abs_site_href }}"{% if banner.image_link_url|slice:":4" == "http" %} target="_blank" rel="noopener"{% endif %}>
-              <img src="{{ banner.image.url }}" alt="{{ banner.internal_note|default:promo_banner_alt_default }}" decoding="async" sizes="(max-width:1200px) 100vw, 1200px"{% if banner.image.width and banner.image.height %} width="{{ banner.image.width }}" height="{{ banner.image.height }}"{% endif %}{% if forloop.first %} fetchpriority="high"{% else %} loading="lazy" fetchpriority="low"{% endif %}>
+              {% if forloop.first %}
+              {% include 'shop/includes/responsive_img.html' with sizes="(max-width:1200px) 100vw, 1200px" alt=banner.internal_note|default:promo_banner_alt_default fetchpriority="low" %}
+              {% else %}
+              {% include 'shop/includes/responsive_img.html' with sizes="(max-width:1200px) 100vw, 1200px" alt=banner.internal_note|default:promo_banner_alt_default loading="lazy" fetchpriority="low" %}
+              {% endif %}
             </a>
             {% else %}
-            <img src="{{ banner.image.url }}" alt="{{ banner.internal_note|default:promo_banner_alt_default }}" decoding="async" sizes="(max-width:1200px) 100vw, 1200px"{% if banner.image.width and banner.image.height %} width="{{ banner.image.width }}" height="{{ banner.image.height }}"{% endif %}{% if forloop.first %} fetchpriority="high"{% else %} loading="lazy" fetchpriority="low"{% endif %}>
+              {% if forloop.first %}
+              {% include 'shop/includes/responsive_img.html' with sizes="(max-width:1200px) 100vw, 1200px" alt=banner.internal_note|default:promo_banner_alt_default fetchpriority="low" %}
+              {% else %}
+              {% include 'shop/includes/responsive_img.html' with sizes="(max-width:1200px) 100vw, 1200px" alt=banner.internal_note|default:promo_banner_alt_default loading="lazy" fetchpriority="low" %}
+              {% endif %}
             {% endif %}
           </div>
           {% endfor %}
@@ -681,7 +702,8 @@
             <a class="story-card" href="{% shop_url 'shop:blog_post' slug=post.slug %}">
               {% if post.teaser_image %}
               <div class="story-card__media">
-                <img src="{{ post.teaser_image.url }}" alt="{{ post.title }}" decoding="async" sizes="(max-width:640px) 78vw, 320px"{% if post.teaser_image.width and post.teaser_image.height %} width="{{ post.teaser_image.width }}" height="{{ post.teaser_image.height }}"{% endif %}{% if forloop.counter0 < 2 %} fetchpriority="low"{% else %} loading="lazy"{% endif %}>
+                {% image_rendition post.teaser_image 640 as pic %}
+                {% include 'shop/includes/responsive_img.html' with sizes="(max-width:640px) 78vw, 320px" alt=post.title loading="lazy" fetchpriority="low" %}
               </div>
               {% else %}
               <div class="story-card__media" style="min-height:160px;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase">{% trans "Ten Rivals" %}</div>

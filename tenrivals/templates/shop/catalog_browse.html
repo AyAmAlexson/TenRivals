@@ -405,7 +405,7 @@
 
         <div class="product-grid">
       {% for p in products %}
-        {% include 'shop/includes/product_tile.html' with p=p browse_mode=browse_mode %}
+        {% include 'shop/includes/product_tile.html' with p=p browse_mode=browse_mode tile_fetch=forloop.counter0 %}
       {% empty %}
         <p style="grid-column:1/-1">No products to display.</p>
       {% endfor %}
@@ -420,7 +420,8 @@
             <a class="collection-card" href="{% shop_url 'shop:collection_detail' coll.slug %}">
               <div class="collection-card__media">
                 {% if coll.banner_image %}
-                <img src="{{ coll.banner_image.url }}" alt="{{ coll.title }}" loading="lazy" decoding="async" sizes="120px">
+                {% image_rendition coll.banner_image 320 as pic %}
+                {% include 'shop/includes/responsive_img.html' with sizes="120px" alt=coll.title loading="lazy" %}
                 {% endif %}
               </div>
               <div class="collection-card__body">

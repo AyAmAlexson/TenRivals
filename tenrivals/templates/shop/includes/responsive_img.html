@@ -1,0 +1,3 @@
+{% if pic.src %}
+<img src="{{ pic.src }}"{% if pic.srcset %} srcset="{{ pic.srcset }}"{% endif %}{% if sizes %} sizes="{{ sizes }}"{% endif %} alt="{{ alt|default:'' }}" decoding="async"{% if pic.width and pic.height %} width="{{ pic.width }}" height="{{ pic.height }}"{% endif %}{% if img_id %} id="{{ img_id }}"{% endif %}{% if img_class %} class="{{ img_class }}"{% endif %}{% if itemprop %} itemprop="{{ itemprop }}"{% endif %}{% if loading %} loading="{{ loading }}"{% endif %}{% if fetchpriority %} fetchpriority="{{ fetchpriority }}"{% endif %}{% if data_index or data_index == 0 %} data-index="{{ data_index }}"{% endif %}>
+{% endif %}

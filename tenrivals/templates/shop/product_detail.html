@@ -10,6 +10,12 @@
   <link rel="canonical" href="{{ seo_canonical_url }}">
   {% load static %}
   {% load catalog_tags %}
+  {% if product.main_image %}
+  {% image_rendition product.main_image 960 as pic %}
+  {% if pic.src %}
+  <link rel="preload" as="image" href="{{ pic.src }}"{% if pic.srcset %} imagesrcset="{{ pic.srcset }}" imagesizes="(max-width:900px) 100vw, min(58vw, 640px)"{% endif %} fetchpriority="high">
+  {% endif %}
+  {% endif %}
   {% load l10n %}
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -339,17 +345,19 @@
       <div class="pdp-cell pdp-cell--gallery">
       <div class="pdp-gallery">
         <div class="pdp-main-img{% if pdp_gallery %} pdp-main-img--zoomable{% endif %}" id="pdp-main-wrap"{% if pdp_gallery %} role="button" tabindex="0" aria-label="View larger image"{% endif %}>
-          {% if pdp_gallery %}
-          <img id="pdp-main-img" src="{{ pdp_gallery.0 }}" alt="{{ product.name }}" decoding="async" fetchpriority="high" sizes="(max-width:900px) 100vw, min(58vw, 640px)">
+          {% if pdp_images %}
+          {% image_rendition pdp_images.0 960 as pic %}
+          {% include 'shop/includes/responsive_img.html' with sizes="(max-width:900px) 100vw, min(58vw, 640px)" alt=product.name img_id="pdp-main-img" fetchpriority="high" data_index=0 %}
           {% else %}
           <span>No image</span>
           {% endif %}
         </div>
-        {% if pdp_gallery|length > 1 %}
+        {% if pdp_images|length > 1 %}
         <div class="pdp-thumbs" role="tablist" aria-label="Product images">
-          {% for url in pdp_gallery %}
-          <button type="button" class="pdp-thumb{% if forloop.first %} active{% endif %}" data-src="{{ url }}" aria-label="Image {{ forloop.counter }}">
-            <img src="{{ url }}" alt="" loading="lazy" decoding="async" sizes="72px">
+          {% for img in pdp_images %}
+          {% image_rendition img 960 as pic %}
+          <button type="button" class="pdp-thumb{% if forloop.first %} active{% endif %}" data-src="{{ pic.src }}" data-srcset="{{ pic.srcset }}" data-index="{{ forloop.counter0 }}" aria-label="Image {{ forloop.counter }}">
+            {% include 'shop/includes/responsive_img.html' with sizes="72px" alt="" loading="lazy" %}
           </button>
           {% endfor %}
         </div>
@@ -658,8 +666,13 @@
     document.querySelectorAll('.pdp-thumb').forEach(th => {
       th.addEventListener('click', function() {
         const src = this.getAttribute('data-src');
+        const srcset = this.getAttribute('data-srcset') || '';
         const main = document.getElementById('pdp-main-img');
-        if (main && src) main.src = src;
+        if (main && src) {
+          main.src = src;
+          main.srcset = srcset;
+          if (this.dataset.index) main.dataset.index = this.dataset.index;
+        }
         document.querySelectorAll('.pdp-thumb').forEach(t => t.classList.remove('active'));
         this.classList.add('active');
       });
@@ -692,17 +705,9 @@
         syncNav();
       }
       function indexFromMain() {
-        var cur = mainImg.getAttribute('src') || '';
-        var i;
-        for (i = 0; i < urls.length; i++) {
-          if (cur === urls[i]) return i;
-        }
-        try {
-          var path = new URL(cur, window.location.href).pathname;
-          for (i = 0; i < urls.length; i++) {
-            if (new URL(urls[i], window.location.href).pathname === path) return i;
-          }
-        } catch (e) {}
+        var raw = mainImg.dataset.index || '0';
+        var n = parseInt(raw, 10);
+        if (!isNaN(n) && n >= 0 && n < urls.length) return n;
         return 0;
       }
       function openLb() {

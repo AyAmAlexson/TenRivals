@@ -448,11 +448,17 @@ def product_detail(request, pk):
         pk=pk,
         is_active=True,
     )
+    from .responsive_images import image_rendition
+
     gallery = []
+    pdp_images = []
     for name in ("image_1", "image_2", "image_3", "image_4", "image_5"):
         f = getattr(product, name)
         if f:
-            gallery.append(f.url)
+            rendition = image_rendition(f, default_width=1600)
+            if rendition:
+                pdp_images.append(f)
+                gallery.append(rendition.full)
     pdp_og_image_url = (
         request.build_absolute_uri(gallery[0]) if gallery else ""
     )
@@ -498,6 +504,7 @@ def product_detail(request, pk):
         "shop/product_detail.html",
         {
             "product": product,
+            "pdp_images": pdp_images,
             "pdp_gallery": gallery,
             "pdp_og_image_url": pdp_og_image_url,
             "seo_canonical_url": seo_canonical_url,
@@ -1558,7 +1565,15 @@ def product_create(request):
             if barcode_error:
                 messages.error(request, barcode_error)
             else:
+                from .responsive_images import (
+                    prepare_product_image_uploads,
+                    schedule_saved_images,
+                    PRODUCT_IMAGE_FIELDS,
+                )
+
+                prepare_product_image_uploads(form.instance)
                 obj = form.save()
+                schedule_saved_images(obj, PRODUCT_IMAGE_FIELDS)
                 _write_product_barcodes(obj, form, request.POST)
                 _save_listing_from_form(obj, form)
                 return _redirect_after_product_form_save(request, obj, form)
@@ -1625,7 +1640,15 @@ def product_edit(request, pk):
             if barcode_error:
                 messages.error(request, barcode_error)
             else:
+                from .responsive_images import (
+                    prepare_product_image_uploads,
+                    schedule_saved_images,
+                    PRODUCT_IMAGE_FIELDS,
+                )
+
+                prepare_product_image_uploads(form.instance)
                 obj = form.save()
+                schedule_saved_images(obj, PRODUCT_IMAGE_FIELDS)
                 _write_product_barcodes(obj, form, request.POST)
                 _save_listing_from_form(obj, form)
                 return _redirect_after_product_form_save(request, obj, form)

@@ -27,7 +27,12 @@
   <a class="blog-card" href="{% shop_url 'shop:blog_post' slug=post.slug %}">
     <div class="blog-card__media">
       {% if post.teaser_image %}
-      <img src="{{ post.teaser_image.url }}" alt="" decoding="async" sizes="(max-width:1100px) 50vw, 33vw"{% if post.teaser_image.width and post.teaser_image.height %} width="{{ post.teaser_image.width }}" height="{{ post.teaser_image.height }}"{% endif %}{% if forloop.counter0 < 4 %} fetchpriority="low"{% else %} loading="lazy"{% endif %}>
+      {% image_rendition post.teaser_image 640 as pic %}
+      {% if forloop.counter0 < 4 %}
+      {% include 'shop/includes/responsive_img.html' with sizes="(max-width:1100px) 50vw, 33vw" alt="" fetchpriority="low" %}
+      {% else %}
+      {% include 'shop/includes/responsive_img.html' with sizes="(max-width:1100px) 50vw, 33vw" alt="" loading="lazy" %}
+      {% endif %}
       {% else %}
       <div style="width:100%;height:100%;min-height:200px;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.1em">Ten Rivals</div>
       {% endif %}

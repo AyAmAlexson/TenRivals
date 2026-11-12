@@ -271,6 +271,17 @@ else:
     os.makedirs(MEDIA_ROOT, exist_ok=True)
 
 
+# Storefront pages enqueue WebP variants onto the Celery worker.
+# Tests must not open the broker while rendering a template.
+import sys as _sys
+
+_RUNNING_TESTS = 'test' in _sys.argv
+SHOP_BUILD_IMAGE_RENDITIONS = env.bool(
+    'SHOP_BUILD_IMAGE_RENDITIONS',
+    default=not _RUNNING_TESTS,
+)
+
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 SITE_ID = 1

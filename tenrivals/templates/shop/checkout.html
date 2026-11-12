@@ -200,7 +200,7 @@
         </div>
         {% for row in checkout_rows %}
         <div class="checkout-item">
-          <div class="checkout-item__thumb">{% if row.product.main_image %}<img src="{{ row.product.main_image.url }}" alt="{{ row.name }}">{% endif %}</div>
+          <div class="checkout-item__thumb">{% if row.product.main_image %}{% image_rendition row.product.main_image 320 as pic %}{% include 'shop/includes/responsive_img.html' with sizes="72px" alt=row.name loading="lazy" %}{% endif %}</div>
           <div class="checkout-item__meta">
             <div>{{ row.name }}</div>
             <div style="color:var(--muted)">Qty {{ row.qty }}{% if row.variant_label != '—' %} · {{ row.variant_label }}{% endif %}</div>

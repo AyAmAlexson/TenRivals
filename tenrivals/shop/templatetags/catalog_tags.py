@@ -5,11 +5,22 @@ from persons.account_display import account_initials_for_user
 
 from ..catalog_utils import distinct_brands_for_type, stock_catalog_storefront_queryset
 from ..models import ProductType
+from ..responsive_images import image_rendition as _image_rendition
 from ..seo_catalog import absolute_public_shop_url
 from ..site_locale import shop_reverse
 
 
 register = template.Library()
+
+
+@register.simple_tag
+def image_rendition(image, default_width=960):
+    """src / srcset for a stored image. Does not open the file during render."""
+    try:
+        width = int(default_width)
+    except (TypeError, ValueError):
+        width = 960
+    return _image_rendition(image, width)
 
 
 @register.simple_tag

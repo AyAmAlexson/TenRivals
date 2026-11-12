@@ -92,7 +92,7 @@
     {% if q %}
     <div class="product-grid">
       {% for p in products %}
-        {% include 'shop/includes/product_tile.html' with p=p browse_mode=tile_browse_mode %}
+        {% include 'shop/includes/product_tile.html' with p=p browse_mode=tile_browse_mode tile_fetch=forloop.counter0 %}
       {% empty %}
         <p style="grid-column:1/-1; color:var(--muted); text-transform:none">No products matched your search.</p>
       {% endfor %}

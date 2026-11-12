@@ -4,7 +4,10 @@
   .product-grid > .product-tile{height:100%}
   .product-rail__cell{display:flex; min-width:0}
   .product-rail__cell > .product-tile{flex:1; width:100%; min-width:0}
-  .product-tile{position:relative; min-width:0; padding:20px 22px; transition:background .15s; display:flex; flex-direction:column}
+  .product-tile{
+    position:relative; min-width:0; padding:20px 22px; transition:background .15s; display:flex; flex-direction:column;
+    content-visibility:auto; contain-intrinsic-size:auto 480px;
+  }
   .product-tile:hover{background:rgba(0,0,0,.02)}
   .product-tile__edit{
     position:absolute; top:12px; right:12px; z-index:3;

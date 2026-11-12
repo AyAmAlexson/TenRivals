@@ -365,7 +365,8 @@
             <div class="cart-line__left">
               <a class="cart-item__thumb" href="{% shop_url 'shop:product_detail' row.product.pk %}?channel=stock" aria-label="{{ row.name }}">
                 {% if row.product.main_image %}
-                <img src="{{ row.product.main_image.url }}" alt="{{ row.name }}">
+                {% image_rendition row.product.main_image 320 as pic %}
+                {% include 'shop/includes/responsive_img.html' with sizes="88px" alt=row.name loading="lazy" %}
                 {% endif %}
               </a>
               <div class="cart-line__text">

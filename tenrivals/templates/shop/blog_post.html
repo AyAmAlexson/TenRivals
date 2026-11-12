@@ -11,7 +11,10 @@
 {% block title %}{{ post.title }} | Tenrivals{% endblock %}
 {% block extra_head %}
 {% if post.hero_image %}
-<link rel="preload" as="image" href="{{ post.hero_image.url }}" fetchpriority="high">
+{% image_rendition post.hero_image 1280 as pic %}
+{% if pic.src %}
+<link rel="preload" as="image" href="{{ pic.src }}"{% if pic.srcset %} imagesrcset="{{ pic.srcset }}" imagesizes="(max-width:720px) 100vw, 720px"{% endif %} fetchpriority="high">
+{% endif %}
 {% endif %}
 {% endblock %}
 {% block extra_css %}
@@ -204,7 +207,8 @@
 
   {% if post.hero_image %}
   <figure class="article-hero-wrap">
-    <img src="{{ post.hero_image.url }}" alt="" itemprop="image" decoding="async" fetchpriority="high" sizes="(max-width:720px) 100vw, 720px"{% if post.hero_image.width and post.hero_image.height %} width="{{ post.hero_image.width }}" height="{{ post.hero_image.height }}"{% endif %}>
+    {% image_rendition post.hero_image 1280 as pic %}
+    {% include 'shop/includes/responsive_img.html' with sizes="(max-width:720px) 100vw, 720px" alt="" itemprop="image" fetchpriority="high" %}
   </figure>
   {% endif %}
 
@@ -230,7 +234,8 @@
           </blockquote>
         {% elif sec.type == 'figure' %}
           <figure class="article-inline-figure">
-            <img src="{{ sec.image.url }}" alt="" loading="lazy" decoding="async" sizes="(max-width:720px) 100vw, 720px"{% if sec.image.width and sec.image.height %} width="{{ sec.image.width }}" height="{{ sec.image.height }}"{% endif %}>
+            {% image_rendition sec.image 960 as pic %}
+            {% include 'shop/includes/responsive_img.html' with sizes="(max-width:720px) 100vw, 720px" alt="" loading="lazy" %}
           </figure>
         {% elif sec.type == 'products' %}
           <section class="article-products" aria-label="Featured products">
@@ -240,7 +245,10 @@
                 {% for p in sec.products %}
                 <a class="article-product-card" href="{% shop_url 'shop:product_detail' p.pk %}">
                   <div class="article-product-card__media">
-                    {% if p.image_1 %}<img src="{{ p.image_1.url }}" alt="{{ p.name }}" loading="lazy" decoding="async" sizes="168px">{% endif %}
+                    {% if p.image_1 %}
+                    {% image_rendition p.image_1 320 as pic %}
+                    {% include 'shop/includes/responsive_img.html' with sizes="168px" alt=p.name loading="lazy" %}
+                    {% endif %}
                   </div>
                   <div class="article-product-card__body">
                     <p class="article-product-card__brand">{{ p.brand }}</p>

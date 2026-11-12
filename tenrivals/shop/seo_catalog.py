@@ -643,12 +643,15 @@ def pdp_product_json_ld(
     price_value: Decimal | None,
 ) -> dict:
     """Schema.org Product (dict for json_script or |safe JSON)."""
+    from .responsive_images import image_rendition
+
     images = []
     for n in ('image_1', 'image_2', 'image_3', 'image_4', 'image_5'):
         f = getattr(product, n, None)
         if f:
             try:
-                images.append(request.build_absolute_uri(f.url))
+                rendition = image_rendition(f, default_width=1600)
+                images.append(request.build_absolute_uri(rendition.full if rendition else f.url))
             except Exception:
                 pass
     avail = (

@@ -556,7 +556,11 @@ class HomeHeroSlide(models.Model):
         prev = HomeHeroSlide.objects.filter(pk=self.pk).first() if self.pk else None
         if self.image and imagefield_changed(prev, self, 'image'):
             assign_optimized_imagefield(self.image, max_width=2000, max_height=1200)
-        return super().save(*args, **kwargs)
+        saved = super().save(*args, **kwargs)
+        from shop.responsive_images import schedule_saved_images
+
+        schedule_saved_images(self, ('image',))
+        return saved
 
 
 class HomePromoBanner(models.Model):
@@ -596,7 +600,11 @@ class HomePromoBanner(models.Model):
         prev = HomePromoBanner.objects.filter(pk=self.pk).first() if self.pk else None
         if self.image and imagefield_changed(prev, self, 'image'):
             assign_optimized_filefield(self.image, max_width=2000, max_height=700)
-        return super().save(*args, **kwargs)
+        saved = super().save(*args, **kwargs)
+        from shop.responsive_images import schedule_saved_images
+
+        schedule_saved_images(self, ('image',))
+        return saved
 
 
 class ProductCollection(models.Model):
@@ -840,7 +848,11 @@ class BlogPost(models.Model):
             if f and imagefield_changed(prev, self, fname):
                 assign_optimized_filefield(f, max_width=1400, max_height=1400)
 
-        return super().save(*args, **kwargs)
+        saved = super().save(*args, **kwargs)
+        from shop.responsive_images import schedule_saved_images
+
+        schedule_saved_images(self, img_fields)
+        return saved
 
     @property
     def teaser_image(self):
@@ -2001,3 +2013,21 @@ class PromoRedemption(models.Model):
 
     def __str__(self) -> str:
         return f'{self.promo.code} → order {self.sales_order_id}'
+
+
+class StoredImageRendition(models.Model):
+    """WebP width variants for one stored raster. Page render reads this row and does not open the file."""
+
+    source_name = models.CharField(max_length=300, unique=True)
+    width = models.PositiveIntegerField(default=0)
+    height = models.PositiveIntegerField(default=0)
+    variants = models.JSONField(default=dict, blank=True)
+    version = models.PositiveSmallIntegerField(default=1)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Stored image rendition'
+        verbose_name_plural = 'Stored image renditions'
+
+    def __str__(self) -> str:
+        return self.source_name
