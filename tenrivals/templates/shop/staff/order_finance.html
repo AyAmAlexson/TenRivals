@@ -48,6 +48,7 @@
   </div>
   <input type="hidden" name="sort" value="{{ sort }}">
   <input type="hidden" name="dir" value="{{ direction }}">
+  <input type="hidden" name="month" value="{{ month_metrics.query }}">
   <button type="submit" class="btn btn--sm">Apply</button>
 </form>
 
@@ -61,7 +62,7 @@
       <tr>
         {% for col in sort_columns %}
         <th class="{% if col.num %}num {% endif %}{% if sort == col.key %}is-sorted{% endif %}">
-          <a href="?start={{ start|date:'Y-m-d' }}&end={{ end|date:'Y-m-d' }}&q={{ invoice_q|urlencode }}&sort={{ col.key }}&dir={% if sort == col.key and direction == 'desc' %}asc{% else %}desc{% endif %}">
+          <a href="?start={{ start|date:'Y-m-d' }}&end={{ end|date:'Y-m-d' }}&q={{ invoice_q|urlencode }}&month={{ month_metrics.query }}&sort={{ col.key }}&dir={% if sort == col.key and direction == 'desc' %}asc{% else %}desc{% endif %}">
             {{ col.label }}{% if sort == col.key %}<span class="of-sort">{% if direction == 'asc' %}▲{% else %}▼{% endif %}</span>{% endif %}
           </a>
         </th>

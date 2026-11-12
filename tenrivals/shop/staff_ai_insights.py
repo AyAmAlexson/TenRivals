@@ -93,7 +93,7 @@ def _compact_analytics(label: str, start: date, end: date, ctx: dict) -> dict:
         )
     monthly = []
     for r in ctx.get('bucket_rows') or []:
-        if not r.get('orders'):
+        if not r.get('orders') and not r.get('tax_credit') and not r.get('operating_expenses'):
             continue
         monthly.append(
             {
@@ -103,6 +103,9 @@ def _compact_analytics(label: str, start: date, end: date, ctx: dict) -> dict:
                 'net_proceeds': _n(r.get('net_proceeds')),
                 'gross_profit': _n(r.get('gross_profit')),
                 'profit': _n(r['profit']),
+                'order_profit': _n(r.get('order_profit')),
+                'tax_credit': _n(r.get('tax_credit')),
+                'operating_expenses': _n(r.get('operating_expenses')),
                 'roi_pct': _n(r.get('roi_pct')),
                 'margin_pct': _n(r.get('margin_pct')),
                 'aov': _n(r.get('aov')),
@@ -126,6 +129,9 @@ def _compact_analytics(label: str, start: date, end: date, ctx: dict) -> dict:
         'tax': _n(totals.get('tax')),
         'acquiring': _n(totals.get('acquiring')),
         'profit': _n(totals.get('profit')),
+        'order_profit': _n(totals.get('order_profit')),
+        'tax_credit': _n(totals.get('tax_credit')),
+        'operating_expenses': _n(totals.get('operating_expenses')),
         'margin_pct': _n(totals.get('margin_pct')),
         'roi_pct': _n(totals.get('roi_pct')),
         'coverage_pct': _n(totals.get('coverage_pct')),
@@ -252,7 +258,7 @@ def build_analytics_insight_payload(*, today: date | None = None) -> dict:
     for label, start, end in specs:
         if start > end:
             continue
-        ctx = build_sales_analytics(start, end, 'month')
+        ctx = build_sales_analytics(start, end, 'month', today=today)
         periods.append(_compact_analytics(label, start, end, ctx))
 
     return {
@@ -266,8 +272,11 @@ def build_analytics_insight_payload(*, today: date | None = None) -> dict:
             'cogs': 'known landed costs + service/delivery contractor costs',
             'net_proceeds': 'Revenue − VAT − TAX − Acquiring',
             'gross_profit': 'Revenue − VAT − COGS',
-            'profit': 'Net Proceeds − COGS',
-            'roi': 'Profit / COGS',
+            'order_profit': 'Revenue − VAT − TAX − Acquiring − COGS',
+            'tax_credit': 'Manual VAT and 1% credit for a month the window fully covers',
+            'operating_expenses': 'Manual rent, communications, services, accounting, payroll',
+            'profit': 'order profit + tax credit − operating expenses, when the window covers the month; otherwise order profit',
+            'roi': '(order profit + tax credit) / COGS on a covered month. Operating expenses stay out of ROI',
             'coverage': 'share of product revenue with a known landed cost',
             'cancelled_refunded': 'excluded',
         },

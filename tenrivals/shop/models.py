@@ -2015,6 +2015,71 @@ class PromoRedemption(models.Model):
         return f'{self.promo.code} → order {self.sales_order_id}'
 
 
+class MonthLedger(models.Model):
+    """Manual close for one calendar month.
+
+    Order rows keep full output VAT and the 1% turnover tax.
+    Company profit for the month is order profit + tax credit − operating
+    expenses. Month ROI is (order profit + tax credit) / COGS.
+    """
+
+    EXPENSE_FIELDS = (
+        ('rent', 'Rent'),
+        ('communications', 'Communications'),
+        ('services', 'Services'),
+        ('accounting', 'Accounting'),
+        ('payroll', 'Staff payroll'),
+    )
+
+    year = models.PositiveSmallIntegerField()
+    month = models.PositiveSmallIntegerField()
+    tax_credit = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        help_text=_('VAT and turnover-tax credit applied to this month (₾).'),
+    )
+    rent = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
+    communications = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
+    services = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
+    accounting = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
+    payroll = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-year', '-month']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['year', 'month'],
+                name='shop_monthledger_year_month_uniq',
+            ),
+            models.CheckConstraint(
+                check=models.Q(month__gte=1, month__lte=12),
+                name='shop_monthledger_month_valid',
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f'{self.year}-{self.month:02d}'
+
+    def expense_total(self) -> Decimal:
+        total = Decimal('0.00')
+        for name, _label in self.EXPENSE_FIELDS:
+            total += getattr(self, name) or Decimal('0.00')
+        return total.quantize(Decimal('0.01'))
+
+    def expense_lines(self) -> list[dict]:
+        return [
+            {'key': key, 'label': label, 'amount': getattr(self, key) or Decimal('0.00')}
+            for key, label in self.EXPENSE_FIELDS
+        ]
+
+    @classmethod
+    def empty_lines(cls) -> list[dict]:
+        zero = Decimal('0.00')
+        return [{'key': key, 'label': label, 'amount': zero} for key, label in cls.EXPENSE_FIELDS]
+
+
 class StoredImageRendition(models.Model):
     """WebP width variants for one stored raster. Page render reads this row and does not open the file."""
 

@@ -18,7 +18,13 @@ Canonical product/order metrics:
     ROI            = Profit / COGS
 
 Do not label Gross Profit, Net Proceeds, or Profit as Income.
-Profit here is product/order-level, not company-wide net profit.
+Profit on an order row is product-level, not company-wide net profit.
+
+Month close (manual, editable after the fact):
+    Company profit = order profit + tax credit − operating expenses
+    Month ROI      = (order profit + tax credit) / COGS
+Operating expenses do not enter ROI. The credit is previously paid VAT
+applied against this month's VAT and 1% bill.
 
 Cancelled / refunded orders are excluded everywhere. Lines without a landed
 cost contribute to Revenue but not to COGS — the dashboard reports "cost
@@ -29,15 +35,17 @@ from __future__ import annotations
 
 import calendar
 from datetime import date, timedelta
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from collections import defaultdict
+from urllib.parse import urlencode
 
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.db.models import Prefetch
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from django.urls import reverse
+from django.views.decorators.http import require_http_methods
 
-from .models import SalesOrder, SalesOrderLine
+from .models import MonthLedger, SalesOrder, SalesOrderLine
 from .sales_order_utils import order_services_and_delivery_cogs
 from .stock_value_history import build_stock_value_series
 from .stock_units import build_shelf_age_report
@@ -370,8 +378,13 @@ def _build_profit_accumulation(
 
 
 def build_sales_analytics(
-    start: date, end: date, granularity: str
+    start: date,
+    end: date,
+    granularity: str,
+    *,
+    today: date | None = None,
 ) -> dict:
+    today = today or date.today()
     orders = list(
         SalesOrder.objects.filter(order_date__gte=start, order_date__lte=end)
         .exclude(status__in=_EXCLUDED_STATUSES)
@@ -518,6 +531,9 @@ def build_sales_analytics(
         row['label'] = _bucket_label(b, granularity)
         bucket_rows.append(row)
 
+    if granularity == 'month':
+        _apply_month_ledgers(bucket_rows, totals, start, end, today)
+
     type_breakdown = []
     for trow in sorted(type_rows.values(), key=lambda r: -r['revenue']):
         trow['coverage_pct'] = (
@@ -610,8 +626,11 @@ def build_sales_analytics(
                 / bucket_rows[i - 1]['revenue']
                 * 100
             ).quantize(_Q2)
+    # Per-order average stays on merchandise profit. Company profit includes
+    # the month close and is not a property of one order.
+    profit_per_order_base = totals.get('order_profit', totals['profit'])
     avg_profit_per_order = (
-        _q2(totals['profit'] / totals['orders']) if totals['orders'] else None
+        _q2(profit_per_order_base / totals['orders']) if totals['orders'] else None
     )
     avg_items_per_order = (
         (Decimal(totals['items']) / totals['orders']).quantize(Decimal('0.1'))
@@ -655,7 +674,7 @@ def build_sales_analytics(
         ],
     }
     chart.update(
-        _build_profit_accumulation(daily_profit, start, end, date.today())
+        _build_profit_accumulation(daily_profit, start, end, today)
     )
 
     return {
@@ -698,7 +717,7 @@ def staff_sales_analytics(request):
     if granularity not in ('day', 'week', 'month'):
         granularity = 'month'
 
-    ctx = build_sales_analytics(start, end, granularity)
+    ctx = build_sales_analytics(start, end, granularity, today=today)
     month_metrics = build_current_month_metrics(today)
 
     ctx.update(
@@ -719,12 +738,111 @@ def staff_sales_analytics(request):
     return render(request, 'shop/staff/sales_analytics.html', ctx)
 
 
-def build_current_month_metrics(today: date | None = None) -> dict:
-    """Calendar-month snapshot (1st → today), independent of the page date filter."""
-    today = today or date.today()
-    month_start = today.replace(day=1)
+def parse_money(raw) -> Decimal:
+    """Non-negative lari amount. Empty is zero. Comma or dot decimals."""
+    text = (raw or '').strip().replace('\u00a0', '').replace(' ', '').replace(',', '.')
+    if not text:
+        return Decimal('0.00')
+    value = Decimal(text)
+    if value < 0 or value > Decimal('99999999.99'):
+        raise InvalidOperation
+    return _q2(value)
+
+
+def month_period(year: int, month: int, today: date) -> tuple[date, date]:
+    """First day through the last day of the month, capped at today."""
+    start = date(year, month, 1)
+    last = calendar.monthrange(year, month)[1]
+    end = date(year, month, last)
+    if end > today:
+        end = today
+    return start, end
+
+
+def period_is_open(year: int, month: int, today: date) -> bool:
+    try:
+        start = date(int(year), int(month), 1)
+    except (TypeError, ValueError):
+        return False
+    return date(2000, 1, 1) <= start <= date(today.year, today.month, 1)
+
+
+def parse_year_month(raw: str | None, today: date) -> tuple[int, int]:
+    """Calendar month from YYYY-MM. Unknown or future values fall back to today."""
+    if raw:
+        parts = str(raw).split('-')
+        if len(parts) >= 2 and period_is_open(parts[0], parts[1], today):
+            return int(parts[0]), int(parts[1])
+    return today.year, today.month
+
+
+def shift_month(year: int, month: int, delta: int) -> tuple[int, int]:
+    index = year * 12 + (month - 1) + delta
+    return index // 12, index % 12 + 1
+
+
+def month_fully_covered(year: int, month: int, range_start: date, range_end: date, today: date) -> bool:
+    """True when the filter includes the whole month, or the current month through today."""
+    start, end = month_period(year, month, today)
+    if start > today:
+        return False
+    return range_start <= start and range_end >= end
+
+
+def apply_company_month_result(metrics: dict, tax_credit: Decimal, expenses: Decimal) -> None:
+    """Set company profit and month ROI. Order profit is kept beside them.
+
+    Margin follows the company profit (profit / revenue) so a month row stays
+    internally consistent. ROI does not subtract operating expenses.
+    """
+    order_profit = metrics['order_profit'] if 'order_profit' in metrics else metrics['profit']
+    credit = _q2(Decimal(tax_credit or 0))
+    opex = _q2(Decimal(expenses or 0))
+    metrics['order_profit'] = order_profit
+    metrics['tax_credit'] = credit
+    metrics['operating_expenses'] = opex
+    metrics['profit'] = _q2(order_profit + credit - opex)
+    base = order_profit + credit
+    cogs = metrics['cogs']
+    metrics['roi_pct'] = (base / cogs * 100).quantize(_Q2) if cogs else None
+    revenue = metrics['revenue']
+    metrics['margin_pct'] = (metrics['profit'] / revenue * 100).quantize(_Q2) if revenue else None
+
+
+def _ledgers_by_month(keys: list[tuple[int, int]]) -> dict[tuple[int, int], MonthLedger]:
+    if not keys:
+        return {}
+    wanted = set(keys)
+    years = {year for year, _month in wanted}
+    return {
+        (row.year, row.month): row
+        for row in MonthLedger.objects.filter(year__in=years)
+        if (row.year, row.month) in wanted
+    }
+
+
+def _apply_month_ledgers(bucket_rows: list[dict], totals: dict, start: date, end: date, today: date) -> None:
+    """Fold each full month's manual close into that bucket and into the total."""
+    keys = [(row['start'].year, row['start'].month) for row in bucket_rows]
+    ledgers = _ledgers_by_month(keys)
+    credit_sum = Decimal('0.00')
+    expense_sum = Decimal('0.00')
+    for row in bucket_rows:
+        key = (row['start'].year, row['start'].month)
+        ledger = ledgers.get(key) if month_fully_covered(*key, start, end, today) else None
+        credit = ledger.tax_credit if ledger else Decimal('0.00')
+        expenses = ledger.expense_total() if ledger else Decimal('0.00')
+        apply_company_month_result(row, credit, expenses)
+        credit_sum += credit
+        expense_sum += expenses
+    apply_company_month_result(totals, credit_sum, expense_sum)
+
+
+def _order_metrics_between(start: date, end: date) -> dict:
+    if start > end:
+        return _finalize_metrics(_zero_metrics())
     orders = (
-        SalesOrder.objects.filter(order_date__gte=month_start, order_date__lte=today)
+        SalesOrder.objects.filter(order_date__gte=start, order_date__lte=end)
         .exclude(status__in=_EXCLUDED_STATUSES)
         .prefetch_related(
             Prefetch(
@@ -743,13 +861,52 @@ def build_current_month_metrics(today: date | None = None) -> dict:
     totals = _zero_metrics()
     for order in orders:
         _add_metrics(totals, compute_order_economics(order))
-    metrics = _finalize_metrics(totals)
+    return _finalize_metrics(totals)
+
+
+def build_month_statement(year: int, month: int, *, today: date | None = None) -> dict:
+    """Company P&L for one calendar month, including a manual close when saved."""
+    today = today or date.today()
+    start, end = month_period(year, month, today)
+    metrics = _order_metrics_between(start, end)
+    ledger = MonthLedger.objects.filter(year=year, month=month).first()
+    credit = ledger.tax_credit if ledger else Decimal('0.00')
+    expenses = ledger.expense_total() if ledger else Decimal('0.00')
+    apply_company_month_result(metrics, credit, expenses)
+    prev_year, prev_month = shift_month(year, month, -1)
+    next_pair = shift_month(year, month, 1)
+    next_label = None
+    if period_is_open(*next_pair, today):
+        next_label = f'{next_pair[0]:04d}-{next_pair[1]:02d}'
     return {
-        'label': month_start.strftime('%B %Y'),
-        'start': month_start,
-        'end': today,
+        'year': year,
+        'month': month,
+        'label': start.strftime('%B %Y'),
+        'query': f'{year:04d}-{month:02d}',
+        'prev': f'{prev_year:04d}-{prev_month:02d}' if prev_year >= 2000 else None,
+        'next': next_label,
+        'start': start,
+        'end': end,
+        'is_current': (year, month) == (today.year, today.month),
         'metrics': metrics,
+        'expense_lines': ledger.expense_lines() if ledger else MonthLedger.empty_lines(),
+        'tax_credit_input': credit,
     }
+
+
+def build_current_month_metrics(today: date | None = None) -> dict:
+    """Calendar-month snapshot (1st → today), independent of the page date filter."""
+    today = today or date.today()
+    return build_month_statement(today.year, today.month, today=today)
+
+
+def _finance_redirect(request, year: int, month: int):
+    params = {'month': f'{year:04d}-{month:02d}'}
+    for key in ('start', 'end', 'q', 'sort', 'dir'):
+        value = (request.POST.get(key) or '').strip()
+        if value:
+            params[key] = value
+    return f"{reverse('administration:staff_order_finance')}?{urlencode(params)}"
 
 
 _ORDER_SORT_KEYS = frozenset(
@@ -890,29 +1047,66 @@ def build_order_finance_table(
 
 @login_required
 @user_passes_test(_staff_ok)
+@require_http_methods(['GET', 'HEAD', 'POST'])
 def staff_order_finance(request):
-    """Separate tab: per-order financial breakdown with filters and sort."""
+    """Per-order table plus the company month report (tax credit and expenses)."""
     today = date.today()
+    source = request.POST if request.method == 'POST' else request.GET
     default_start = today - timedelta(days=365)
-    start = _parse_date(request.GET.get('start'), default_start)
-    end = _parse_date(request.GET.get('end'), today)
+    start = _parse_date(source.get('start'), default_start)
+    end = _parse_date(source.get('end'), today)
     if start > end:
         start, end = end, start
-    invoice_q = (request.GET.get('q') or '').strip()
-    sort = (request.GET.get('sort') or 'date').strip()
-    direction = (request.GET.get('dir') or 'desc').strip().lower()
+    invoice_q = (source.get('q') or '').strip()
+    sort = (source.get('sort') or 'date').strip()
+    direction = (source.get('dir') or 'desc').strip().lower()
     if direction not in ('asc', 'desc'):
         direction = 'desc'
+
+    ledger_error = ''
+    if request.method == 'POST':
+        year_raw = request.POST.get('year')
+        month_raw = request.POST.get('month')
+        if not period_is_open(year_raw, month_raw, today):
+            ledger_error = 'Choose a month that is already open.'
+            year, month = today.year, today.month
+        else:
+            year, month = int(year_raw), int(month_raw)
+            try:
+                defaults = {'tax_credit': parse_money(request.POST.get('tax_credit'))}
+                for key, _label in MonthLedger.EXPENSE_FIELDS:
+                    defaults[key] = parse_money(request.POST.get(key))
+            except (InvalidOperation, ValueError):
+                ledger_error = 'Enter amounts as numbers, zero or greater.'
+            else:
+                MonthLedger.objects.update_or_create(
+                    year=year, month=month, defaults=defaults
+                )
+                return redirect(_finance_redirect(request, year, month))
+    else:
+        year, month = parse_year_month(request.GET.get('month'), today)
 
     table = build_order_finance_table(
         start, end, invoice_q=invoice_q, sort=sort, direction=direction
     )
-    month_metrics = build_current_month_metrics(today)
+    month_metrics = build_month_statement(year, month, today=today)
+    if ledger_error:
+        month_metrics['tax_credit_input'] = request.POST.get('tax_credit', '')
+        month_metrics['expense_lines'] = [
+            {
+                'key': key,
+                'label': label,
+                'amount': request.POST.get(key, ''),
+            }
+            for key, label in MonthLedger.EXPENSE_FIELDS
+        ]
     ctx = {
         **table,
         'start': start,
         'end': end,
         'invoice_q': invoice_q,
+        'month_editable': True,
+        'ledger_error': ledger_error,
         'tax_rate_pct': TURNOVER_TAX_RATE * 100,
         'acquiring_rate_pct': ACQUIRING_RATE * 100,
         'staff_nav_active': 'order_finance',

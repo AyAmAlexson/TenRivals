@@ -7,6 +7,7 @@ from django.urls import reverse
 
 from shop.models import (
     Customer,
+    MonthLedger,
     Product,
     ProductListing,
     ProductListingChannel,
@@ -17,6 +18,7 @@ from shop.models import (
 )
 from shop.staff_analytics import (
     _finalize_metrics,
+    build_month_statement,
     build_sales_analytics,
     compute_order_economics,
     expected_unit_economics,
@@ -313,3 +315,152 @@ class StockValueChartTests(TestCase):
         self.assertEqual(series['labels'], [])
         self.assertEqual(series['roi'], [])
         self.assertIn('avg_expected_roi_pct', series['today'])
+
+
+@override_settings(SECURE_SSL_REDIRECT=False)
+class MonthLedgerTests(TestCase):
+    """Company month profit = order profit + tax credit − operating expenses.
+    Month ROI = (order profit + tax credit) / COGS.
+    """
+
+    def setUp(self):
+        User = get_user_model()
+        staff = User.objects.create_superuser(email='month-close@test.com', password='x-secret-1')
+        self.client.force_login(staff)
+        self.customer = Customer.objects.create(
+            first_name='Nika',
+            last_name='Close',
+            email='close@test.com',
+            phone='555',
+        )
+        self.today = date(2026, 11, 12)
+
+    def _october_order(self):
+        order = SalesOrder.objects.create(
+            customer=self.customer,
+            order_date=date(2026, 10, 8),
+            status=SalesOrder.Status.COMPLETED,
+            gross_total=Decimal('700.00'),
+            vat_total=Decimal('107.00'),
+            net_total=Decimal('593.00'),
+            invoice_number='FIN-OCT',
+        )
+        SalesOrderLine.objects.create(
+            order=order,
+            custom_label='Yonex EZONE 100',
+            product_type=ProductType.RACKET,
+            quantity=1,
+            unit_price_gross=Decimal('700.00'),
+            line_gross=Decimal('700.00'),
+            line_vat=Decimal('107.00'),
+            line_net=Decimal('593.00'),
+            landed_cost_gel=Decimal('450.00'),
+            sale_channel=SalesOrderLine.SaleChannel.STOCK,
+        )
+        SalesOrderPayment.objects.create(
+            order=order,
+            paid_on=date(2026, 10, 8),
+            amount_gross=Decimal('700.00'),
+            payment_method='Card terminal',
+            fiscal_receipt='FIN-OCT-1',
+        )
+        order.sync_payment_summary()
+        return order
+
+    def _save(self, **extra):
+        payload = {
+            'year': '2026',
+            'month': '10',
+            'tax_credit': '0',
+            'rent': '0',
+            'communications': '0',
+            'services': '0',
+            'accounting': '0',
+            'payroll': '0',
+            'start': '2026-10-01',
+            'end': '2026-10-31',
+        }
+        payload.update(extra)
+        return self.client.post(reverse('administration:staff_order_finance'), payload)
+
+    def test_statement_adds_credit_and_subtracts_expenses_from_profit_only(self):
+        self._october_order()
+        MonthLedger.objects.create(
+            year=2026,
+            month=10,
+            tax_credit=Decimal('50.00'),
+            rent=Decimal('30.00'),
+        )
+        statement = build_month_statement(2026, 10, today=self.today)
+        metrics = statement['metrics']
+        self.assertEqual(metrics['order_profit'], Decimal('122.00'))
+        self.assertEqual(metrics['profit'], Decimal('142.00'))
+        self.assertEqual(metrics['roi_pct'], Decimal('38.22'))
+        self.assertEqual(metrics['margin_pct'], Decimal('20.29'))
+        labels = [line['label'] for line in statement['expense_lines']]
+        self.assertEqual(
+            labels,
+            ['Rent', 'Communications', 'Services', 'Accounting', 'Staff payroll'],
+        )
+
+    def test_finance_page_keeps_order_profit_and_collapses_expenses(self):
+        self._october_order()
+        saved = self._save(tax_credit='50,5', rent='30')
+        self.assertEqual(saved.status_code, 302)
+        resp = self.client.get(saved['Location'])
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, '142.50')
+        self.assertContains(resp, 'Order profit 122.00')
+        self.assertContains(resp, '38.33')
+        html = resp.content.decode()
+        self.assertIn('<details class="mf-expenses">', html)
+        self.assertNotIn('<details class="mf-expenses" open>', html)
+        for label in ('Rent', 'Communications', 'Services', 'Accounting', 'Staff payroll'):
+            self.assertContains(resp, label)
+        # The order row still shows merchandise profit, not the month close.
+        self.assertContains(resp, '>122.00<')
+
+    def test_later_edit_recalculates_profit(self):
+        self._october_order()
+        self._save(tax_credit='50', rent='30')
+        again = self._save(tax_credit='80', rent='30')
+        resp = self.client.get(again['Location'])
+        self.assertContains(resp, '172.00')
+        self.assertEqual(MonthLedger.objects.get(year=2026, month=10).tax_credit, Decimal('80.00'))
+
+    def test_negative_amount_is_rejected(self):
+        self._october_order()
+        resp = self._save(tax_credit='-5')
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'Enter amounts as numbers, zero or greater.')
+        self.assertFalse(MonthLedger.objects.exists())
+
+    def test_full_month_in_analytics_uses_the_close(self):
+        self._october_order()
+        MonthLedger.objects.create(year=2026, month=10, tax_credit=Decimal('50.00'), rent=Decimal('30.00'))
+        data = build_sales_analytics(
+            date(2026, 10, 1), date(2026, 10, 31), 'month', today=self.today
+        )
+        self.assertEqual(data['totals']['profit'], Decimal('142.00'))
+        self.assertEqual(data['totals']['roi_pct'], Decimal('38.22'))
+        october = data['bucket_rows'][0]
+        self.assertEqual(october['profit'], Decimal('142.00'))
+        self.assertEqual(october['order_profit'], Decimal('122.00'))
+
+    def test_partial_month_keeps_order_profit(self):
+        self._october_order()
+        MonthLedger.objects.create(year=2026, month=10, tax_credit=Decimal('50.00'), rent=Decimal('30.00'))
+        data = build_sales_analytics(
+            date(2026, 10, 1), date(2026, 10, 20), 'month', today=self.today
+        )
+        self.assertEqual(data['totals']['profit'], Decimal('122.00'))
+        self.assertEqual(data['totals']['roi_pct'], Decimal('27.11'))
+
+    def test_day_granularity_does_not_apply_the_close(self):
+        self._october_order()
+        MonthLedger.objects.create(year=2026, month=10, tax_credit=Decimal('50.00'), rent=Decimal('30.00'))
+        data = build_sales_analytics(
+            date(2026, 10, 1), date(2026, 10, 31), 'day', today=self.today
+        )
+        self.assertEqual(data['totals']['profit'], Decimal('122.00'))
+        self.assertNotIn('order_profit', data['totals'])
