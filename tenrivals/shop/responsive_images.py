@@ -10,6 +10,7 @@ from __future__ import annotations
 import hashlib
 import io
 import logging
+import time
 from dataclasses import dataclass
 
 from django.conf import settings
@@ -36,6 +37,9 @@ _POS = 'img-rendition:v1:'
 _NEG = 'img-rendition-miss:v1:'
 _LOCK = 'img-rendition-lock:v1:'
 _broker_failed = False
+_read_pause_until = 0.0
+_write_pause_until = 0.0
+_CACHE_PAUSE = 30.0
 
 
 @dataclass(frozen=True)
@@ -108,7 +112,7 @@ def schedule_build(source_name: str) -> None:
         return
     if _cached_meta(name) is not None:
         return
-    if not cache.add(_LOCK + name, 1, _LOCK_TTL):
+    if not _cache_add(_LOCK + name, 1, _LOCK_TTL):
         return
     try:
         from shop.tasks import build_image_rendition
@@ -116,7 +120,7 @@ def schedule_build(source_name: str) -> None:
         build_image_rendition.delay(name)
     except Exception:
         _broker_failed = True
-        cache.delete(_LOCK + name)
+        _cache_delete(_LOCK + name)
         logger.exception('Could not enqueue image rendition for %s', name)
 
 
@@ -215,25 +219,81 @@ def _lookup(name: str) -> dict | None:
     meta = _cached_meta(name)
     if meta is not None:
         return meta
-    if cache.get(_NEG + name):
+    if _cache_get(_NEG + name):
         return None
     meta = _row_meta(name)
     if meta is None:
-        cache.set(_NEG + name, 1, _MISS_TTL)
+        _cache_set(_NEG + name, 1, _MISS_TTL)
         schedule_build(name)
         return None
     if int(meta.get('version') or 0) != RENDITION_VERSION:
         schedule_build(name)
         return None
-    cache.set(_POS + name, meta, _CACHE_TTL)
+    _cache_set(_POS + name, meta, _CACHE_TTL)
     return meta
 
 
 def _cached_meta(name: str) -> dict | None:
-    hit = cache.get(_POS + name)
+    hit = _cache_get(_POS + name)
     if isinstance(hit, dict) and int(hit.get('version') or 0) == RENDITION_VERSION:
         return hit
     return None
+
+
+def _pause_cache(kind: str) -> None:
+    """Back off for a short window so one full Redis does not fail every tile."""
+    global _read_pause_until, _write_pause_until
+    now = time.monotonic()
+    until = now + _CACHE_PAUSE
+    if kind == 'read':
+        if now >= _read_pause_until:
+            logger.warning('Image rendition cache read failed; serving without it', exc_info=True)
+        _read_pause_until = until
+        return
+    if now >= _write_pause_until:
+        logger.warning(
+            'Image rendition cache is full or unreachable; serving without it',
+            exc_info=True,
+        )
+    _write_pause_until = until
+
+
+def _cache_get(key: str):
+    """Read-through helper. A full or down Redis must not 500 the storefront."""
+    if time.monotonic() < _read_pause_until:
+        return None
+    try:
+        return cache.get(key)
+    except Exception:
+        _pause_cache('read')
+        return None
+
+
+def _cache_set(key: str, value, timeout: int) -> None:
+    if time.monotonic() < _write_pause_until:
+        return
+    try:
+        cache.set(key, value, timeout)
+    except Exception:
+        _pause_cache('write')
+
+
+def _cache_add(key: str, value, timeout: int) -> bool:
+    """False when the lock is already held or Redis rejects the write."""
+    if time.monotonic() < _write_pause_until:
+        return False
+    try:
+        return bool(cache.add(key, value, timeout))
+    except Exception:
+        _pause_cache('write')
+        return False
+
+
+def _cache_delete(key: str) -> None:
+    try:
+        cache.delete(key)
+    except Exception:
+        logger.warning('Image rendition cache delete failed', exc_info=True)
 
 
 def _row_meta(name: str) -> dict | None:
@@ -266,9 +326,9 @@ def _store(name: str, width: int, height: int, variants: dict) -> None:
             'version': RENDITION_VERSION,
         },
     )
-    cache.delete(_NEG + name)
-    cache.delete(_LOCK + name)
-    cache.set(
+    _cache_delete(_NEG + name)
+    _cache_delete(_LOCK + name)
+    _cache_set(
         _POS + name,
         {
             'width': width,

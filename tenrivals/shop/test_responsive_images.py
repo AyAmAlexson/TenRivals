@@ -1,4 +1,5 @@
 import io
+from unittest.mock import patch
 
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
@@ -25,6 +26,13 @@ def _jpeg(width: int, height: int) -> bytes:
 
 @override_settings(STORAGES=_STORAGES, SHOP_BUILD_IMAGE_RENDITIONS=False)
 class ResponsiveImageTests(TestCase):
+    def setUp(self):
+        from shop import responsive_images
+
+        responsive_images._read_pause_until = 0.0
+        responsive_images._write_pause_until = 0.0
+        responsive_images._broker_failed = False
+
     def test_build_writes_widths_under_the_source(self):
         default_storage.save('shop/products/racket.jpg', ContentFile(_jpeg(1000, 800)))
         self.assertEqual(build_rendition('shop/products/racket.jpg'), 'built')
@@ -94,6 +102,42 @@ class ResponsiveImageTests(TestCase):
         default_storage.save('shop/products/again.jpg', ContentFile(_jpeg(320, 200)))
         self.assertEqual(build_rendition('shop/products/again.jpg'), 'built')
         self.assertEqual(build_rendition('shop/products/again.jpg'), 'skipped')
+
+    def test_full_redis_still_serves_the_original(self):
+        default_storage.save('shop/products/oom.jpg', ContentFile(_jpeg(400, 400)))
+        oom = RuntimeError("command not allowed when used memory > 'maxmemory'.")
+        with (
+            patch('shop.responsive_images.cache.set', side_effect=oom),
+            patch('shop.responsive_images.cache.add', side_effect=oom),
+        ):
+            rendition = image_rendition(_Named('shop/products/oom.jpg'), default_width=640)
+        self.assertIn('oom.jpg', rendition.src)
+        self.assertEqual(rendition.srcset, '')
+
+    def test_full_redis_still_serves_a_stored_rendition(self):
+        default_storage.save('shop/products/oom-hit.jpg', ContentFile(_jpeg(1000, 800)))
+        self.assertEqual(build_rendition('shop/products/oom-hit.jpg'), 'built')
+        from django.core.cache import cache
+
+        cache.clear()
+        oom = RuntimeError("command not allowed when used memory > 'maxmemory'.")
+        with patch('shop.responsive_images.cache.set', side_effect=oom):
+            rendition = image_rendition(_Named('shop/products/oom-hit.jpg'), default_width=640)
+        self.assertIn('640.webp', rendition.src)
+        self.assertIn('640w', rendition.srcset)
+
+    @override_settings(SHOP_BUILD_IMAGE_RENDITIONS=True)
+    def test_full_redis_does_not_enqueue_a_build_storm(self):
+        default_storage.save('shop/products/oom-queue.jpg', ContentFile(_jpeg(400, 400)))
+        oom = RuntimeError("command not allowed when used memory > 'maxmemory'.")
+        with (
+            patch('shop.responsive_images.cache.set', side_effect=oom),
+            patch('shop.responsive_images.cache.add', side_effect=oom),
+            patch('shop.tasks.build_image_rendition.delay') as delay,
+        ):
+            rendition = image_rendition(_Named('shop/products/oom-queue.jpg'))
+        delay.assert_not_called()
+        self.assertIn('oom-queue.jpg', rendition.src)
 
 
 class _Named:
