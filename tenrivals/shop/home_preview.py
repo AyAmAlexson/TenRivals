@@ -66,6 +66,7 @@ def build_home_preview_payload(request) -> dict:
                 hero_text.secondary_link_label,
                 hero_text.secondary_link_url,
             ),
+            'sticker': staticfiles_storage.url('assets/img/tr-sticker.png'),
         },
         'announce': (
             _('Free delivery in Tbilisi')

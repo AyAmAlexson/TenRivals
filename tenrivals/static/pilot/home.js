@@ -69,6 +69,164 @@ function Headline({ text }) {
   return html`<h1 className="hero-tagline">${parts.map((line, i) => html`<${React.Fragment} key=${i}>${i ? html`<br />` : null}${line}</${React.Fragment}>`)}</h1>`;
 }
 
+function HeroSticker({ src }) {
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || !src) return undefined;
+    const ctx = canvas.getContext('2d');
+    const image = new Image();
+    image.decoding = 'async';
+    image.src = src;
+    const media = window.matchMedia('(prefers-reduced-motion: reduce)');
+    let peel = 0;
+    let peelV = 0;
+    let angle = -Math.PI / 4;
+    let angleTarget = angle;
+    let target = 0;
+    let raf = 0;
+    let last = 0;
+
+    const resize = () => {
+      const size = canvas.clientWidth || 1;
+      const dpr = Math.min(2, window.devicePixelRatio || 1);
+      canvas.width = Math.round(size * dpr);
+      canvas.height = Math.round(size * dpr);
+      draw();
+    };
+
+    const draw = () => {
+      const w = canvas.width;
+      const h = canvas.height;
+      const cx = w / 2;
+      const cy = h / 2;
+      const radius = w * 0.46;
+      ctx.clearRect(0, 0, w, h);
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+      ctx.clip();
+      if (image.complete && image.naturalWidth) {
+        ctx.drawImage(image, cx - radius, cy - radius, radius * 2, radius * 2);
+      }
+      if (peel > 0.012) {
+        const depth = radius * peel * 0.5;
+        const fold = radius - depth;
+        ctx.save();
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.translate(cx, cy);
+        ctx.rotate(angle);
+        ctx.fillStyle = '#000';
+        ctx.fillRect(fold, -radius - 2, radius + 4, radius * 2 + 4);
+        ctx.restore();
+
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(angle);
+        ctx.beginPath();
+        ctx.rect(fold - depth - 1, -radius - 2, depth + 2, radius * 2 + 4);
+        ctx.clip();
+        ctx.beginPath();
+        ctx.arc(fold * 2, 0, radius, 0, Math.PI * 2);
+        ctx.clip();
+        const shade = ctx.createLinearGradient(fold, 0, fold - depth, 0);
+        shade.addColorStop(0, 'rgba(255,255,255,.95)');
+        shade.addColorStop(0.2, '#e4e4e8');
+        shade.addColorStop(0.62, '#9c9ca4');
+        shade.addColorStop(1, '#6a6a72');
+        ctx.fillStyle = shade;
+        ctx.fillRect(fold - depth - 2, -radius, depth + 4, radius * 2);
+        const half = Math.sqrt(Math.max(0, radius * radius - fold * fold));
+        ctx.beginPath();
+        ctx.moveTo(fold, -half);
+        ctx.lineTo(fold, half);
+        ctx.strokeStyle = 'rgba(255,255,255,.85)';
+        ctx.lineWidth = Math.max(1.5, w * 0.01);
+        ctx.stroke();
+        ctx.restore();
+      }
+      ctx.restore();
+    };
+
+    const step = (now) => {
+      if (!last) last = now;
+      const dt = Math.min(0.05, (now - last) / 1000);
+      last = now;
+      const pull = 1 - Math.exp(-dt / 0.16);
+      peelV += ((target - peel) * 28 - peelV * 8) * dt;
+      peel = Math.max(0, Math.min(1, peel + peelV * dt));
+      let delta = angleTarget - angle;
+      delta = Math.atan2(Math.sin(delta), Math.cos(delta));
+      angle += delta * pull;
+      draw();
+      const idle = Math.abs(peel - target) < 0.004 && Math.abs(peelV) < 0.004 && Math.abs(delta) < 0.01;
+      if (idle) {
+        raf = 0;
+        return;
+      }
+      raf = requestAnimationFrame(step);
+    };
+    const wake = () => {
+      if (!raf) raf = requestAnimationFrame(step);
+    };
+    const localPoint = (event) => {
+      const rect = canvas.getBoundingClientRect();
+      const rot = 30 * Math.PI / 180;
+      const cos = Math.cos(rot);
+      const sin = Math.sin(rot);
+      const dx = event.clientX - (rect.left + rect.width / 2);
+      const dy = event.clientY - (rect.top + rect.height / 2);
+      return {
+        x: dx * cos + dy * sin,
+        y: -dx * sin + dy * cos,
+      };
+    };
+    const onEnter = () => {
+      if (media.matches) return;
+      target = 0.55;
+      wake();
+    };
+    const onMove = (event) => {
+      if (media.matches) return;
+      const point = localPoint(event);
+      if (point.x * point.x + point.y * point.y < 16) return;
+      angleTarget = Math.atan2(point.y, point.x);
+      target = 0.55;
+      wake();
+    };
+    const onLeave = () => {
+      target = 0;
+      wake();
+    };
+
+    image.onload = () => {
+      draw();
+    };
+    const observer = new ResizeObserver(resize);
+    observer.observe(canvas);
+    resize();
+    canvas.addEventListener('pointerenter', onEnter);
+    canvas.addEventListener('pointermove', onMove);
+    canvas.addEventListener('pointerleave', onLeave);
+    if (image.complete) draw();
+
+    return () => {
+      cancelAnimationFrame(raf);
+      observer.disconnect();
+      canvas.removeEventListener('pointerenter', onEnter);
+      canvas.removeEventListener('pointermove', onMove);
+      canvas.removeEventListener('pointerleave', onLeave);
+    };
+  }, [src]);
+
+  return html`
+    <div className="hero-sticker">
+      <canvas ref=${canvasRef} aria-hidden="true"></canvas>
+    </div>
+  `;
+}
+
 function Hero({ hero, labels }) {
   const slides = hero.slides || [];
   const [index, jump] = useRotator(slides.length, 7000);
@@ -94,6 +252,7 @@ function Hero({ hero, labels }) {
           </div>
         </div>
       </div>
+      ${hero.sticker ? html`<${HeroSticker} src=${hero.sticker} />` : null}
       ${slides.length > 1 ? html`
         <button type="button" className="hero-nav hero-nav--prev" aria-label=${labels.prevHero} onClick=${() => jump(index - 1)}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
@@ -276,32 +435,188 @@ function Stories({ stories, labels }) {
   `;
 }
 
+function LogoLoop({ items, label }) {
+  const rootRef = useRef(null);
+  const trackRef = useRef(null);
+  const [copies, setCopies] = useState(2);
+  const itemsKey = items.map((item) => item.src).join('|');
+
+  useEffect(() => {
+    const root = rootRef.current;
+    const track = trackRef.current;
+    if (!root || !track || !items.length) return undefined;
+
+    const media = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const speed = 72;
+    let raf = 0;
+    let offset = 0;
+    let velocity = 0;
+    let fling = 0;
+    let last = 0;
+    let hovering = false;
+    let visible = true;
+    let dragging = false;
+    let moved = false;
+    let pointerId = null;
+    let grabX = 0;
+    let grabOffset = 0;
+    let lastX = 0;
+    let lastT = 0;
+
+    const sequenceWidth = () => {
+      const list = track.querySelector('.logo-loop__list');
+      return list ? list.getBoundingClientRect().width : 0;
+    };
+    const wrap = (value, period) => {
+      if (!period) return 0;
+      const mod = value % period;
+      return mod < 0 ? mod + period : mod;
+    };
+    const paint = () => {
+      offset = wrap(offset, sequenceWidth());
+      track.style.transform = `translate3d(${-offset}px,0,0)`;
+    };
+    const fit = () => {
+      const width = sequenceWidth();
+      if (!width) return;
+      const need = Math.max(2, Math.ceil(root.clientWidth / width) + 2);
+      setCopies((current) => (current === need ? current : need));
+    };
+
+    fit();
+    const observer = new ResizeObserver(fit);
+    observer.observe(root);
+    observer.observe(track);
+
+    const frame = (now) => {
+      if (!last) last = now;
+      const dt = Math.min(0.05, (now - last) / 1000);
+      last = now;
+      if (!dragging) {
+        if (Math.abs(fling) > 8) {
+          offset += fling * dt;
+          fling *= Math.exp(-dt / 0.35);
+        } else {
+          fling = 0;
+          const cruise = media.matches || !visible || document.hidden ? 0 : speed;
+          const goal = hovering ? 0 : cruise;
+          velocity += (goal - velocity) * (1 - Math.exp(-dt / 0.25));
+          offset += velocity * dt;
+        }
+        paint();
+      }
+      raf = requestAnimationFrame(frame);
+    };
+
+    const onEnter = () => { hovering = true; };
+    const onLeave = () => { hovering = false; };
+    const onDown = (event) => {
+      if (event.button !== 0) return;
+      dragging = true;
+      moved = false;
+      pointerId = event.pointerId;
+      grabX = lastX = event.clientX;
+      lastT = performance.now();
+      grabOffset = offset;
+      fling = 0;
+      velocity = 0;
+      root.classList.add('is-dragging');
+      root.setPointerCapture?.(pointerId);
+    };
+    const onMove = (event) => {
+      if (!dragging || event.pointerId !== pointerId) return;
+      const dx = event.clientX - grabX;
+      if (Math.abs(dx) > 6) moved = true;
+      offset = grabOffset - dx;
+      const now = performance.now();
+      fling = ((lastX - event.clientX) / Math.max(16, now - lastT)) * 1000;
+      lastX = event.clientX;
+      lastT = now;
+      paint();
+    };
+    const endDrag = (event) => {
+      if (!dragging || (event.pointerId != null && event.pointerId !== pointerId)) return;
+      dragging = false;
+      pointerId = null;
+      root.classList.remove('is-dragging');
+    };
+    const onClick = (event) => {
+      if (!moved) return;
+      event.preventDefault();
+      event.stopPropagation();
+      moved = false;
+    };
+    const onDragStart = (event) => event.preventDefault();
+
+    root.addEventListener('pointerenter', onEnter);
+    root.addEventListener('pointerleave', onLeave);
+    root.addEventListener('pointerdown', onDown);
+    root.addEventListener('pointermove', onMove);
+    root.addEventListener('pointerup', endDrag);
+    root.addEventListener('pointercancel', endDrag);
+    root.addEventListener('click', onClick, true);
+    root.addEventListener('dragstart', onDragStart);
+
+    let visibility;
+    if (typeof IntersectionObserver !== 'undefined') {
+      visibility = new IntersectionObserver((entries) => {
+        visible = entries[entries.length - 1].isIntersecting;
+      }, { threshold: 0.15 });
+      visibility.observe(root);
+    }
+
+    if (!media.matches) raf = requestAnimationFrame(frame);
+    return () => {
+      cancelAnimationFrame(raf);
+      observer.disconnect();
+      visibility?.disconnect();
+      root.classList.remove('is-dragging');
+      root.removeEventListener('pointerenter', onEnter);
+      root.removeEventListener('pointerleave', onLeave);
+      root.removeEventListener('pointerdown', onDown);
+      root.removeEventListener('pointermove', onMove);
+      root.removeEventListener('pointerup', endDrag);
+      root.removeEventListener('pointercancel', endDrag);
+      root.removeEventListener('click', onClick, true);
+      root.removeEventListener('dragstart', onDragStart);
+    };
+  }, [itemsKey, items.length]);
+
+  const sequence = (copy) => html`
+    <ul className="logo-loop__list" key=${copy} aria-hidden=${copy ? 'true' : undefined}>
+      ${items.map((item) => html`
+        <li className="logo-loop__item" key=${`${copy}-${item.href}`}>
+          <a
+            className="logo-loop__link"
+            style=${{ '--brand-optical-scale': item.scale }}
+            href=${item.href}
+            title=${copy ? undefined : item.title}
+            tabIndex=${copy ? -1 : undefined}
+            draggable="false"
+          >
+            <img src=${item.src} alt=${copy ? '' : item.alt} width="220" height="56" draggable="false" decoding="async" />
+          </a>
+        </li>
+      `)}
+    </ul>
+  `;
+
+  return html`
+    <div className="logo-loop" ref=${rootRef} aria-label=${label}>
+      <div className="logo-loop__track" ref=${trackRef}>
+        ${Array.from({ length: copies }, (_, copy) => sequence(copy))}
+      </div>
+    </div>
+  `;
+}
+
 function Brands({ brands }) {
-  const row = (hidden) => brands.items.map((item) => html`
-    <li key=${`${hidden ? 'b' : 'a'}-${item.href}`} aria-hidden=${hidden ? 'true' : undefined}>
-      <a
-        className="brand-logo-link"
-        style=${{ '--brand-optical-scale': item.scale }}
-        href=${item.href}
-        title=${hidden ? undefined : item.title}
-        tabIndex=${hidden ? -1 : undefined}
-      >
-        <img src=${item.src} alt=${hidden ? '' : item.alt} width="280" height="64" loading="lazy" decoding="async" />
-      </a>
-    </li>
-  `);
+  if (!brands.items.length) return null;
   return html`
     <section className="brands-strip">
       <div className="container">
         <${SectionHead} title=${brands.title} href=${brands.viewAll} viewAll=${data.labels.viewAll} />
-        <div className="brands-marquee" aria-label=${brands.label}>
-          <div className="brands-marquee__track">
-            <ul className="brands-marquee__sequence">
-              ${row(false)}
-              ${row(true)}
-            </ul>
-          </div>
-        </div>
+        <${LogoLoop} items=${brands.items} label=${brands.label} />
       </div>
     </section>
   `;
