@@ -425,6 +425,21 @@ def index(request):
     )
 
 
+@login_required
+def home_react_preview(request):
+    """Closed React clone of the shop home. Login only, unlisted, not for crawlers."""
+    from .home_preview import build_home_preview_payload
+
+    response = render(
+        request,
+        'shop/home_react_preview.html',
+        {'preview': build_home_preview_payload(request)},
+    )
+    response['X-Robots-Tag'] = 'noindex, nofollow, noarchive'
+    response['Cache-Control'] = 'private, no-store'
+    return response
+
+
 def brands(request):
     return render(
         request,
@@ -1472,6 +1487,12 @@ def robots_txt(request):
         '# Staff / editor flows',
         'Disallow: /shop/add',
         'Disallow: /shop/edit',
+        '',
+        '# Closed React home preview (login only, not for indexing)',
+        'Disallow: /ge_en/shop/pilot/',
+        'Disallow: /ge_ru/shop/pilot/',
+        'Disallow: /ge_ka/shop/pilot/',
+        'Disallow: /*/shop/pilot/',
         '',
         '# Account & auth (no SEO value)',
         'Disallow: /persons/my_account/',

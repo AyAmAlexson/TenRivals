@@ -1,0 +1,91 @@
+{% load i18n catalog_tags %}
+  <section class="shop-about" aria-label="{% trans 'About Tennis Rivals' %}">
+    <div class="container">
+      <div class="shop-about__content">
+      <h2 class="shop-about__headline">{% blocktranslate trimmed %}Your Premium Tennis Destination<br>in Tbilisi, Georgia{% endblocktranslate %}</h2>
+      <p class="shop-about__subheadline">{% trans "Expertly curated gear for the dedicated player" %}</p>
+      <div class="shop-about__feature-chips" aria-label="{% trans 'Store highlights' %}">
+        <span class="shop-about__chip">{% trans "Player-first curation" %}</span>
+        <span class="shop-about__chip">{% trans "Official fiscal receipts" %}</span>
+        <span class="shop-about__chip">{% trans "Expert fitting support" %}</span>
+        <span class="shop-about__chip">{% trans "Fast delivery in Tbilisi" %}</span>
+      </div>
+      <p class="shop-about__lead">
+        {% blocktranslate trimmed %}At Tennis Rivals, we are more than just an online tennis shop in Tbilisi. We are a community-driven project founded by players, for players. Whether you are stepping onto the clay courts of Mziuri or training at Raketo, we understand that the right equipment is the foundation of your growth. Our mission is to provide the Georgian tennis community with access to the world's most advanced tennis technology, backed by radical transparency and expert advice.{% endblocktranslate %}
+      </p>
+
+      <h3 class="shop-about__section-title">{% trans "Why choose Tennis Rivals for your gear?" %}</h3>
+      <ul class="shop-about__list">
+        <li>{% blocktranslate trimmed %}<strong>Curated professional selection:</strong> We do not just stock every racket on the market. We act as a filter, offering a hand-picked selection of high-performance gear from industry leaders like Wilson, Solinco, Prince, and Toroline. From the legendary Wilson Blade v9 to the spin-friendly Solinco Whiteout, every item in our store has been tested on local courts to ensure it meets the needs of players ranging from NTRP 2.5 to 3.5 and beyond.{% endblocktranslate %}</li>
+        <li>{% blocktranslate trimmed %}<strong>The best tennis shoes and apparel in Georgia:</strong> Movement is the soul of tennis. That is why we offer specialized tennis footwear designed for both hard and clay courts. Our size guides and personal consultations help you find the perfect fit to prevent injury and maximize your lateral speed.{% endblocktranslate %}</li>
+        <li>{% blocktranslate trimmed %}<strong>Official and transparent service:</strong> We are proud to be a fully legal business in Georgia. When you buy a tennis racket in Tbilisi from us, you receive an official fiscal receipt. We stand against grey imports, ensuring that every product is authentic and covered by our fair-play return policy.{% endblocktranslate %}</li>
+        <li>{% blocktranslate trimmed %}<strong>Global pre-orders, local delivery:</strong> Cannot find a specific grip size or a limited-edition frame in Tbilisi? Our global pre-order service connects you to the best warehouses in the US and Europe. We handle the logistics, customs, and paperwork, delivering your dream gear directly to your door with free delivery in Tbilisi.{% endblocktranslate %}</li>
+      </ul>
+
+      <div class="shop-about__community">
+        <h3 class="shop-about__section-title">{% trans "Join the Rivals community" %}</h3>
+        <p class="shop-about__closing">
+          {% blocktranslate trimmed %}Tennis in Georgia is growing, and we are here to support that momentum. Beyond being a store, we provide expert insights into tennis stringing, racket customization, and gear maintenance. We believe that professional-grade equipment should not be a luxury — it should be a tool for your next victory.{% endblocktranslate %}
+        </p>
+        <p class="shop-about__closing">
+          {% blocktranslate trimmed %}Explore our collection today and see why Tennis Rivals is the preferred choice for players who take their game seriously. From high-quality strings to the latest racket innovations, we help you find the line for your growth.{% endblocktranslate %}
+        </p>
+      </div>
+
+      <section class="shop-home-faq shop-home-faq--embedded" aria-labelledby="shop-home-faq-title">
+        <h2 id="shop-home-faq-title">{% trans "Frequently asked questions" %}</h2>
+        <div class="shop-home-faq__acc">
+          <details class="shop-home-faq__details">
+            <summary class="shop-home-faq__summary"><span class="shop-home-faq__num" aria-hidden="true">1</span><span class="shop-home-faq__qtext">{% trans "Do you offer free delivery in Tbilisi?" %}</span></summary>
+            <div class="shop-home-faq__panel">
+              <p>{% blocktranslate trimmed %}Yes, any in-stock order includes free delivery within Tbilisi (0₾). Whether it is a high-end racket or just a single pack of overgrips, we will bring it to your door. For other cities in Georgia, contact us and we will provide a quick courier quote before you checkout.{% endblocktranslate %}</p>
+            </div>
+          </details>
+          <details class="shop-home-faq__details">
+            <summary class="shop-home-faq__summary"><span class="shop-home-faq__num" aria-hidden="true">2</span><span class="shop-home-faq__qtext">{% trans "Which brands do you carry?" %}</span></summary>
+            <div class="shop-home-faq__panel">
+              <p>{% blocktranslate trimmed %}We offer a curated selection of world leaders like Wilson, HEAD, and Babolat, alongside “hidden gems” favored by pro players, such as Solinco, Prince, and Toroline. From rackets and shoes to strings and accessories — if it is on our shelves, it is because we trust its performance.{% endblocktranslate %} <a href="{% shop_url 'shop:brands' %}">{% trans "All brands" %}</a>. {% trans "Use the category strip above to browse." %}</p>
+            </div>
+          </details>
+          <details class="shop-home-faq__details">
+            <summary class="shop-home-faq__summary"><span class="shop-home-faq__num" aria-hidden="true">3</span><span class="shop-home-faq__qtext">{% trans "Are the products original? Do I get a receipt?" %}</span></summary>
+            <div class="shop-home-faq__panel">
+              <p>{% blocktranslate trimmed %}Absolutely. We operate fully “in the white.” Every item in our stock is sourced directly from official distributors or trusted global retailers. Every purchase includes an official fiscal receipt (RS.ge), which serves as your guarantee of authenticity and quality.{% endblocktranslate %}</p>
+            </div>
+          </details>
+          <details class="shop-home-faq__details">
+            <summary class="shop-home-faq__summary"><span class="shop-home-faq__num" aria-hidden="true">4</span><span class="shop-home-faq__qtext">{% trans "Can you help me choose a racket if I am a beginner?" %}</span></summary>
+            <div class="shop-home-faq__panel">
+              <p>{% blocktranslate trimmed %}That is exactly what we are here for. We do not just “sell boxes” — we consult. As players ourselves, we analyze your NTRP level, play style, and goals to recommend a racket that will help you grow. Message us for a personalized gear audit.{% endblocktranslate %}</p>
+            </div>
+          </details>
+          <details class="shop-home-faq__details">
+            <summary class="shop-home-faq__summary"><span class="shop-home-faq__num" aria-hidden="true">5</span><span class="shop-home-faq__qtext">{% trans "How does the global pre-order service work?" %}</span></summary>
+            <div class="shop-home-faq__panel">
+              <p>{% blocktranslate trimmed %}If you need something that is not in our local stock (like a rare grip size or a specific brand from the US or EU), send us a link. We will provide an official quote including shipping and customs. We handle the paperwork and logistics, and you pay locally upon delivery.{% endblocktranslate %}</p>
+            </div>
+          </details>
+          <details class="shop-home-faq__details">
+            <summary class="shop-home-faq__summary"><span class="shop-home-faq__num" aria-hidden="true">6</span><span class="shop-home-faq__qtext">{% trans "What happens if the shoes or clothes do not fit?" %}</span></summary>
+            <div class="shop-home-faq__panel">
+              <p>{% blocktranslate trimmed %}We offer a “two-size delivery” service. If you are unsure about your size, tell us and we will bring two adjacent sizes for you to try on at delivery. You only pay for what fits perfectly.{% endblocktranslate %}</p>
+            </div>
+          </details>
+          <details class="shop-home-faq__details">
+            <summary class="shop-home-faq__summary"><span class="shop-home-faq__num" aria-hidden="true">7</span><span class="shop-home-faq__qtext">{% trans "Do you have a physical store where I can see the gear?" %}</span></summary>
+            <div class="shop-home-faq__panel">
+              <p>{% blocktranslate trimmed %}We are an online-first shop to keep our prices fair and our delivery fast. However, we are deeply involved in the Tbilisi tennis scene. You can often find us at City Sport or Mziuri. If you want to see a specific racket before buying, we can arrange a meeting at a court near you.{% endblocktranslate %}</p>
+            </div>
+          </details>
+          <details class="shop-home-faq__details">
+            <summary class="shop-home-faq__summary"><span class="shop-home-faq__num" aria-hidden="true">8</span><span class="shop-home-faq__qtext">{% trans "Do you provide stringing services?" %}</span></summary>
+            <div class="shop-home-faq__panel">
+              <p>{% blocktranslate trimmed %}While we specialize in high-performance strings like Toroline and Solinco, we can also recommend the best stringing professionals in Tbilisi and help you choose the right tension for your racket and game style.{% endblocktranslate %}</p>
+            </div>
+          </details>
+        </div>
+      </section>
+
+      </div>
+    </div>
+  </section>

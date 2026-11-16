@@ -1,0 +1,30 @@
+{% load static %}
+<!doctype html>
+<html lang="{{ shop_html_lang|default:'en' }}">
+<head>
+  <meta charset="utf-8">
+  <title>Home preview</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow, noarchive">
+  <meta name="googlebot" content="noindex, nofollow, noarchive">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Saira:wght@400;600;800&family=Saira+Condensed:wght@400&display=swap" rel="stylesheet">
+  <link rel="icon" href="{% static 'assets/img/favicon.png' %}">
+  <link href="{% static 'css/styles.css' %}" rel="stylesheet">
+  {% include 'shop/includes/product_tile_styles.html' %}
+  <style>
+    {% include 'shop/includes/shop_public_header_styles.html' %}
+  </style>
+  <link href="{% static 'css/home-preview.css' %}" rel="stylesheet">
+</head>
+<body>
+  {% include 'shop/includes/shop_public_site_header.html' %}
+  <div id="home-preview-root"></div>
+  <noscript>This preview needs JavaScript.</noscript>
+  {% include 'shop/includes/shop_footer.html' %}
+  {{ preview|json_script:"home-preview-data" }}
+  <script type="module" src="{% static 'pilot/home.js' %}"></script>
+  {% include 'shop/includes/shop_public_header_scripts.html' %}
+</body>
+</html>
