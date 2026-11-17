@@ -7,7 +7,11 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from shop.models import Customer, SalesOrder
-from shop.staff_shipping_views import OPEN_DELIVERY_STATUSES, delivery_address_for_order
+from shop.staff_shipping_views import (
+    OPEN_DELIVERY_STATUSES,
+    delivery_address_for_order,
+    phone_tel_uri,
+)
 
 
 @override_settings(SECURE_SSL_REDIRECT=False)
@@ -23,6 +27,7 @@ class StaffShippingAddressesTests(TestCase):
             first_name='Nino',
             last_name='Beridze',
             address='Old street 1',
+            phone='+995 591 11 22 33',
         )
         self.open_order = SalesOrder.objects.create(
             invoice_number='2026-000711',
@@ -73,6 +78,8 @@ class StaffShippingAddressesTests(TestCase):
         self.assertContains(resp, 'Current addresses')
         self.assertContains(resp, '2026-000711')
         self.assertContains(resp, 'Nino Beridze')
+        self.assertContains(resp, 'tel:+995591112233')
+        self.assertContains(resp, '+995 591 11 22 33')
         self.assertContains(resp, '120.00')
         self.assertContains(resp, 'Tbilisi. Rustaveli 1')
         query = quote_plus('Tbilisi. Rustaveli 1')
@@ -112,6 +119,22 @@ class StaffShippingAddressesTests(TestCase):
         self.cancelled.refresh_from_db()
         self.assertEqual(self.cancelled.status, SalesOrder.Status.CANCELLED)
         self.assertContains(resp, 'not waiting for delivery')
+
+    def test_phone_tel_uri_dials_georgian_and_international_numbers(self):
+        self.assertEqual(phone_tel_uri('+995 591 11 22 33'), 'tel:+995591112233')
+        self.assertEqual(phone_tel_uri('591112233'), 'tel:+995591112233')
+        self.assertEqual(phone_tel_uri('0591112233'), 'tel:+995591112233')
+        self.assertEqual(phone_tel_uri('995591112233'), 'tel:+995591112233')
+        self.assertEqual(phone_tel_uri(''), '')
+
+    def test_page_omits_phone_link_when_customer_has_none(self):
+        self.customer.phone = ''
+        self.customer.save(update_fields=['phone'])
+        url = reverse('administration:staff_shipping_addresses')
+        resp = self.client.get(url)
+        self.assertEqual(resp.status_code, 200)
+        self.assertNotContains(resp, 'tel:')
+        self.assertContains(resp, 'Nino Beridze')
 
     def test_open_statuses_cover_in_progress_orders(self):
         self.assertIn(SalesOrder.Status.SHIPPED, OPEN_DELIVERY_STATUSES)

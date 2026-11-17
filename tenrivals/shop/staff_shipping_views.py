@@ -50,6 +50,36 @@ def maps_search_urls(address: str) -> tuple[str, str]:
     )
 
 
+def contact_phone_for_order(order: SalesOrder) -> str:
+    """Checkout writes the contact phone onto the customer."""
+    customer = order.customer
+    if customer is None:
+        return ''
+    return (customer.phone or '').strip()
+
+
+def phone_tel_uri(phone: str) -> str:
+    """tel: URI a phone browser can dial. Local Georgian mobiles get +995."""
+    raw = (phone or '').strip()
+    if not raw:
+        return ''
+    compact = ''.join(ch for ch in raw if ch.isdigit() or ch == '+')
+    if raw.startswith('00'):
+        compact = '+' + ''.join(ch for ch in raw[2:] if ch.isdigit())
+    digits = ''.join(ch for ch in compact if ch.isdigit())
+    if not digits:
+        return ''
+    if compact.startswith('+'):
+        return f'tel:+{digits}'
+    if len(digits) == 9 and digits.startswith('5'):
+        return f'tel:+995{digits}'
+    if len(digits) == 10 and digits.startswith('0'):
+        return f'tel:+995{digits[1:]}'
+    if len(digits) == 12 and digits.startswith('995'):
+        return f'tel:+{digits}'
+    return f'tel:{digits}'
+
+
 @login_required
 @user_passes_test(_staff_ok)
 def staff_shipping_addresses(request):
@@ -62,10 +92,13 @@ def staff_shipping_addresses(request):
     for order in orders:
         address = delivery_address_for_order(order)
         google_url, yandex_url = maps_search_urls(address) if address else ('', '')
+        phone = contact_phone_for_order(order)
         rows.append(
             {
                 'order': order,
                 'address': address,
+                'phone': phone,
+                'phone_tel': phone_tel_uri(phone),
                 'google_maps_url': google_url,
                 'yandex_maps_url': yandex_url,
             }
