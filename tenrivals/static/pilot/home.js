@@ -482,114 +482,111 @@ function HeroSticker({ src }) {
       const cx = w / 2;
       const cy = h / 2;
       const radius = w * drawnRadius;
+      const px = w / (canvas.clientWidth || 1);
+      ctx.filter = 'none';
+      ctx.globalAlpha = 1;
+      ctx.globalCompositeOperation = 'source-over';
       ctx.clearRect(0, 0, w, h);
 
-      const lift = peel;
-      const shadowX = Math.cos(angle) * w * 0.018 * (0.35 + lift);
-      const shadowY = Math.sin(angle) * h * 0.012 * lift + h * (0.03 + lift * 0.045);
+      const peeling = peel > 0.02;
+      const curlR = radius * 0.2;
+      const depth = peeling ? radius * peel * 0.8 : 0;
+      const fold = radius - depth;
+      const chord = Math.sqrt(Math.max(0, radius * radius - Math.min(radius, Math.max(-radius, fold)) ** 2));
+      const ready = image.complete && image.naturalWidth;
+      const lift = dragging ? 18 * px : 0;
+      const ox = 1.4 * px + 0.28 * lift;
+      const oy = 3.2 * px + 0.55 * lift;
+
+      const traceSide = (keep, edge = fold) => {
+        ctx.beginPath();
+        if (!peeling || edge >= radius - 0.5) {
+          if (keep === 'flat') ctx.arc(0, 0, radius, 0, Math.PI * 2);
+          return;
+        }
+        if (edge <= -radius + 0.5) {
+          if (keep === 'peeled') ctx.arc(0, 0, radius, 0, Math.PI * 2);
+          return;
+        }
+        const span = Math.sqrt(Math.max(0, radius * radius - edge * edge));
+        const sweep = Math.atan2(span, edge);
+        ctx.arc(0, 0, radius, -sweep, sweep, keep === 'flat');
+        ctx.closePath();
+      };
+
       ctx.save();
-      ctx.translate(cx + shadowX, cy + shadowY);
-      const shadow = ctx.createRadialGradient(0, 0, radius * 0.2, 0, 0, radius * (1.05 + lift * 0.32));
-      shadow.addColorStop(0, `rgba(0,0,0,${0.32 + lift * 0.3})`);
-      shadow.addColorStop(0.68, `rgba(0,0,0,${0.14 + lift * 0.1})`);
-      shadow.addColorStop(1, 'rgba(0,0,0,0)');
-      ctx.fillStyle = shadow;
-      ctx.beginPath();
-      ctx.arc(0, 0, radius * (1.05 + lift * 0.32), 0, Math.PI * 2);
+      ctx.translate(cx, cy);
+      ctx.filter = `blur(${((5 + (dragging ? 2.2 : 0)) * px).toFixed(2)}px)`;
+      ctx.translate(ox, oy);
+      ctx.rotate(angle);
+      ctx.globalAlpha = 0.24 / (1 + lift * 0.01);
+      ctx.fillStyle = '#000';
+      traceSide('flat', Math.min(fold, radius) - (peeling ? curlR * 1.8 : 0));
       ctx.fill();
       ctx.restore();
+
+      if (peeling && chord > 1.5 && fold < radius - 0.5) {
+        const capMid = (fold + radius) * 0.5;
+        const capReach = Math.max(curlR * 0.9, (radius - fold) * 0.42);
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.filter = `blur(${(4.5 * px).toFixed(2)}px)`;
+        ctx.translate(1.8 * px, oy);
+        ctx.rotate(angle);
+        ctx.beginPath();
+        ctx.arc(capMid, 0, capReach, 0, Math.PI * 2);
+        const cast = ctx.createRadialGradient(capMid, 0, capReach * 0.05, capMid, 0, capReach);
+        cast.addColorStop(0, 'rgba(0,0,0,0.5)');
+        cast.addColorStop(0.55, 'rgba(0,0,0,0.16)');
+        cast.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = cast;
+        ctx.fill();
+        ctx.restore();
+      }
 
       ctx.save();
       ctx.beginPath();
       ctx.arc(cx, cy, radius, 0, Math.PI * 2);
       ctx.clip();
-      if (image.complete && image.naturalWidth) {
-        ctx.drawImage(image, cx - radius, cy - radius, radius * 2, radius * 2);
+      ctx.translate(cx, cy);
+      ctx.rotate(angle);
+      if (ready) {
+        ctx.save();
+        traceSide('flat');
+        ctx.clip();
+        ctx.rotate(-angle);
+        ctx.drawImage(image, -radius, -radius, radius * 2, radius * 2);
+        ctx.restore();
       }
-      if (peel > 0.02) {
-        const depth = radius * (0.18 + peel * 0.7);
-        const fold = radius - depth;
-        const curl = Math.max(radius * 0.1, depth * 0.62);
-        ctx.save();
-        ctx.translate(cx, cy);
-        ctx.rotate(angle);
-
-        ctx.save();
-        ctx.globalCompositeOperation = 'destination-out';
-        ctx.fillStyle = '#000';
-        ctx.fillRect(fold, -radius - 4, radius + 8, radius * 2 + 8);
-        ctx.restore();
-
-        const hole = ctx.createLinearGradient(fold, 0, fold + depth * 0.95, 0);
-        hole.addColorStop(0, 'rgba(0,0,0,0.66)');
-        hole.addColorStop(0.22, 'rgba(0,0,0,0.3)');
-        hole.addColorStop(1, 'rgba(0,0,0,0)');
-        ctx.fillStyle = hole;
-        ctx.fillRect(fold, -radius, depth + 8, radius * 2);
-
+      if (peeling && chord > 1.5 && fold > -radius + curlR * 0.2) {
         ctx.save();
         ctx.beginPath();
-        ctx.rect(fold - curl * 1.65, -radius, curl * 1.65, radius * 2);
+        ctx.rect(fold - curlR, -chord, curlR, chord * 2);
         ctx.clip();
-        ctx.beginPath();
-        ctx.arc(fold * 2, 0, radius, 0, Math.PI * 2);
-        ctx.clip();
-        const cast = ctx.createLinearGradient(fold, 0, fold - curl * 1.65, 0);
-        cast.addColorStop(0, 'rgba(0,0,0,0.55)');
-        cast.addColorStop(0.35, 'rgba(0,0,0,0.18)');
-        cast.addColorStop(1, 'rgba(0,0,0,0)');
-        ctx.fillStyle = cast;
-        ctx.fillRect(fold - curl * 1.7, -radius, curl * 1.7, radius * 2);
-        ctx.restore();
-
-        const strips = 18;
-        for (let i = 0; i < strips; i += 1) {
-          const a0 = (i / strips) * Math.PI;
-          const a1 = ((i + 1) / strips) * Math.PI;
-          const x0 = fold - Math.sin(a0) * curl;
-          const x1 = fold - Math.sin(a1) * curl;
-          const left = Math.min(x0, x1);
-          const span = Math.max(1.2, Math.abs(x1 - x0) + w * 0.005);
-          const facing = Math.sin((a0 + a1) / 2);
-          const light = 0.18 + 0.82 * Math.pow(facing, 0.65);
-          const gray = Math.round(70 + light * 176);
-          ctx.save();
-          ctx.beginPath();
-          ctx.rect(left, -radius - 2, span, radius * 2 + 4);
-          ctx.clip();
-          ctx.beginPath();
-          ctx.arc(fold * 2, 0, radius, 0, Math.PI * 2);
-          ctx.clip();
-          ctx.fillStyle = `rgb(${gray},${gray},${Math.min(255, gray + 8)})`;
-          ctx.fillRect(left - 1, -radius - 2, span + 2, radius * 2 + 4);
-          ctx.restore();
-        }
-
-        const crest = fold - curl * 0.98;
-        ctx.save();
-        ctx.beginPath();
-        ctx.rect(crest - curl * 0.1, -radius, curl * 0.18, radius * 2);
-        ctx.clip();
-        ctx.beginPath();
-        ctx.arc(fold * 2, 0, radius, 0, Math.PI * 2);
-        ctx.clip();
-        ctx.fillStyle = 'rgba(255,255,255,0.82)';
-        ctx.fillRect(crest - curl * 0.1, -radius, curl * 0.18, radius * 2);
-        ctx.restore();
-
-        const halfChord = Math.sqrt(Math.max(0, radius * radius - fold * fold));
-        ctx.beginPath();
-        ctx.moveTo(fold, -halfChord);
-        ctx.lineTo(fold, halfChord);
-        ctx.strokeStyle = 'rgba(16,16,20,0.78)';
-        ctx.lineWidth = Math.max(1.4, w * 0.014);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(fold + w * 0.005, -halfChord);
-        ctx.lineTo(fold + w * 0.005, halfChord);
-        ctx.strokeStyle = 'rgba(255,255,255,0.62)';
-        ctx.lineWidth = Math.max(1, w * 0.006);
-        ctx.stroke();
+        const paper = ctx.createLinearGradient(fold, 0, fold - curlR, 0);
+        paper.addColorStop(0, '#9a9aa1');
+        paper.addColorStop(0.22, '#c8c8ce');
+        paper.addColorStop(0.72, '#e4e4e8');
+        paper.addColorStop(1, '#f7f7f8');
+        ctx.fillStyle = paper;
+        ctx.fillRect(fold - curlR, -chord, curlR, chord * 2);
+        const sky = ctx.createLinearGradient(0, -chord, 0, chord);
+        sky.addColorStop(0, 'rgba(255,255,255,0.34)');
+        sky.addColorStop(0.42, 'rgba(255,255,255,0)');
+        sky.addColorStop(1, 'rgba(0,0,0,0.24)');
+        ctx.fillStyle = sky;
+        ctx.fillRect(fold - curlR, -chord, curlR, chord * 2);
+        const crease = ctx.createLinearGradient(fold, 0, fold - curlR * 0.22, 0);
+        crease.addColorStop(0, 'rgba(0,0,0,0.22)');
+        crease.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = crease;
+        ctx.fillRect(fold - curlR * 0.22, -chord, curlR * 0.22, chord * 2);
+        const crest = ctx.createLinearGradient(fold - curlR - px, 0, fold - curlR + curlR * 0.28, 0);
+        crest.addColorStop(0, 'rgba(255,255,255,0)');
+        crest.addColorStop(0.42, 'rgba(255,255,255,0.92)');
+        crest.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = crest;
+        ctx.fillRect(fold - curlR - px, -chord, curlR * 0.28 + px, chord * 2);
         ctx.restore();
       }
       ctx.restore();
