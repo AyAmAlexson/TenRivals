@@ -1,3 +1,6 @@
+import logging
+
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.db.models.signals import pre_save, post_delete, post_save # Импортируем сигналы
 from django.dispatch import receiver # Импортируем декоратор receiver
@@ -7,6 +10,8 @@ from allauth.account.models import EmailAddress
 from allauth.account.signals import email_confirmed
 from .const import ONBOARDING_ITEMS_COST
 from .services import apply_award_service
+
+logger = logging.getLogger(__name__)
 
 
 
@@ -100,22 +105,40 @@ def on_player_save(sender, instance, **kwargs):
 @receiver(post_save, sender=CustomUser)
 def on_user_save(sender, instance, **kwargs):
     """
-    Действие при сохранении объекта CustomUser.
+    Grant the Telegram onboarding award when a verified user is saved.
+
+    Django updates last_login inside the login request, so this signal runs on
+    every successful sign-in. A missing player profile must not turn that into
+    a 500.
     """
-    if instance.is_telegram_verified:
-        player_onboarding = PlayerOnboarding.objects.get(player=instance.player)
-        if not player_onboarding.is_completed and not player_onboarding.ob_verify_tg:
-            player_onboarding.ob_verify_tg = True
-            player_onboarding.save()
-            new_award = Award.objects.create(
-                player=instance.player,
-                award_type='SP',
-                received_via='OB',
-                amount=ONBOARDING_ITEMS_COST['tg_verify'],
-            )   
-            apply_award_service(award=new_award)
-    else:
-        pass
+    if not instance.is_telegram_verified:
+        return
+    try:
+        player = instance.player
+    except ObjectDoesNotExist:
+        logger.warning(
+            "Skipping telegram onboarding for user %s: no player profile",
+            instance.pk,
+        )
+        return
+    try:
+        player_onboarding, _ = PlayerOnboarding.objects.get_or_create(player=player)
+        if player_onboarding.is_completed or player_onboarding.ob_verify_tg:
+            return
+        player_onboarding.ob_verify_tg = True
+        player_onboarding.save()
+        new_award = Award.objects.create(
+            player=player,
+            award_type='SP',
+            received_via='OB',
+            amount=ONBOARDING_ITEMS_COST['tg_verify'],
+        )
+        apply_award_service(award=new_award)
+    except Exception:
+        logger.exception(
+            "Telegram onboarding side effect failed for user %s",
+            instance.pk,
+        )
 
 
 
