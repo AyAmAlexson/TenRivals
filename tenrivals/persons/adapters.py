@@ -3,14 +3,34 @@ from allauth.account.models import EmailAddress
 from allauth.account.utils import user_email
 from django.forms import ValidationError
 from django.utils.translation import gettext_lazy as _
+from django.contrib.auth import authenticate as django_authenticate
 from django.contrib.auth import get_user_model
 from rivals.models import Player, PlayerOnboarding
+from tenrivals.ratelimit_cache_patch import is_cache_backend_error
 import logging
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
 
 class CustomAccountAdapter(DefaultAccountAdapter):
+
+    def authenticate(self, request, **credentials):
+        """Check the password even when the login-attempt counter cannot use Redis.
+
+        allauth records failed attempts in the default cache before it checks
+        the password. A down or full Redis raises here and the sign-in POST
+        becomes a 500 instead of "email or password is not correct".
+        """
+        try:
+            return super().authenticate(request, **credentials)
+        except Exception as exc:
+            if not is_cache_backend_error(exc):
+                raise
+            logger.warning(
+                'Login attempt cache failed (%s); checking the password anyway',
+                type(exc).__name__,
+            )
+        return django_authenticate(request, **credentials)
 
     def validate_unique_email(self, email):
         """
