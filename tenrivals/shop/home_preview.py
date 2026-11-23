@@ -100,6 +100,7 @@ def build_home_preview_payload(request) -> dict:
             'tone': 'blue',
             'products': [_product(request, product) for product in _new_arrivals()],
         },
+        'aurora': _aurora(loc),
         'stories': _stories(loc),
         'brands': _brands(loc, stock_url),
         'aboutHtml': render_to_string(
@@ -179,6 +180,24 @@ def _promos() -> dict:
         'prev': _('Previous promo banner'),
         'next': _('Next promo banner'),
         'goTo': _('Go to banner'),
+    }
+
+
+def _aurora(loc) -> dict:
+    return {
+        'kicker': _('Next drop'),
+        'title': _('Pre-order gear from the US and EU'),
+        'lead': _(
+            'Rackets, shoes, and strings, cleared through customs and delivered in Tbilisi.'
+        ),
+        'primary': {
+            'href': shop_reverse('shop:order_for_me', site_locale=loc),
+            'label': _('Order for me'),
+        },
+        'secondary': {
+            'href': shop_reverse('shop:preorder', site_locale=loc),
+            'label': _('Browse preorder'),
+        },
     }
 
 

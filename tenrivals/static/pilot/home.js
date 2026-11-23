@@ -526,20 +526,14 @@ function HeroSticker({ src }) {
       ctx.restore();
 
       if (peeling && chord > 1.5 && fold < radius - 0.5) {
-        const capMid = (fold + radius) * 0.5;
-        const capReach = Math.max(curlR * 0.9, (radius - fold) * 0.42);
         ctx.save();
         ctx.translate(cx, cy);
         ctx.filter = `blur(${(4.5 * px).toFixed(2)}px)`;
         ctx.translate(1.8 * px, oy);
         ctx.rotate(angle);
-        ctx.beginPath();
-        ctx.arc(capMid, 0, capReach, 0, Math.PI * 2);
-        const cast = ctx.createRadialGradient(capMid, 0, capReach * 0.05, capMid, 0, capReach);
-        cast.addColorStop(0, 'rgba(0,0,0,0.5)');
-        cast.addColorStop(0.55, 'rgba(0,0,0,0.16)');
-        cast.addColorStop(1, 'rgba(0,0,0,0)');
-        ctx.fillStyle = cast;
+        ctx.globalAlpha = 0.32;
+        ctx.fillStyle = '#000';
+        traceSide('peeled');
         ctx.fill();
         ctx.restore();
       }
@@ -558,36 +552,51 @@ function HeroSticker({ src }) {
         ctx.drawImage(image, -radius, -radius, radius * 2, radius * 2);
         ctx.restore();
       }
-      if (peeling && chord > 1.5 && fold > -radius + curlR * 0.2) {
+      if (peeling && chord > 1.5 && Math.abs(fold) < radius - 0.5) {
+        const arcStart = Math.atan2(-chord, -fold);
+        const arcEnd = Math.atan2(chord, -fold);
+        const turn = (value) => {
+          const t = Math.atan2(Math.sin(value), Math.cos(value));
+          return t < 0 ? t + Math.PI * 2 : t;
+        };
+        const arcHoldsTip = (anticlockwise) => {
+          const s = turn(arcStart);
+          const e = turn(arcEnd);
+          const tip = Math.PI;
+          if (anticlockwise) return s >= e ? tip <= s && tip >= e : tip <= s || tip >= e;
+          return s <= e ? tip >= s && tip <= e : tip >= s || tip <= e;
+        };
+        const curlArc = arcHoldsTip(true);
+        const tipX = fold * 2 - radius;
         ctx.save();
         ctx.beginPath();
-        ctx.rect(fold - curlR, -chord, curlR, chord * 2);
+        ctx.arc(fold * 2, 0, radius, arcStart, arcEnd, curlArc);
+        ctx.closePath();
         ctx.clip();
-        const paper = ctx.createLinearGradient(fold, 0, fold - curlR, 0);
+        const paper = ctx.createLinearGradient(fold, 0, tipX, 0);
         paper.addColorStop(0, '#9a9aa1');
-        paper.addColorStop(0.22, '#c8c8ce');
-        paper.addColorStop(0.72, '#e4e4e8');
+        paper.addColorStop(0.35, '#d0d0d4');
+        paper.addColorStop(0.78, '#ececee');
         paper.addColorStop(1, '#f7f7f8');
         ctx.fillStyle = paper;
-        ctx.fillRect(fold - curlR, -chord, curlR, chord * 2);
+        ctx.fillRect(-radius * 2, -radius * 2, radius * 4, radius * 4);
         const sky = ctx.createLinearGradient(0, -chord, 0, chord);
         sky.addColorStop(0, 'rgba(255,255,255,0.34)');
         sky.addColorStop(0.42, 'rgba(255,255,255,0)');
         sky.addColorStop(1, 'rgba(0,0,0,0.24)');
         ctx.fillStyle = sky;
-        ctx.fillRect(fold - curlR, -chord, curlR, chord * 2);
-        const crease = ctx.createLinearGradient(fold, 0, fold - curlR * 0.22, 0);
+        ctx.fillRect(-radius * 2, -radius * 2, radius * 4, radius * 4);
+        const crease = ctx.createLinearGradient(fold, 0, fold + (tipX - fold) * 0.28, 0);
         crease.addColorStop(0, 'rgba(0,0,0,0.22)');
         crease.addColorStop(1, 'rgba(0,0,0,0)');
         ctx.fillStyle = crease;
-        ctx.fillRect(fold - curlR * 0.22, -chord, curlR * 0.22, chord * 2);
-        const crest = ctx.createLinearGradient(fold - curlR - px, 0, fold - curlR + curlR * 0.28, 0);
-        crest.addColorStop(0, 'rgba(255,255,255,0)');
-        crest.addColorStop(0.42, 'rgba(255,255,255,0.92)');
-        crest.addColorStop(1, 'rgba(255,255,255,0)');
-        ctx.fillStyle = crest;
-        ctx.fillRect(fold - curlR - px, -chord, curlR * 0.28 + px, chord * 2);
+        ctx.fillRect(-radius * 2, -radius * 2, radius * 4, radius * 4);
         ctx.restore();
+        ctx.beginPath();
+        ctx.arc(fold * 2, 0, radius, arcStart, arcEnd, curlArc);
+        ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+        ctx.lineWidth = Math.max(1.2, px);
+        ctx.stroke();
       }
       ctx.restore();
       sticker.style.transform = `rotate(${30 + spin}deg) scale(${1 + peel * 0.08})`;
@@ -1071,6 +1080,135 @@ function LogoLoop({ items, label }) {
   `;
 }
 
+function AuroraCta({ aurora }) {
+  const rootRef = useRef(null);
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    const root = rootRef.current;
+    const canvas = canvasRef.current;
+    if (!root || !canvas) return undefined;
+    const ctx = canvas.getContext('2d');
+    const media = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const bands = [
+      { hue: 168, y: 0.36, amp: 0.15, freq: 1.25, speed: 0.018, width: 0.24 },
+      { hue: 286, y: 0.5, amp: 0.13, freq: 1.7, speed: -0.014, width: 0.2 },
+      { hue: 332, y: 0.58, amp: 0.11, freq: 1.05, speed: 0.022, width: 0.16 },
+      { hue: 46, y: 0.44, amp: 0.09, freq: 2.05, speed: 0.011, width: 0.12 },
+    ];
+    let raf = 0;
+    let time = 0;
+    let aimX = 0.32;
+    let aimY = 0.48;
+    let visible = true;
+
+    const resize = () => {
+      canvas.style.position = 'absolute';
+      canvas.style.inset = '0';
+      canvas.style.width = '100%';
+      canvas.style.height = '100%';
+      const dpr = Math.min(2, window.devicePixelRatio || 1);
+      const width = Math.max(1, root.clientWidth);
+      const height = Math.max(240, Math.min(640, root.clientHeight || 240));
+      canvas.width = Math.round(width * dpr);
+      canvas.height = Math.round(height * dpr);
+      draw();
+    };
+    const draw = () => {
+      const w = canvas.width;
+      const h = canvas.height;
+      ctx.clearRect(0, 0, w, h);
+      const sky = ctx.createLinearGradient(0, 0, w, h);
+      sky.addColorStop(0, '#07111a');
+      sky.addColorStop(0.48, '#12182c');
+      sky.addColorStop(1, '#1a0c18');
+      ctx.fillStyle = sky;
+      ctx.fillRect(0, 0, w, h);
+      ctx.globalCompositeOperation = 'lighter';
+      bands.forEach((band, index) => {
+        ctx.beginPath();
+        const steps = 42;
+        for (let i = 0; i <= steps; i += 1) {
+          const u = i / steps;
+          const pull = Math.exp(-(((u - aimX) * 3.1) ** 2)) * (aimY - 0.5) * 0.22;
+          const wave = Math.sin(u * band.freq * Math.PI * 2 + time * band.speed + index) * band.amp;
+          const y = (band.y + wave + pull) * h;
+          if (i === 0) ctx.moveTo(u * w, y);
+          else ctx.lineTo(u * w, y);
+        }
+        ctx.strokeStyle = `hsla(${band.hue}, 78%, 62%, 0.34)`;
+        ctx.lineWidth = h * band.width;
+        ctx.lineCap = 'round';
+        ctx.shadowColor = `hsla(${band.hue}, 90%, 62%, 0.55)`;
+        ctx.shadowBlur = h * 0.05;
+        ctx.stroke();
+      });
+      ctx.shadowBlur = 0;
+      ctx.globalCompositeOperation = 'source-over';
+    };
+    const frame = () => {
+      time += 1;
+      if (visible && !document.hidden) draw();
+      raf = requestAnimationFrame(frame);
+    };
+    const onMove = (event) => {
+      const box = root.getBoundingClientRect();
+      aimX = (event.clientX - box.left) / Math.max(1, box.width);
+      aimY = (event.clientY - box.top) / Math.max(1, box.height);
+    };
+    resize();
+    const observer = new ResizeObserver(resize);
+    observer.observe(root);
+    let visibility;
+    if (typeof IntersectionObserver !== 'undefined') {
+      visibility = new IntersectionObserver((entries) => {
+        visible = entries[entries.length - 1].isIntersecting;
+      }, { threshold: 0.08 });
+      visibility.observe(root);
+    }
+    root.addEventListener('pointermove', onMove);
+    if (!media.matches) raf = requestAnimationFrame(frame);
+    return () => {
+      cancelAnimationFrame(raf);
+      observer.disconnect();
+      visibility?.disconnect();
+      root.removeEventListener('pointermove', onMove);
+    };
+  }, []);
+
+  return html`
+    <section className="aurora-cta" ref=${rootRef} aria-label=${aurora.title}>
+      <canvas className="aurora-cta__wash" ref=${canvasRef} aria-hidden="true"></canvas>
+      <div className="aurora-cta__copy">
+        <p className="aurora-cta__kicker">${aurora.kicker}</p>
+        <h2>${aurora.title}</h2>
+        <p className="aurora-cta__lead">${aurora.lead}</p>
+        <div className="aurora-cta__actions">
+          <a className="btn" href=${aurora.primary.href}>${aurora.primary.label}</a>
+          <a className="aurora-cta__ghost" href=${aurora.secondary.href}>${aurora.secondary.label}</a>
+        </div>
+      </div>
+    </section>
+  `;
+}
+
+function PointerSheen() {
+  useEffect(() => {
+    const root = document.querySelector('.shop-home-mid');
+    if (!root) return undefined;
+    const move = (event) => {
+      const card = event.target.closest('.product-tile, .story-card, .cat-seg');
+      if (!card || !root.contains(card)) return;
+      const box = card.getBoundingClientRect();
+      card.style.setProperty('--mx', `${event.clientX - box.left}px`);
+      card.style.setProperty('--my', `${event.clientY - box.top}px`);
+    };
+    root.addEventListener('pointermove', move);
+    return () => root.removeEventListener('pointermove', move);
+  }, []);
+  return null;
+}
+
 function Brands({ brands }) {
   if (!brands.items.length) return null;
   return html`
@@ -1088,6 +1226,7 @@ function Home() {
   return html`
     <${React.Fragment}>
       <${Hero} hero=${data.hero} labels=${labels} />
+      <${PointerSheen} />
       <div className="shop-home-mid">
         <div className="announce-bar">${data.announce}</div>
         <div className="cat-strip">
@@ -1124,6 +1263,7 @@ function Home() {
                 `)}
               </${Rail}>
             </section>
+            <${AuroraCta} aurora=${data.aurora} />
             <${Stories} stories=${data.stories} labels=${labels} />
           </div>
         </main>
