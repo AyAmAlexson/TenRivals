@@ -6,29 +6,18 @@
   .ofm-hero{max-width:980px; margin:0 auto 18px}
   .ofm-title{font-size:clamp(18px,2.4vw,24px); line-height:1.12; margin:0 0 10px; font-weight:800; text-transform:uppercase; letter-spacing:.06em}
   .ofm-sub{font-size:16px; line-height:1.55; color:var(--muted); margin:0; font-weight:400; text-transform:none}
-  .ofm-flow{max-width:980px; margin:36px auto 0}
-  .ofm-flow__title{margin:0 0 18px; font-size:13px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; font-family:inherit}
-  .ofm-flow__list{list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(5,minmax(0,1fr))}
-  .ofm-flow__step{min-width:0}
-  .ofm-flow__top{position:relative; height:56px; margin:0 0 14px}
-  .ofm-flow__mark{
-    width:56px; height:56px; background:var(--accent); color:#fff;
-    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px;
-    position:relative; z-index:1;
-  }
-  .ofm-flow__mark svg{width:20px; height:20px; display:block}
-  .ofm-flow__mark span{font-size:11px; font-weight:800; letter-spacing:.04em; line-height:1}
-  .ofm-flow__step:not(:last-child) .ofm-flow__top::after{
-    content:""; position:absolute; left:56px; right:0; top:50%; height:2px; background:#d6dbe3; transform:translateY(-50%);
-  }
-  .ofm-flow__name{
-    margin:0 14px 8px 0; font-family:inherit; font-size:13px; font-weight:800; line-height:1.25;
-    letter-spacing:.06em; text-transform:uppercase; color:var(--ink);
-  }
-  .ofm-flow__text{
-    margin:0 14px 0 0; font-size:16px; font-weight:400; line-height:1.45;
-    text-transform:none; color:var(--ink);
-  }
+  .ofm-glance{list-style:none; margin:20px 0 0; padding:0; display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:14px}
+  .ofm-glance__item{display:flex; align-items:center; gap:8px; min-width:0}
+  .ofm-glance__n{flex:none; font-size:13px; font-weight:800; letter-spacing:.04em; line-height:1; color:var(--accent)}
+  .ofm-glance__icon{flex:none; width:36px; height:36px; display:grid; place-items:center; background:var(--accent); color:#fff}
+  .ofm-glance__icon svg{width:18px; height:18px; display:block}
+  .ofm-glance__label{font-size:12px; font-weight:800; letter-spacing:.04em; line-height:1.2; text-transform:uppercase; color:var(--ink)}
+  .ofm-notes{max-width:980px; margin:36px auto 0}
+  .ofm-notes__title{margin:0 0 14px; font-family:inherit; font-size:13px; font-weight:800; letter-spacing:.08em; text-transform:uppercase}
+  .ofm-notes__list{list-style:none; margin:0; padding:0; display:grid; gap:14px}
+  .ofm-notes__list li{display:grid; grid-template-columns:32px minmax(0,1fr); gap:10px; align-items:start}
+  .ofm-notes__n{font-size:13px; font-weight:800; letter-spacing:.04em; line-height:1.5; color:var(--accent)}
+  .ofm-notes__list p{margin:0; font-size:16px; font-weight:400; line-height:1.5; text-transform:none; color:var(--ink)}
   .ofm-card{max-width:980px; margin:0 auto; background:#fff; border:1px solid var(--line); padding:22px}
   .ofm-card h2{font-size:13px; letter-spacing:.08em; margin:0 0 14px}
   .ofm-grid{display:grid; grid-template-columns:1fr 1fr; gap:14px}
@@ -58,19 +47,8 @@
   .ofm-modal__title{margin:0 0 10px; font-size:15px; font-weight:800; text-transform:uppercase; letter-spacing:.06em}
   .ofm-modal__text{margin:0 0 14px; font-size:14px; color:var(--muted); line-height:1.55}
   .ofm-modal__actions{display:flex; gap:8px; flex-wrap:wrap}
-  @media(max-width:1024px){
-    .ofm-flow__list{display:flex; flex-direction:column}
-    .ofm-flow__step{
-      display:grid; grid-template-columns:56px minmax(0,1fr); column-gap:14px; row-gap:4px;
-      position:relative; padding:0 0 20px;
-    }
-    .ofm-flow__top{grid-row:1 / span 2; height:auto; margin:0}
-    .ofm-flow__step:not(:last-child) .ofm-flow__top::after{display:none}
-    .ofm-flow__step:not(:last-child)::before{
-      content:""; position:absolute; left:27px; top:56px; bottom:0; width:2px; background:#d6dbe3;
-    }
-    .ofm-flow__name{grid-column:2; margin:6px 0 0}
-    .ofm-flow__text{grid-column:2; margin:0}
+  @media(max-width:900px){
+    .ofm-glance{grid-template-columns:1fr; gap:10px}
   }
   @media(max-width:760px){
     .ofm-page{margin:0 -20px; padding:24px 20px 44px}
@@ -84,6 +62,33 @@
   <section class="ofm-hero">
     <h1 class="ofm-title">Order for me</h1>
     <p class="ofm-sub">Send links to any products from online stores in Europe, USA, or China, and we will order and deliver them for you.</p>
+    <ol class="ofm-glance" aria-label="How it works">
+      <li class="ofm-glance__item">
+        <span class="ofm-glance__n">01</span>
+        <span class="ofm-glance__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.07 0l1.42-1.41a5 5 0 0 0-7.08-7.08L10.5 5.4"/><path d="M14 11a5 5 0 0 0-7.07 0L5.5 12.43a5 5 0 0 0 7.08 7.07L13.5 18.6"/></svg></span>
+        <span class="ofm-glance__label">Send links</span>
+      </li>
+      <li class="ofm-glance__item">
+        <span class="ofm-glance__n">02</span>
+        <span class="ofm-glance__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M12 8v5l3 2"/></svg></span>
+        <span class="ofm-glance__label">Get a quote</span>
+      </li>
+      <li class="ofm-glance__item">
+        <span class="ofm-glance__n">03</span>
+        <span class="ofm-glance__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>
+        <span class="ofm-glance__label">Fixed price</span>
+      </li>
+      <li class="ofm-glance__item">
+        <span class="ofm-glance__n">04</span>
+        <span class="ofm-glance__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h11v8H3z"/><path d="M14 10h4l3 3v2h-7z"/><circle cx="7" cy="18" r="1.6"/><circle cx="17" cy="18" r="1.6"/></svg></span>
+        <span class="ofm-glance__label">21 days</span>
+      </li>
+      <li class="ofm-glance__item">
+        <span class="ofm-glance__n">05</span>
+        <span class="ofm-glance__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13"/><path d="M3 10h18"/></svg></span>
+        <span class="ofm-glance__label">Pay on delivery</span>
+      </li>
+    </ol>
   </section>
 
   <form class="ofm-card" method="post" novalidate>
@@ -162,59 +167,14 @@
     </div>
   </form>
 
-  <section class="ofm-flow" aria-labelledby="ofm-flow-title">
-    <h2 class="ofm-flow__title" id="ofm-flow-title">How it works</h2>
-    <ol class="ofm-flow__list">
-      <li class="ofm-flow__step">
-        <div class="ofm-flow__top">
-          <span class="ofm-flow__mark" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.07 0l1.42-1.41a5 5 0 0 0-7.08-7.08L10.5 5.4"/><path d="M14 11a5 5 0 0 0-7.07 0L5.5 12.43a5 5 0 0 0 7.08 7.07L13.5 18.6"/></svg>
-            <span>01</span>
-          </span>
-        </div>
-        <h3 class="ofm-flow__name">Send links</h3>
-        <p class="ofm-flow__text">Add a link, color, and size. No obligation to buy.</p>
-      </li>
-      <li class="ofm-flow__step">
-        <div class="ofm-flow__top">
-          <span class="ofm-flow__mark" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M12 8v5l3 2"/></svg>
-            <span>02</span>
-          </span>
-        </div>
-        <h3 class="ofm-flow__name">Quote in 48 hours</h3>
-        <p class="ofm-flow__text">We reply by email, WhatsApp, or Telegram.</p>
-      </li>
-      <li class="ofm-flow__step">
-        <div class="ofm-flow__top">
-          <span class="ofm-flow__mark" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
-            <span>03</span>
-          </span>
-        </div>
-        <h3 class="ofm-flow__name">Price locks in</h3>
-        <p class="ofm-flow__text">Confirm the order. The price will not change.</p>
-      </li>
-      <li class="ofm-flow__step">
-        <div class="ofm-flow__top">
-          <span class="ofm-flow__mark" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h11v8H3z"/><path d="M14 10h4l3 3v2h-7z"/><circle cx="7" cy="18" r="1.6"/><circle cx="17" cy="18" r="1.6"/></svg>
-            <span>04</span>
-          </span>
-        </div>
-        <h3 class="ofm-flow__name">About 21 days</h3>
-        <p class="ofm-flow__text">Most orders arrive sooner. Rare cases take longer.</p>
-      </li>
-      <li class="ofm-flow__step">
-        <div class="ofm-flow__top">
-          <span class="ofm-flow__mark" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13"/><path d="M3 10h18"/></svg>
-            <span>05</span>
-          </span>
-        </div>
-        <h3 class="ofm-flow__name">Pay on delivery</h3>
-        <p class="ofm-flow__text">Card, cash, or another method you prefer.</p>
-      </li>
+  <section class="ofm-notes" aria-labelledby="ofm-notes-title">
+    <h2 class="ofm-notes__title" id="ofm-notes-title">How it works</h2>
+    <ol class="ofm-notes__list">
+      <li><span class="ofm-notes__n">01</span><p>Send product links, add details (color, size, variant), and click Get a quote. This does not obligate you to buy.</p></li>
+      <li><span class="ofm-notes__n">02</span><p>Receive a quote within 48 hours using your selected contact method.</p></li>
+      <li><span class="ofm-notes__n">03</span><p>Confirm the order. The final price is fixed at this moment and will not change.</p></li>
+      <li><span class="ofm-notes__n">04</span><p>Receive your order in about 21 days. Most orders arrive earlier, but in rare cases may take longer.</p></li>
+      <li><span class="ofm-notes__n">05</span><p>Pay on delivery using your preferred payment method.</p></li>
     </ol>
   </section>
 
