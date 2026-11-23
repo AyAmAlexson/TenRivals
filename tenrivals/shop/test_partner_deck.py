@@ -1,8 +1,10 @@
 from datetime import date
 from decimal import Decimal
+from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
+from django.db import connection
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
@@ -154,6 +156,30 @@ class PartnerDeckTests(TestCase):
         self.assertContains(resp, 'Partnership')
         self.assertNotContains(resp, '>Partners<')
         self.assertContains(resp, 'brand-logos/diadem.png')
+
+    def test_full_redis_still_renders_the_page(self):
+        oom = RuntimeError("command not allowed when used memory > 'maxmemory'.")
+        url = reverse('shop:partners', kwargs={'site_locale': 'ge_en'})
+        with (
+            patch('shop.partner_deck.cache.get', side_effect=oom),
+            patch('shop.partner_deck.cache.set', side_effect=oom),
+        ):
+            resp = self.client.get(url)
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'For partners')
+        self.assertContains(resp, 'Tennis Racket')
+
+    def test_failed_chart_query_keeps_the_category_mix(self):
+        def boom(*args, **kwargs):
+            with connection.cursor() as cursor:
+                cursor.execute('SELECT * FROM missing_partner_chart_table')
+            return {}
+
+        with patch('shop.partner_deck.build_sales_analytics', side_effect=boom):
+            facts = partner_public_facts()
+        self.assertEqual(facts['clients'], 1)
+        self.assertEqual(facts['category_mix'][0]['label'], 'Tennis Racket')
+        self.assertEqual(facts['revenue_bars'], [])
 
     def test_anonymous_user_is_enough(self):
         User = get_user_model()

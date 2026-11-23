@@ -14,6 +14,7 @@ from decimal import Decimal
 import qrcode
 import qrcode.image.svg
 from django.core.cache import cache
+from django.db import transaction
 from django.db.models import Count, Sum
 from django.shortcuts import render
 
@@ -60,12 +61,28 @@ def partner_deck(request):
 
 
 def partner_public_facts() -> dict:
-    cached = cache.get(CACHE_KEY)
+    """Public counts. A full Redis or a failed chart query must not 500 the page."""
+    cached = _cache_get(CACHE_KEY)
     if isinstance(cached, dict):
         return cached
     facts = _compute_public_facts()
-    cache.set(CACHE_KEY, facts, CACHE_SECONDS)
+    _cache_set(CACHE_KEY, facts, CACHE_SECONDS)
     return facts
+
+
+def _cache_get(key: str):
+    try:
+        return cache.get(key)
+    except Exception:
+        logger.warning('Partner deck cache read failed', exc_info=True)
+        return None
+
+
+def _cache_set(key: str, value, timeout: int) -> None:
+    try:
+        cache.set(key, value, timeout)
+    except Exception:
+        logger.warning('Partner deck cache write failed', exc_info=True)
 
 
 def _compute_public_facts() -> dict:
@@ -136,15 +153,19 @@ def _trend(start: date, end: date) -> tuple[list[dict], str, int | None]:
 
     Raw revenue and ROI never leave this function. Revenue bars are scaled
     from zero to the peak. The ROI line is scaled on its own min and max.
+
+    The analytics query runs in a savepoint. A failed statement must not abort
+    the request transaction, or the category mix query that follows becomes a 500.
     """
     try:
-        chart = build_sales_analytics(start, end, 'month')['chart']
+        with transaction.atomic():
+            chart = build_sales_analytics(start, end, 'month')['chart']
+        revenue = [float(v or 0) for v in chart.get('revenue') or []]
+        roi = _carry(list(chart.get('roi') or []))
+        growth = _compound_monthly_growth_pct(revenue)
     except Exception:
         logger.exception('Partner deck trend failed')
         return [], '', None
-    revenue = [float(v or 0) for v in chart.get('revenue') or []]
-    roi = _carry(list(chart.get('roi') or []))
-    growth = _compound_monthly_growth_pct(revenue)
     if len(revenue) < 2:
         return [], '', growth
     return _bars(revenue), _polyline(roi), growth
@@ -152,6 +173,14 @@ def _trend(start: date, end: date) -> tuple[list[dict], str, int | None]:
 
 def _category_mix() -> list[dict]:
     """Share of sales by category. Percents only, never the amounts."""
+    try:
+        return _category_mix_rows()
+    except Exception:
+        logger.exception('Partner deck category mix failed')
+        return []
+
+
+def _category_mix_rows() -> list[dict]:
     rows = (
         SalesOrderLine.objects.filter(order__order_date__lte=CHART_END)
         .exclude(order__status__in=_EXCLUDED_STATUSES)
