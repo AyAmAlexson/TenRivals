@@ -180,5 +180,6 @@ class StaffShippingAddressesTests(TestCase):
 
     def test_open_statuses_cover_in_progress_orders(self):
         self.assertIn(SalesOrder.Status.SHIPPED, OPEN_DELIVERY_STATUSES)
+        self.assertIn(SalesOrder.Status.BUYING, OPEN_DELIVERY_STATUSES)
         self.assertNotIn(SalesOrder.Status.COMPLETED, OPEN_DELIVERY_STATUSES)
         self.assertNotIn(SalesOrder.Status.REFUNDED, OPEN_DELIVERY_STATUSES)

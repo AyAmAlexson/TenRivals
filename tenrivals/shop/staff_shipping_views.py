@@ -20,8 +20,9 @@ from .models import SalesOrder
 # and marking them completed would pull stock again.
 OPEN_DELIVERY_STATUSES = (
     SalesOrder.Status.SUBMITTED,
-    SalesOrder.Status.AWAITING_PAYMENT,
     SalesOrder.Status.CONFIRMED,
+    SalesOrder.Status.BUYING,
+    SalesOrder.Status.AWAITING_PAYMENT,
     SalesOrder.Status.SHIPPED,
 )
 

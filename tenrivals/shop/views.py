@@ -2366,7 +2366,7 @@ def checkout(request):
                         )
                         staff_url = request.build_absolute_uri(staff_path)
                         _send_checkout_email(
-                            f'TR - NEW Order Submitted - {order.invoice_number} - {order.gross_total} GEL',
+                            f'TR - NEW Order Received - {order.invoice_number} - {order.gross_total} GEL',
                             (
                                 f'Order: {order.invoice_number}\n'
                                 f'Customer: {customer.display_name()}\n'

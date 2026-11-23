@@ -1198,6 +1198,25 @@ class SalesOrderPaymentTests(TestCase):
         resp = self.client.get(url, {'q': 'R-1001'})
         self.assertContains(resp, '2026-000900')
 
+    def test_sales_order_status_labels_follow_the_workflow(self):
+        self.assertEqual(
+            [str(label) for _code, label in SalesOrder.Status.choices],
+            [
+                'Received',
+                'Confirmed',
+                'Buying',
+                'Waiting for Stock',
+                'Ready for Delivery',
+                'Completed',
+                'Cancelled',
+                'Refunded',
+            ],
+        )
+        self.assertEqual(
+            SalesOrder._meta.get_field('status').default,
+            SalesOrder.Status.SUBMITTED,
+        )
+
     def test_orders_board_groups_cards_by_status(self):
         url = reverse('administration:staff_sales_orders')
         resp = self.client.get(url, {'view': 'board'})

@@ -1612,10 +1612,13 @@ class SalesOrder(models.Model):
     )
 
     class Status(models.TextChoices):
-        SUBMITTED = 'SUBMITTED', _('Submitted')
-        AWAITING_PAYMENT = 'AWAITING_PAYMENT', _('Awaiting payment')
+        # Stored values stay stable so existing orders and the counter till
+        # (which still opens a sale on AWAITING_PAYMENT) keep working.
+        SUBMITTED = 'SUBMITTED', _('Received')
         CONFIRMED = 'CONFIRMED', _('Confirmed')
-        SHIPPED = 'SHIPPED', _('Shipped')
+        BUYING = 'BUYING', _('Buying')
+        AWAITING_PAYMENT = 'AWAITING_PAYMENT', _('Waiting for Stock')
+        SHIPPED = 'SHIPPED', _('Ready for Delivery')
         COMPLETED = 'COMPLETED', _('Completed')
         CANCELLED = 'CANCELLED', _('Cancelled')
         REFUNDED = 'REFUNDED', _('Refunded')
