@@ -5,7 +5,10 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.forms import BaseInlineFormSet, inlineformset_factory
 
-from persons.account_display import normalize_telegram_username
+from persons.account_display import (
+    normalize_instagram_username,
+    normalize_telegram_username,
+)
 
 from .customer_sync import sync_customer_to_user
 from .models import (
@@ -40,6 +43,7 @@ class CustomerForm(forms.ModelForm):
             'phone',
             'email',
             'tg_account',
+            'inst_account',
             'newsletter_opt_in',
             'address',
             'source',
@@ -69,10 +73,14 @@ class CustomerForm(forms.ModelForm):
                 attrs={'class': 'customer-form-checkbox'}
             ),
             'tg_account': forms.TextInput(attrs={'placeholder': '@username'}),
+            'inst_account': forms.TextInput(attrs={'placeholder': '@username'}),
         }
 
     def clean_tg_account(self):
         return normalize_telegram_username(self.cleaned_data.get('tg_account'))
+
+    def clean_inst_account(self):
+        return normalize_instagram_username(self.cleaned_data.get('inst_account'))
 
     def clean_email(self):
         email = (self.cleaned_data.get('email') or '').strip()

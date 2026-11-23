@@ -8,6 +8,28 @@ def normalize_telegram_username(value: str | None) -> str:
     return s
 
 
+def normalize_instagram_username(value: str | None) -> str:
+    s = (value or '').strip()
+    if not s:
+        return ''
+    lower = s.lower()
+    for prefix in (
+        'https://www.instagram.com/',
+        'http://www.instagram.com/',
+        'https://instagram.com/',
+        'http://instagram.com/',
+        'www.instagram.com/',
+        'instagram.com/',
+    ):
+        if lower.startswith(prefix):
+            s = s[len(prefix):]
+            break
+    s = s.split('?', 1)[0].split('/', 1)[0].strip()
+    while s.startswith('@'):
+        s = s[1:].strip()
+    return s
+
+
 def account_initials_for_user(user) -> str:
     fn = (getattr(user, 'first_name', None) or '').strip()
     ln = (getattr(user, 'last_name', None) or '').strip()

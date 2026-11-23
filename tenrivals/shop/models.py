@@ -7,6 +7,11 @@ from django.core.validators import FileExtensionValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
+from persons.account_display import (
+    normalize_instagram_username,
+    normalize_telegram_username,
+)
+
 
 class ProductType(models.TextChoices):
     RACKET = 'RACKET', 'Tennis Racket'
@@ -1363,6 +1368,12 @@ class Customer(models.Model):
         blank=True,
         help_text=_('Telegram username or handle (optional).'),
     )
+    inst_account = models.CharField(
+        max_length=64,
+        blank=True,
+        default='',
+        help_text=_('Instagram username or handle (optional).'),
+    )
     address = models.TextField(blank=True)
     source = models.CharField(
         max_length=255,
@@ -1386,22 +1397,42 @@ class Customer(models.Model):
         ]
 
     def __str__(self):
-        parts = [self.first_name, self.last_name]
-        return ' '.join(p for p in parts if p).strip() or f'Customer #{self.pk}'
+        return self.display_name()
+
+    def _social_account_label(self) -> str:
+        """Telegram handle, or Instagram when Telegram is empty."""
+        tg = normalize_telegram_username(self.tg_account)
+        if tg:
+            return f'@{tg}'
+        inst = normalize_instagram_username(self.inst_account)
+        if inst:
+            return f'@{inst}'
+        return ''
 
     def display_name(self) -> str:
-        return str(self)
+        """Latin first + last. A missing surname is filled from Telegram, then Instagram."""
+        first = (self.first_name or '').strip()
+        last = (self.last_name or '').strip()
+        if last:
+            return f'{first} {last}'.strip()
+        social = self._social_account_label()
+        if first and social:
+            return f'{first} {social}'
+        if social:
+            return social
+        if first:
+            return first
+        if self.pk:
+            return f'Customer #{self.pk}'
+        return 'Customer'
 
     def display_name_for_invoice(self) -> str:
-        """Prefer Georgian/local name on invoice; fall back to Latin first/last."""
-        parts = [
-            (self.name_local or '').strip(),
-            (self.surname_local or '').strip(),
-        ]
-        local = ' '.join(p for p in parts if p).strip()
-        if local:
-            return local
-        return str(self)
+        """Prefer a full Georgian/local name; otherwise the same label as display_name."""
+        local_first = (self.name_local or '').strip()
+        local_last = (self.surname_local or '').strip()
+        if local_first and local_last:
+            return f'{local_first} {local_last}'
+        return self.display_name()
 
 
 class SalesInvoiceYearSequence(models.Model):

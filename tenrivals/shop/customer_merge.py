@@ -21,6 +21,7 @@ MERGEABLE_FIELDS: tuple[tuple[str, str], ...] = (
     ('phone', 'Phone'),
     ('email', 'Email'),
     ('tg_account', 'Telegram'),
+    ('inst_account', 'Instagram'),
     ('address', 'Address'),
     ('source', 'Source'),
     ('comment', 'Comment / notes'),

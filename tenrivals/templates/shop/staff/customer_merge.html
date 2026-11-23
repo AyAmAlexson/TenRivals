@@ -95,6 +95,7 @@
         <dt>Email</dt><dd>{{ survivor.email|default:"—" }}</dd>
         <dt>Phone</dt><dd>{{ survivor.phone|default:"—" }}</dd>
         <dt>Telegram</dt><dd>{{ survivor.tg_account|default:"—" }}</dd>
+        <dt>Instagram</dt><dd>{{ survivor.inst_account|default:"—" }}</dd>
         <dt>Account</dt><dd>{% if survivor.user %}#{{ survivor.user.pk }} {{ survivor.user.email }}{% else %}Guest{% endif %}</dd>
       </dl>
     </div>
@@ -104,6 +105,7 @@
         <dt>Email</dt><dd>{{ donor.email|default:"—" }}</dd>
         <dt>Phone</dt><dd>{{ donor.phone|default:"—" }}</dd>
         <dt>Telegram</dt><dd>{{ donor.tg_account|default:"—" }}</dd>
+        <dt>Instagram</dt><dd>{{ donor.inst_account|default:"—" }}</dd>
         <dt>Account</dt><dd>{% if donor.user %}#{{ donor.user.pk }} {{ donor.user.email }}{% else %}Guest{% endif %}</dd>
       </dl>
     </div>

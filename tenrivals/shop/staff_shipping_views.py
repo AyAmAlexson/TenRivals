@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from urllib.parse import quote_plus
 
 from django.contrib import messages
@@ -9,6 +10,8 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
+
+from persons.account_display import normalize_telegram_username
 
 from .models import SalesOrder
 
@@ -80,6 +83,63 @@ def phone_tel_uri(phone: str) -> str:
     return f'tel:{digits}'
 
 
+# Telegram usernames: a letter, then 4–31 letters, digits, or underscores.
+_TG_USERNAME = re.compile(r'^[A-Za-z][A-Za-z0-9_]{4,31}$')
+_TG_EMPTY = {'', '—', '-', '–'}
+_TG_URL_PREFIXES = (
+    'https://t.me/',
+    'http://t.me/',
+    'https://telegram.me/',
+    'http://telegram.me/',
+    't.me/',
+    'telegram.me/',
+    'tg://resolve?domain=',
+)
+
+
+def _note_value(order: SalesOrder, prefix: str) -> str | None:
+    for line in (order.notes or '').splitlines():
+        stripped = line.strip()
+        if stripped.lower().startswith(prefix):
+            return stripped.split(':', 1)[1].strip()
+    return None
+
+
+def contact_telegram_for_order(order: SalesOrder) -> str:
+    """Checkout stores Telegram on the order notes; staff orders use the customer."""
+    noted = _note_value(order, 'telegram:')
+    if noted is not None and noted not in _TG_EMPTY:
+        return noted
+    customer = order.customer
+    if customer is None:
+        return ''
+    return (customer.tg_account or '').strip()
+
+
+def telegram_username(value: str) -> str:
+    """Username that can open a Telegram profile, without @."""
+    raw = (value or '').strip()
+    if raw in _TG_EMPTY:
+        return ''
+    lower = raw.lower()
+    for prefix in _TG_URL_PREFIXES:
+        if lower.startswith(prefix):
+            raw = raw[len(prefix):]
+            break
+    raw = raw.split('?', 1)[0].split('/', 1)[0].strip()
+    username = normalize_telegram_username(raw)
+    if not _TG_USERNAME.fullmatch(username):
+        return ''
+    return username
+
+
+def telegram_profile_url(value: str) -> str:
+    username = telegram_username(value)
+    if not username:
+        return ''
+    return f'https://t.me/{username}'
+
+
 @login_required
 @user_passes_test(_staff_ok)
 def staff_shipping_addresses(request):
@@ -93,12 +153,16 @@ def staff_shipping_addresses(request):
         address = delivery_address_for_order(order)
         google_url, yandex_url = maps_search_urls(address) if address else ('', '')
         phone = contact_phone_for_order(order)
+        telegram = contact_telegram_for_order(order)
+        telegram_name = telegram_username(telegram)
         rows.append(
             {
                 'order': order,
                 'address': address,
                 'phone': phone,
                 'phone_tel': phone_tel_uri(phone),
+                'telegram_label': f'@{telegram_name}' if telegram_name else '',
+                'telegram_url': telegram_profile_url(telegram),
                 'google_maps_url': google_url,
                 'yandex_maps_url': yandex_url,
             }

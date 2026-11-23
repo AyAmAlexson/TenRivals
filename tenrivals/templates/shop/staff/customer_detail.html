@@ -91,11 +91,12 @@
   <div class="card">
     <h2 class="card-title">Contact</h2>
     <dl class="kv">
-      <dt>Name</dt><dd>{{ customer.first_name }} {{ customer.last_name }}</dd>
+      <dt>Name</dt><dd>{{ customer.display_name }}</dd>
       {% if customer.name_local or customer.surname_local %}<dt>Name (local)</dt><dd>{{ customer.name_local }} {{ customer.surname_local }}</dd>{% endif %}
       <dt>Phone</dt><dd>{% if customer.phone %}<a href="tel:{{ customer.phone }}" class="mono">{{ customer.phone }}</a>{% else %}—{% endif %}</dd>
       <dt>Email</dt><dd>{% if customer.email %}<a href="mailto:{{ customer.email }}">{{ customer.email }}</a>{% else %}—{% endif %}</dd>
       <dt>Telegram</dt><dd class="mono">{{ customer.tg_account|default:"—" }}</dd>
+      <dt>Instagram</dt><dd class="mono">{{ customer.inst_account|default:"—" }}</dd>
       <dt>Address</dt><dd>{{ customer.address|default:"—" }}</dd>
       <dt>Newsletter</dt><dd>{% if customer.newsletter_opt_in %}<span class="badge badge--yes">Opted in</span>{% else %}<span class="badge badge--no">No</span>{% endif %}</dd>
       <dt>Source</dt><dd>{{ customer.source|default:"—" }}</dd>

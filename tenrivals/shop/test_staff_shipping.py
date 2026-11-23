@@ -9,8 +9,10 @@ from django.urls import reverse
 from shop.models import Customer, SalesOrder
 from shop.staff_shipping_views import (
     OPEN_DELIVERY_STATUSES,
+    contact_telegram_for_order,
     delivery_address_for_order,
     phone_tel_uri,
+    telegram_profile_url,
 )
 
 
@@ -126,6 +128,46 @@ class StaffShippingAddressesTests(TestCase):
         self.assertEqual(phone_tel_uri('0591112233'), 'tel:+995591112233')
         self.assertEqual(phone_tel_uri('995591112233'), 'tel:+995591112233')
         self.assertEqual(phone_tel_uri(''), '')
+
+    def test_telegram_profile_url_opens_a_username(self):
+        self.assertEqual(telegram_profile_url('@nino_tennis'), 'https://t.me/nino_tennis')
+        self.assertEqual(telegram_profile_url('nino_tennis'), 'https://t.me/nino_tennis')
+        self.assertEqual(
+            telegram_profile_url('https://t.me/nino_tennis'),
+            'https://t.me/nino_tennis',
+        )
+        self.assertEqual(telegram_profile_url(''), '')
+        self.assertEqual(telegram_profile_url('—'), '')
+        self.assertEqual(telegram_profile_url('+995591112233'), '')
+
+    def test_telegram_prefers_order_note_over_customer(self):
+        self.customer.tg_account = 'old_handle'
+        self.customer.save(update_fields=['tg_account'])
+        self.open_order.notes = 'Telegram: @nino_tennis\nAddress: Tbilisi. Rustaveli 1'
+        self.open_order.save(update_fields=['notes'])
+        self.assertEqual(contact_telegram_for_order(self.open_order), '@nino_tennis')
+
+    def test_telegram_falls_back_to_customer_when_note_is_empty(self):
+        self.customer.tg_account = 'nino_tennis'
+        self.customer.save(update_fields=['tg_account'])
+        self.open_order.notes = 'Telegram: —\nAddress: Tbilisi. Rustaveli 1'
+        self.open_order.save(update_fields=['notes'])
+        self.assertEqual(contact_telegram_for_order(self.open_order), 'nino_tennis')
+
+    def test_page_links_telegram_profile_when_present(self):
+        self.customer.tg_account = '@nino_tennis'
+        self.customer.save(update_fields=['tg_account'])
+        url = reverse('administration:staff_shipping_addresses')
+        resp = self.client.get(url)
+        self.assertContains(resp, 'https://t.me/nino_tennis')
+        self.assertContains(resp, '@nino_tennis')
+
+    def test_page_omits_telegram_link_when_customer_has_none(self):
+        url = reverse('administration:staff_shipping_addresses')
+        resp = self.client.get(url)
+        self.assertEqual(resp.status_code, 200)
+        self.assertNotContains(resp, 'https://t.me/')
+        self.assertContains(resp, 'Nino Beridze')
 
     def test_page_omits_phone_link_when_customer_has_none(self):
         self.customer.phone = ''

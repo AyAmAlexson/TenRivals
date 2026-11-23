@@ -99,6 +99,7 @@ class CustomerEditPersistTests(TestCase):
                 'phone': '222',
                 'email': 'new-cust@test.com',
                 'tg_account': '@handle',
+                'inst_account': 'https://instagram.com/nino.inst/',
                 'newsletter_opt_in': 'on',
                 'address': 'Tbilisi',
                 'source': 'Instagram / social',
@@ -113,6 +114,7 @@ class CustomerEditPersistTests(TestCase):
         self.assertEqual(customer.phone, '222')
         self.assertEqual(customer.email, 'new-cust@test.com')
         self.assertEqual(customer.tg_account, 'handle')
+        self.assertEqual(customer.inst_account, 'nino.inst')
         self.assertEqual(customer.address, 'Tbilisi')
         self.assertEqual(customer.source, 'Instagram / social')
         self.assertEqual(customer.comment, 'VIP walk-in')
@@ -137,6 +139,7 @@ class CustomerEditPersistTests(TestCase):
                 'phone': '555',
                 'email': 'linked-cust@test.com',
                 'tg_account': '@newtg',
+                'inst_account': '',
                 'newsletter_opt_in': True,
                 'address': 'Addr',
                 'source': '',
@@ -178,6 +181,60 @@ class CustomerEditPersistTests(TestCase):
         self.assertEqual(customer.last_name, 'AccLn')
         self.assertEqual(customer.phone, '777')
         self.assertEqual(customer.tg_account, 'acctg')
+
+
+@override_settings(SECURE_SSL_REDIRECT=False)
+class CustomerDisplayNameTests(TestCase):
+    def test_missing_surname_uses_telegram_then_instagram(self):
+        customer = Customer(
+            first_name='Nino',
+            last_name='',
+            tg_account='@nino_tennis',
+            inst_account='nino.inst',
+        )
+        self.assertEqual(customer.display_name(), 'Nino @nino_tennis')
+        customer.tg_account = ''
+        self.assertEqual(customer.display_name(), 'Nino @nino.inst')
+        customer.first_name = ''
+        self.assertEqual(customer.display_name(), '@nino.inst')
+        customer.last_name = 'Beridze'
+        customer.first_name = 'Nino'
+        self.assertEqual(customer.display_name(), 'Nino Beridze')
+
+    def test_invoice_name_keeps_full_local_name(self):
+        customer = Customer(
+            first_name='Nino',
+            last_name='',
+            name_local='ნინო',
+            surname_local='ბერიძე',
+            tg_account='nino_tennis',
+        )
+        self.assertEqual(customer.display_name_for_invoice(), 'ნინო ბერიძე')
+        customer.surname_local = ''
+        self.assertEqual(customer.display_name_for_invoice(), 'Nino @nino_tennis')
+
+    def test_customers_list_and_order_dropdown_use_social_name(self):
+        User = get_user_model()
+        staff = User.objects.create_superuser(
+            email='staff-name@test.com',
+            password='secret-secret',
+        )
+        self.client.force_login(staff)
+        customer = Customer.objects.create(
+            first_name='Nino',
+            last_name='',
+            tg_account='',
+            inst_account='@nino.inst',
+        )
+        listed = self.client.get(reverse('administration:staff_customers'))
+        self.assertContains(listed, 'Nino @nino.inst')
+        form = CustomerForm()
+        self.assertIn('inst_account', form.fields)
+        order_form_html = self.client.get(
+            reverse('administration:staff_sales_order_new')
+        )
+        self.assertContains(order_form_html, 'Nino @nino.inst')
+        self.assertEqual(str(customer), 'Nino @nino.inst')
 
 
 @override_settings(SECURE_SSL_REDIRECT=False)

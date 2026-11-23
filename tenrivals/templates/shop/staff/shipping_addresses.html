@@ -21,7 +21,8 @@
   .ship-address__actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
   .ship-address__actions .btn{margin-right:0}
   .ship-address__actions .btn.is-disabled{opacity:.45;pointer-events:none}
-  .ship-phone{display:inline-flex;align-items:center;min-height:32px;margin-top:2px;font-weight:600;color:var(--accent);text-decoration:underline;text-underline-offset:2px}
+  .ship-contacts{display:flex;flex-direction:column;align-items:flex-start;gap:2px;margin-top:2px}
+  .ship-contact{display:inline-flex;align-items:center;min-height:32px;font-weight:600;color:var(--accent);text-decoration:underline;text-underline-offset:2px}
   .ship-dialog{margin:auto;border:1px solid var(--line);padding:24px;max-width:440px;width:calc(100% - 32px);background:#fff;color:var(--ink)}
   .ship-dialog::backdrop{background:rgba(0,0,0,.45)}
   .ship-dialog h2{margin:0 0 12px;font-size:15px;font-weight:800;letter-spacing:.5px;text-transform:uppercase}
@@ -52,8 +53,15 @@
           <td class="mono"><a href="{% url 'administration:staff_sales_order_edit' row.order.pk %}">{{ row.order.invoice_number }}</a></td>
           <td>
             <div>{{ row.order.customer.display_name }}</div>
-            {% if row.phone_tel %}
-            <a class="ship-phone mono" href="{{ row.phone_tel }}">{{ row.phone }}</a>
+            {% if row.phone_tel or row.telegram_url %}
+            <div class="ship-contacts">
+              {% if row.phone_tel %}
+              <a class="ship-contact mono" href="{{ row.phone_tel }}">{{ row.phone }}</a>
+              {% endif %}
+              {% if row.telegram_url %}
+              <a class="ship-contact mono" href="{{ row.telegram_url }}" target="_blank" rel="noopener">{{ row.telegram_label }}</a>
+              {% endif %}
+            </div>
             {% endif %}
           </td>
           <td class="mono">{{ row.order.gross_total }} ₾</td>

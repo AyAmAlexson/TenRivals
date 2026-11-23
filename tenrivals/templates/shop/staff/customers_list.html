@@ -64,14 +64,15 @@
         <tr>
           <td class="mono">{{ c.pk }}</td>
           <td>
-            <a href="{% url 'administration:staff_customer_detail' c.pk %}" class="cust-name-link">{% if c.last_name %}{{ c.last_name }} {{ c.first_name }}{% else %}{{ c.first_name }}{% endif %}</a>
+            <a href="{% url 'administration:staff_customer_detail' c.pk %}" class="cust-name-link">{{ c.display_name }}</a>
             {% if c.name_local or c.surname_local %}<div class="cust-sub">{% if c.surname_local %}{{ c.surname_local }} {{ c.name_local }}{% else %}{{ c.name_local }}{% endif %}</div>{% endif %}
           </td>
           <td>
             {% if c.phone %}<span class="contact-line mono">{{ c.phone }}</span>{% endif %}
             {% if c.email %}<span class="contact-line" title="{{ c.email }}">{{ c.email }}</span>{% endif %}
             {% if c.tg_account %}<span class="contact-line mono" title="Telegram">{{ c.tg_account }}</span>{% endif %}
-            {% if not c.phone and not c.email and not c.tg_account %}—{% endif %}
+            {% if c.inst_account %}<span class="contact-line mono" title="Instagram">{{ c.inst_account }}</span>{% endif %}
+            {% if not c.phone and not c.email and not c.tg_account and not c.inst_account %}—{% endif %}
           </td>
           <td>
             {% if c.user_id %}
@@ -95,7 +96,7 @@
               <a href="{% url 'administration:staff_customer_edit' c.pk %}" class="icon-btn" title="Edit" aria-label="Edit">✎</a>
               <form id="delete-customer-{{ c.pk }}" method="post" action="{% url 'administration:staff_customer_delete' c.pk %}" style="display:inline">
                 {% csrf_token %}
-                <button type="button" class="icon-btn icon-btn--danger js-delete-customer" data-delete-form="delete-customer-{{ c.pk }}" data-customer-name="{{ c.first_name|escape }} {{ c.last_name|default:''|escape }}" title="Delete" aria-label="Delete">×</button>
+                <button type="button" class="icon-btn icon-btn--danger js-delete-customer" data-delete-form="delete-customer-{{ c.pk }}" data-customer-name="{{ c.display_name|escape }}" title="Delete" aria-label="Delete">×</button>
               </form>
             </div>
           </td>

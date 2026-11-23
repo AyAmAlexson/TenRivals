@@ -440,7 +440,7 @@ def build_sales_analytics(
             o.customer_id,
             {
                 'pk': o.customer_id,
-                'label': f'{o.customer.last_name} {o.customer.first_name}'.strip(),
+                'label': o.customer.display_name(),
                 'orders': 0,
                 'revenue': Decimal('0.00'),
                 'profit': Decimal('0.00'),
