@@ -168,14 +168,110 @@
     .order-totals{align-items:flex-start;text-align:left}
     .order-totals__row{justify-content:flex-start}
   }
+
+  .orders-view-toggle{display:inline-flex;border:1px solid var(--line);background:#fff;flex-shrink:0}
+  .orders-view-toggle__btn{
+    display:inline-flex;align-items:center;justify-content:center;
+    padding:6px 12px;font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;
+    color:var(--muted);background:#fff;border:0;border-right:1px solid var(--line);
+    font-family:inherit;text-decoration:none;line-height:1.2;
+  }
+  .orders-view-toggle__btn:last-child{border-right:0}
+  .orders-view-toggle__btn:hover{color:var(--ink);background:#f9fafb}
+  .orders-view-toggle__btn.is-active{background:var(--ink);color:#fff}
+  .orders-view-toggle__btn.is-active:hover{background:var(--ink);color:#fff}
+
+  .orders-board__hint{margin:-8px 0 14px;font-size:13px;font-weight:400;color:var(--muted);line-height:1.45}
+  .orders-board__error{
+    margin:0 0 12px;padding:10px 12px;font-size:13px;font-weight:600;line-height:1.4;
+    background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;
+  }
+  .orders-board{
+    display:flex;gap:12px;overflow-x:auto;align-items:flex-start;
+    padding-bottom:6px;scroll-snap-type:x proximity;
+  }
+  .orders-board__col{
+    flex:0 0 272px;width:272px;background:#f3f4f6;border:1px solid var(--line);
+    display:flex;flex-direction:column;max-height:calc(100vh - 220px);min-height:220px;
+    scroll-snap-align:start;
+  }
+  .orders-board__col.is-over{background:#fdf2f2;box-shadow:inset 0 0 0 2px var(--accent)}
+  .orders-board__head{
+    display:flex;align-items:center;justify-content:space-between;gap:8px;
+    padding:10px 12px;background:#fff;border-bottom:1px solid var(--line);
+    border-top:3px solid var(--col, #94a3b8);position:sticky;top:0;z-index:1;
+  }
+  .orders-board__title{
+    margin:0;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--ink);
+  }
+  .orders-board__count{
+    min-width:22px;padding:1px 6px;text-align:center;font-size:11px;font-weight:700;
+    color:var(--muted);background:#f3f4f6;
+  }
+  .orders-board__col[data-status="SUBMITTED"]{--col:#64748b}
+  .orders-board__col[data-status="AWAITING_PAYMENT"]{--col:#b45309}
+  .orders-board__col[data-status="CONFIRMED"]{--col:#1d4ed8}
+  .orders-board__col[data-status="SHIPPED"]{--col:#6d28d9}
+  .orders-board__col[data-status="COMPLETED"]{--col:#15803d}
+  .orders-board__col[data-status="CANCELLED"]{--col:#b91c1c}
+  .orders-board__col[data-status="REFUNDED"]{--col:#78716c}
+  .orders-board__list{
+    display:flex;flex-direction:column;gap:8px;padding:8px;overflow-y:auto;min-height:72px;flex:1;
+  }
+  .orders-board__empty{
+    margin:0;padding:18px 8px;text-align:center;font-size:12px;font-weight:400;color:var(--muted);
+    border:1px dashed #d1d5db;background:rgba(255,255,255,.45);
+  }
+  .orders-board__list:has(.order-card) .orders-board__empty,
+  .orders-board__list:has(.order-card__placeholder) .orders-board__empty{display:none}
+  .order-card{
+    background:#fff;border:1px solid var(--line);padding:10px;cursor:grab;touch-action:none;
+    box-shadow:0 1px 0 rgba(15,23,42,.04);
+  }
+  .order-card:active{cursor:grabbing}
+  .order-card.is-dragging{opacity:.45}
+  .order-card.is-saving{opacity:.55}
+  .order-card.is-floating{
+    position:fixed;z-index:6000;pointer-events:none;margin:0;
+    box-shadow:0 14px 32px rgba(15,23,42,.18);cursor:grabbing;
+  }
+  .order-card__placeholder{border:1px dashed #cbd5e1;background:rgba(255,255,255,.7);min-height:72px}
+  .order-card__top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+  .order-card__main{min-width:0;flex:1}
+  .order-card__invoice{color:var(--ink);text-decoration:none}
+  .order-card__invoice:hover{color:var(--accent)}
+  .order-card__customer{
+    margin-top:8px;font-size:13px;font-weight:600;line-height:1.3;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .order-card__item{
+    margin-top:4px;font-size:12px;font-weight:400;line-height:1.35;color:var(--muted);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .order-card__more{font-weight:600;color:var(--ink)}
+  .order-card__foot{
+    display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px;
+  }
+  .order-card__total{font-size:13px;font-weight:800}
+  .order-card .order-actions-menu{flex-shrink:0}
+  body.is-order-dragging{user-select:none;cursor:grabbing}
+  body.is-order-dragging .order-card{cursor:grabbing}
+  @media(max-width:800px){
+    .orders-board__col{max-height:70vh}
+  }
 </style>
 {% endblock %}
 {% block content %}
 <div class="orders-page">
 <div class="staff-toolbar staff-toolbar--orders">
   <a href="{% url 'administration:staff_sales_order_new' %}" class="btn btn--sm">NEW</a>
+  <div class="orders-view-toggle" role="group" aria-label="Orders layout">
+    <a href="{% url 'administration:staff_sales_orders' %}?{{ orders_list_qs }}" class="orders-view-toggle__btn{% if view_mode != 'board' %} is-active{% endif %}"{% if view_mode != 'board' %} aria-current="page"{% endif %}>List</a>
+    <a href="{% url 'administration:staff_sales_orders' %}?{{ orders_board_qs }}" class="orders-view-toggle__btn{% if view_mode == 'board' %} is-active{% endif %}"{% if view_mode == 'board' %} aria-current="page"{% endif %}>Board</a>
+  </div>
   <form method="get" action="{% url 'administration:staff_sales_orders' %}" class="staff-toolbar__search">
     <input type="hidden" name="seq_year" value="{{ seq_year }}">
+    {% if view_mode == 'board' %}<input type="hidden" name="view" value="board">{% endif %}
     <input type="hidden" name="report_year" value="{{ report_year }}">
     <input type="hidden" name="report_month" value="{{ report_month }}">
     <input type="search" name="q" value="{{ search_q }}" placeholder="Invoice, fiscal, customer, item…" aria-label="Search orders" style="min-width:180px;max-width:260px">
@@ -210,6 +306,7 @@
       {% if sort %}<input type="hidden" name="sort" value="{{ sort }}">{% endif %}
       {% if payment_filter %}<input type="hidden" name="payment" value="{{ payment_filter }}">{% endif %}
       {% if missing_cost %}<input type="hidden" name="missing_cost" value="1">{% endif %}
+      {% if view_mode == 'board' %}<input type="hidden" name="view" value="board">{% endif %}
       <input type="hidden" name="report_year" value="{{ report_year }}">
       <input type="hidden" name="report_month" value="{{ report_month }}">
       <label class="visually-hidden" for="id_seq_year">Year for next invoice preview</label>
@@ -252,6 +349,62 @@
 </div>
 
 <div class="card">
+  {% if view_mode == 'board' %}
+  <h2 class="card-title">Orders by status</h2>
+  <p class="orders-board__hint">Drag a card into another column to change its status. Up to 500 orders.</p>
+  <div class="orders-board__error" id="orders-board-error" hidden role="alert"></div>
+  <div class="orders-board" aria-label="Orders by status">
+    {% for col in status_columns %}
+    <section class="orders-board__col" data-status="{{ col.code }}" aria-label="{{ col.label }}">
+      <header class="orders-board__head">
+        <h3 class="orders-board__title">{{ col.label }}</h3>
+        <span class="orders-board__count">{{ col.orders|length }}</span>
+      </header>
+      <div class="orders-board__list">
+        <p class="orders-board__empty">Drop here</p>
+        {% for o in col.orders %}
+        <article class="order-card" draggable="true" role="group" aria-label="Order {{ o.invoice_number }}" data-order-id="{{ o.pk }}" data-status="{{ o.status }}" data-status-url="{% url 'administration:staff_sales_order_set_status' o.pk %}">
+          <div class="order-card__top">
+            <div class="order-card__main">
+              <div class="order-cell__main order-cell__main--invoice">
+                {% with cs=o.cogs_fill_status %}
+                <span class="cogs-light" title="{% if cs == 'green' %}Landed cost filled for all lines{% elif cs == 'yellow' %}Landed cost missing in some lines{% else %}Landed cost not filled for any line{% endif %}">{% if cs == 'green' %}&#128994;{% elif cs == 'yellow' %}&#128993;{% else %}&#128308;{% endif %}</span>
+                {% endwith %}
+                <a class="mono order-card__invoice" draggable="false" href="{% url 'administration:staff_sales_order_edit' o.pk %}">{{ o.invoice_number }}</a>
+              </div>
+              <div class="order-cell__meta">{{ o.order_date|date:"Y-m-d" }}</div>
+            </div>
+            <div class="order-actions-menu">
+              <button type="button" class="icon-btn order-actions-menu__trigger" title="Actions" aria-label="Order actions for {{ o.invoice_number }}" aria-haspopup="menu" aria-expanded="false">⋮</button>
+              <div class="order-actions-menu__panel" role="menu" hidden>
+                <a href="{% url 'administration:staff_sales_order_invoice' o.pk %}" class="order-actions-menu__link" role="menuitem">View invoice</a>
+                <a href="{% url 'administration:staff_sales_order_invoice' o.pk %}?print=1" class="order-actions-menu__link order-actions-menu__link--accent" role="menuitem" target="_blank" rel="noopener">Print / Save as PDF</a>
+                <a href="{% url 'administration:staff_sales_order_edit' o.pk %}" class="order-actions-menu__link" role="menuitem">Edit</a>
+                <button type="button" class="order-actions-menu__link order-actions-menu__link--danger js-delete-sales-order" role="menuitem" data-delete-form="delete-order-{{ o.pk }}" data-delete-invoice="{{ o.invoice_number|escape }}">Delete</button>
+              </div>
+            </div>
+          </div>
+          <div class="order-card__customer" title="{{ o.customer.display_name }}">{{ o.customer.display_name }}</div>
+          {% with lines=o.lines.all %}
+          {% if lines %}
+          <div class="order-card__item" title="{{ lines.0.staff_order_item_summary }}">{{ lines.0.staff_order_item_summary }}{% if lines|length > 1 %} <span class="order-card__more">+{{ lines|length|add:"-1" }}</span>{% endif %}</div>
+          {% endif %}
+          {% endwith %}
+          <div class="order-card__foot">
+            {% with st=o.payment_state %}
+            <span title="Paid {{ o.paid_total }} of {{ o.gross_total }} ₾">
+              {% if st == 'PAID' %}<span class="pay-badge pay-badge--paid">Paid</span>{% elif st == 'PARTIAL' %}<span class="pay-badge pay-badge--partial">Due {{ o.balance_due }}</span>{% elif st == 'OVERPAID' %}<span class="pay-badge pay-badge--overpaid">Overpaid</span>{% else %}<span class="pay-badge pay-badge--unpaid">Unpaid</span>{% endif %}
+            </span>
+            {% endwith %}
+            <span class="mono order-card__total">{{ o.gross_total }}</span>
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+    </section>
+    {% endfor %}
+  </div>
+  {% else %}
   <h2 class="card-title">Orders (up to 500)</h2>
   <div class="orders-list" role="table" aria-label="Sales orders">
     <div class="orders-list__head" role="row">
@@ -340,6 +493,7 @@
     <div class="orders-list__empty">No orders yet.</div>
     {% endfor %}
   </div>
+  {% endif %}
   {% for o in orders %}
   <form id="delete-order-{{ o.pk }}" method="post" action="{% url 'administration:staff_sales_order_delete' o.pk %}" class="visually-hidden" aria-hidden="true">{% csrf_token %}</form>
   {% endfor %}
@@ -494,6 +648,319 @@
     }
   });
   window.addEventListener('resize', closeMenu);
+})();
+</script>
+<script>
+(function () {
+  var board = document.querySelector('.orders-board');
+  if (!board) return;
+  var errorEl = document.getElementById('orders-board-error');
+  var drag = null;
+  var saving = false;
+  var csrfInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
+  var csrf = csrfInput ? csrfInput.value : '';
+
+  function showError(message) {
+    if (!errorEl) return;
+    errorEl.hidden = false;
+    errorEl.textContent = message;
+  }
+  function clearError() {
+    if (!errorEl) return;
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+  }
+  function updateCounts() {
+    board.querySelectorAll('.orders-board__col').forEach(function (col) {
+      var count = col.querySelectorAll('.order-card').length;
+      var el = col.querySelector('.orders-board__count');
+      if (el) el.textContent = String(count);
+    });
+  }
+  function clearFloat(card) {
+    card.classList.remove('is-floating');
+    card.style.left = '';
+    card.style.top = '';
+    card.style.width = '';
+  }
+  function restoreCard(card, parent, next, placeholder) {
+    clearFloat(card);
+    if (next && next.parentNode === parent) parent.insertBefore(card, next);
+    else parent.appendChild(card);
+    if (placeholder && placeholder.parentNode) placeholder.parentNode.removeChild(placeholder);
+    updateCounts();
+  }
+  function columnFromPoint(x, y) {
+    var under = document.elementFromPoint(x, y);
+    var list = under && under.closest ? under.closest('.orders-board__list') : null;
+    if (list && board.contains(list)) return list;
+    var cols = board.querySelectorAll('.orders-board__col');
+    for (var i = 0; i < cols.length; i++) {
+      var rect = cols[i].getBoundingClientRect();
+      if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+        return cols[i].querySelector('.orders-board__list');
+      }
+    }
+    return null;
+  }
+  function placePlaceholder(list, clientY, placeholder) {
+    var cards = list.querySelectorAll('.order-card');
+    for (var i = 0; i < cards.length; i++) {
+      var rect = cards[i].getBoundingClientRect();
+      if (clientY < rect.top + rect.height / 2) {
+        list.insertBefore(placeholder, cards[i]);
+        return;
+      }
+    }
+    list.appendChild(placeholder);
+  }
+  function setOver(list) {
+    board.querySelectorAll('.orders-board__col.is-over').forEach(function (col) {
+      col.classList.remove('is-over');
+    });
+    if (!list) return;
+    var col = list.closest('.orders-board__col');
+    if (col) col.classList.add('is-over');
+  }
+  function autoScroll(x, y, list) {
+    var boardRect = board.getBoundingClientRect();
+    if (x < boardRect.left + 48) board.scrollLeft -= 18;
+    else if (x > boardRect.right - 48) board.scrollLeft += 18;
+    if (!list) return;
+    var listRect = list.getBoundingClientRect();
+    if (y < listRect.top + 36) list.scrollTop -= 14;
+    else if (y > listRect.bottom - 36) list.scrollTop += 14;
+  }
+  function endDrag(commit) {
+    if (!drag) return;
+    var state = drag;
+    drag = null;
+    document.body.classList.remove('is-order-dragging');
+    setOver(null);
+    if (!state.active || !state.placeholder) return;
+    var col = state.placeholder.closest('.orders-board__col');
+    var nextStatus = col ? col.getAttribute('data-status') : '';
+    if (!commit || !nextStatus || nextStatus === state.originStatus) {
+      restoreCard(state.card, state.originParent, state.originNext, state.placeholder);
+      return;
+    }
+    clearFloat(state.card);
+    state.placeholder.replaceWith(state.card);
+    state.card.setAttribute('data-status', nextStatus);
+    state.card.classList.add('is-saving');
+    updateCounts();
+    saving = true;
+    var body = new URLSearchParams();
+    body.set('status', nextStatus);
+    body.set('csrfmiddlewaretoken', csrf);
+    fetch(state.card.getAttribute('data-status-url'), {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': csrf,
+        'X-Requested-With': 'XMLHttpRequest',
+        'Accept': 'application/json'
+      },
+      body: body,
+      credentials: 'same-origin'
+    }).then(function (res) {
+      var type = res.headers.get('content-type') || '';
+      if (type.indexOf('application/json') === -1) throw new Error('Could not update status.');
+      return res.json().then(function (data) {
+        if (!res.ok || !data.ok) throw new Error((data && data.error) || 'Could not update status.');
+        return data;
+      });
+    }).then(function () {
+      clearError();
+    }).catch(function (err) {
+      restoreCard(state.card, state.originParent, state.originNext, null);
+      state.card.setAttribute('data-status', state.originStatus);
+      showError(err && err.message ? err.message : 'Could not update status.');
+    }).finally(function () {
+      state.card.classList.remove('is-saving');
+      saving = false;
+    });
+  }
+
+  board.addEventListener('pointerdown', function (e) {
+    if (e.pointerType && e.pointerType !== 'touch') return;
+    if (saving || drag) return;
+    if (e.button !== undefined && e.button !== 0) return;
+    var card = e.target.closest('.order-card');
+    if (!card || !board.contains(card)) return;
+    if (e.target.closest('button, input, select, textarea, label')) return;
+    var rect = card.getBoundingClientRect();
+    drag = {
+      card: card,
+      pointerId: e.pointerId,
+      startX: e.clientX,
+      startY: e.clientY,
+      dx: e.clientX - rect.left,
+      dy: e.clientY - rect.top,
+      active: false,
+      originParent: card.parentElement,
+      originNext: card.nextSibling,
+      originStatus: card.getAttribute('data-status'),
+      placeholder: null
+    };
+  });
+
+  document.addEventListener('pointermove', function (e) {
+    if (!drag || e.pointerId !== drag.pointerId) return;
+    var dx = e.clientX - drag.startX;
+    var dy = e.clientY - drag.startY;
+    if (!drag.active) {
+      if (dx * dx + dy * dy < 16) return;
+      drag.active = true;
+      document.body.classList.add('is-order-dragging');
+      var draggedCard = drag.card;
+      draggedCard.addEventListener('click', function suppressClick(ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        draggedCard.removeEventListener('click', suppressClick, true);
+      }, true);
+      var placeholder = document.createElement('div');
+      placeholder.className = 'order-card__placeholder';
+      placeholder.style.height = drag.card.offsetHeight + 'px';
+      drag.placeholder = placeholder;
+      drag.originParent.insertBefore(placeholder, drag.card);
+      drag.card.style.width = drag.card.offsetWidth + 'px';
+      drag.card.classList.add('is-floating');
+      document.body.appendChild(drag.card);
+    }
+    drag.card.style.left = (e.clientX - drag.dx) + 'px';
+    drag.card.style.top = (e.clientY - drag.dy) + 'px';
+    var list = columnFromPoint(e.clientX, e.clientY);
+    if (list) placePlaceholder(list, e.clientY, drag.placeholder);
+    setOver(list);
+    autoScroll(e.clientX, e.clientY, list);
+    e.preventDefault();
+  });
+
+  function onPointerEnd(e) {
+    if (!drag || (e.pointerId !== undefined && e.pointerId !== drag.pointerId)) return;
+    endDrag(!!drag.active);
+  }
+  document.addEventListener('pointerup', onPointerEnd);
+  document.addEventListener('pointercancel', function (e) {
+    if (!drag || e.pointerId !== drag.pointerId) return;
+    endDrag(false);
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && drag && drag.active) {
+      e.preventDefault();
+      endDrag(false);
+    }
+  });
+
+  var htmlDrag = null;
+
+  function listFromTarget(target) {
+    if (!target || !target.closest) return null;
+    var list = target.closest('.orders-board__list');
+    if (list && board.contains(list)) return list;
+    var col = target.closest('.orders-board__col');
+    return col ? col.querySelector('.orders-board__list') : null;
+  }
+
+  function saveStatus(card, originParent, originNext, originStatus, nextStatus) {
+    card.setAttribute('data-status', nextStatus);
+    card.classList.add('is-saving');
+    updateCounts();
+    saving = true;
+    var body = new URLSearchParams();
+    body.set('status', nextStatus);
+    body.set('csrfmiddlewaretoken', csrf);
+    fetch(card.getAttribute('data-status-url'), {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': csrf,
+        'X-Requested-With': 'XMLHttpRequest',
+        'Accept': 'application/json'
+      },
+      body: body,
+      credentials: 'same-origin'
+    }).then(function (res) {
+      var type = res.headers.get('content-type') || '';
+      if (type.indexOf('application/json') === -1) throw new Error('Could not update status.');
+      return res.json().then(function (data) {
+        if (!res.ok || !data.ok) throw new Error((data && data.error) || 'Could not update status.');
+        return data;
+      });
+    }).then(function () {
+      clearError();
+    }).catch(function (err) {
+      restoreCard(card, originParent, originNext, null);
+      card.setAttribute('data-status', originStatus);
+      showError(err && err.message ? err.message : 'Could not update status.');
+    }).finally(function () {
+      card.classList.remove('is-saving');
+      saving = false;
+    });
+  }
+
+  board.addEventListener('dragstart', function (e) {
+    var card = e.target.closest && e.target.closest('.order-card');
+    if (!card || !board.contains(card) || saving) {
+      e.preventDefault();
+      return;
+    }
+    if (e.target.closest('button, input, select, textarea')) {
+      e.preventDefault();
+      return;
+    }
+    htmlDrag = {
+      card: card,
+      originParent: card.parentElement,
+      originNext: card.nextSibling,
+      originStatus: card.getAttribute('data-status')
+    };
+    card.classList.add('is-dragging');
+    if (e.dataTransfer) {
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', card.getAttribute('data-order-id') || '');
+    }
+  });
+
+  board.addEventListener('dragover', function (e) {
+    if (!htmlDrag) return;
+    var list = listFromTarget(e.target);
+    if (!list) return;
+    e.preventDefault();
+    if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+    setOver(list);
+    htmlDrag.list = list;
+  });
+
+  board.addEventListener('drop', function (e) {
+    if (!htmlDrag) return;
+    e.preventDefault();
+    var state = htmlDrag;
+    var list = listFromTarget(e.target) || state.list;
+    var col = list ? list.closest('.orders-board__col') : null;
+    var nextStatus = col ? col.getAttribute('data-status') : '';
+    state.card.classList.remove('is-dragging');
+    setOver(null);
+    htmlDrag = null;
+    if (!list || !nextStatus || nextStatus === state.originStatus) return;
+    var after = null;
+    var cards = list.querySelectorAll('.order-card');
+    for (var i = 0; i < cards.length; i++) {
+      var rect = cards[i].getBoundingClientRect();
+      if (e.clientY < rect.top + rect.height / 2) {
+        after = cards[i];
+        break;
+      }
+    }
+    if (after) list.insertBefore(state.card, after);
+    else list.appendChild(state.card);
+    saveStatus(state.card, state.originParent, state.originNext, state.originStatus, nextStatus);
+  });
+
+  board.addEventListener('dragend', function () {
+    if (htmlDrag && htmlDrag.card) htmlDrag.card.classList.remove('is-dragging');
+    htmlDrag = null;
+    setOver(null);
+  });
 })();
 </script>
 {% endblock %}

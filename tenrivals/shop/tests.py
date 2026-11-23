@@ -1197,3 +1197,47 @@ class SalesOrderPaymentTests(TestCase):
         self.assertContains(resp, 'Due 335.00')
         resp = self.client.get(url, {'q': 'R-1001'})
         self.assertContains(resp, '2026-000900')
+
+    def test_orders_board_groups_cards_by_status(self):
+        url = reverse('administration:staff_sales_orders')
+        resp = self.client.get(url, {'view': 'board'})
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'orders-board')
+        self.assertContains(resp, 'data-status="CONFIRMED"')
+        self.assertContains(resp, '2026-000900')
+        self.assertContains(resp, 'Drop here')
+        self.assertNotContains(resp, 'role="table"')
+        self.assertContains(resp, 'name="view" value="board"')
+
+    def test_set_status_json_for_board_drag(self):
+        url = reverse(
+            'administration:staff_sales_order_set_status',
+            kwargs={'pk': self.order.pk},
+        )
+        resp = self.client.post(
+            url,
+            {'status': SalesOrder.Status.SHIPPED},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+            HTTP_ACCEPT='application/json',
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertTrue(resp.json()['ok'])
+        self.assertEqual(resp.json()['status'], SalesOrder.Status.SHIPPED)
+        self.order.refresh_from_db()
+        self.assertEqual(self.order.status, SalesOrder.Status.SHIPPED)
+
+        bad = self.client.post(
+            url,
+            {'status': 'NOT_A_STATUS'},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+            HTTP_ACCEPT='application/json',
+        )
+        self.assertEqual(bad.status_code, 400)
+        self.assertFalse(bad.json()['ok'])
+        self.order.refresh_from_db()
+        self.assertEqual(self.order.status, SalesOrder.Status.SHIPPED)
+
+        form = self.client.post(url, {'status': SalesOrder.Status.COMPLETED})
+        self.assertEqual(form.status_code, 302)
+        self.order.refresh_from_db()
+        self.assertEqual(self.order.status, SalesOrder.Status.COMPLETED)

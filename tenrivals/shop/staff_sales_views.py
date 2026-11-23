@@ -6,6 +6,7 @@ import calendar
 import json
 from datetime import date
 from decimal import Decimal
+from urllib.parse import urlencode
 
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
@@ -17,6 +18,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.db import IntegrityError, transaction
 from django.db.models import Exists, OuterRef, Prefetch, Q
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
@@ -663,11 +665,34 @@ def staff_sales_orders(request):
     seq_year_options = list(range(today_y - 4, today_y + 7))
     max_seq = max_issued_invoice_seq_for_year(seq_year)
     month_choices = [(m, calendar.month_name[m]) for m in range(1, 13)]
+    report_year = _safe_int(request.GET.get('report_year'), date.today().year, 1990, 2100)
+    report_month = _safe_int(request.GET.get('report_month'), date.today().month, 1, 12)
+    view_mode = 'board' if (request.GET.get('view') or '').strip().lower() == 'board' else 'list'
+    orders = list(qs[:500])
+    query = {
+        'seq_year': str(seq_year),
+        'report_year': str(report_year),
+        'report_month': str(report_month),
+    }
+    if q:
+        query['q'] = q
+    if sort != 'date':
+        query['sort'] = sort
+    if payment:
+        query['payment'] = payment
+    if missing_cost:
+        query['missing_cost'] = '1'
+    board_query = dict(query)
+    board_query['view'] = 'board'
     return render(
         request,
         'shop/staff/sales_orders_list.html',
         {
-            'orders': qs[:500],
+            'orders': orders,
+            'status_columns': _sales_order_status_columns(orders),
+            'view_mode': view_mode,
+            'orders_list_qs': urlencode(query),
+            'orders_board_qs': urlencode(board_query),
             'search_q': q,
             'sort': sort,
             'payment_filter': payment,
@@ -682,14 +707,33 @@ def staff_sales_orders(request):
             'peek_next_invoice': peek_next_invoice_number(seq_year),
             'max_issued_seq': max_seq,
             'month_choices': month_choices,
-            'report_year': _safe_int(
-                request.GET.get('report_year'), date.today().year, 1990, 2100
-            ),
-            'report_month': _safe_int(
-                request.GET.get('report_month'), date.today().month, 1, 12
-            ),
+            'report_year': report_year,
+            'report_month': report_month,
         },
     )
+
+
+def _sales_order_status_columns(orders):
+    """Kanban columns in workflow order. Empty statuses stay so cards can be dropped there."""
+    grouped = {code: [] for code, _label in SalesOrder.Status.choices}
+    for order in orders:
+        grouped.setdefault(order.status, []).append(order)
+    columns = [
+        {'code': code, 'label': label, 'orders': grouped.get(code, [])}
+        for code, label in SalesOrder.Status.choices
+    ]
+    known = {code for code, _label in SalesOrder.Status.choices}
+    for code, items in grouped.items():
+        if code not in known and items:
+            columns.append({'code': code, 'label': code, 'orders': items})
+    return columns
+
+
+def _orders_status_wants_json(request) -> bool:
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return True
+    accept = (request.headers.get('Accept') or '').lower()
+    return 'application/json' in accept
 
 
 def _safe_int(raw, default: int, lo: int, hi: int) -> int:
@@ -1145,9 +1189,16 @@ def staff_sales_order_set_status(request, pk):
     order = get_object_or_404(SalesOrder, pk=pk)
     raw = (request.POST.get('status') or '').strip()
     valid = {c[0] for c in SalesOrder.Status.choices}
-    if raw not in valid:
-        messages.error(request, 'Invalid status.')
+    wants_json = _orders_status_wants_json(request)
+
+    def fail(message):
+        if wants_json:
+            return JsonResponse({'ok': False, 'error': message}, status=400)
+        messages.error(request, message)
         return redirect('administration:staff_sales_orders')
+
+    if raw not in valid:
+        return fail('Invalid status.')
     try:
         send_customer_confirmed = False
         with transaction.atomic():
@@ -1182,10 +1233,17 @@ def staff_sales_order_set_status(request, pk):
             if raw == SalesOrder.Status.CONFIRMED and old != SalesOrder.Status.CONFIRMED:
                 send_customer_confirmed = True
     except Exception as e:
-        messages.error(request, f'Could not update status: {e}')
-        return redirect('administration:staff_sales_orders')
+        return fail(f'Could not update status: {e}')
     if send_customer_confirmed:
         _send_customer_order_confirmed_email(locked)
+    if wants_json:
+        return JsonResponse(
+            {
+                'ok': True,
+                'status': locked.status,
+                'status_label': locked.get_status_display(),
+            }
+        )
     messages.success(request, 'Status updated.')
     return redirect('administration:staff_sales_orders')
 
