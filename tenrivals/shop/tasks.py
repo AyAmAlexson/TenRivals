@@ -3,7 +3,11 @@ from celery import shared_task
 
 @shared_task(ignore_result=True)
 def build_image_rendition(source_name: str):
-    """Build WebP width variants for one stored storefront image."""
+    """Build WebP variants for one stored photo.
+
+    Page views do not enqueue this. Staff saves build inline, and the backlog
+    of existing photos is ``build_image_renditions``.
+    """
     from .responsive_images import build_rendition
 
     return build_rendition(source_name)

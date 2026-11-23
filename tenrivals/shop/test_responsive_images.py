@@ -31,7 +31,6 @@ class ResponsiveImageTests(TestCase):
 
         responsive_images._read_pause_until = 0.0
         responsive_images._write_pause_until = 0.0
-        responsive_images._broker_failed = False
 
     def test_build_writes_widths_under_the_source(self):
         default_storage.save('shop/products/racket.jpg', ContentFile(_jpeg(1000, 800)))
@@ -125,6 +124,32 @@ class ResponsiveImageTests(TestCase):
             rendition = image_rendition(_Named('shop/products/oom-hit.jpg'), default_width=640)
         self.assertIn('640.webp', rendition.src)
         self.assertIn('640w', rendition.srcset)
+
+    @override_settings(SHOP_BUILD_IMAGE_RENDITIONS=True)
+    def test_storefront_lookup_does_not_enqueue(self):
+        default_storage.save('shop/products/browse.jpg', ContentFile(_jpeg(400, 400)))
+        with patch('shop.tasks.build_image_rendition.delay') as delay:
+            rendition = image_rendition(_Named('shop/products/browse.jpg'))
+        delay.assert_not_called()
+        self.assertIn('browse.jpg', rendition.src)
+        self.assertEqual(rendition.srcset, '')
+
+    @override_settings(SHOP_BUILD_IMAGE_RENDITIONS=True)
+    def test_saved_image_is_built_without_the_queue(self):
+        from shop.responsive_images import schedule_saved_images
+
+        default_storage.save('shop/products/saved.jpg', ContentFile(_jpeg(400, 300)))
+        product = Product(
+            type=ProductType.BALLS,
+            name='Saved ball',
+            initial_price='10.00',
+            image_1='shop/products/saved.jpg',
+        )
+        with patch('shop.tasks.build_image_rendition.delay') as delay:
+            schedule_saved_images(product, ('image_1',))
+        delay.assert_not_called()
+        rendition = image_rendition(_Named('shop/products/saved.jpg'), default_width=320)
+        self.assertIn('320.webp', rendition.src)
 
     @override_settings(SHOP_BUILD_IMAGE_RENDITIONS=True)
     def test_full_redis_does_not_enqueue_a_build_storm(self):

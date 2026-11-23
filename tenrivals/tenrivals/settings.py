@@ -271,8 +271,8 @@ else:
     os.makedirs(MEDIA_ROOT, exist_ok=True)
 
 
-# Storefront pages enqueue WebP variants onto the Celery worker.
-# Tests must not open the broker while rendering a template.
+# Saved photos build WebP variants in the request that stored them.
+# Tests skip that work. Public pages never enqueue it.
 import sys as _sys
 
 _RUNNING_TESTS = 'test' in _sys.argv

@@ -1,8 +1,8 @@
 """Width-limited WebP copies for storefront images.
 
-HTML render must not open the original file. Variants are built on the Celery
-worker (or by ``build_image_renditions``) and recorded in StoredImageRendition.
-Until that row exists, the template keeps the original URL.
+HTML render must not open the original file and must not enqueue work. Variants
+are built when a photo is saved, or by ``build_image_renditions``, and recorded
+in StoredImageRendition. Until that row exists, the template keeps the original URL.
 """
 
 from __future__ import annotations
@@ -27,7 +27,6 @@ _LONGEST_SIDE = 2000
 _WEBP_QUALITY = 76
 _CACHE_TTL = 60 * 60 * 24
 _MISS_TTL = 90
-_LOCK_TTL = 60 * 15
 _SKIP_EXTENSIONS = ('.svg', '.gif')
 _RASTER_EXTENSIONS = ('.jpg', '.jpeg', '.png', '.webp', '.bmp', '.tif', '.tiff')
 
@@ -35,8 +34,6 @@ PRODUCT_IMAGE_FIELDS = ('image_1', 'image_2', 'image_3', 'image_4', 'image_5')
 
 _POS = 'img-rendition:v1:'
 _NEG = 'img-rendition-miss:v1:'
-_LOCK = 'img-rendition-lock:v1:'
-_broker_failed = False
 _read_pause_until = 0.0
 _write_pause_until = 0.0
 _CACHE_PAUSE = 30.0
@@ -99,29 +96,20 @@ def image_rendition(image, default_width: int = 960) -> ImageRendition | None:
 
 
 def schedule_build(source_name: str) -> None:
-    """Enqueue one build. No-op when renditions are disabled, already stored, or already queued."""
-    global _broker_failed
+    """Build one photo that was just saved. Never call this from a page render.
+
+    A page view used to enqueue ``build_image_rendition`` for every missing
+    picture. Those messages have no expiry and filled the Redis broker.
+    """
     name = (source_name or '').strip()
-    if (
-        not name
-        or _broker_failed
-        or not getattr(settings, 'SHOP_BUILD_IMAGE_RENDITIONS', False)
-    ):
+    if not name or not getattr(settings, 'SHOP_BUILD_IMAGE_RENDITIONS', False):
         return
     if _extension(name) in _SKIP_EXTENSIONS or _extension(name) not in _RASTER_EXTENSIONS:
         return
-    if _cached_meta(name) is not None:
-        return
-    if not _cache_add(_LOCK + name, 1, _LOCK_TTL):
-        return
     try:
-        from shop.tasks import build_image_rendition
-
-        build_image_rendition.delay(name)
+        build_rendition(name)
     except Exception:
-        _broker_failed = True
-        _cache_delete(_LOCK + name)
-        logger.exception('Could not enqueue image rendition for %s', name)
+        logger.exception('Could not build image rendition for %s', name)
 
 
 def schedule_saved_images(instance, field_names) -> None:
@@ -163,7 +151,6 @@ def build_rendition(source_name: str, *, force: bool = False) -> str:
     if not force:
         current = _row_meta(name)
         if current and int(current.get('version') or 0) == RENDITION_VERSION:
-            cache.delete(_LOCK + name)
             return 'skipped'
 
     try:
@@ -224,10 +211,8 @@ def _lookup(name: str) -> dict | None:
     meta = _row_meta(name)
     if meta is None:
         _cache_set(_NEG + name, 1, _MISS_TTL)
-        schedule_build(name)
         return None
     if int(meta.get('version') or 0) != RENDITION_VERSION:
-        schedule_build(name)
         return None
     _cache_set(_POS + name, meta, _CACHE_TTL)
     return meta
@@ -278,17 +263,6 @@ def _cache_set(key: str, value, timeout: int) -> None:
         _pause_cache('write')
 
 
-def _cache_add(key: str, value, timeout: int) -> bool:
-    """False when the lock is already held or Redis rejects the write."""
-    if time.monotonic() < _write_pause_until:
-        return False
-    try:
-        return bool(cache.add(key, value, timeout))
-    except Exception:
-        _pause_cache('write')
-        return False
-
-
 def _cache_delete(key: str) -> None:
     try:
         cache.delete(key)
@@ -327,7 +301,6 @@ def _store(name: str, width: int, height: int, variants: dict) -> None:
         },
     )
     _cache_delete(_NEG + name)
-    _cache_delete(_LOCK + name)
     _cache_set(
         _POS + name,
         {
