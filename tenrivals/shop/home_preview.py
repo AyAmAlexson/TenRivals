@@ -195,8 +195,8 @@ def _aurora(loc) -> dict:
             'label': _('Order for me'),
         },
         'secondary': {
-            'href': shop_reverse('shop:preorder', site_locale=loc),
-            'label': _('Browse preorder'),
+            'href': shop_reverse('shop:info_payment', site_locale=loc),
+            'label': _('Delivery and payment'),
         },
     }
 

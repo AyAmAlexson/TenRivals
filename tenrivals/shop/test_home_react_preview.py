@@ -30,6 +30,8 @@ class HomeReactPreviewTests(TestCase):
         self.assertContains(response, 'id="home-preview-data"')
         self.assertContains(response, 'Pre-order gear from the US and EU')
         self.assertContains(response, 'Order for me')
+        self.assertContains(response, 'Delivery and payment')
+        self.assertNotContains(response, 'Browse preorder')
         self.assertNotContains(response, 'rel="canonical"')
 
     def test_robots_txt_disallows_the_preview(self):

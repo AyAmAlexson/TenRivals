@@ -203,9 +203,13 @@ a.cat-seg.glare-hover{
   min-width:0;
   padding:10px;
   border-radius:0;
-  background:#fff;
   border:1px solid var(--seg-border);
   overflow:hidden;
+}
+a.cat-seg.glare-hover:hover,
+a.cat-seg.glare-hover:focus-visible{
+  background:var(--seg);
+  color:#fff;
 }
 .glare-hover{position:relative; isolation:isolate}
 .glare-hover__glare{
