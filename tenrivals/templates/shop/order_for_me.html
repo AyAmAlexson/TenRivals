@@ -6,12 +6,29 @@
   .ofm-hero{max-width:980px; margin:0 auto 18px}
   .ofm-title{font-size:clamp(18px,2.4vw,24px); line-height:1.12; margin:0 0 10px; font-weight:800; text-transform:uppercase; letter-spacing:.06em}
   .ofm-sub{font-size:16px; line-height:1.55; color:var(--muted); margin:0; font-weight:400; text-transform:none}
-  .ofm-glance{list-style:none; margin:20px 0 0; padding:0; display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:14px}
-  .ofm-glance__item{display:flex; align-items:center; gap:8px; min-width:0}
-  .ofm-glance__n{flex:none; font-size:13px; font-weight:800; letter-spacing:.04em; line-height:1; color:var(--accent)}
-  .ofm-glance__icon{flex:none; width:36px; height:36px; display:grid; place-items:center; background:var(--accent); color:#fff}
-  .ofm-glance__icon svg{width:18px; height:18px; display:block}
-  .ofm-glance__label{font-size:12px; font-weight:800; letter-spacing:.04em; line-height:1.2; text-transform:uppercase; color:var(--ink)}
+  .ofm-glance{
+    list-style:none; margin:22px 0 0; padding:18px 12px 16px;
+    display:grid; grid-template-columns:repeat(3,minmax(0,1fr));
+    background:#fff; border:1px solid var(--line);
+  }
+  .ofm-glance__item{display:flex; flex-direction:column; align-items:center; text-align:center; min-width:0}
+  .ofm-glance__n{font-size:12px; font-weight:800; letter-spacing:.14em; line-height:1; color:var(--accent); margin-bottom:10px}
+  .ofm-glance__rail{position:relative; width:100%; height:64px; display:flex; align-items:center; justify-content:center; margin-bottom:12px}
+  .ofm-glance__item:not(:first-child) .ofm-glance__rail::before,
+  .ofm-glance__item:not(:last-child) .ofm-glance__rail::after{
+    content:""; position:absolute; top:50%; height:2px; background:#e5e7eb; transform:translateY(-50%);
+  }
+  .ofm-glance__item:not(:first-child) .ofm-glance__rail::before{left:0; right:50%; margin-right:40px}
+  .ofm-glance__item:not(:last-child) .ofm-glance__rail::after{left:50%; right:0; margin-left:40px}
+  .ofm-glance__icon{
+    width:64px; height:64px; background:var(--accent); color:#fff;
+    display:grid; place-items:center; position:relative; z-index:1;
+  }
+  .ofm-glance__icon svg{width:28px; height:28px; display:block}
+  .ofm-glance__label{
+    max-width:210px; font-size:14px; font-weight:800; letter-spacing:.05em; line-height:1.25;
+    text-transform:uppercase; color:var(--ink);
+  }
   .ofm-notes{max-width:980px; margin:36px auto 0}
   .ofm-notes__title{margin:0 0 14px; font-family:inherit; font-size:13px; font-weight:800; letter-spacing:.08em; text-transform:uppercase}
   .ofm-notes__list{list-style:none; margin:0; padding:0; display:grid; gap:14px}
@@ -47,8 +64,14 @@
   .ofm-modal__title{margin:0 0 10px; font-size:15px; font-weight:800; text-transform:uppercase; letter-spacing:.06em}
   .ofm-modal__text{margin:0 0 14px; font-size:14px; color:var(--muted); line-height:1.55}
   .ofm-modal__actions{display:flex; gap:8px; flex-wrap:wrap}
-  @media(max-width:900px){
-    .ofm-glance{grid-template-columns:1fr; gap:10px}
+  @media(max-width:640px){
+    .ofm-glance{grid-template-columns:1fr; gap:14px; padding:16px}
+    .ofm-glance__item{flex-direction:row; align-items:center; text-align:left; gap:12px}
+    .ofm-glance__n{margin:0; width:28px; flex:none}
+    .ofm-glance__rail{width:56px; height:56px; flex:none; margin:0}
+    .ofm-glance__icon{width:56px; height:56px}
+    .ofm-glance__rail::before,.ofm-glance__rail::after{display:none}
+    .ofm-glance__label{max-width:none}
   }
   @media(max-width:760px){
     .ofm-page{margin:0 -20px; padding:24px 20px 44px}
@@ -65,28 +88,24 @@
     <ol class="ofm-glance" aria-label="How it works">
       <li class="ofm-glance__item">
         <span class="ofm-glance__n">01</span>
-        <span class="ofm-glance__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.07 0l1.42-1.41a5 5 0 0 0-7.08-7.08L10.5 5.4"/><path d="M14 11a5 5 0 0 0-7.07 0L5.5 12.43a5 5 0 0 0 7.08 7.07L13.5 18.6"/></svg></span>
-        <span class="ofm-glance__label">Send links</span>
+        <div class="ofm-glance__rail">
+          <span class="ofm-glance__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.07 0l1.42-1.41a5 5 0 0 0-7.08-7.08L10.5 5.4"/><path d="M14 11a5 5 0 0 0-7.07 0L5.5 12.43a5 5 0 0 0 7.08 7.07L13.5 18.6"/></svg></span>
+        </div>
+        <span class="ofm-glance__label">Send us links</span>
       </li>
       <li class="ofm-glance__item">
         <span class="ofm-glance__n">02</span>
-        <span class="ofm-glance__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M12 8v5l3 2"/></svg></span>
-        <span class="ofm-glance__label">Get a quote</span>
+        <div class="ofm-glance__rail">
+          <span class="ofm-glance__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>
+        </div>
+        <span class="ofm-glance__label">The price is fixed</span>
       </li>
       <li class="ofm-glance__item">
         <span class="ofm-glance__n">03</span>
-        <span class="ofm-glance__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>
-        <span class="ofm-glance__label">Fixed price</span>
-      </li>
-      <li class="ofm-glance__item">
-        <span class="ofm-glance__n">04</span>
-        <span class="ofm-glance__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h11v8H3z"/><path d="M14 10h4l3 3v2h-7z"/><circle cx="7" cy="18" r="1.6"/><circle cx="17" cy="18" r="1.6"/></svg></span>
-        <span class="ofm-glance__label">21 days</span>
-      </li>
-      <li class="ofm-glance__item">
-        <span class="ofm-glance__n">05</span>
-        <span class="ofm-glance__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13"/><path d="M3 10h18"/></svg></span>
-        <span class="ofm-glance__label">Pay on delivery</span>
+        <div class="ofm-glance__rail">
+          <span class="ofm-glance__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M12 8v5l3 2"/></svg></span>
+        </div>
+        <span class="ofm-glance__label">±21 days waiting time</span>
       </li>
     </ol>
   </section>
