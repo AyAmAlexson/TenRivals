@@ -23,6 +23,7 @@ app_name = 'shop'
 urlpatterns = [
     path('', _v(views.index), name='index'),
     path('pilot/home/', _v(views.home_react_preview), name='home_react_preview'),
+    path('pilot/story/', _v(views.company_story), name='company_story'),
     path('product/<int:pk>/', _v(views.product_detail), name='product_detail'),
     path('cart/', _v(views.cart), name='cart'),
     path('cart/add/', _v(views.cart_add), name='cart_add'),

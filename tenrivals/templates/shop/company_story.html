@@ -1,0 +1,313 @@
+{% load static catalog_tags i18n %}
+<!doctype html>
+<html lang="{{ shop_html_lang|default:'en' }}">
+<head>
+  {% include 'includes/google_tag_gtag.html' %}
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% trans "Tennis Rivals | Who we are" %}</title>
+  <meta name="robots" content="noindex, nofollow, noarchive">
+  <meta name="googlebot" content="noindex, nofollow, noarchive">
+  <meta name="description" content="{% trans 'A player-run tennis shop in Tbilisi. Curated gear, official receipts, free city delivery, and preorders from the US and EU.' %}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Saira:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="icon" href="{% static 'assets/img/favicon.png' %}">
+  <link href="{% static 'css/styles.css' %}" rel="stylesheet">
+  <link href="{% static 'css/company-story.css' %}" rel="stylesheet">
+  <style>
+    :root{
+      --accent:#B20009;
+      --accent-dark:#8E0007;
+      --ink:#1a1a1a;
+      --muted:#64748b;
+      --line:#e5e7eb;
+      --bg:#fff;
+    }
+    *{box-sizing:border-box; margin:0; padding:0}
+    body{font-family:'Saira', system-ui, -apple-system, sans-serif; font-weight:400; color:var(--ink); background:var(--bg)}
+    a{color:inherit; text-decoration:none}
+    img{display:block; max-width:100%}
+    .container{max-width:1200px; margin:0 auto; padding:0 20px}
+    {% include 'shop/includes/shop_public_header_styles.html' %}
+  </style>
+</head>
+<body>
+{% include 'includes/google_tag_manager_body.html' %}
+{% include 'shop/includes/shop_public_site_header.html' %}
+
+<main class="tr-story">
+  <section class="tr-hero">
+    <img class="tr-hero__photo" src="{% static 'assets/img/story/story-court.jpg' %}" alt="{% trans 'Clay court line and a tennis ball' %}">
+    <div class="tr-hero__scrim" aria-hidden="true"></div>
+    <div class="tr-wrap tr-hero__grid">
+      <div>
+        <p class="tr-kicker">{% trans "Tennis Rivals · Tbilisi" %}</p>
+        <h1>{% trans "The line for your growth" %}</h1>
+        <p class="tr-lead">{% trans "A shop built by players, for the next point. We edit the shelf, prove the gear is real, and put it on the court in Tbilisi." %}</p>
+        <div class="tr-actions">
+          <a class="tr-btn" href="{% shop_url 'shop:stock' %}">{% trans "Shop in stock" %}</a>
+          <a class="tr-btn tr-btn--ghost" href="#why">{% trans "Why buy here" %}</a>
+        </div>
+        <div class="tr-chips" aria-label="{% trans 'Store highlights' %}">
+          <span class="tr-chip">{% trans "Player-first" %}</span>
+          <span class="tr-chip">{% trans "Official receipt" %}</span>
+          <span class="tr-chip">{% trans "Free in Tbilisi" %}</span>
+          <span class="tr-chip">{% trans "US and EU preorder" %}</span>
+        </div>
+      </div>
+      <div class="tr-hero__collage" aria-hidden="true">
+        <div class="tr-frame tr-frame--back">
+          <img src="{% static 'assets/img/illustrations/ball_on_court_3.png' %}" alt="">
+        </div>
+        <div class="tr-frame tr-frame--front">
+          <img src="{% static 'assets/img/story/story-strings.jpg' %}" alt="">
+        </div>
+        <img class="tr-hero__sticker" src="{% static 'assets/img/tr-sticker.png' %}" alt="">
+      </div>
+    </div>
+    <div class="tr-wave" style="color:#f6f1ea" aria-hidden="true">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144.54 17.34" preserveAspectRatio="none" fill="currentColor"><path d="M144.54,17.34H0V0H144.54ZM0,0S32.36,17.34,72.27,17.34,144.54,0,144.54,0"></path></svg>
+    </div>
+  </section>
+
+  <section class="tr-values" id="values" aria-labelledby="values-title">
+    <div class="tr-wrap">
+      <div class="tr-section-head">
+        <p class="tr-kicker">{% trans "What we stand for" %}</p>
+        <h2 id="values-title">{% trans "Four lines we do not cross" %}</h2>
+        <p class="tr-lead">{% trans "Tennis Rivals is the retail side of a tennis community in Georgia. The values are the reason the shelf looks the way it does." %}</p>
+      </div>
+      <div class="tr-values__grid">
+        <article class="tr-value">
+          <div class="tr-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="8" r="3"/><path d="M5 19c1.4-3 3.8-4.5 7-4.5S17.6 16 19 19"/></svg>
+          </div>
+          <h3>{% trans "Players first" %}</h3>
+          <p>{% trans "We play the same courts you do: Mziuri, Raketo, City Sport. Advice comes from a session, not from a script." %}</p>
+        </article>
+        <article class="tr-value">
+          <div class="tr-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 7h16M4 12h10M4 17h13"/></svg>
+          </div>
+          <h3>{% trans "A filter, not a warehouse" %}</h3>
+          <p>{% trans "Wilson, HEAD, Babolat, Solinco, Prince, Toroline. A frame earns a place only when it makes sense for a real game here." %}</p>
+        </article>
+        <article class="tr-value">
+          <div class="tr-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M7 3h8l4 4v14H7z"/><path d="M15 3v5h5M9 13h6M9 17h4"/></svg>
+          </div>
+          <h3>{% trans "In the white" %}</h3>
+          <p>{% trans "Every sale includes an official fiscal receipt. We buy from distributors and trusted retailers. Grey imports do not make the shelf." %}</p>
+        </article>
+        <article class="tr-value">
+          <div class="tr-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 8h13l3 4v5H3z"/><circle cx="7.5" cy="17.5" r="1.5"/><circle cx="16.5" cy="17.5" r="1.5"/></svg>
+          </div>
+          <h3>{% trans "Fair at the door" %}</h3>
+          <p>{% trans "In-stock orders are delivered free inside Tbilisi. Unsure of a shoe size? We bring two. You pay for the one that fits." %}</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="tr-who" id="who" aria-labelledby="who-title">
+    <div class="tr-wrap tr-who__grid">
+      <div class="tr-skew">
+        <div class="tr-skew__block" aria-hidden="true"></div>
+        <img class="tr-skew__photo" src="{% static 'assets/img/story/story-grip.jpg' %}" alt="{% trans 'Hands wrapping a fresh overgrip' %}">
+        <div class="tr-skew__cap">
+          <strong>{% trans "Online-first" %}</strong>
+          <span>{% trans "So the price stays honest and the delivery stays fast." %}</span>
+        </div>
+      </div>
+      <div class="tr-who__copy">
+        <p class="tr-kicker">{% trans "Who we are" %}</p>
+        <h2 id="who-title">{% trans "A shop that still plays" %}</h2>
+        <p>{% trans "Tennis in Georgia is growing. Tennis Rivals grew with it: players who got tired of guessing which frame was real, which shoe would survive clay, and which shop would still answer after the payment." %}</p>
+        <p>{% trans "We stay online-first. When you want to hold a racket before you buy, we meet you at a court in the city. The gear is the product. The conversation is how you pick it." %}</p>
+        <div class="tr-facts">
+          <div class="tr-fact">
+            <b>{% trans "Tbilisi" %}</b>
+            <span>{% trans "Local delivery, local courts, a shop you can actually reach." %}</span>
+          </div>
+          <div class="tr-fact">
+            <b>{% trans "Registered" %}</b>
+            <span>{% trans "A legal retail channel in Georgia, with fiscal documentation on the sale." %}</span>
+          </div>
+          <div class="tr-fact">
+            <b>{% trans "Edited shelf" %}</b>
+            <span>{% trans "Rackets, shoes, strings, and the small things that change a session." %}</span>
+          </div>
+          <div class="tr-fact">
+            <b>{% trans "The long order" %}</b>
+            <span>{% trans "If it is not in the city yet, we quote the import and bring it in." %}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="tr-brands" aria-label="{% trans 'Brands on the shelf' %}">
+    <div class="tr-wrap tr-brands__row">
+      <p class="tr-brands__label">{% trans "On the shelf now" %}</p>
+      <div class="tr-brands__logos">
+        {% for brand in featured_stock_brands %}
+        <a href="{% shop_url 'shop:stock' %}?cbrand={{ brand.stock_brand|urlencode }}" title="{{ brand.label }}">
+          <img src="{% static brand.logo %}" alt="{{ brand.label }}">
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <section class="tr-why" id="why" aria-labelledby="why-title">
+    <div class="tr-wrap">
+      <div class="tr-section-head">
+        <p class="tr-kicker">{% trans "Why buy at Tennis Rivals" %}</p>
+        <h2 id="why-title">{% trans "The next session needs a better tool" %}</h2>
+        <p class="tr-lead">{% trans "Professional gear should not be a luxury you wait on. It should be the line you trust on Thursday night." %}</p>
+      </div>
+
+      <article class="tr-split">
+        <div class="tr-split__media">
+          <img src="{% static 'assets/img/story/story-strings.jpg' %}" alt="{% trans 'Two balls resting in a string bed' %}">
+        </div>
+        <div class="tr-split__body">
+          <div class="tr-split__index">{% trans "01 · The shelf" %}</div>
+          <h3>{% trans "Already edited for this city" %}</h3>
+          <p>{% trans "We do not list every frame on the market. From a Wilson Blade to a spin frame like the Solinco Whiteout, the gear here is picked for players from NTRP 2.5 upward, on the courts we actually use." %}</p>
+          <a class="tr-textlink" href="{% shop_url 'shop:stock_catalog_type' 'rackets' %}">{% trans "Browse rackets" %}</a>
+        </div>
+      </article>
+
+      <article class="tr-split tr-split--flip">
+        <div class="tr-split__media">
+          <img src="{% static 'assets/img/story/story-shoes.jpg' %}" alt="{% trans 'Tennis shoes on a clay court line' %}">
+        </div>
+        <div class="tr-split__body">
+          <div class="tr-split__index">{% trans "02 · The feet" %}</div>
+          <h3>{% trans "Shoes that belong on clay" %}</h3>
+          <p>{% trans "Movement is the point. We carry clay and hard-court shoes and help you read the size before you commit. If you are between sizes, we bring both. You keep the pair that holds the slide." %}</p>
+          <a class="tr-textlink" href="{% shop_url 'shop:stock_catalog_type' 'mens-shoes' %}">{% trans "Browse shoes" %}</a>
+        </div>
+      </article>
+
+      <article class="tr-split">
+        <div class="tr-split__media">
+          <img src="{% static 'assets/img/story/story-grip.jpg' %}" alt="{% trans 'A fresh overgrip going on a racket handle' %}">
+        </div>
+        <div class="tr-split__body">
+          <div class="tr-split__index">{% trans "03 · The proof" %}</div>
+          <h3>{% trans "The paperwork is part of the gear" %}</h3>
+          <p>{% trans "A Tennis Rivals purchase is a legal sale in Georgia. The fiscal receipt is your proof of authenticity, and the return rules are written down. You are not buying a suitcase special." %}</p>
+          <a class="tr-textlink" href="{% shop_url 'shop:legal_company' %}">{% trans "Company details" %}</a>
+        </div>
+      </article>
+
+      <article class="tr-split tr-split--flip">
+        <div class="tr-split__media">
+          <img src="{% static 'assets/img/story/story-court.jpg' %}" alt="{% trans 'Late light on a clay court' %}">
+        </div>
+        <div class="tr-split__body">
+          <div class="tr-split__index">{% trans "04 · The long order" %}</div>
+          <h3>{% trans "If it is not in Tbilisi, we still get it" %}</h3>
+          <p>{% trans "A rare grip, a limited frame, a shoe from a US or EU warehouse: send the link. We quote shipping and customs, handle the paperwork, and you pay locally when it arrives." %}</p>
+          <a class="tr-textlink" href="{% shop_url 'shop:order_for_me' %}">{% trans "Order for me" %}</a>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="tr-quote" aria-label="{% trans 'What we believe' %}">
+    <img class="tr-quote__photo" src="{% static 'assets/img/illustrations/ball_on_court_3.png' %}" alt="">
+    <div class="tr-quote__scrim" aria-hidden="true"></div>
+    <div class="tr-wrap">
+      <figure class="tr-quote__inner">
+        <blockquote>{% trans "Professional gear should be a tool for your next win." %}</blockquote>
+        <figcaption>{% trans "Tennis Rivals · Tbilisi" %}</figcaption>
+      </figure>
+    </div>
+    <div class="tr-wave" style="color:#fff" aria-hidden="true">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144.54 17.34" preserveAspectRatio="none" fill="currentColor"><path d="M144.54,17.34H0V0H144.54ZM0,0S32.36,17.34,72.27,17.34,144.54,0,144.54,0"></path></svg>
+    </div>
+  </section>
+
+  <section class="tr-steps" aria-labelledby="steps-title">
+    <div class="tr-wrap">
+      <div class="tr-section-head">
+        <p class="tr-kicker">{% trans "How it works" %}</p>
+        <h2 id="steps-title">{% trans "From a question to a frame that fits" %}</h2>
+      </div>
+      <div class="tr-steps__grid">
+        <article class="tr-step">
+          <span class="tr-step__num">01</span>
+          <h3>{% trans "Tell us the game" %}</h3>
+          <p>{% trans "Level, surface, and what feels wrong in the current frame or shoe." %}</p>
+        </article>
+        <article class="tr-step">
+          <span class="tr-step__num">02</span>
+          <h3>{% trans "We narrow it" %}</h3>
+          <p>{% trans "A short list, not a catalog dump. Strings, tension, and grip included." %}</p>
+        </article>
+        <article class="tr-step">
+          <span class="tr-step__num">03</span>
+          <h3>{% trans "It shows up" %}</h3>
+          <p>{% trans "In stock today, or a preorder with shipping and customs in the quote." %}</p>
+        </article>
+        <article class="tr-step">
+          <span class="tr-step__num">04</span>
+          <h3>{% trans "You keep the line" %}</h3>
+          <p>{% trans "Two sizes when you need them, and a receipt either way." %}</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="tr-faq" aria-label="{% trans 'Before you order' %}">
+    <div class="tr-wrap">
+      <p id="faq-title" class="tr-kicker">{% trans "Before you order" %}</p>
+      <div class="tr-faq__list">
+        <details>
+          <summary>{% trans "Do I get a real receipt?" %}</summary>
+          <p>{% trans "Yes. Purchases include an official fiscal receipt. That is the guarantee of authenticity, not a story about a friend of a friend." %}</p>
+        </details>
+        <details>
+          <summary>{% trans "Is delivery in Tbilisi really free?" %}</summary>
+          <p>{% trans "In-stock orders are delivered free inside Tbilisi, including a single pack of overgrips. For other cities in Georgia, we quote a courier before you pay." %}</p>
+        </details>
+        <details>
+          <summary>{% trans "What if the shoes do not fit?" %}</summary>
+          <p>{% trans "Ask for two adjacent sizes. We bring both, you try them at the door, and you pay for the pair that fits." %}</p>
+        </details>
+        <details>
+          <summary>{% trans "Can you help me choose if I am still new?" %}</summary>
+          <p>{% trans "That is the job. Tell us your level and how you want the ball to come off the strings. We recommend a setup, not a box." %}</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <section class="tr-close">
+    <div class="tr-wrap tr-close__grid">
+      <div>
+        <p class="tr-kicker" style="color:#ffd2d4">{% trans "Your next session" %}</p>
+        <h2>{% trans "See the shelf" %}</h2>
+        <p class="tr-lead">{% trans "The next match does not need a bigger promise. It needs a frame, a shoe, and a string you trust." %}</p>
+        <div class="tr-actions">
+          <a class="tr-btn" href="{% shop_url 'shop:stock' %}">{% trans "Shop in stock" %}</a>
+          <a class="tr-btn tr-btn--ghost" href="{% shop_url 'shop:info_contacts' %}">{% trans "Ask for a fit" %}</a>
+        </div>
+      </div>
+      <div class="tr-close__visual">
+        <img class="tr-close__photo" src="{% static 'assets/img/story/story-shoes.jpg' %}" alt="{% trans 'Clay-court shoes ready for a session' %}">
+        <img class="tr-close__mark" src="{% static 'assets/img/tr-sticker.png' %}" alt="">
+      </div>
+    </div>
+  </section>
+</main>
+
+{% include 'shop/includes/shop_footer.html' %}
+{% include 'shop/includes/shop_public_header_scripts.html' %}
+</body>
+</html>

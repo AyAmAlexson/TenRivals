@@ -440,6 +440,18 @@ def home_react_preview(request):
     return response
 
 
+def company_story(request):
+    """Unlisted company landing. Public to read, closed to crawlers."""
+    response = render(
+        request,
+        'shop/company_story.html',
+        {'featured_stock_brands': FEATURED_STOCK_BRANDS},
+    )
+    response['X-Robots-Tag'] = 'noindex, nofollow, noarchive'
+    response['Cache-Control'] = 'private, no-store'
+    return response
+
+
 def brands(request):
     return render(
         request,
@@ -1488,7 +1500,7 @@ def robots_txt(request):
         'Disallow: /shop/add',
         'Disallow: /shop/edit',
         '',
-        '# Closed React home preview (login only, not for indexing)',
+        '# Closed previews: React home (login only) and company story (noindex)',
         'Disallow: /ge_en/shop/pilot/',
         'Disallow: /ge_ru/shop/pilot/',
         'Disallow: /ge_ka/shop/pilot/',
