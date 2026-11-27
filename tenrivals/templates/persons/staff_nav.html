@@ -1,61 +1,129 @@
-<nav class="staff-nav" aria-label="Staff navigation">
-  <div class="staff-nav__group">
-    <div class="staff-nav__label">Catalog</div>
-    <a href="{% url 'administration:staff_stock' %}" class="staff-nav__link {% if staff_nav_active == 'stock' %}is-active{% endif %}">In stock</a>
-    <a href="{% url 'administration:staff_preorder' %}" class="staff-nav__link {% if staff_nav_active == 'preorder' %}is-active{% endif %}">Preorder</a>
-    <a href="{% url 'administration:staff_stock_stats' %}" class="staff-nav__link {% if staff_nav_active == 'stock_stats' %}is-active{% endif %}">Stock stats</a>
-    <a href="{% url 'administration:staff_stock_stack' %}" class="staff-nav__link {% if staff_nav_active == 'stock_stack' %}is-active{% endif %}">Shelf stack</a>
-    <a href="{% url 'administration:staff_stock_arrival_dates' %}" class="staff-nav__link {% if staff_nav_active == 'stock_dates' %}is-active{% endif %}">Arrival dates</a>
-    <a href="{% url 'administration:staff_collections' %}" class="staff-nav__link {% if staff_nav_active == 'collections' %}is-active{% endif %}">Collections</a>
-  </div>
-  <div class="staff-nav__group">
-    <div class="staff-nav__label">Sales</div>
-    <a href="{% url 'administration:staff_counter' %}" class="staff-nav__link {% if staff_nav_active == 'counter' %}is-active{% endif %}">Counter</a>
-    <a href="{% url 'administration:staff_sales_orders' %}" class="staff-nav__link {% if staff_nav_active == 'sales_orders' %}is-active{% endif %}">Orders</a>
-    <a href="{% url 'administration:staff_write_offs' %}" class="staff-nav__link {% if staff_nav_active == 'write_offs' %}is-active{% endif %}">Write-offs</a>
-    <a href="{% url 'administration:staff_customers' %}" class="staff-nav__link {% if staff_nav_active == 'customers' %}is-active{% endif %}">Customers</a>
-    <a href="{% url 'administration:staff_order_for_me_list' %}" class="staff-nav__link {% if staff_nav_active == 'order_for_me' %}is-active{% endif %}">Order for me</a>
-  </div>
-  <div class="staff-nav__group">
-    <div class="staff-nav__label">Analytics</div>
-    <a href="{% url 'administration:staff_sales_analytics' %}" class="staff-nav__link {% if staff_nav_active == 'sales_analytics' %}is-active{% endif %}">Analytics</a>
-    <a href="{% url 'administration:staff_order_finance' %}" class="staff-nav__link {% if staff_nav_active == 'order_finance' %}is-active{% endif %}">Orders finance</a>
-    <a href="{% url 'administration:staff_accounting' %}" class="staff-nav__link {% if staff_nav_active == 'accounting' %}is-active{% endif %}">Accounting</a>
-  </div>
-  <div class="staff-nav__group">
-    <div class="staff-nav__label">Shipping</div>
-    <a href="{% url 'administration:staff_shipping_addresses' %}" class="staff-nav__link {% if staff_nav_active == 'shipping' %}is-active{% endif %}">Current addresses</a>
-  </div>
-  {% if perms.buying.view %}
-  <div class="staff-nav__group">
-    <div class="staff-nav__label">Buying</div>
-    <a href="{% url 'administration:buying_requests' %}" class="staff-nav__link {% if staff_nav_active == 'buying_requests' %}is-active{% endif %}">Buying requests</a>
-    <a href="{% url 'administration:buying_request_new' %}" class="staff-nav__link {% if staff_nav_active == 'buying_new' %}is-active{% endif %}">New request</a>
-    <a href="{% url 'administration:buying_calculator_list' %}" class="staff-nav__link {% if staff_nav_active == 'buying_calculator' %}is-active{% endif %}">Calculator</a>
-    <a href="{% url 'administration:buying_suppliers' %}" class="staff-nav__link {% if staff_nav_active == 'buying_suppliers' %}is-active{% endif %}">Suppliers</a>
-    <a href="{% url 'administration:buying_connectors' %}" class="staff-nav__link {% if staff_nav_active == 'buying_connectors' %}is-active{% endif %}">Connector status</a>
-    <a href="{% url 'administration:buying_ai_diagnostics' %}" class="staff-nav__link {% if staff_nav_active == 'buying_ai' %}is-active{% endif %}">AI diagnostics</a>
-    <a href="{% url 'administration:buying_mappings' %}" class="staff-nav__link {% if staff_nav_active == 'buying_mappings' %}is-active{% endif %}">Product mappings</a>
-    <a href="{% url 'administration:buying_routes' %}" class="staff-nav__link {% if staff_nav_active == 'buying_routes' %}is-active{% endif %}">Fulfillment routes</a>
-    <a href="{% url 'administration:buying_pricing_rules' %}" class="staff-nav__link {% if staff_nav_active == 'buying_rules' %}is-active{% endif %}">Pricing rules</a>
-    <a href="{% url 'administration:buying_fx_rates' %}" class="staff-nav__link {% if staff_nav_active == 'buying_fx' %}is-active{% endif %}">FX rates</a>
-    <a href="{% url 'administration:buying_optimization_rules' %}" class="staff-nav__link {% if staff_nav_active == 'buying_optimization' %}is-active{% endif %}">Optimization rules</a>
-  </div>
-  {% endif %}
-  <div class="staff-nav__group">
-    <div class="staff-nav__label">Marketing</div>
-    <a href="{% url 'administration:staff_home_banners' %}" class="staff-nav__link {% if staff_nav_active == 'banners' %}is-active{% endif %}">Shop home</a>
-    <a href="{% url 'administration:staff_blog_posts' %}" class="staff-nav__link {% if staff_nav_active == 'blog' %}is-active{% endif %}">Blog</a>
-    <a href="{% url 'administration:staff_promo_codes' %}" class="staff-nav__link {% if staff_nav_active == 'promo_codes' %}is-active{% endif %}">Promo codes</a>
-  </div>
-  <div class="staff-nav__group">
-    <div class="staff-nav__label">Administration</div>
-    {% if user.is_superuser %}
-    <a href="{% url 'administration:staff_counter_stores' %}" class="staff-nav__link {% if staff_nav_active == 'counter_stores' %}is-active{% endif %}">Shops</a>
+{% load catalog_tags %}
+<nav class="staff-sidenav sidenav-light" aria-label="Staff navigation">
+  <div class="staff-sidenav__menu">
+    <div class="staff-sidenav__quick">
+      <div class="sidenav-menu-heading">Storefront</div>
+      <a class="sidenav-link sidenav-link--top" href="{% shop_url 'shop:index' %}">Shop</a>
+      <a class="sidenav-link sidenav-link--top" href="{% shop_url 'shop:order_for_me' %}">Order for me</a>
+    </div>
+
+    <div class="sidenav-menu-heading">Core</div>
+
+    <div class="sidenav-group">
+      <button type="button" class="sidenav-parent collapsed" aria-expanded="false" aria-controls="staff-nav-catalog">
+        <span class="nav-link-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M16.5 9.4l-9-5.19"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="M3.27 6.96L12 12.01l8.73-5.05"/><path d="M12 22.08V12"/></svg></span>
+        <span class="sidenav-parent__label">Catalog</span>
+        <span class="sidenav-collapse-arrow" aria-hidden="true"></span>
+      </button>
+      <div class="sidenav-collapse" id="staff-nav-catalog" hidden>
+        <a href="{% url 'administration:staff_stock' %}" class="sidenav-link {% if staff_nav_active == 'stock' %}is-active{% endif %}">In stock</a>
+        <a href="{% url 'administration:staff_preorder' %}" class="sidenav-link {% if staff_nav_active == 'preorder' %}is-active{% endif %}">Preorder</a>
+        <a href="{% url 'administration:staff_stock_stats' %}" class="sidenav-link {% if staff_nav_active == 'stock_stats' %}is-active{% endif %}">Stock stats</a>
+        <a href="{% url 'administration:staff_stock_stack' %}" class="sidenav-link {% if staff_nav_active == 'stock_stack' %}is-active{% endif %}">Shelf stack</a>
+        <a href="{% url 'administration:staff_stock_arrival_dates' %}" class="sidenav-link {% if staff_nav_active == 'stock_dates' %}is-active{% endif %}">Arrival dates</a>
+        <a href="{% url 'administration:staff_collections' %}" class="sidenav-link {% if staff_nav_active == 'collections' %}is-active{% endif %}">Collections</a>
+      </div>
+    </div>
+
+    <div class="sidenav-group">
+      <button type="button" class="sidenav-parent collapsed" aria-expanded="false" aria-controls="staff-nav-sales">
+        <span class="nav-link-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></span>
+        <span class="sidenav-parent__label">Sales</span>
+        <span class="sidenav-collapse-arrow" aria-hidden="true"></span>
+      </button>
+      <div class="sidenav-collapse" id="staff-nav-sales" hidden>
+        <a href="{% url 'administration:staff_counter' %}" class="sidenav-link {% if staff_nav_active == 'counter' %}is-active{% endif %}">Counter</a>
+        <a href="{% url 'administration:staff_sales_orders' %}" class="sidenav-link {% if staff_nav_active == 'sales_orders' %}is-active{% endif %}">Orders</a>
+        <a href="{% url 'administration:staff_write_offs' %}" class="sidenav-link {% if staff_nav_active == 'write_offs' %}is-active{% endif %}">Write-offs</a>
+        <a href="{% url 'administration:staff_customers' %}" class="sidenav-link {% if staff_nav_active == 'customers' %}is-active{% endif %}">Customers</a>
+        <a href="{% url 'administration:staff_order_for_me_list' %}" class="sidenav-link {% if staff_nav_active == 'order_for_me' %}is-active{% endif %}">Order for me</a>
+      </div>
+    </div>
+
+    <div class="sidenav-group">
+      <button type="button" class="sidenav-parent collapsed" aria-expanded="false" aria-controls="staff-nav-analytics">
+        <span class="nav-link-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg></span>
+        <span class="sidenav-parent__label">Analytics</span>
+        <span class="sidenav-collapse-arrow" aria-hidden="true"></span>
+      </button>
+      <div class="sidenav-collapse" id="staff-nav-analytics" hidden>
+        <a href="{% url 'administration:staff_sales_analytics' %}" class="sidenav-link {% if staff_nav_active == 'sales_analytics' %}is-active{% endif %}">Analytics</a>
+        <a href="{% url 'administration:staff_order_finance' %}" class="sidenav-link {% if staff_nav_active == 'order_finance' %}is-active{% endif %}">Orders finance</a>
+        <a href="{% url 'administration:staff_accounting' %}" class="sidenav-link {% if staff_nav_active == 'accounting' %}is-active{% endif %}">Accounting</a>
+      </div>
+    </div>
+
+    <div class="sidenav-group">
+      <button type="button" class="sidenav-parent collapsed" aria-expanded="false" aria-controls="staff-nav-shipping">
+        <span class="nav-link-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></span>
+        <span class="sidenav-parent__label">Shipping</span>
+        <span class="sidenav-collapse-arrow" aria-hidden="true"></span>
+      </button>
+      <div class="sidenav-collapse" id="staff-nav-shipping" hidden>
+        <a href="{% url 'administration:staff_shipping_addresses' %}" class="sidenav-link {% if staff_nav_active == 'shipping' %}is-active{% endif %}">Current addresses</a>
+      </div>
+    </div>
+
+    {% if perms.buying.view %}
+    <div class="sidenav-menu-heading">Buying</div>
+    <div class="sidenav-group">
+      <button type="button" class="sidenav-parent collapsed" aria-expanded="false" aria-controls="staff-nav-buying">
+        <span class="nav-link-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg></span>
+        <span class="sidenav-parent__label">Buying</span>
+        <span class="sidenav-collapse-arrow" aria-hidden="true"></span>
+      </button>
+      <div class="sidenav-collapse" id="staff-nav-buying" hidden>
+        <a href="{% url 'administration:buying_requests' %}" class="sidenav-link {% if staff_nav_active == 'buying_requests' %}is-active{% endif %}">Buying requests</a>
+        <a href="{% url 'administration:buying_request_new' %}" class="sidenav-link {% if staff_nav_active == 'buying_new' %}is-active{% endif %}">New request</a>
+        <a href="{% url 'administration:buying_calculator_list' %}" class="sidenav-link {% if staff_nav_active == 'buying_calculator' %}is-active{% endif %}">Calculator</a>
+        <a href="{% url 'administration:buying_suppliers' %}" class="sidenav-link {% if staff_nav_active == 'buying_suppliers' %}is-active{% endif %}">Suppliers</a>
+        <a href="{% url 'administration:buying_connectors' %}" class="sidenav-link {% if staff_nav_active == 'buying_connectors' %}is-active{% endif %}">Connector status</a>
+        <a href="{% url 'administration:buying_ai_diagnostics' %}" class="sidenav-link {% if staff_nav_active == 'buying_ai' %}is-active{% endif %}">AI diagnostics</a>
+        <a href="{% url 'administration:buying_mappings' %}" class="sidenav-link {% if staff_nav_active == 'buying_mappings' %}is-active{% endif %}">Product mappings</a>
+        <a href="{% url 'administration:buying_routes' %}" class="sidenav-link {% if staff_nav_active == 'buying_routes' %}is-active{% endif %}">Fulfillment routes</a>
+        <a href="{% url 'administration:buying_pricing_rules' %}" class="sidenav-link {% if staff_nav_active == 'buying_rules' %}is-active{% endif %}">Pricing rules</a>
+        <a href="{% url 'administration:buying_fx_rates' %}" class="sidenav-link {% if staff_nav_active == 'buying_fx' %}is-active{% endif %}">FX rates</a>
+        <a href="{% url 'administration:buying_optimization_rules' %}" class="sidenav-link {% if staff_nav_active == 'buying_optimization' %}is-active{% endif %}">Optimization rules</a>
+      </div>
+    </div>
     {% endif %}
-    <a href="{% url 'administration:staff_users' %}" class="staff-nav__link {% if staff_nav_active == 'users' %}is-active{% endif %}">Users</a>
-    {% if user.is_superuser %}
-    <a href="{% url 'admin:index' %}" class="staff-nav__link">Django admin</a>
-    {% endif %}
+
+    <div class="sidenav-menu-heading">Site</div>
+
+    <div class="sidenav-group">
+      <button type="button" class="sidenav-parent collapsed" aria-expanded="false" aria-controls="staff-nav-marketing">
+        <span class="nav-link-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></span>
+        <span class="sidenav-parent__label">Marketing</span>
+        <span class="sidenav-collapse-arrow" aria-hidden="true"></span>
+      </button>
+      <div class="sidenav-collapse" id="staff-nav-marketing" hidden>
+        <a href="{% url 'administration:staff_home_banners' %}" class="sidenav-link {% if staff_nav_active == 'banners' %}is-active{% endif %}">Shop home</a>
+        <a href="{% url 'administration:staff_blog_posts' %}" class="sidenav-link {% if staff_nav_active == 'blog' %}is-active{% endif %}">Blog</a>
+        <a href="{% url 'administration:staff_promo_codes' %}" class="sidenav-link {% if staff_nav_active == 'promo_codes' %}is-active{% endif %}">Promo codes</a>
+      </div>
+    </div>
+
+    <div class="sidenav-group">
+      <button type="button" class="sidenav-parent collapsed" aria-expanded="false" aria-controls="staff-nav-admin">
+        <span class="nav-link-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
+        <span class="sidenav-parent__label">Administration</span>
+        <span class="sidenav-collapse-arrow" aria-hidden="true"></span>
+      </button>
+      <div class="sidenav-collapse" id="staff-nav-admin" hidden>
+        {% if user.is_superuser %}
+        <a href="{% url 'administration:staff_counter_stores' %}" class="sidenav-link {% if staff_nav_active == 'counter_stores' %}is-active{% endif %}">Shops</a>
+        {% endif %}
+        <a href="{% url 'administration:staff_users' %}" class="sidenav-link {% if staff_nav_active == 'users' %}is-active{% endif %}">Users</a>
+        {% if user.is_superuser %}
+        <a href="{% url 'admin:index' %}" class="sidenav-link">Django admin</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="sidenav-footer">
+    <div class="sidenav-footer-content">
+      <div class="sidenav-footer-subtitle">Logged in as</div>
+      <div class="sidenav-footer-title">{% firstof user.get_full_name user.email user.username %}</div>
+    </div>
   </div>
 </nav>
