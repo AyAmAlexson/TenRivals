@@ -1,52 +1,44 @@
 {# Requires: month_metrics. Optional: month_kpis_title. #}
 <style>
-  .an-month{margin:0 0 26px;padding:18px 20px 20px;background:#fff;border:1px solid var(--line)}
-  .an-month__head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px}
-  .an-month__title{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;margin:0}
-  .an-month__range{font-size:12px;color:var(--muted);font-weight:400}
-  .an-month__grid{display:grid;grid-template-columns:1.35fr repeat(4,minmax(0,1fr));gap:14px}
+  .an-month__range{font-size:12px; font-weight:400; color:var(--muted)}
+  .an-month__grid{display:grid; grid-template-columns:1.4fr repeat(4,minmax(0,1fr)); gap:14px}
   @media(max-width:1100px){.an-month__grid{grid-template-columns:1fr 1fr}}
   @media(max-width:560px){.an-month__grid{grid-template-columns:1fr}}
-  .an-kpi{padding:14px 16px;border:1px solid var(--line);background:#fafafa;min-width:0}
-  .an-kpi--profit{background:#fdf2f2;border-color:#f0c4c7}
-  .an-kpi__label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
-  .an-kpi__value{font-size:34px;font-weight:800;line-height:1.1;margin-top:8px;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
-  .an-kpi--profit .an-kpi__value{color:var(--accent);font-size:40px}
   .an-kpi__value.neg{color:#b91c1c}
-  .an-kpi__hint{font-size:12px;color:var(--muted);margin-top:6px;font-weight:400}
-  .mf-bridge{margin:14px 0 0;font-size:13px;font-weight:400;color:var(--muted)}
+  .stat-card--hero .an-kpi__value.neg{color:#fecaca}
+  .mf-bridge{margin:14px 0 0; font-size:13px; font-weight:400; color:var(--muted)}
 </style>
 {% with mm=month_metrics.metrics %}
-<section class="an-month" aria-label="Monthly financial report">
-  <div class="an-month__head">
-    <h2 class="an-month__title">{{ month_kpis_title|default:"This month" }} · {{ month_metrics.label }}</h2>
+<section class="card" aria-label="Monthly financial report">
+  <div class="card-head">
+    <h2 class="card-title">{{ month_kpis_title|default:"This month" }} · {{ month_metrics.label }}</h2>
     <span class="an-month__range">{{ month_metrics.start|date:'Y-m-d' }} → {{ month_metrics.end|date:'Y-m-d' }}</span>
   </div>
   <div class="an-month__grid">
-    <div class="an-kpi an-kpi--profit">
-      <div class="an-kpi__label">Profit</div>
-      <div class="an-kpi__value {% if mm.profit < 0 %}neg{% endif %}">{{ mm.profit }} ₾</div>
-      <div class="an-kpi__hint">Order profit + tax credit − expenses</div>
+    <div class="stat-card stat-card--hero">
+      <div class="stat-card__label">Profit</div>
+      <div class="stat-card__value an-kpi__value {% if mm.profit < 0 %}neg{% endif %}">{{ mm.profit }} ₾</div>
+      <div class="stat-card__hint">Order profit + tax credit − expenses</div>
     </div>
-    <div class="an-kpi">
-      <div class="an-kpi__label">Net Proceeds</div>
-      <div class="an-kpi__value {% if mm.net_proceeds < 0 %}neg{% endif %}">{{ mm.net_proceeds }} ₾</div>
-      <div class="an-kpi__hint">Revenue − VAT − TAX − Acquiring</div>
+    <div class="stat-card">
+      <div class="stat-card__label">Net Proceeds</div>
+      <div class="stat-card__value {% if mm.net_proceeds < 0 %}neg{% endif %}">{{ mm.net_proceeds }} ₾</div>
+      <div class="stat-card__hint">Revenue − VAT − TAX − Acquiring</div>
     </div>
-    <div class="an-kpi">
-      <div class="an-kpi__label">Revenue</div>
-      <div class="an-kpi__value">{{ mm.revenue }} ₾</div>
-      <div class="an-kpi__hint">Customer payment</div>
+    <div class="stat-card">
+      <div class="stat-card__label">Revenue</div>
+      <div class="stat-card__value">{{ mm.revenue }} ₾</div>
+      <div class="stat-card__hint">Customer payment</div>
     </div>
-    <div class="an-kpi">
-      <div class="an-kpi__label">Avg check</div>
-      <div class="an-kpi__value">{% if mm.aov is not None %}{{ mm.aov }} ₾{% else %}—{% endif %}</div>
-      <div class="an-kpi__hint">Revenue / orders</div>
+    <div class="stat-card">
+      <div class="stat-card__label">Avg check</div>
+      <div class="stat-card__value">{% if mm.aov is not None %}{{ mm.aov }} ₾{% else %}—{% endif %}</div>
+      <div class="stat-card__hint">Revenue / orders</div>
     </div>
-    <div class="an-kpi">
-      <div class="an-kpi__label">ROI</div>
-      <div class="an-kpi__value">{% if mm.roi_pct is not None %}{{ mm.roi_pct }}%{% else %}—{% endif %}</div>
-      <div class="an-kpi__hint">(Order profit + tax credit) / COGS</div>
+    <div class="stat-card">
+      <div class="stat-card__label">ROI</div>
+      <div class="stat-card__value">{% if mm.roi_pct is not None %}{{ mm.roi_pct }}%{% else %}—{% endif %}</div>
+      <div class="stat-card__hint">(Order profit + tax credit) / COGS</div>
     </div>
   </div>
   <p class="mf-bridge">Order profit {{ mm.order_profit }} ₾ · Tax credit {{ mm.tax_credit }} ₾ · Operating expenses {{ mm.operating_expenses }} ₾</p>

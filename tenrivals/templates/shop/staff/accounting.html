@@ -1,10 +1,12 @@
 {% extends 'persons/staff_base.html' %}
 {% block title %}Accounting — Staff | Tenrivals{% endblock %}
 {% block page_heading %}{{ page_heading }}{% endblock %}
+{% block page_tabs %}{% include 'shop/staff/includes/analytics_sections.html' %}{% endblock %}
 {% block page_note %}<p class="page-note">Company result by calendar month. Plus = order profit + tax credit. Minus = operating expenses. Profit = plus − minus. ROI = (order profit + tax credit) / COGS. Click a month to edit its tax credit and expenses. Saving again corrects that month.</p>{% endblock %}
 {% block extra_head %}
 <style>
-  .mf-form{margin:-8px 0 26px;padding:16px 20px 18px;background:#fff;border:1px solid var(--line);border-top:none}
+  .mf-form{margin:0}
+  .card--flush .ac-table-wrap{border:0}
   .mf-line{display:grid;grid-template-columns:minmax(140px,220px) 140px;gap:12px;align-items:center;margin:0 0 8px;font-size:14px;font-weight:400}
   .mf-line input{width:140px;padding:8px 10px;border:1px solid var(--line);font-family:inherit;font-size:14px;font-weight:400;text-align:right;font-variant-numeric:tabular-nums}
   .mf-hint{margin:0 0 12px;font-size:12px;font-weight:400;color:var(--muted)}
@@ -34,9 +36,10 @@
 </style>
 {% endblock %}
 {% block content %}
-{% include 'shop/staff/includes/analytics_sections.html' %}
 {% include 'shop/staff/includes/month_kpis.html' %}
-<form method="post" class="mf-form" action="{% url 'administration:staff_accounting' %}">
+<div class="card">
+  <h2 class="card-title">{{ month_metrics.label }}</h2>
+  <form method="post" class="mf-form" action="{% url 'administration:staff_accounting' %}">
   {% csrf_token %}
   <input type="hidden" name="year" value="{{ month_metrics.year }}">
   <input type="hidden" name="month" value="{{ month_metrics.month }}">
@@ -61,10 +64,13 @@
     </div>
   </details>
   <button type="submit" class="btn btn--sm mf-save">Save month</button>
-</form>
+  </form>
+</div>
 
-<p class="ac-note">Click a month to load it above. Plus is what the month keeps before operating expenses. Minus is those expenses.</p>
-<div class="ac-table-wrap">
+<div class="card card--flush">
+  <h2 class="card-title">Months</h2>
+  <p class="ac-note" style="padding:0 22px">Click a month to load it above. Plus is what the month keeps before operating expenses. Minus is those expenses.</p>
+  <div class="ac-table-wrap">
   <table class="ac-table">
     <thead>
       <tr>
@@ -104,6 +110,7 @@
       </tr>
     </tfoot>
   </table>
+  </div>
 </div>
 <script>
 (function(){
