@@ -104,6 +104,29 @@
   align-items:center;
   padding:64px 0 88px;
 }
+.tr-hero--home{display:block}
+.tr-hero--home .tr-hero__grid{grid-template-columns:minmax(0, 720px)}
+.tr-hero__slides{position:absolute; inset:0; z-index:0}
+.tr-hero__slide{
+  position:absolute;
+  inset:0;
+  opacity:0;
+  visibility:hidden;
+  transition:opacity .7s ease, visibility .7s;
+}
+.tr-hero__slide.is-active{opacity:1; visibility:visible}
+.tr-hero__slide a,
+.tr-hero__slide img{
+  display:block;
+  width:100%;
+  height:100%;
+  max-width:none;
+  object-fit:cover;
+  object-position:center 42%;
+}
+.tr-hero--home .tr-hero__scrim{z-index:1; pointer-events:none}
+.tr-hero--home .tr-hero__grid{z-index:2; pointer-events:none}
+.tr-hero--home .tr-actions{pointer-events:auto}
 .tr-hero h1{
   margin:0 0 18px;
   font-size:clamp(42px, 5.6vw, 72px);
@@ -165,6 +188,9 @@
   grid-template-columns:repeat(4, minmax(0, 1fr));
   gap:18px;
 }
+.tr-values__grid.tr-values__grid--stock{grid-template-columns:repeat(3, minmax(0, 1fr))}
+a.tr-value{display:block; color:inherit; text-decoration:none}
+a.tr-value:hover{border-color:#1a1a1a}
 .tr-value{
   background:#fff;
   border:1px solid var(--line);
@@ -314,6 +340,7 @@
   box-shadow:0 16px 40px rgba(40,24,12,.05);
 }
 .tr-split--flip .tr-split__media{order:2}
+.tr-split--text{grid-template-columns:1fr}
 .tr-split__media{position:relative; min-height:260px; overflow:hidden}
 .tr-split__media img{width:100%; height:100%; object-fit:cover; position:absolute; inset:0}
 .tr-split__body{padding:36px 36px 32px; display:flex; flex-direction:column; justify-content:center}
@@ -460,6 +487,7 @@
   .tr-close__grid{grid-template-columns:1fr}
   .tr-hero__collage{min-height:300px; max-width:460px}
   .tr-values__grid,
+  .tr-values__grid.tr-values__grid--stock,
   .tr-steps__grid{grid-template-columns:1fr 1fr}
   .tr-step + .tr-step{border-left:none}
   .tr-step{border-top:1px solid var(--line); padding-left:0}
@@ -475,6 +503,7 @@
   .tr-hero__grid{padding:42px 0 70px}
   .tr-hero__collage{display:none}
   .tr-values__grid,
+  .tr-values__grid.tr-values__grid--stock,
   .tr-facts,
   .tr-steps__grid{grid-template-columns:1fr}
   .tr-split__body{padding:24px 20px}

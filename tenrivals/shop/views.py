@@ -1,6 +1,5 @@
 import json
 from decimal import Decimal
-from itertools import chain
 from urllib.parse import quote, urlencode
 
 from django.conf import settings
@@ -90,7 +89,6 @@ from .models import (
     SalesOrderLine,
     Shoe,
     String,
-    HomePromoBanner,
 )
 from .sales_order_stock import (
     get_variant_qty_map,
@@ -346,18 +344,12 @@ def _safe_internal_redirect(request, url: str | None):
 
 _MAX_HOME_FEATURED_BLOG = 12
 _HOME_FEATURED_PRODUCTS = 10
-_HOME_NEW_RACKETS = 4
-_HOME_NEW_MENS_SHOES = 4
-_HOME_NEW_WOMENS_SHOES = 2
-
-
 def index(request):
     hero_row = HomeHeroContent.load()
     hero_text = hero_row.localized_strings(
         django_lang_for_site_locale(getattr(request, 'site_locale', None))
     )
     hero_slides = list(HomeHeroSlide.objects.all()[:5])
-    promo_banners = list(HomePromoBanner.objects.all()[:5])
     featured_blog_posts = list(
         BlogPost.objects.filter(
             is_published=True,
@@ -368,33 +360,13 @@ def index(request):
         *_PRODUCT_SUBCLASS_SELECT,
         'category',
     )
-    stock_products = (
-        stock_catalog_storefront_queryset()
-        .select_related(*_PRODUCT_SUBCLASS_SELECT, 'category')
-        .distinct()
-    )
-    stock_products = order_products_by_effective_price(stock_products)
-    stock_products = annotate_stock_shelf_priority(stock_products)
-    stock_products = stock_products.order_by(
-        '-_shelf_first', '-in_stock', '-sort_price', 'id'
-    )
     featured_products = list(
         annotate_stock_listing_quantity(
             active_products.filter(featured_product=True).order_by('-created_at')
         )[:_HOME_FEATURED_PRODUCTS]
     )
-    new_arrivals = list(
-        chain(
-            stock_products.filter(type=ProductType.RACKET).order_by('-created_at')[
-                :_HOME_NEW_RACKETS
-            ],
-            stock_products.filter(type=ProductType.MENS_SHOES).order_by('-created_at')[
-                :_HOME_NEW_MENS_SHOES
-            ],
-            stock_products.filter(type=ProductType.WOMENS_SHOES).order_by(
-                '-created_at'
-            )[:_HOME_NEW_WOMENS_SHOES],
-        )
+    home_collections = list(
+        ProductCollection.objects.filter(is_archived=False).order_by('-updated_at', 'title')
     )
     from .seo_catalog import site_organization_json_ld
 
@@ -406,10 +378,9 @@ def index(request):
         {
             'hero_text': hero_text,
             'hero_slides': hero_slides,
-            'promo_banners': promo_banners,
+            'home_collections': home_collections,
             'featured_blog_posts': featured_blog_posts,
             'featured_products': featured_products,
-            'new_arrivals': new_arrivals,
             'featured_stock_brands': FEATURED_STOCK_BRANDS,
             'seo_page_title': _(
                 'Tenrivals | Tennis rackets, shoes & strings | Tbilisi, Georgia'
